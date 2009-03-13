@@ -1,0 +1,6 @@
+; $Id$
+name = "Features"
+description = "Provides feature management for Drupal."
+core = 6.x
+package = "Features"
+dependencies[] = context
