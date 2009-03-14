@@ -71,5 +71,5 @@ function theme_features_form_buttons($element) {
   drupal_add_css(drupal_get_path('module', 'features') .'/features.css');
 
   $output = drupal_render($element);
-  return "<div class='buttons clear-block'>{$output}</div>";
+  return !empty($output) ? "<div class='buttons clear-block'>{$output}</div>" : '';
 }

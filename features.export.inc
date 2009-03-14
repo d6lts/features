@@ -159,19 +159,41 @@ function features_export_form($form_state, $module = NULL) {
       $form['#theme'] = 'features_export_form_final';
 
       if ($code = features_export_render($export, $info)) {
+
+        $files = array(
+          "{$info['filename']}/{$info['filename']}.info" => $code[0],
+          "{$info['filename']}/{$info['filename']}.module" => $code[1],
+        );
+        $form['download'] = array(
+          '#tree' => TRUE,
+          '#theme' => 'features_form_buttons',
+          '#weight' => -10,
+        );
+        $form['download']['filename'] = array(
+          '#type' => 'value',
+          '#value' => function_exists('gzencode') ? "{$info['filename']}.tar.gz" : "{$info['filename']}.tar",
+        );
+        $form['download']['tar'] = array(
+          '#type' => 'value',
+          '#value' => features_tar_create($files),
+        );
+        $form['download']['download'] = array(
+          '#type' => 'submit',
+          '#value' => t('Download feature'),
+          '#submit' => array('features_export_download_submit'),
+        );
+
         $form['info'] = array(
-          '#description' => t('Copy and paste the following code into !module/!filename in your modules directory.', array('!module' => $info['filename'], '!filename' => "{$info['filename']}.info")),
           '#title' => "{$info['filename']}.info",
           '#type' => 'textarea',
-          '#rows' => 20,
+          '#rows' => 15,
           '#default_value' => $code[0],
           '#resizable' => FALSE,
         );
         $form['module'] = array(
-          '#description' => t('Copy and paste the following code into !module/!filename in your modules directory.', array('!module' => $info['filename'], '!filename' => "{$info['filename']}.module")),
           '#title' => "{$info['filename']}.module",
           '#type' => 'textarea',
-          '#rows' => 20,
+          '#rows' => 15,
           '#default_value' => $code[1],
           '#resizable' => FALSE,
         );
@@ -181,7 +203,7 @@ function features_export_form($form_state, $module = NULL) {
 
   // Add Next/Prev step buttons
   $form['buttons'] = array('#tree' => FALSE, '#theme' => 'features_form_buttons');
-  if ($step > 0) {
+  if ($step > 0 && $step != count($steps) - 1) {
     $form['buttons']['prev'] = array('#value' => t('Previous'), '#type' => 'submit');
   }
   if ($step < count($steps) - 1) {
@@ -273,6 +295,25 @@ function features_export_form_submit($form, &$form_state) {
   }
   elseif ($form_state['clicked_button']['#id'] == 'edit-next') {
     $form_state['storage']['step']++;
+  }
+}
+
+/**
+ * Download submit handler.
+ */
+function features_export_download_submit(&$form, &$form_state) {
+  if (!empty($form_state['values']['download'])) {
+    $file = $form_state['values']['download']['tar'];
+    $filename = $form_state['values']['download']['filename'];
+    if (function_exists('gzencode')) {
+      drupal_set_header('Content-type: application/x-gzip');
+    }
+    else {
+      drupal_set_header('Content-type: application/x-tar');
+    }
+    drupal_set_header('Content-Disposition: attachment; filename="'. $filename .'"');
+    print $file;
+    exit;
   }
 }
 
@@ -591,4 +632,53 @@ function features_export_info($info) {
   }
   $code = implode("\n", $code);
   return $code;
+}
+
+/**
+ * Tar creation function. Written by dmitrig01.
+ *
+ * @param $files
+ *   A keyed array where the key is the filepath and the value is the
+ *   string contents of the file.
+ *
+ * @return
+ *   A string of the tar file contents.
+ */
+function features_tar_create($files) {
+  $tar = '';
+  foreach ($files as $name => $contents) {
+    $binary_data_first = pack("a100a8a8a8a12A12",
+      $name,
+      '100644 ', // File permissions
+      '   765 ', // UID,
+      '   765 ', // GID,
+      sprintf("%11s ", decoct(strlen($contents))), // Filesize,
+      sprintf("%11s", decoct(time())) // Creation time
+    );
+    $binary_data_last = pack("a1a100a6a2a32a32a8a8a155a12", '', '', '', '', '', '', '', '', '', '');
+
+    $checksum = 0;
+    for ($i = 0; $i < 148; $i++) {
+      $checksum += ord(substr($binary_data_first, $i, 1));
+    }
+    for ($i = 148; $i < 156; $i++) {
+      $checksum += ord(' ');
+    }
+    for ($i = 156, $j = 0; $i < 512; $i++, $j++) {
+      $checksum += ord(substr($binary_data_last, $j, 1));
+    }
+
+    $tar .= $binary_data_first;
+    $tar .= pack("a8", sprintf("%6s ", decoct($checksum)));
+    $tar .= $binary_data_last;
+
+    $buffer = str_split($contents, 512);
+    foreach ($buffer as $item) {
+      $tar .= pack("a512", $item);
+    }
+  }
+  if (function_exists('gzencode')) {
+    $tar = gzencode($tar);
+  }
+  return $tar;
 }
