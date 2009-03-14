@@ -60,13 +60,13 @@ function node_features_export($data, &$export, $module_name = '') {
  */
 function node_features_export_render($module = 'foo', $data) {
   $elements = array(
-    'name' => true,
-    'module' => false,
-    'description' => true,
-    'has_title' => false,
-    'title_label' => true,
-    'has_body' => false,
-    'body_label' => true
+    'name' => TRUE,
+    'module' => FALSE,
+    'description' => TRUE,
+    'has_title' => FALSE,
+    'title_label' => TRUE,
+    'has_body' => FALSE,
+    'body_label' => TRUE,
   );
   $output = '';
 

@@ -58,7 +58,7 @@ function features_command_list() {
         format_date($m->info['feature_timestamp']));
     }
   }
-  drush_print_table($rows, 2, true);
+  drush_print_table($rows, 2, TRUE);
 }
 
 /**
@@ -85,7 +85,7 @@ function features_command_export() {
     foreach (context_enabled_contexts(NULL, TRUE) as $k => $c) {
       $rows[] = array("{$c->namespace}-{$c->attribute}-{$c->value}");
     }
-    drush_print_table($rows, 2, true);
+    drush_print_table($rows, 2, TRUE);
   }
 }
 
@@ -98,7 +98,7 @@ function features_command_export() {
  *  Optional. The name for the exported module, it omitted will be generated
  *  from the first listed context.
  */
-function _features_command_export($requests, $name = null) {
+function _features_command_export($requests, $name = NULL) {
   module_load_include('inc', 'features', 'features.export');
   $contexts = context_enabled_contexts();
   $export = array();

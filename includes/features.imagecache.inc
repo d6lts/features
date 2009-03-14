@@ -26,7 +26,7 @@ function imagecache_features_export_render($module_name, $data) {
     foreach ($omit as $i) {
       unset($preset[$i]);
     }
-    $code .= "\"$key\" => ". var_export($preset, true) . ",";
+    $code .= "\"$key\" => ". var_export($preset, TRUE) . ",";
   }
 
   return <<<EOT

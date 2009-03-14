@@ -164,7 +164,7 @@ function features_form_submit(&$form, &$form_state) {
   }
 
   // Clear the cache to respect any changes.
-  features_get_modules(null, true);
+  features_get_modules(NULL, TRUE);
   $form['#redirect'] = 'admin/features/cache-clear';
 }
 
@@ -206,8 +206,8 @@ function features_feature_comparison($feature) {
             $new = explode("\n", $v['current']->export());
           }
           else {
-            $old = explode("\n", var_export($v['default'], true));
-            $new = explode("\n", var_export($v['current'], true));
+            $old = explode("\n", var_export($v['default'], TRUE));
+            $new = explode("\n", var_export($v['current'], TRUE));
           }
           $diff = new Diff($old, $new);
           $output .= '<h3>' . $k . '</h3>';
