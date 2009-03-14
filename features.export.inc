@@ -550,36 +550,6 @@ function theme_features_export_form_final($form) {
 }
 
 /**
- * Export var function -- from Views.
- */
-function features_var_export($var, $prefix = '', $multiple = TRUE) {
-  if (is_array($var)) {
-    if (empty($var)) {
-      $output = 'array()';
-    }
-    else {
-      $output = "array(\n";
-      foreach ($var as $key => $value) {
-        $output .= "  '$key' => ". context_var_export($value, $prefix . ($multiple? '' : '  ')) .",\n";
-      }
-      $output .= ')';
-    }
-  }
-  else if (is_bool($var)) {
-    $output = $var ? 'TRUE' : 'FALSE';
-  }
-  else {
-    $output = var_export($var, TRUE);
-  }
-
-  if ($prefix) {
-    $output = str_replace("\n", "\n$prefix", $output);
-  }
-
-  return $output;
-}
-
-/**
  * Generate code friendly to the Drupal .info format from a structured array.
  *
  * @param $info

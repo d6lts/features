@@ -21,19 +21,22 @@ function imagecache_features_export($data, &$export) {
 function imagecache_features_export_render($module_name, $data) {
   $omit = array('presetid', 'storage');
 
+  $items = array();
   foreach ($data as $key => $value) {
     $preset = imagecache_preset_by_name($key);
     foreach ($omit as $i) {
       unset($preset[$i]);
     }
-    $code .= "\"$key\" => ". var_export($preset, TRUE) . ",";
+    $items[$key] = $preset;
   }
+  $code .= "\$items = ". features_var_export($items, '  ') .";";
 
   return <<<EOT
-// Implementation of hook_imagecache_default_presets().
+/**
+ * Implementation of hook_imagecache_default_presets().
+ */
 function {$module_name}_imagecache_default_presets() {
-  return array({$code}
-  );
+  return {$code}
 }
 EOT;
 }

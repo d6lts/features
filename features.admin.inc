@@ -206,8 +206,8 @@ function features_feature_comparison($feature) {
             $new = explode("\n", $v['current']->export());
           }
           else {
-            $old = explode("\n", var_export($v['default'], TRUE));
-            $new = explode("\n", var_export($v['current'], TRUE));
+            $old = explode("\n", features_var_export($v['default']));
+            $new = explode("\n", features_var_export($v['current']));
           }
           $diff = new Diff($old, $new);
           $output .= '<h3>' . $k . '</h3>';
