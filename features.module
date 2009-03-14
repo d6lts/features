@@ -43,14 +43,6 @@ function features_menu() {
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'file' => 'features.admin.inc',
   );
-  $items['admin/features/compare/%'] = array(
-    'title' => 'Compare',
-    'description' => 'Compare default and current feature.',
-    'page callback' => 'features_feature_comparison',
-    'page arguments' => array(3),
-    'type' => MENU_CALLBACK,
-    'file' => 'features.admin.inc',
-  );
   $items['admin/features/export'] = array(
     'title' => 'Export',
     'description' => 'Export features to code.',
@@ -60,22 +52,36 @@ function features_menu() {
     'file' => "features.export.inc",
     'weight' => 10,
   );
-  $items['admin/features/export/%'] = array(
-    'title' => 'Export',
-    'description' => 'Export features to code.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('features_export_form', 3),
-    'type' => MENU_LOCAL_TASK,
-    'file' => "features.export.inc",
-    'weight' => 10,
-  );
-  $items['admin/features/%'] = array(
+  $items['admin/features/%feature'] = array(
     'title' => 'Feature components',
     'description' => 'Display components of a feature.',
     'page callback' => 'features_admin_components',
     'page arguments' => array(2),
     'type' => MENU_NORMAL_ITEM,
     'file' => 'features.admin.inc',
+  );
+  $items['admin/features/%feature/view'] = array(
+    'title' => 'View',
+    'description' => 'Display components of a feature.',
+    'type' => MENU_DEFAULT_LOCAL_TASK,
+    'weight' => -10,
+  );
+  $items['admin/features/%feature/compare'] = array(
+    'title' => 'Compare',
+    'description' => 'Compare default and current feature.',
+    'page callback' => 'features_feature_comparison',
+    'page arguments' => array(2),
+    'type' => MENU_LOCAL_TASK,
+    'file' => 'features.admin.inc',
+  );
+  $items['admin/features/%feature/export'] = array(
+    'title' => 'Export',
+    'description' => 'Export features to code.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('features_export_form', 2),
+    'type' => MENU_LOCAL_TASK,
+    'file' => "features.export.inc",
+    'weight' => 10,
   );
   foreach ($items as $path => $item) {
     $items[$path]['access callback'] = 'user_access';
@@ -145,6 +151,13 @@ function features_theme_registry_alter(&$theme_registry) {
   if (!in_array('features_preprocess_page', $theme_registry['page']['preprocess functions'])) {
     $theme_registry['page']['preprocess functions'][] = 'features_preprocess_page';
   }
+}
+
+/**
+ * Feature object loader.
+ */
+function feature_load($name, $reset = FALSE) {
+  return features_get_features($name, $reset);
 }
 
 /**

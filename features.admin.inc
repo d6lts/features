@@ -61,8 +61,8 @@ function features_admin_form($feature = NULL) {
       $actions[] = l(t('View'), "admin/features/{$name}");
       switch ($storage) {
         case FEATURES_OVERRIDDEN:
-          $state = l(theme('features_storage', $storage), "admin/features/compare/{$name}", array('html' => TRUE));
-          $actions[] = l(t('Re-export'), "admin/features/export/{$name}");
+          $state = l(theme('features_storage', $storage), "admin/features/{$name}/compare", array('html' => TRUE));
+          $actions[] = l(t('Re-export'), "admin/features/{$name}/export");
           break;
         case FEATURES_DEFAULT:
           $state = theme('features_storage', $storage);
@@ -94,9 +94,8 @@ function features_admin_form($feature = NULL) {
 /**
  * Display the components of a feature.
  */
-function features_admin_components($module) {
+function features_admin_components($feature) {
   module_load_include('inc', 'features', 'features.export');
-  $feature = features_get_features($module);
   $conflict = features_detect_overrides($feature);
 
   // Retrieve basic information
@@ -116,7 +115,7 @@ function features_admin_components($module) {
   $conflicts = array();
   foreach ($feature->info['feature'] as $type => $items) {
     if (!empty($conflict[$type])) {
-      $conflicts[$type] = l(theme('features_storage', FEATURES_OVERRIDDEN), "admin/features/compare/{$module}", array('html' => TRUE));
+      $conflicts[$type] = l(theme('features_storage', FEATURES_OVERRIDDEN), "admin/features/{$module}/compare", array('html' => TRUE));
     }
     else {
       $conflicts[$type] = theme('features_storage', FEATURES_DEFAULT);
@@ -188,35 +187,45 @@ function features_cache_clear() {
  *
  * @return Themed display of what is different.
  */
-function features_feature_comparison($module) {
+function features_feature_comparison($feature) {
   drupal_add_css(drupal_get_path('module', 'features') .'/features.css');
-
   module_load_include('inc', 'features', 'features.export');
-  if (module_exists('diff')) {
-    module_load_include('php', 'diff', 'DiffEngine');
-    $formatter = new DrupalDiffFormatter();
-  }
 
-  $feature = features_get_features($module);
   $conflict = features_detect_overrides($feature);
 
-  foreach ($conflict as $k => $v) {
+  // There are differences
+  if (!empty($conflict)) {
+    // Diff is installed
     if (module_exists('diff')) {
-      if (is_object($v['default']) && get_class($v['default']) == 'view') {
-        $old = explode("\n", $v['default']->export());
-        $new = explode("\n", $v['current']->export());
+      module_load_include('php', 'diff', 'DiffEngine');
+      $formatter = new DrupalDiffFormatter();
+      foreach ($conflict as $k => $v) {
+        if (module_exists('diff')) {
+          if (is_object($v['default']) && get_class($v['default']) == 'view' ){
+            $old = explode("\n", $v['default']->export());
+            $new = explode("\n", $v['current']->export());
+          }
+          else {
+            $old = explode("\n", var_export($v['default'], true));
+            $new = explode("\n", var_export($v['current'], true));
+          }
+          $diff = new Diff($old, $new);
+          $output .= '<h3>' . $k . '</h3>';
+          $output .= theme('diff_table', array(), $formatter->format($diff), array('class' => 'diff'));
+        }
+        else {
+          $items[] = $k;
+        }
       }
-      else {
-        $old = explode("\n", var_export($v['default'], true));
-        $new = explode("\n", var_export($v['current'], true));
-      }
-      $diff = new Diff($old, $new);
-      $output .= '<h3>' . $k . '</h3>';
-      $output .= theme('diff_table', array(), $formatter->format($diff), array('class' => 'diff'));
     }
+    // Diff is not installed
     else {
-      $items[] = $k;
+      $output = "<div class='features-empty'>". t('Please install the diff module to view changes.') ."</div>";
     }
+  }
+  // No changes
+  else {
+    $output = "<div class='features-empty'>". t('No changes have been made to this feature.') ."</div>";
   }
   $output = "<div class='features-comparison'>{$output}</div>";
   return $output;
