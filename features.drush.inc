@@ -82,7 +82,7 @@ function features_command_export() {
   else {
     // By default just show contexts that are available.
     $rows = array(array(dt('Available contexts')));
-    foreach (context_enabled_contexts() as $k => $c) {
+    foreach (context_enabled_contexts(NULL, TRUE) as $k => $c) {
       $rows[] = array("{$c->namespace}-{$c->attribute}-{$c->value}");
     }
     drush_print_table($rows, 2, true);
@@ -116,7 +116,7 @@ function _features_command_export($requests, $name = null) {
     $stub = array(
       'context' => array("{$contexts[$c]->namespace}-{$contexts[$c]->attribute}-{$contexts[$c]->value}"),
     );
-    $e = features_populate($stub, $module_name);
+    $e = features_populate($stub, $name);
     $export = array_merge_recursive($export, $e);
   }
 
