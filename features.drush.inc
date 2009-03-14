@@ -3,7 +3,7 @@
 
 /**
  * @file
- *   Feature module drush integration.
+ *   Features module drush integration.
  */
 
 /**
@@ -25,7 +25,14 @@ function features_drush_command() {
     'callback' => 'features_command_export',
     'description' => "Export a feature from your site into a module.",
     'arguments' => array(
-      'feature' => 'Feature name to export / update.',
+      'feature' => 'Feature name to export.',
+    ),
+  );
+  $items['features update'] = array(
+    'callback' => 'features_command_update',
+    'description' => "Update a feature module on your site.",
+    'arguments' => array(
+      'feature' => 'Feature name to export.',
     ),
   );
 
@@ -70,20 +77,49 @@ function features_command_export() {
   if (count($args) == 1) {
     // Assume that the user intends to create a module with the same name as the
     // "value" of the context.
-    $context = array_shift($args);
-    _features_command_export(array($context));
+    $stub = array('context' => $args);
+    $split = explode('-', $args[0]);
+    $name = array_pop($split);
+    _features_command_export($stub, $name);
   }
   elseif (count($args) > 1) {
     // Assume that the user intends to create a new module based on a list of 
     // contexts. First argument is assumed to be the name.
     $name = array_shift($args);
-    _features_command_export($args, $name);
+    $stub = array('context' => $args);
+    _features_command_export($stub, $name);
   }
   else {
     // By default just show contexts that are available.
     $rows = array(array(dt('Available contexts')));
     foreach (context_enabled_contexts(NULL, TRUE) as $k => $c) {
       $rows[] = array("{$c->namespace}-{$c->attribute}-{$c->value}");
+    }
+    drush_print_table($rows, 2, TRUE);
+  }
+}
+
+/**
+ * Create a feature module based on a list of contexts.
+ */
+function features_command_update() {
+  $args = func_get_args();
+
+  if (count($args) == 1) {
+    $module = array_shift($args);
+    if ($feature = feature_load($module, TRUE)) {
+      $stub = $feature->info['feature'];
+      _features_command_export($stub, $feature->name);
+    }
+    else {
+      drush_die('The feature '. $module .' could not be found.');
+    }
+  }
+  else {
+    // By default just show contexts that are available.
+    $rows = array(array(dt('Available features')));
+    foreach (features_get_features(NULL, TRUE) as $name => $info) {
+      $rows[] = array($name);
     }
     drush_print_table($rows, 2, TRUE);
   }
@@ -98,28 +134,23 @@ function features_command_export() {
  *  Optional. The name for the exported module, it omitted will be generated
  *  from the first listed context.
  */
-function _features_command_export($requests, $name = NULL) {
+function _features_command_export($stub, $name = NULL) {
   module_load_include('inc', 'features', 'features.export');
-  $contexts = context_enabled_contexts();
-  $export = array();
-  foreach ($requests as $c) {
-    if (!isset($contexts[$c])) {
-      drush_die(dt('Couldn\'t generate module based on that context, which doesn\'t seem to exist'));
-    }
-    if (!isset($meta)) {
-      $meta = array(
-        'name' => ($name ? $name :$contexts[$c]->value),
-        'description' => $contexts[$c]->description,
-        'filename' => ($name ? $name :$contexts[$c]->value),
-      );
-    }
-    $stub = array(
-      'context' => array("{$contexts[$c]->namespace}-{$contexts[$c]->attribute}-{$contexts[$c]->value}"),
+  $export = features_populate($stub, $name);
+  if ($feature = feature_load($name)) {
+    $meta = array(
+      'name' => $feature->info['name'],
+      'filename' => $feature->name,
+      'description' => $feature->info['description'],
     );
-    $e = features_populate($stub, $name);
-    $export = array_merge_recursive($export, $e);
   }
-
+  else {
+    $meta = array(
+      'name' => $name,
+      'filename' => $name,
+      'description' => '',
+    );
+  }
   list($info, $module) = features_export_render($export, $meta);
 
   // Currently you cannot establish your own options, so this won't work as
@@ -127,7 +158,7 @@ function _features_command_export($requests, $name = NULL) {
   $dest = drush_get_option(array('d', 'destination'), 'all');
 
   if ($root = drush_locate_root()) {
-    $directory = "$root/sites/$dest/modules/{$meta[filename]}";
+    $directory = "$root/sites/$dest/modules/{$meta['filename']}";
     if (is_dir($directory)) {
       drush_print(dt('Module appears to already exist in !dir', array('!dir' => $directory)));
       if(!drush_confirm(dt('Do you really want to continue?'))) {
