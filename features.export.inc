@@ -441,7 +441,11 @@ function features_detect_overrides($module) {
 
     // Retrieve default hooks & compare against eval'd versions
     $export_functions = features_get_default_hooks();
-    foreach ($module->info['feature'] as $i => $data) {
+
+    // Merge items from both
+    $merged = array_merge($export['items'], $module->info['feature']);
+
+    foreach ($merged as $i => $data) {
       if (isset($export_functions[$i])) {
         // Call the eval'd function and collect results
         $fname = $module->info['filename'] .'_'. $export_functions[$i];

@@ -115,10 +115,19 @@ function features_admin_components($feature) {
   $conflicts = array();
   foreach ($feature->info['feature'] as $type => $items) {
     if (!empty($conflict[$type])) {
-      $conflicts[$type] = l(theme('features_storage', FEATURES_OVERRIDDEN), "admin/features/{$module}/compare", array('html' => TRUE));
+      $conflicts[$type] = l(theme('features_storage', FEATURES_OVERRIDDEN), "admin/features/{$feature->name}/compare", array('html' => TRUE));
+      unset($conflict[$type]);
     }
     else {
       $conflicts[$type] = theme('features_storage', FEATURES_DEFAULT);
+    }
+  }
+  // There are new additions -- show
+  if (!empty($conflict)) {
+    foreach ($conflict as $type => $items) {
+      // If exportables are standardized with keyed arrays, this would work much better!
+      $components[$type] = array();
+      $conflicts[$type] = l(theme('features_storage', FEATURES_OVERRIDDEN), "admin/features/{$feature->name}/compare", array('html' => TRUE));
     }
   }
 
