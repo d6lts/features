@@ -2,7 +2,7 @@
 // $Id$
 
 /**
- * admin/features page callback.
+ * admin/build/features page callback.
  */
 function features_admin_form($feature = NULL) {
   // Load export functions to use in comparison.
@@ -58,11 +58,11 @@ function features_admin_form($feature = NULL) {
     if ($module->status) {
       $storage = count(features_detect_overrides($module)) ? FEATURES_OVERRIDDEN : FEATURES_DEFAULT;
       $actions = array();
-      $actions[] = l(t('View'), "admin/features/{$name}");
+      $actions[] = l(t('View'), "admin/build/features/{$name}");
       switch ($storage) {
         case FEATURES_OVERRIDDEN:
-          $state = l(theme('features_storage', $storage), "admin/features/{$name}/compare", array('html' => TRUE));
-          $actions[] = l(t('Re-export'), "admin/features/{$name}/export");
+          $state = l(theme('features_storage', $storage), "admin/build/features/{$name}/compare", array('html' => TRUE));
+          $actions[] = l(t('Re-export'), "admin/build/features/{$name}/export");
           break;
         case FEATURES_DEFAULT:
           $state = theme('features_storage', $storage);
@@ -115,7 +115,7 @@ function features_admin_components($feature) {
   $conflicts = array();
   foreach ($feature->info['feature'] as $type => $items) {
     if (!empty($conflict[$type])) {
-      $conflicts[$type] = l(theme('features_storage', FEATURES_OVERRIDDEN), "admin/features/{$feature->name}/compare", array('html' => TRUE));
+      $conflicts[$type] = l(theme('features_storage', FEATURES_OVERRIDDEN), "admin/build/features/{$feature->name}/compare", array('html' => TRUE));
       unset($conflict[$type]);
     }
     else {
@@ -127,7 +127,7 @@ function features_admin_components($feature) {
     foreach ($conflict as $type => $items) {
       // If exportables are standardized with keyed arrays, this would work much better!
       $components[$type] = array();
-      $conflicts[$type] = l(theme('features_storage', FEATURES_OVERRIDDEN), "admin/features/{$feature->name}/compare", array('html' => TRUE));
+      $conflicts[$type] = l(theme('features_storage', FEATURES_OVERRIDDEN), "admin/build/features/{$feature->name}/compare", array('html' => TRUE));
     }
   }
 
@@ -174,7 +174,7 @@ function features_form_submit(&$form, &$form_state) {
 
   // Clear the cache to respect any changes.
   features_get_modules(NULL, TRUE);
-  $form['#redirect'] = 'admin/features/cache-clear';
+  $form['#redirect'] = 'admin/build/features/cache-clear';
 }
 
 /**
@@ -184,7 +184,7 @@ function features_cache_clear() {
   drupal_rebuild_theme_registry();
   node_types_rebuild();
   menu_rebuild();
-  drupal_goto('admin/features');
+  drupal_goto('admin/build/features');
 }
 
 /**
