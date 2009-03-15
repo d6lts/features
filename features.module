@@ -57,7 +57,7 @@ function features_menu() {
     'description' => 'Display components of a feature.',
     'page callback' => 'features_admin_components',
     'page arguments' => array(3),
-    'type' => MENU_NORMAL_ITEM,
+    'type' => MENU_CALLBACK,
     'file' => 'features.admin.inc',
   );
   $items['admin/build/features/%feature/view'] = array(
