@@ -116,9 +116,10 @@ function features_theme() {
   $items = array();
   $path = drupal_get_path('module', 'features') .'/theme';
 
-  $items['features_form'] = array();
-  $items['features_export_form_confirm'] = array();
-  $items['features_export_form_final'] = array();
+  $items['features_form'] =
+  $items['features_export_context_form'] =
+  $items['features_export_form_confirm'] =
+  $items['features_export_form_final'] = array('arguments' => array('form' => NULL));
 
   $items['features_form_buttons'] = array(
     'arguments' => array('element' => NULL),

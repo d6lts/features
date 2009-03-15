@@ -70,24 +70,15 @@ function features_export_form($form_state, $module = NULL) {
 
     // Choose a context ===============================================
     case 1:
-      // Collect enabled contexts into tree'd array.
-      $options = array();
-      $contexts = context_enabled_contexts();
-      foreach ($contexts as $identifier => $context) {
-        if (!isset($options["{$context->namespace}-{$context->attribute}"])) {
-          $options["{$context->namespace}-{$context->attribute}"] = array();
-        }
-        $options["{$context->namespace}-{$context->attribute}"][$identifier] = $context->value;
+      $form['#theme'] = 'features_export_context_form';
+      $form['#contexts'] = $contexts = context_enabled_contexts();
+      $form['contexts'] = array('#tree' => TRUE);
+      foreach ($contexts as $context) {
+        $form['contexts']["$context->namespace-$context->attribute-$context->value"] = array(
+          '#title' => $context->value,
+          '#type' => 'checkbox',
+        );
       }
-
-      $form['contexts'] = array(
-        '#title' => t('Contexts'),
-        '#description' => t('Choose contexts to build your feature from'),
-        '#type' => 'select',
-        '#multiple' => TRUE,
-        '#size' => 6,
-        '#options' => $options,
-      );
       break;
 
     // Confirm components =============================================
@@ -241,8 +232,10 @@ function features_export_form_submit($form, &$form_state) {
       // Retrieve export
       $feature = array();
       if (!empty($form_state['values']['contexts'])) {
-        foreach ($form_state['values']['contexts'] as $identifier) {
-          $feature['context'][] = $identifier;
+        foreach ($form_state['values']['contexts'] as $identifier => $value) {
+          if ($value) {
+            $feature['context'][] = $identifier;
+          }
         }
       }
       $export = features_populate($feature, $module_name);
@@ -545,6 +538,56 @@ function features_get_default_hooks() {
 /**
  * Theme functions ====================================================
  */
+
+/**
+ * Display a table of contexts (step 1).
+ */
+function theme_features_export_context_form($form) {
+  // Add css
+  drupal_add_css(drupal_get_path("module", "context_ui") ."/context_ui.css");
+
+  $rows = $headings = array();
+  foreach (element_children($form['contexts']) as $key) {
+    $context = $form['#contexts'][$key];
+    $row = array();
+
+    $namespace = $context->namespace;
+    $attribute = $context->attribute;
+    $value = $context->value;
+    if (isset($context->cid) && $context->cid) {
+      $identifier = $context->cid;
+    }
+    else {
+      $identifier = $key;
+    }
+
+    // If no heading has been printed for this n/a pair, do so
+    if (!isset($rows["$namespace-$attribute"])) {
+      $row = array('', array('data' => "<span class='context-namespace'>$namespace &gt; $attribute</span>", 'colspan' => 2));
+      $rows["$namespace-$attribute"] = $row;
+    }
+    unset($form['contexts'][$key]['#title']);
+
+    $rows[$key] = array(
+      'data' => array(
+        array(
+          'data' => drupal_render($form['contexts'][$key]),
+          'class' => 'context-ui-checkbox',
+        ),
+        array(
+          'data' => '<strong>'. $value .'</strong>',
+          'class' => 'context-name',
+        ),
+      ),
+      'class' => 'context-table-row ' . $class,
+    );
+  }
+  $output = drupal_render($form['step']);
+  $output .= theme('table', array(theme('table_select_header_cell'), t('Context')), $rows, array('class' => 'context-ui-bulk-export context-ui-overview'));
+  $output .= drupal_render($form);
+
+  return $output;
+}
 
 /**
  * Theme function for features_export_form (step 2)
