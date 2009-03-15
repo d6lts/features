@@ -51,13 +51,15 @@ function features_export_form($form_state, $module = NULL) {
         '#type' => 'textfield',
         '#required' => TRUE,
         '#default_value' => '',
+        '#attributes' => array('class' => 'feature-name'),
       );
       $form['info']['filename'] = array(
-        '#title' => t('Name (machine-readable)'),
-        '#description' => t('Provide a machine-readable name for your feature. This may only contain lowercase letters, numbers and underscores. <strong>It should also avoid conflicting with the names of any existing Drupal modules.</strong>'),
         '#type' => 'textfield',
+        '#title' => t('Machine-readable name'),
+        '#description' => t('Provide a machine-readable name for your feature. This may only contain lowercase letters, numbers and underscores. <strong>It should also avoid conflicting with the names of any existing Drupal modules.</strong>'),
         '#required' => TRUE,
         '#default_value' => '',
+        '#attributes' => array('class' => 'feature-filename'),
       );
       $form['info']['description'] = array(
         '#title' => t('Description'),
@@ -66,6 +68,7 @@ function features_export_form($form_state, $module = NULL) {
         '#required' => TRUE,
         '#default_value' => '',
       );
+      drupal_add_js(drupal_get_path('module', 'features') .'/features.js');
       break;
 
     // Choose a context ===============================================
