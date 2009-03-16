@@ -187,7 +187,7 @@ function features_get_info($type = 'module', $name = NULL, $reset = FALSE) {
 
   if (($cache == 0) || $reset) {
     $data = array();
-    $result = db_query("SELECT filename, name, type, status, throttle, schema_version FROM {system} WHERE type = 'module'");
+    $result = db_query("SELECT filename, name, type, status, throttle, schema_version FROM {system} WHERE type = 'module' ORDER BY name ASC");
     while ($row = db_fetch_object($result)) {
       $row->info = drupal_parse_info_file(dirname($row->filename) .'/'. $row->name .'.info');
       if (!empty($row->info)) {
