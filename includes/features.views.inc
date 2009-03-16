@@ -150,12 +150,13 @@ function views_features_export($data, &$export, $module_name = '') {
           // If view is overridden we display an error message and bail.
           if ($v->type == 'Overridden') {
             $conflicts[$m] = $view_name;
+            unset($export['items']['views'][$view_name]);
           }
           // If view is default, we add the providing module as a dependency and exclude it from the Views export
           else if ($v->type == 'Default') {
+            unset($export['items']['views'][$view_name]);
             $tokens = array('!view_name' => $view_name, '!module' => $m);
             $export['conflicts']['status'][] = t('The view <strong>!view_name</strong> will not be exported with your feature because it is provided by <strong>!module</strong> which has been added as a dependency.', $tokens);
-            unset($export['items']['views'][$view_name]);
             $export['dependencies'][$m] = $m;
           }
         }
