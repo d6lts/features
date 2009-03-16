@@ -1,4 +1,5 @@
 <?php
+// $Id$
 
 /**
  * Display feature component info

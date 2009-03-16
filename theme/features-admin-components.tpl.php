@@ -1,3 +1,6 @@
+<?php
+// $Id$
+?>
 <div class='clear-block features-components'>
   <div class='column'>
     <div class='info'>
