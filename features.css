@@ -55,6 +55,7 @@ div.features-components div.column {
 div.features-components div.column div.info { padding-right:20px; }
 div.features-components div.column div.components { padding-left:20px; }
 
+h3.features-download,
 div.features-comparison h3,
 div.features-components h3 {
   font-size:2em;
@@ -62,6 +63,8 @@ div.features-components h3 {
   letter-spacing:-1px;
   margin:15px 0px;
   }
+
+  h3.features-download { text-align:center; }
 
 div.features-components div.description {
   font-size:11px;

@@ -76,7 +76,7 @@ function features_menu() {
   );
   $items['admin/build/features/%feature/export'] = array(
     'title' => 'Export',
-    'description' => 'Export features to code.',
+    'description' => 'Update a feature.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('features_export_form', 3),
     'type' => MENU_LOCAL_TASK,
@@ -191,7 +191,7 @@ function features_get_info($type = 'module', $name = NULL, $reset = FALSE) {
     while ($row = db_fetch_object($result)) {
       $row->info = drupal_parse_info_file(dirname($row->filename) .'/'. $row->name .'.info');
       if (!empty($row->info)) {
-        if (!empty($row->info['feature'])) {
+        if (!empty($row->info['features'])) {
           $data['feature'][$row->name] = $row;
         }
         $data['module'][$row->name] = $row;

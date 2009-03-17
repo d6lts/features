@@ -56,14 +56,13 @@ function example_drush_help($section) {
  */
 function features_command_list() {
   $rows = array(array(dt('Name'), dt('Enabled/Disabled'), dt('From'), dt('Timestamp')));
-  foreach (features_get_modules() as $k => $m) {
-    if ($m->info['feature']) {
-      $rows[] = array(
-        $m->name,
-        $m->status ? dt('Enabled') : dt('Disabled'),
-        $m->info['feature_uri'],
-        format_date($m->info['feature_timestamp']));
-    }
+  foreach (features_get_features() as $k => $m) {
+    $rows[] = array(
+      $m->name,
+      $m->status ? dt('Enabled') : dt('Disabled'),
+      $m->info['feature_uri'],
+      format_date($m->info['feature_timestamp'])
+    );
   }
   drush_print_table($rows, 2, TRUE);
 }
@@ -108,7 +107,7 @@ function features_command_update() {
   if (count($args) == 1) {
     $module = array_shift($args);
     if ($feature = feature_load($module, TRUE)) {
-      $stub = $feature->info['feature'];
+      $stub = $feature->info['features'];
       _features_command_export($stub, $feature->name);
     }
     else {
@@ -130,35 +129,28 @@ function features_command_update() {
  *
  * @param $requests
  *   An array of the context requested in this export.
- * @param $name 
+ * @param $module_name
  *  Optional. The name for the exported module, it omitted will be generated
  *  from the first listed context.
  */
-function _features_command_export($stub, $name = NULL) {
+function _features_command_export($stub, $module_name = NULL) {
   module_load_include('inc', 'features', 'features.export');
-  $export = features_populate($stub, $name);
-  if ($feature = feature_load($name)) {
-    $meta = array(
-      'name' => $feature->info['name'],
-      'filename' => $feature->name,
-      'description' => $feature->info['description'],
-    );
+  $export = features_populate($stub, $module_name);
+  if ($feature = feature_load($module_name)) {
+    $export['name'] = $feature->info['name'];
+    $export['description'] = $feature->info['description'];
   }
   else {
-    $meta = array(
-      'name' => $name,
-      'filename' => $name,
-      'description' => '',
-    );
+    $export['name'] = $module_name;
   }
-  list($info, $module) = features_export_render($export, $meta);
+  $files = features_export_render($export, $module_name, TRUE);
 
   // Currently you cannot establish your own options, so this won't work as
   // a hook needs to be added. See drush_get_options().
   $dest = drush_get_option(array('d', 'destination'), 'all');
 
   if ($root = drush_locate_root()) {
-    $directory = "$root/sites/$dest/modules/{$meta['filename']}";
+    $directory = "$root/sites/$dest/modules/{$module_name}";
     if (is_dir($directory)) {
       drush_print(dt('Module appears to already exist in !dir', array('!dir' => $directory)));
       if(!drush_confirm(dt('Do you really want to continue?'))) {
@@ -168,11 +160,12 @@ function _features_command_export($stub, $name = NULL) {
     else {
       drush_op('mkdir', $directory);
     }
-    drush_op('file_put_contents', $directory. '/'. $meta['filename'] . '.info', $info);
-    drush_op('file_put_contents', $directory. '/'. $meta['filename'] . '.module', $module);
-    drush_print(dt("Created module: !module in !directory", array('!module' => $meta['filename'], '!directory' => $directory)));
+    foreach ($files as $extension => $file_contents) {
+      drush_op('file_put_contents', "{$directory}/{$module_name}.$extension", $file_contents);
+    }
+    drush_print(dt("Created module: !module in !directory", array('!module' => $module_name, '!directory' => $directory)));
   }
-  else{
+  else {
     drush_die(dt('Couldn\'t locate site root'));
   }
 }

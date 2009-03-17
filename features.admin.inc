@@ -111,9 +111,9 @@ function features_admin_components($feature) {
   }
 
   // Iterate over components and retrieve status for display
-  $components = $feature->info['feature'];
+  $components = $feature->info['features'];
   $conflicts = array();
-  foreach ($feature->info['feature'] as $type => $items) {
+  foreach ($feature->info['features'] as $type => $items) {
     if (!empty($conflict[$type])) {
       $conflicts[$type] = l(theme('features_storage', FEATURES_OVERRIDDEN), "admin/build/features/{$feature->name}/compare", array('html' => TRUE));
       unset($conflict[$type]);

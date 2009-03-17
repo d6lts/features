@@ -12,19 +12,16 @@ function features_export_form($form_state, $module = NULL) {
     t('Step 4: download your feature'),
   );
 
+  // retrieve storage variables
+  $module_name = !empty($form_state['storage']['module_name']) ? $form_state['storage']['module_name'] : '';
+  $export = !empty($form_state['storage']['export']) ? $form_state['storage']['export'] : array();
+
   // we are re-exporting a module -- load up data and export
   if (!empty($module)) {
-    $step =
-    $form_state['storage']['step'] = 3;
-
+    $step = $form_state['storage']['step'] = 3;
     $steps[3] = t('Update your feature: !module_name', array('!module_name' => $module->name));
-
-    $form_state['storage']['info'] = array(
-      'name' => $module->info['name'],
-      'filename' => $module->name,
-      'description' => $module->info['description'],
-    );
-    $form_state['storage']['export_final'] = features_populate($module->info['feature'], $module->name);
+    $module_name = $module->name;
+    $export = array_merge($module->info, features_populate($module->info['features'], $module->name));
   }
   // we are coming in without a step, so default to step 1
   else {
@@ -42,10 +39,7 @@ function features_export_form($form_state, $module = NULL) {
 
     // Provide additional information =================================
     case 0:
-      $form['info'] = array(
-        '#tree' => TRUE,
-      );
-      $form['info']['name'] = array(
+      $form['name'] = array(
         '#title' => t('Name'),
         '#description' => t('Provide a name for your feature.'),
         '#type' => 'textfield',
@@ -53,15 +47,15 @@ function features_export_form($form_state, $module = NULL) {
         '#default_value' => '',
         '#attributes' => array('class' => 'feature-name'),
       );
-      $form['info']['filename'] = array(
+      $form['module_name'] = array(
         '#type' => 'textfield',
         '#title' => t('Machine-readable name'),
         '#description' => t('Provide a machine-readable name for your feature. This may only contain lowercase letters, numbers and underscores. <strong>It should also avoid conflicting with the names of any existing Drupal modules.</strong>'),
         '#required' => TRUE,
         '#default_value' => '',
-        '#attributes' => array('class' => 'feature-filename'),
+        '#attributes' => array('class' => 'feature-module-name'),
       );
-      $form['info']['description'] = array(
+      $form['description'] = array(
         '#title' => t('Description'),
         '#description' => t('Provide a description for your feature.'),
         '#type' => 'textfield',
@@ -90,7 +84,6 @@ function features_export_form($form_state, $module = NULL) {
       $form['detected'] =
       $form['added'] = array('#tree' => TRUE);
 
-      $export = $form_state['storage']['export'];
       foreach ($export['conflicts'] as $type => $messages) {
         foreach ($messages as $msg) {
           drupal_set_message($msg, $type);
@@ -124,11 +117,10 @@ function features_export_form($form_state, $module = NULL) {
       }
 
       // Dependencies
-      $dependencies = $export['dependencies'];
       $form['detected']['dependencies'] = array(
         '#type' => 'markup',
         '#title' => t('Module dependencies'),
-        '#value' => theme('item_list', array_keys($dependencies)),
+        '#value' => theme('item_list', array_keys($export['dependencies'])),
       );
 
       $options = array();
@@ -148,48 +140,21 @@ function features_export_form($form_state, $module = NULL) {
 
     // Download/export ================================================
     case 3:
-      $info = $form_state['storage']['info'];
-      $export = $form_state['storage']['export_final'];
-      $form['#theme'] = 'features_export_form_final';
+      if ($files = features_export_render($export, $module_name, TRUE)) {
+        $filename = function_exists('gzencode') ? "{$module_name}.tar.gz" : "{$module_name}.tar";
+        $form['module_display'] = array(
+          '#type' => 'markup',
+          '#value' => "<h3 class='features-download'>{$filename}</h3>",
+        );
 
-      if ($code = features_export_render($export, $info)) {
+        $form['download'] = array('#tree' => TRUE, '#theme' => 'features_form_buttons');
+        $form['download']['module_name'] = array('#type' => 'value', '#value' => $module_name);
+        $form['download']['files'] = array('#type' => 'value', '#value' => $files);
 
-        $files = array(
-          "{$info['filename']}/{$info['filename']}.info" => $code[0],
-          "{$info['filename']}/{$info['filename']}.module" => $code[1],
-        );
-        $form['download'] = array(
-          '#tree' => TRUE,
-          '#theme' => 'features_form_buttons',
-          '#weight' => -10,
-        );
-        $form['download']['filename'] = array(
-          '#type' => 'value',
-          '#value' => function_exists('gzencode') ? "{$info['filename']}.tar.gz" : "{$info['filename']}.tar",
-        );
-        $form['download']['tar'] = array(
-          '#type' => 'value',
-          '#value' => features_tar_create($files),
-        );
         $form['download']['download'] = array(
           '#type' => 'submit',
           '#value' => t('Download feature'),
           '#submit' => array('features_export_download_submit'),
-        );
-
-        $form['info'] = array(
-          '#title' => "{$info['filename']}.info",
-          '#type' => 'textarea',
-          '#rows' => 15,
-          '#default_value' => $code[0],
-          '#resizable' => FALSE,
-        );
-        $form['module'] = array(
-          '#title' => "{$info['filename']}.module",
-          '#type' => 'textarea',
-          '#rows' => 15,
-          '#default_value' => $code[1],
-          '#resizable' => FALSE,
         );
       }
       break;
@@ -224,13 +189,18 @@ function features_export_form_submit($form, &$form_state) {
 
     // Step 0: Store info
     case 0:
-      $form_state['storage']['info'] = $form_state['values']['info'];
+      $export = array(
+        'name' => $form_state['values']['name'],
+        'description' => $form_state['values']['description'],
+      );
+      $form_state['storage']['export'] = $export;
+      $form_state['storage']['module_name'] = $form_state['values']['module_name'];
       break;
 
     // Step 1: Convert sources into export object
     case 1:
-      // Module name
-      $module_name = $form_state['storage']['info']['filename'];
+      $module_name = $form_state['storage']['module_name'];
+      $export = $form_state['storage']['export'];
 
       // Retrieve export
       $feature = array();
@@ -241,12 +211,13 @@ function features_export_form_submit($form, &$form_state) {
           }
         }
       }
-      $export = features_populate($feature, $module_name);
+      $export = array_merge($export, features_populate($feature, $module_name));
       $form_state['storage']['export'] = $export;
       break;
 
     // Step 2: Update export object based on user input
     case 2:
+      $module_name = $form_state['storage']['module_name'];
       $export = $form_state['storage']['export'];
 
       // Update export array based on what's been selected
@@ -275,13 +246,9 @@ function features_export_form_submit($form, &$form_state) {
       }
 
       // Build final export array
-      $module_name = $form_state['storage']['info']['filename'];
-
-      $final = $export;
-      $final = array_merge($final, features_populate($export['features'], $module_name));
-      $final['dependencies'] = _features_export_minimize_dependencies($final['dependencies']);
-
-      $form_state['storage']['export_final'] = $final;
+      $export = array_merge($export, features_populate($export['features'], $module_name));
+      $export['dependencies'] = _features_export_minimize_dependencies($export['dependencies']);
+      $form_state['storage']['export'] = $export;
       break;
   }
 
@@ -298,19 +265,28 @@ function features_export_form_submit($form, &$form_state) {
  * Download submit handler.
  */
 function features_export_download_submit(&$form, &$form_state) {
-  if (!empty($form_state['values']['download'])) {
-    $file = $form_state['values']['download']['tar'];
-    $filename = $form_state['values']['download']['filename'];
-    if (function_exists('gzencode')) {
-      drupal_set_header('Content-type: application/x-gzip');
-    }
-    else {
-      drupal_set_header('Content-type: application/x-tar');
-    }
-    drupal_set_header('Content-Disposition: attachment; filename="'. $filename .'"');
-    print $file;
-    exit;
+  if (!empty($form_state['values']['download']['files'])) {
+    $files = $form_state['values']['download']['files'];
+    $module_name = $form_state['values']['download']['module_name'];
+    features_export_download_files($files, $module_name);
   }
+}
+
+/**
+ * Delivers files to the user through a tarball download.
+ */
+function features_export_download_files($files, $module_name) {
+  $tar = array();
+  foreach ($files as $path => $file_contents) {
+    $tar["{$module_name}/{$module_name}.$path"] = $file_contents;
+  }
+  $tar = features_tar_create($tar);
+  $header = function_exists('gzencode') ? 'Content-type: application/x-gzip' : 'Content-type: application/x-tar';
+  $filename = function_exists('gzencode') ? "{$module_name}.tar.gz" : "{$module_name}.tar";
+  drupal_set_header($header);
+  drupal_set_header('Content-Disposition: attachment; filename="'. $filename .'"');
+  print $tar;
+  exit;
 }
 
 /**
@@ -386,31 +362,48 @@ function _features_export_minimize_dependencies($dependencies, $module_name = ''
 }
 
 /**
- * Render feature export into a .info and .module file.
+ * Render feature export into an array representing its files.
  *
  * @param $export
  *  An exported feature definition.
- * @param $module_info
- *  Meta information about the module.
+ * @param $module_name
+ *  The name of the module to be exported.
+ * @param $reset
+ *  Boolean flag for resetting the module cache. Only set to true when
+ *  doing a final export for delivery.
  *
  * @return array of info file and module file contents.
  */
-function features_export_render($export, $module_info = array()) {
+function features_export_render($export, $module_name, $reset = FALSE) {
   global $base_url;
 
-  // Standard dot-info file metadata first.
-  $info = array(
-    'name' => $module_info['name'],
-    'description' => $module_info['description'],
-    'core' => '6.x',
-    'package' => 'Features',
-    'feature_uri' => $base_url,
-    'feature_timestamp' => time(),
-  );
-  $info = features_export_info(array_merge($info, $export));
-
-  // Now the dot-module.
   $code = array();
+  $existing = features_get_modules($module_name, $reset);
+
+  // Prepare info string -- if module exists, merge into its existing info file
+  if ($existing) {
+    $info = $existing->info;
+  }
+  else {
+    $info = array(
+      'core' => '6.x',
+      'package' => 'Features',
+      'feature_uri' => $base_url,
+      'feature_timestamp' => time(),
+    );
+  }
+  $export = array_merge($info, $export);
+  // A couple of special cases.
+  if (!empty($export['dependencies'])) {
+    $export['dependencies'] = array_values($export['dependencies']);
+  }
+  if (!empty($export['conflicts'])) {
+    unset($info['conflicts']);
+  }
+  $code['info'] = features_export_info($export);
+
+  // Prepare the defaults
+  $code['defaults.inc'] = array();
   foreach ($export['features'] as $module => $data) {
     if (!empty($data)) {
       // Attempt to load inc file for the module, will fail silently if the file
@@ -419,14 +412,24 @@ function features_export_render($export, $module_info = array()) {
 
       if (module_hook($module, 'features_export_render')) {
         $function = "{$module}_features_export_render";
-        $code[$module] = $function($module_info['filename'], $data);
+        $code['defaults.inc'][$module] = $function($module_name, $data);
       }
     }
   }
-  $code = implode("\n\n", $code);
-  $code = "<?php\n\n{$code}\n";
+  $code['defaults.inc'] = implode("\n\n", $code['defaults.inc']);
+  $code['defaults.inc'] = "<?php\n\n{$code['defaults.inc']}\n";
 
-  return array($info, $code);
+
+  // Prepare the module
+  // If module exists, let it be and include it in the files
+  if ($existing) {
+    $code['module'] = file_get_contents($existing->filename);
+  }
+  // Add a stub module to include the defaults
+  else {
+    $code['module'] = "<?php\n\ninclude_once('{$module_name}.defaults.inc');\n";
+  }
+  return $code;
 }
 
 /**
@@ -456,14 +459,17 @@ function features_detect_overrides($module) {
     }
 
     // Rebuild feature from .info file description.
-    $export = features_populate($module->info['feature'], '');
+    $export = features_populate($module->info['features'], '');
 
     // Render and run an export of the current state.
-    $module->info['filename'] = '_features_comparison_' . $module->name;
-    list($i, $m) = features_export_render($export, $module->info);
-    $m = substr_replace($m, '', strpos($m, "<?php"), 5);
+    $export = array_merge($export, $module->info);
+    $eval_namespace = "_features_comparison_{$module->name}";
+    $code = features_export_render($export, $eval_namespace);
+    $php = $code['defaults.inc'];
+
+    $php = substr_replace($php, '', strpos($php, "<?php"), 5);
     ob_start();
-    eval($m);
+    eval($php);
     ob_end_clean();
 
     $overridden = array();
@@ -472,12 +478,12 @@ function features_detect_overrides($module) {
     $export_functions = features_get_default_hooks();
 
     // Merge items from both
-    $merged = array_merge($export['features'], $module->info['feature']);
+    $merged = array_merge($export['features'], $module->info['features']);
 
     foreach ($merged as $i => $data) {
       if (isset($export_functions[$i])) {
         // Call the eval'd function and collect results
-        $fname = $module->info['filename'] .'_'. $export_functions[$i];
+        $fname = $eval_namespace .'_'. $export_functions[$i];
         if (function_exists($fname)) {
           $current[$i] = call_user_func($fname);
         }
@@ -607,32 +613,6 @@ function theme_features_export_form_confirm($form) {
 }
 
 /**
- * Theme function for features_export_form (step 3)
- */
-function theme_features_export_form_final($form) {
-  drupal_add_css(drupal_get_path('module', 'features') .'/features.css');
-
-  $output = drupal_render($form['step']);
-
-  $header = array();
-  $header[] = $form['info']['#title'];
-  $header[] = $form['module']['#title'];
-
-  unset($form['info']['#title']);
-  unset($form['module']['#title']);
-
-  $rows = array();
-  $row = array();
-  $row[] = drupal_render($form['info']);
-  $row[] = drupal_render($form['module']);
-  $rows[] = $row;
-
-  $output .= theme('table', $header, $rows, array('class' => 'features-export features-export-final'));
-  $output .= drupal_render($form);
-  return $output;
-}
-
-/**
  * Generate code friendly to the Drupal .info format from a structured array.
  *
  * @param $info
@@ -642,11 +622,6 @@ function theme_features_export_form_final($form) {
  *   A code string ready to be written to a module's .info file.
  */
 function features_export_info($info) {
-  // The conflict element can be used to pass errors. 
-  unset($info['conflicts']);
-
-  // Render the info array into a string
-  // @TODO: we should probably break this out.
   $code = array();
   foreach ($info as $k => $v) {
     if (strpos($k, '#') === 0) {
@@ -656,13 +631,19 @@ function features_export_info($info) {
     else {
       if (is_array($v)) {
         foreach ($v as $l => $m) {
+          if (is_numeric($l)) {
+            $key = '';
+          }
+          else {
+            $key = $l;
+          }
           if (is_array($m)) {
             foreach ($m as $n => $o) {
-              $code[] = "{$k}[$l][] = \"{$o}\"";
+              $code[] = "{$k}[$key][] = \"{$o}\"";
             }
           }
           else {
-            $code[] = "{$k}[] = \"{$m}\"";
+            $code[] = "{$k}[$key] = \"{$m}\"";
           }
         }
       }
@@ -671,7 +652,7 @@ function features_export_info($info) {
       }
     }
   }
-  $code = implode("\n", $code);
+  $code = implode("\n", $code) ."\n";
   return $code;
 }
 
