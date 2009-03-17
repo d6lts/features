@@ -17,7 +17,7 @@ function content_features_export($data, &$export) {
 
     if ($field) {
       // Add field item instance for later export.
-      $export['items']['content'][$instance] = $instance;
+      $export['features']['content'][$instance] = $instance;
 
       // Add module which provides field.
       $export['dependencies'][$field['module']] = $field['module'];

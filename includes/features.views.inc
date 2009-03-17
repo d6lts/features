@@ -53,15 +53,15 @@ function views_features_export_render($module = 'foo', $data) {
  * Implementation of hook_features_export().
  */
 function views_features_export($data, &$export, $module_name = '') {
-  if (!isset($export['items']['views'])) {
-    $export['items']['views'] = array();
+  if (!isset($export['features']['views'])) {
+    $export['features']['views'] = array();
   }
 
   // Build views & add to export array
   $views = array();
   foreach ($data as $view_name) {
     // Add to exports
-    $export['items']['views'][$view_name] = $view_name;
+    $export['features']['views'][$view_name] = $view_name;
 
     // Build the view
     $view = views_get_view($view_name);
@@ -144,17 +144,17 @@ function views_features_export($data, &$export, $module_name = '') {
   foreach ($modules as $m) {
     $callback = $m ."_views_default_views";
     foreach (call_user_func($callback) as $view_name => $view) {
-      if (array_key_exists($view_name, $export['items']['views']) && ($m != $module_name)) {
+      if (array_key_exists($view_name, $export['features']['views']) && ($m != $module_name)) {
         $v = views_get_view($view_name);
         if ($v) {
           // If view is overridden we display an error message and bail.
           if ($v->type == 'Overridden') {
             $conflicts[$m] = $view_name;
-            unset($export['items']['views'][$view_name]);
+            unset($export['features']['views'][$view_name]);
           }
           // If view is default, we add the providing module as a dependency and exclude it from the Views export
           else if ($v->type == 'Default') {
-            unset($export['items']['views'][$view_name]);
+            unset($export['features']['views'][$view_name]);
             $tokens = array('!view_name' => $view_name, '!module' => $m);
             $export['conflicts']['status'][] = t('The view <strong>!view_name</strong> will not be exported with your feature because it is provided by <strong>!module</strong> which has been added as a dependency.', $tokens);
             $export['dependencies'][$m] = $m;

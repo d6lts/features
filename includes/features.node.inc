@@ -30,7 +30,7 @@ function node_features_export($data, &$export, $module_name = '') {
 
       $export['dependencies'][$info] = $info;
       if ($info == 'node') {
-        $export['items']['node'][$type] = $type;
+        $export['features']['node'][$type] = $type;
       }
 
       // If this node type is provided by a different module, add it as a dependency

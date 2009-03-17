@@ -28,7 +28,7 @@ $data is an array of identifiers that is specific to the objects /
   $data is an array of content string names. etc.
 
 $export is an export array passed by reference. It has two main keys:
-  $export['items'] and $export['dependencies']. You can modify this
+  $export['features'] and $export['dependencies']. You can modify this
   array to alter what components are part of the final feature and what
   module dependencies the feature will require.
 
@@ -44,7 +44,7 @@ In practice, hook_features_export() has 3 tasks:
     plugins to determine which modules need to be added as dependencies.
 
 2.  Correctly add components to the export array. In general this is usually
-    adding all of the items in $data to $export['items']['my_key'], but
+    adding all of the items in $data to $export['features']['my_key'], but
     can become more complicated if components are shared between features
     or modules.
 

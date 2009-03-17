@@ -11,7 +11,7 @@ function context_features_export($data, &$export) {
   $contexts = context_enabled_contexts();
   foreach ($data as $identifier) {
     if (!empty($contexts[$identifier])) {
-      $export['items']['context'][$identifier] = $identifier;
+      $export['features']['context'][$identifier] = $identifier;
 
       $context = $contexts[$identifier];
       if (!empty($context->node)) {

@@ -98,7 +98,7 @@ function features_export_form($form_state, $module = NULL) {
       }
 
       // Display each set of components and options for adding to the components
-      foreach ($export['items'] as $module_name => $items) {
+      foreach ($export['features'] as $module_name => $items) {
         $module = features_get_modules($module_name);
 
         $form['detected'][$module_name] = array(
@@ -250,14 +250,14 @@ function features_export_form_submit($form, &$form_state) {
       $export = $form_state['storage']['export'];
 
       // Update export array based on what's been selected
-      foreach ($export['items'] as $module_name => $items) {
+      foreach ($export['features'] as $module_name => $items) {
         if (!empty($form_state['values']['added'][$module_name])) {
           foreach ($form_state['values']['added'][$module_name] as $item => $value) {
             if ($value) {
-              $export['items'][$module_name][$item] = $item;
+              $export['features'][$module_name][$item] = $item;
             }
-            else if (!empty($export['items'][$module_name][$item])) {
-              unset($export['items'][$module_name][$item]);
+            else if (!empty($export['features'][$module_name][$item])) {
+              unset($export['features'][$module_name][$item]);
             }
           }
         }
@@ -278,7 +278,7 @@ function features_export_form_submit($form, &$form_state) {
       $module_name = $form_state['storage']['info']['filename'];
 
       $final = $export;
-      $final = array_merge($final, features_populate($export['items'], $module_name));
+      $final = array_merge($final, features_populate($export['features'], $module_name));
       $final['dependencies'] = _features_export_minimize_dependencies($final['dependencies']);
 
       $form_state['storage']['export_final'] = $final;
@@ -319,7 +319,7 @@ function features_export_download_submit(&$form, &$form_state) {
  * @return
  */
 function features_populate($items, $module_name) {
-  $stub = array('items' => array(), 'dependencies' => array(), 'conflicts' => array());
+  $stub = array('features' => array(), 'dependencies' => array(), 'conflicts' => array());
   $export = _features_populate($items, $stub, $module_name);
   $export['dependencies'] = _features_export_minimize_dependencies($export['dependencies'], $module_name);
   return $export;
@@ -404,22 +404,14 @@ function features_export_render($export, $module_info = array()) {
     'description' => $module_info['description'],
     'core' => '6.x',
     'package' => 'Features',
-    '#comment_dependencies' => '; Dependencies',
-    'dependencies' => array_keys($export['dependencies']),
-    '#comment_features' => '; Feature components',
-    'feature' => array(),
-    '#comment_version' => '; Feature information',
     'feature_uri' => $base_url,
     'feature_timestamp' => time(),
   );
-  foreach ($export['items'] as $key => $item) {
-    $info['feature'][$key] = $item;
-  }
-  $info = features_export_info($info);
+  $info = features_export_info(array_merge($info, $export));
 
   // Now the dot-module.
   $code = array();
-  foreach ($export['items'] as $module => $data) {
+  foreach ($export['features'] as $module => $data) {
     if (!empty($data)) {
       // Attempt to load inc file for the module, will fail silently if the file
       // doesn't exist.
@@ -480,7 +472,7 @@ function features_detect_overrides($module) {
     $export_functions = features_get_default_hooks();
 
     // Merge items from both
-    $merged = array_merge($export['items'], $module->info['feature']);
+    $merged = array_merge($export['features'], $module->info['feature']);
 
     foreach ($merged as $i => $data) {
       if (isset($export_functions[$i])) {
@@ -650,6 +642,9 @@ function theme_features_export_form_final($form) {
  *   A code string ready to be written to a module's .info file.
  */
 function features_export_info($info) {
+  // The conflict element can be used to pass errors. 
+  unset($info['conflicts']);
+
   // Render the info array into a string
   // @TODO: we should probably break this out.
   $code = array();

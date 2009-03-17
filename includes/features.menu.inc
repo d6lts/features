@@ -28,7 +28,7 @@ function menu_features_export($data, &$export) {
     // Query for links in the features table... if they exist, add to export object.
     $result = db_query("SELECT * FROM {menu_links} WHERE link_path = '%s' AND menu_name = 'features'", $path);
     while ($row = db_fetch_array($result)) {
-      $export['items']['menu'][$path] = $path;
+      $export['features']['menu'][$path] = $path;
       break;
     }
     // We could add menu module as a dependency here but it's not actually necessary...

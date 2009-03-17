@@ -13,7 +13,7 @@ function imagecache_features_export_options() {
 // Implementation of hook_features_export
 function imagecache_features_export($data, &$export) {
   foreach ($data as $preset) {
-    $export['items']['imagecache'][$preset] = $preset;
+    $export['features']['imagecache'][$preset] = $preset;
   }
 }
 
