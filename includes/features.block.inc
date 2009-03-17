@@ -24,8 +24,9 @@ function block_features_export($data, &$export) {
 
         $delta_split = explode('-', $delta);
         $view_name = $delta_split[0];
-
-        $pipe['views'][] = $view_name;
+        if (!empty($view_name)) {
+          $pipe['views'][] = $view_name;
+        }
         break;
     }
   }
