@@ -530,8 +530,7 @@ function features_detect_overrides($module) {
  * Return an array of default functions
  */
 function features_get_default_hooks() {
-  // Fake a registry of default functions for now.
-  return array(
+  $hooks = array(
     'views' => 'views_default_views',
     'imagecache' => 'imagecache_default_presets',
     'node' => 'node_info',
@@ -541,6 +540,14 @@ function features_get_default_hooks() {
     'content' => 'content_default_fields',
     'menu' => 'menu_default_items',
   );
+
+  // A module can implements 'hook_features_defaults' to let us know about the
+  // default hook for what it provides. Currently this limits us to a single
+  // item per module. File this under 'todo'.
+  foreach (module_implements('features_defaults') as $module) {
+    $hooks[$module] = module_invoke($module, 'features_defaults');
+  }
+  return $hooks;
 }
 
 /**
