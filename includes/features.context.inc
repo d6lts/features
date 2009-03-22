@@ -17,7 +17,13 @@ function context_features_export($data, &$export) {
 
       foreach (array('node', 'views', 'menu') as $key) {
         if (!empty($context->{$key})) {
-          foreach ($context->{$key} as $item) {
+          if (is_array($context->{$key})) {
+            foreach ($context->{$key} as $item) {
+              $pipe[$key][$item] = $item;
+            }
+          }
+          else {
+            $item = $context->{$key};
             $pipe[$key][$item] = $item;
           }
         }
