@@ -357,6 +357,16 @@ function features_var_export($var, $prefix = '', $multiple = TRUE) {
 }
 
 /**
+ * Helper function to eliminate whitespace differences in code.
+ */
+function _features_linetrim($code) {
+  foreach ($code as $k => $line) {
+    $code[$k] = trim($line);
+  }
+  return $code;
+}
+
+/**
  * Theme functions ====================================================
  */
 

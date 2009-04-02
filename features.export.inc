@@ -504,9 +504,23 @@ function features_detect_overrides($module) {
         // Compare, and push differences into the overrides array
         if (isset($current[$i])) {
           foreach ($current[$i] as $j => $k) {
-            // We serialize objects to eliminate different instantiations of the "same" object
+            // Special cases for objects -- some (views) provide their own
+            // export methods which we need to respect.
             if (is_object($current[$i][$j])) {
-              $different = serialize($current[$i][$j]) !== serialize($default[$i][$j]);
+              switch (get_class($current[$i][$j])) {
+                case 'view':
+                  $a = $current[$i][$j]->export();
+                  $b = $default[$i][$j]->export();
+                  break;
+                default:
+                  $a = features_var_export($current[$i][$j]);
+                  $b = features_var_export($default[$i][$j]);
+                  break;
+              }
+              $a = _features_linetrim(explode("\n", $a));
+              $b = _features_linetrim(explode("\n", $b));
+
+              $different = $a !== $b;
             }
             else {
               $different = $current[$i][$j] !== $default[$i][$j];

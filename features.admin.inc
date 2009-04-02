@@ -211,13 +211,17 @@ function features_feature_comparison($feature) {
       foreach ($conflict as $k => $v) {
         if (module_exists('diff')) {
           if (is_object($v['default']) && get_class($v['default']) == 'view' ){
-            $old = explode("\n", $v['default']->export());
-            $new = explode("\n", $v['current']->export());
+            $old = $v['default']->export();
+            $new = $v['current']->export();
           }
           else {
-            $old = explode("\n", features_var_export($v['default']));
-            $new = explode("\n", features_var_export($v['current']));
+            $old = features_var_export($v['default']);
+            $new = features_var_export($v['current']);
           }
+          // Eliminate whitespace differences
+          $old = _features_linetrim(explode("\n", $old));
+          $new = _features_linetrim(explode("\n", $new));
+
           $diff = new Diff($old, $new);
           $output .= '<h3>' . $k . '</h3>';
           $output .= theme('diff_table', array(), $formatter->format($diff), array('class' => 'diff'));
