@@ -405,7 +405,7 @@ function features_export_render($export, $module_name, $reset = FALSE) {
     $export['dependencies'] = array_values($export['dependencies']);
   }
   if (!empty($export['conflicts'])) {
-    unset($info['conflicts']);
+    unset($export['conflicts']);
   }
   $code['info'] = features_export_info($export);
 
@@ -651,32 +651,35 @@ function theme_features_export_form_confirm($form) {
 function features_export_info($info) {
   $code = array();
   foreach ($info as $k => $v) {
-    if (strpos($k, '#') === 0) {
-      $code[] = '';
-      $code[] = $v;
-    }
-    else {
-      if (is_array($v)) {
-        foreach ($v as $l => $m) {
-          if (is_numeric($l)) {
-            $key = '';
-          }
-          else {
-            $key = $l;
-          }
-          if (is_array($m)) {
-            foreach ($m as $n => $o) {
-              $code[] = "{$k}[$key][] = \"{$o}\"";
-            }
-          }
-          else {
-            $code[] = "{$k}[$key] = \"{$m}\"";
-          }
-        }
+    if (is_array($v)) {
+      $first = array_shift(array_keys($v));
+      if (is_numeric($first)) {
+        sort($v);
       }
       else {
-        $code[] = "{$k} = \"{$v}\"";
+        ksort($v);
       }
+
+      foreach ($v as $l => $m) {
+        if (is_numeric($l)) {
+          $key = '';
+        }
+        else {
+          $key = $l;
+        }
+        if (is_array($m)) {
+          sort($m);
+          foreach ($m as $n => $o) {
+            $code[] = "{$k}[$key][] = \"{$o}\"";
+          }
+        }
+        else {
+          $code[] = "{$k}[$key] = \"{$m}\"";
+        }
+      }
+    }
+    else {
+      $code[] = "{$k} = \"{$v}\"";
     }
   }
   $code = implode("\n", $code) ."\n";
