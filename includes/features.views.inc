@@ -199,10 +199,12 @@ function views_plugin_dependencies() {
     $map = array();
     foreach (module_implements('views_plugins') as $module) {
       $plugins = module_invoke($module, 'views_plugins');
-      foreach ($plugins as $type => $items) {
-        if (is_array($items)) {
-          foreach (array_keys($items) as $plugin_name) {
-            $map[$type][$plugin_name] = $module;
+      if (!empty($plugins)) {
+        foreach ($plugins as $type => $items) {
+          if (is_array($items)) {
+            foreach (array_keys($items) as $plugin_name) {
+              $map[$type][$plugin_name] = $module;
+            }
           }
         }
       }
