@@ -337,7 +337,7 @@ function features_var_export($var, $prefix = '', $multiple = TRUE) {
     else {
       $output = "array(\n";
       foreach ($var as $key => $value) {
-        $output .= "  '$key' => ". features_var_export($value, $prefix . ($multiple? '' : '  ')) .",\n";
+        $output .= "  '$key' => " . features_var_export($value, '  ', FALSE) . ",\n";
       }
       $output .= ')';
     }
@@ -345,12 +345,23 @@ function features_var_export($var, $prefix = '', $multiple = TRUE) {
   else if (is_bool($var)) {
     $output = $var ? 'TRUE' : 'FALSE';
   }
+  else if (is_string($var) && strpos($var, "\n") !== FALSE) {
+    // Replace line breaks in strings with a token for replacement
+    // at the very end. This protects whitespace in strings from
+    // unintentional indentation.
+    $var = str_replace("\n", "***BREAK***", $var);
+    $output = var_export($var, TRUE);
+  }
   else {
     $output = var_export($var, TRUE);
   }
 
   if ($prefix) {
     $output = str_replace("\n", "\n$prefix", $output);
+  }
+
+  if ($init) {
+    $output = str_replace("***BREAK***", "\n", $output);
   }
 
   return $output;
