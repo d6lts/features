@@ -411,6 +411,7 @@ function features_export_render($export, $module_name, $reset = FALSE) {
 
   // Prepare the defaults
   $code['defaults.inc'] = array();
+  ksort($export['features']);
   foreach ($export['features'] as $module => $data) {
     if (!empty($data)) {
       // Attempt to load inc file for the module, will fail silently if the file
