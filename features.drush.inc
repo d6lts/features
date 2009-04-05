@@ -108,7 +108,15 @@ function features_command_update() {
     $module = array_shift($args);
     if ($feature = feature_load($module, TRUE)) {
       $stub = $feature->info['features'];
-      _features_command_export($stub, $feature->name);
+
+      // Construct the correct destination path
+      $destination = dirname($feature->filename);
+      $split = explode('/', $destination);
+      if ($feature->name == array_pop($split)) {
+        $destination = implode('/', $split);
+      }
+
+      _features_command_export($stub, $feature->name, $destination);
     }
     else {
       drush_die('The feature '. $module .' could not be found.');
@@ -133,7 +141,7 @@ function features_command_update() {
  *  Optional. The name for the exported module, it omitted will be generated
  *  from the first listed context.
  */
-function _features_command_export($stub, $module_name = NULL) {
+function _features_command_export($stub, $module_name = NULL, $destination = 'sites/all/modules') {
   module_load_include('inc', 'features', 'features.export');
   $export = features_populate($stub, $module_name);
   if ($feature = feature_load($module_name)) {
@@ -145,12 +153,8 @@ function _features_command_export($stub, $module_name = NULL) {
   }
   $files = features_export_render($export, $module_name, TRUE);
 
-  // Currently you cannot establish your own options, so this won't work as
-  // a hook needs to be added. See drush_get_options().
-  $dest = drush_get_option(array('d', 'destination'), 'all');
-
   if ($root = drush_locate_root()) {
-    $directory = "$root/sites/$dest/modules/{$module_name}";
+    $directory = "$destination/{$module_name}";
     if (is_dir($directory)) {
       drush_print(dt('Module appears to already exist in !dir', array('!dir' => $directory)));
       if(!drush_confirm(dt('Do you really want to continue?'))) {
