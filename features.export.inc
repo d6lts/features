@@ -409,8 +409,9 @@ function features_export_render($export, $module_name, $reset = FALSE) {
   }
   $code['info'] = features_export_info($export);
 
-  // Prepare the defaults
-  $code['defaults.inc'] = array();
+  // Prepare the defaults & features files
+  $code['defaults.inc'] = $code['features.inc'] = array();
+
   ksort($export['features']);
   foreach ($export['features'] as $module => $data) {
     if (!empty($data)) {
@@ -419,14 +420,19 @@ function features_export_render($export, $module_name, $reset = FALSE) {
       module_load_include('inc', 'features', "includes/features.$module");
 
       if (module_hook($module, 'features_export_render')) {
-        $function = "{$module}_features_export_render";
-        $code['defaults.inc'][$module] = $function($module_name, $data);
+        $hooks = module_invoke($module, 'features_export_render', $module_name, $data);
+        foreach ($hooks as $hook_name => $hook_code) {
+          $code['features.inc'][$hook_name] = features_export_render_features($module_name, $hook_name, $hook_code);
+          $code['defaults.inc'][$hook_name] = features_export_render_defaults($module_name, $hook_name, $hook_code);
+        }
       }
     }
   }
+  $code['features.inc'] = implode("\n\n", $code['features.inc']);
+  $code['features.inc'] = "<?php\n\n{$code['features.inc']}\n";
+
   $code['defaults.inc'] = implode("\n\n", $code['defaults.inc']);
   $code['defaults.inc'] = "<?php\n\n{$code['defaults.inc']}\n";
-
 
   // Prepare the module
   // If module exists, let it be and include it in the files
@@ -435,7 +441,7 @@ function features_export_render($export, $module_name, $reset = FALSE) {
   }
   // Add a stub module to include the defaults
   else {
-    $code['module'] = "<?php\n\ninclude_once('{$module_name}.defaults.inc');\n";
+    $code['module'] = "<?php\n\ninclude_once('{$module_name}.features.inc');\n";
   }
   return $code;
 }
@@ -474,8 +480,8 @@ function features_detect_overrides($module) {
     $eval_namespace = "_features_comparison_{$module->name}";
     $code = features_export_render($export, $eval_namespace);
     $php = $code['defaults.inc'];
-
     $php = substr_replace($php, '', strpos($php, "<?php"), 5);
+
     ob_start();
     eval($php);
     ob_end_clean();
@@ -491,7 +497,9 @@ function features_detect_overrides($module) {
     foreach ($merged as $i => $data) {
       if (isset($export_functions[$i])) {
         // Call the eval'd function and collect results
-        $fname = $eval_namespace .'_'. $export_functions[$i];
+        // Use the underscore version of the function name as we don't want
+        // to go through module_load_include().
+        $fname = "_{$eval_namespace}_{$export_functions[$i]}";
         if (function_exists($fname)) {
           $current[$i] = call_user_func($fname);
         }
@@ -556,13 +564,43 @@ function features_get_default_hooks() {
     'menu' => 'menu_default_items',
   );
 
-  // A module can implements 'hook_features_defaults' to let us know about the
+  // A module can implement 'hook_features_defaults' to let us know about the
   // default hook for what it provides. Currently this limits us to a single
   // item per module. File this under 'todo'.
   foreach (module_implements('features_defaults') as $module) {
     $hooks[$module] = module_invoke($module, 'features_defaults');
   }
   return $hooks;
+}
+
+/**
+ * Return a code string representing an implementation of a module hook.
+ * Includes the module's defaults .inc and calls the private helper function.
+ */
+function features_export_render_features($module, $hook, $code) {
+  $output = array();
+  $output[] = "/**";
+  $output[] = " * Implementation of hook_{$hook}().";
+  $output[] = " */";
+  $output[] = "function {$module}_{$hook}() {";
+  $output[] = "  module_load_include('inc', '{$module}', '{$module}.defaults');";
+  $output[] = "  return _{$module}_{$hook}();";
+  $output[] = "}";
+  return implode("\n", $output);
+}
+
+/**
+ * Return a code string representing an implementation of a defaults module hook.
+ */
+function features_export_render_defaults($module, $hook, $code) {
+  $output = array();
+  $output[] = "/**";
+  $output[] = " * Helper to implemetation of hook_{$hook}().";
+  $output[] = " */";
+  $output[] = "function _{$module}_{$hook}() {";
+  $output[] = $code;
+  $output[] = "}";
+  return implode("\n", $output);
 }
 
 /**

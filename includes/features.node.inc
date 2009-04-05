@@ -68,33 +68,23 @@ function node_features_export_render($module = 'foo', $data) {
     'has_body' => FALSE,
     'body_label' => TRUE,
   );
-  $output = '';
-
+  $output = array();
+  $output[] = '  $items = array(';
   foreach ($data as $type) {
     $info = node_get_types('type', $type);
-    $definition = '';
+    $output[] = "    '{$type}' => array(";
     foreach ($elements as $key => $t) {
       if ($t) {
-        $definition .= "        \"{$key}\" => t(\"" . str_replace('"', '\"', $info->$key). "\"),\n";
+        $output[] = "      '{$key}' => t('" . str_replace('"', '\"', $info->$key). "'),";
       }
       else {
-        $definition .= "        \"{$key}\" => \"{$info->$key}\",\n";
+        $output[] = "      '{$key}' => '{$info->$key}',";
       }
     }
-    $output .= <<<EOT
-
-      "$type" => array(
-$definition      ),
-EOT;
+    $output[] = "    ),";
   }
-  return <<<EOT
-/**
- * Implementation of hook_node_info().
- */
-function {$module}_node_info() {
-  return array($output
-  );
+  $output[] = '  );';
+  $output[] = '  return $items;';
+  $output = implode("\n", $output);
+  return array('node_info' => $output);
 }
-EOT;
-}
-

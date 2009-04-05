@@ -53,10 +53,6 @@ function content_features_export($data, &$export) {
  */
 function content_features_export_render($module = 'foo', $data) {
   $code = array();
-  $code[] = '/**';
-  $code[] = ' * Implementation of hook_content_default_fields().';
-  $code[] = ' */';
-  $code[] = "function {$module}_content_default_fields() {";
   $code[] = '  $fields = array();';
   $code[] = '';
   foreach ($data as $instance) {
@@ -74,6 +70,6 @@ function content_features_export_render($module = 'foo', $data) {
     $code[] = '';
   }
   $code[] = '  return $fields;';
-  $code[] = '}';
-  return implode("\n", $code);
+  $code = implode("\n", $code);
+  return array('content_default_fields' => $code);
 }

@@ -47,10 +47,6 @@ function context_features_export($data, &$export) {
  */
 function context_features_export_render($module = 'foo', $data) {
   $code = array();
-  $code[] = '/**';
-  $code[] = ' * Implementation of hook_context_default_contexts().';
-  $code[] = ' */';
-  $code[] = "function {$module}_context_default_contexts() {";
   $code[] = '  $items = array();';
   $code[] = '';
 
@@ -79,6 +75,6 @@ function context_features_export_render($module = 'foo', $data) {
   }
 
   $code[] = '  return $items;';
-  $code[] = '}';
-  return implode("\n", $code);
+  $code = implode("\n", $code);
+  return array('context_default_contexts' => $code);
 }

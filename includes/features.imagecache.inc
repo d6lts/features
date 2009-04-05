@@ -29,14 +29,7 @@ function imagecache_features_export_render($module_name, $data) {
     }
     $items[$key] = $preset;
   }
-  $code .= "\$items = ". features_var_export($items, '  ') .";";
-
-  return <<<EOT
-/**
- * Implementation of hook_imagecache_default_presets().
- */
-function {$module_name}_imagecache_default_presets() {
-  return {$code}
-}
-EOT;
+  $code = "  \$items = ". features_var_export($items, '  ') .";\n";
+  $code = '  return $items;';
+  return array('imagecache_default_presets' => $code);
 }
