@@ -149,9 +149,14 @@ function features_theme() {
  * Implementation of hook_theme_registry_alter().
  */
 function features_theme_registry_alter(&$theme_registry) {
-  if (!in_array('features_preprocess_page', $theme_registry['page']['preprocess functions'])) {
-    $theme_registry['page']['preprocess functions'][] = 'features_preprocess_page';
+  // Ensures that features_preprocess_page() comes immediately after
+  // template_preprocess_page().
+  if ($position = array_search('features_preprocess_page', $theme_registry['page']['preprocess functions'])) {
+    unset($theme_registry['page']['preprocess functions'][$position]);
   }
+  $position = array_search('template_preprocess_page', $theme_registry['page']['preprocess functions']);
+  $position = $position ? $position + 1 : 2;
+  array_splice($theme_registry['page']['preprocess functions'], $position, 0, 'features_preprocess_page');
 }
 
 /**
