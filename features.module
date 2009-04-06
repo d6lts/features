@@ -334,7 +334,7 @@ function features_menu_links($level = 0, $reset = FALSE) {
 /**
  * Export var function -- from Views.
  */
-function features_var_export($var, $prefix = '', $multiple = TRUE) {
+function features_var_export($var, $prefix = '', $init = TRUE) {
   if (is_array($var)) {
     if (empty($var)) {
       $output = 'array()';
