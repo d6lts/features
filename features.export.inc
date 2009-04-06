@@ -519,7 +519,9 @@ function features_detect_overrides($module) {
               switch (get_class($current[$i][$j])) {
                 case 'view':
                   $a = $current[$i][$j]->export();
-                  $b = $default[$i][$j]->export();
+                  if ($default[$i][$j]) {
+                    $b = $default[$i][$j]->export();
+                  }
                   break;
                 default:
                   $a = features_var_export($current[$i][$j]);
