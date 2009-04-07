@@ -22,7 +22,7 @@ function imagecache_features_export_render($module_name, $data) {
   $omit = array('presetid', 'storage');
 
   $items = array();
-  foreach ($data as $key => $value) {
+  foreach ($data as $key) {
     $preset = imagecache_preset_by_name($key);
     foreach ($omit as $i) {
       unset($preset[$i]);
@@ -30,6 +30,6 @@ function imagecache_features_export_render($module_name, $data) {
     $items[$key] = $preset;
   }
   $code = "  \$items = ". features_var_export($items, '  ') .";\n";
-  $code = '  return $items;';
+  $code .= '  return $items;';
   return array('imagecache_default_presets' => $code);
 }
