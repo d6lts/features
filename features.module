@@ -96,6 +96,8 @@ function features_menu() {
 function features_menu_alter(&$cache) {
   // Collect exported menu items and graft them into the features menu.
   $items = module_invoke_all('menu_default_items');
+  drupal_alter('menu_default_items', $items);
+
   foreach ($items as $item) {
     if (!empty($item['path'])) {
       $path = $item['path'];
@@ -303,7 +305,7 @@ function features_content_fields_rebuild() {
     if (empty($conflicts)) {
       $instance = content_fields($field['field_name'], $field['type_name']);
       if (!empty($instance)) {
-        $field = array_merge($field, $instance);
+        $field = array_merge($instance, $field);
       }
       content_field_instance_update($field);
     }
