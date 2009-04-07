@@ -162,6 +162,14 @@ function features_theme_registry_alter(&$theme_registry) {
 }
 
 /**
+ * Implementation of hook_flush_caches().
+ */
+function features_flush_caches() {
+  features_rebuild();
+  return array();
+}
+
+/**
  * Feature object loader.
  */
 function feature_load($name, $reset = FALSE) {
