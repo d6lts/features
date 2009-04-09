@@ -27,7 +27,7 @@ function imagecache_features_export($data, &$export, $module_name = '') {
   }
   foreach ($data as $preset) {
     // If another module provides this preset, add it as a dependency
-    if (isset($map[$preset])) {
+    if (isset($map[$preset]) && $map[$preset] != $module_name) {
       $module = $map[$preset];
       $export['dependencies'][$module] = $module;
     }
