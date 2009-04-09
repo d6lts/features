@@ -171,6 +171,8 @@ function views_features_export($data, &$export, $module_name = '') {
  * Provides an array that maps hook_views_data() tables to modules.
  */
 function views_handler_dependencies() {
+  views_include_handlers();
+
   static $map;
   if (!isset($map)) {
     $map = array();
@@ -188,6 +190,8 @@ function views_handler_dependencies() {
  * Provides an array that maps hook_views_plugins() to modules.
  */
 function views_plugin_dependencies() {
+  views_include_handlers();
+
   static $map;
   if (!isset($map)) {
     $map = array();
