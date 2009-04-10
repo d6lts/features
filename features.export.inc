@@ -415,6 +415,9 @@ function features_export_render($export, $module_name, $reset = FALSE) {
   ksort($export['features']);
   foreach ($export['features'] as $module => $data) {
     if (!empty($data)) {
+      // Sort the items so that we don't generate different exports based on order
+      asort($data);
+
       // Attempt to load inc file for the module, will fail silently if the file
       // doesn't exist.
       module_load_include('inc', 'features', "includes/features.$module");

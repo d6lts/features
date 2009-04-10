@@ -142,6 +142,8 @@ function features_command_update() {
  *  from the first listed context.
  */
 function _features_command_export($stub, $module_name = NULL, $destination = 'sites/all/modules') {
+  drupal_flush_all_caches();
+
   module_load_include('inc', 'features', 'features.export');
   $export = features_populate($stub, $module_name);
   if ($feature = feature_load($module_name)) {
