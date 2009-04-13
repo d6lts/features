@@ -4,13 +4,33 @@
 /**
  * Implementation of hook_features_export().
  */
-function context_features_export($data, &$export) {
+function context_features_export($data, &$export, $module_name = '') {
   $export['dependencies']['context'] = 'context';
+
+  // Collect a context to module map
+  $map = array();
+  $modules = module_implements('context_default_contexts');
+  foreach ($modules as $module) {
+    $contexts = module_invoke($module, 'context_default_contexts');
+    foreach ($contexts as $context) {
+      $map["{$context['namespace']}-{$context['attribute']}-{$context['value']}"] = $module;
+    }
+  }
 
   $pipe = array();
   $contexts = context_enabled_contexts();
   foreach ($data as $identifier) {
-    if (!empty($contexts[$identifier])) {
+    // If this context is already provided by another module, add it
+    // as a dependency and prevent it from becoming a duplicate export.
+    if (isset($map[$identifier]) && $map[$identifier] != $module_name) {
+      if (isset($export['features']['context'][$identifier])) {
+        unset($export['features']['context'][$identifier]);
+      }
+      $module = $map[$identifier];
+      $export['dependencies'][$module] = $module;
+    }
+    // Otherwise, export it.
+    else if (!empty($contexts[$identifier])) {
       $export['features']['context'][$identifier] = $identifier;
 
       $context = $contexts[$identifier];
