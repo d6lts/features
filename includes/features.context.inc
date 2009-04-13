@@ -35,7 +35,7 @@ function context_features_export($data, &$export, $module_name = '') {
 
       $context = $contexts[$identifier];
 
-      foreach (array('node', 'views', 'menu') as $key) {
+      foreach (array('node', 'menu') as $key) {
         if (!empty($context->{$key})) {
           if (is_array($context->{$key})) {
             foreach ($context->{$key} as $item) {
@@ -46,6 +46,15 @@ function context_features_export($data, &$export, $module_name = '') {
             $item = $context->{$key};
             $pipe[$key][$item] = $item;
           }
+        }
+      }
+
+      // Special pipe for views
+      if (!empty($context->views) && is_array($context->views)) {
+        foreach ($context->views as $view_name) {
+          $split = explode(':', $view_name);
+          $view_name = array_shift($split);
+          $pipe['views'][$view_name] = $view_name;
         }
       }
 
