@@ -228,7 +228,7 @@ function features_feature_comparison($feature) {
 
           $diff = new Diff($old, $new);
           $output .= '<h3>' . $k . '</h3>';
-          $output .= theme('diff_table', array(), $formatter->format($diff), array('class' => 'diff'));
+          $output .= theme('diff_table', array(t('Default'), '', t('Current'), ''), $formatter->format($diff), array('class' => 'diff'));
         }
         else {
           $items[] = $k;
