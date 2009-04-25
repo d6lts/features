@@ -210,3 +210,27 @@ function views_plugin_dependencies() {
   }
   return $map;
 }
+
+/**
+ * Implementation of hook_features_revert().
+ *
+ * @param $module
+ * name of module to revert content for
+ */
+function views_features_revert($module = NULL) {
+  // Get default views from feature
+  if (module_hook($module, 'views_default_views')) {
+    $default_views = module_invoke($module, 'views_default_views');
+
+    // Delete Normal / Overridden views that are defined in code
+    foreach ($default_views as $default_view) {
+      $current_view = views_get_view($default_view->name);
+      $current_view->delete();
+    }
+  }
+  else {
+    drupal_set_message(t('Could not load default node types.'), 'error');
+    return FALSE;
+  }
+  return TRUE;
+}

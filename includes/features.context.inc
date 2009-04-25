@@ -107,3 +107,31 @@ function context_features_export_render($module = 'foo', $data) {
   $code = implode("\n", $code);
   return array('context_default_contexts' => $code);
 }
+
+/**
+ * Implementation of hook_features_revert().
+ *
+ * @param $module
+ * name of module to revert content for
+ */
+function context_features_revert($module = NULL) {
+  // Get default context from feature
+  if (module_hook($module, 'context_default_contexts')){
+    $default_contexts = module_invoke($module, 'context_default_contexts');
+
+    // Delete overridden contexts
+    foreach($default_contexts as $default_context) {
+      $current_context = new StdClass();
+      $current_context->namespace = $default_context['namespace'];
+      $current_context->attribute = $default_context['attribute'];  
+      $current_context->value = $default_context['value'];
+      $context_to_delete = context_load_context($current_context);
+      context_delete_context($context_to_delete);
+    }
+  }
+  else {
+    drupal_set_message(t('Could not load default contexts.'), 'error');
+    return FALSE;
+  }
+  return TRUE;
+}

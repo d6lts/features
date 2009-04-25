@@ -313,7 +313,7 @@ function features_content_fields_rebuild() {
     if (empty($conflicts)) {
       $instance = content_fields($field['field_name'], $field['type_name']);
       if (!empty($instance)) {
-        $field = array_merge($instance, $field);
+        $field = array_merge($field, $instance);
       }
       content_field_instance_update($field);
     }
