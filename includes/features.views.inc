@@ -123,9 +123,9 @@ function views_features_export($data, &$export, $module_name = '') {
       }
     }
   }
-  
+
   // It's possible that a module provides the view for us so we need to
-  // detect this and prevent elusive array_merge_recusive bugs. 
+  // detect this and prevent elusive array_merge_recusive bugs.
   // To do so we do two things:
   //   1. remove any views in the export that are default views.
   //   2. add as a dependency the module that provides the view.
@@ -135,23 +135,25 @@ function views_features_export($data, &$export, $module_name = '') {
   views_include_default_views();
   $modules = module_implements('views_default_views');
   $conflicts = array();
-  foreach ($modules as $m) {
-    $callback = $m ."_views_default_views";
-    foreach (call_user_func($callback) as $view_name => $view) {
-      if (array_key_exists($view_name, $export['features']['views']) && ($m != $module_name)) {
-        $v = views_get_view($view_name);
-        if ($v) {
-          // If view is overridden we display an error message and bail.
-          if ($v->type == 'Overridden') {
-            $conflicts[$m] = $view_name;
-            unset($export['features']['views'][$view_name]);
-          }
-          // If view is default, we add the providing module as a dependency and exclude it from the Views export
-          else if ($v->type == 'Default') {
-            unset($export['features']['views'][$view_name]);
-            $tokens = array('!view_name' => $view_name, '!module' => $m);
-            $export['conflicts']['status'][] = t('The view <strong>!view_name</strong> will not be exported with your feature because it is provided by <strong>!module</strong> which has been added as a dependency.', $tokens);
-            $export['dependencies'][$m] = $m;
+  foreach ($modules as $m) {    
+    $m_default_views = module_invoke($m, 'views_default_views');
+    if (is_array($m_default_views)) {
+      foreach ($m_default_views as $view_name => $view) {
+        if (array_key_exists($view_name, $export['features']['views']) && ($m != $module_name)) {
+          $v = views_get_view($view_name);
+          if ($v) {
+            // If view is overridden we display an error message and bail.
+            if ($v->type == 'Overridden') {
+              $conflicts[$m] = $view_name;
+              unset($export['features']['views'][$view_name]);
+            }
+            // If view is default, we add the providing module as a dependency and exclude it from the Views export
+            else if ($v->type == 'Default') {
+              unset($export['features']['views'][$view_name]);
+              $tokens = array('!view_name' => $view_name, '!module' => $m);
+              $export['conflicts']['status'][] = t('The view <strong>!view_name</strong> will not be exported with your feature because it is provided by <strong>!module</strong> which has been added as a dependency.', $tokens);
+              $export['dependencies'][$m] = $m;
+            }
           }
         }
       }
