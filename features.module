@@ -308,18 +308,6 @@ function features_content_fields_rebuild() {
         content_field_instance_create($field);
       }
     }
-
-    // If there are no field conflicts, update the type instance
-    if (empty($conflicts)) {
-      $instance = content_fields($field['field_name'], $field['type_name']);
-      if (!empty($instance)) {
-        $field = array_merge($field, $instance);
-      }
-      content_field_instance_update($field);
-    }
-    else {
-      drupal_set_message(t('Field <strong>!field</strong> was not updated for <strong>!type</strong> because conflicts were detected.', array('!field' => $field['field_name'], '!type' => $field['type_name'])));
-    }
   }
 }
 
