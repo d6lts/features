@@ -17,7 +17,7 @@
 function features_drush_command() {
   $items = array();
 
-  $items['status features'] = array(
+  $items['features'] = array(
     'callback' => 'features_command_list',
     'description' => "List all the available features for your site.",
   );
