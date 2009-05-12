@@ -2,19 +2,14 @@ $Id$
 
 Features for Drupal 6.x
 
-WARNING
--------
-Features is currently a proof-of-concept module -- it is (at time of
-writing) less than a week old and should be of interest only to
-developers and reckless Drupal enthusiasts. If you're looking for
-something to use on your production site, you'd best bookmark and
-come back later.
-
 Installation
 ------------
 Features can be installed like any other Drupal module -- place it in
 the modules directory for your site and enable it on the
-admin/build/modules page.
+admin/build/modules page. To take full advantage of some of the
+workflow benefits provided by Features, you should install Drush [1].
+
+1: http://drupal.org/project/drush
 
 What is a feature?
 ------------------
@@ -61,6 +56,36 @@ shows you only feature modules, and will also inform you if any of their
 components have been overridden. If this is the case, you can also re-export
 features to bring the module code up to date with any changes that have
 occurred in the database.
+
+Drush usage
+-----------
+Features provides several useful drush commands:
+
+drush features
+
+  This command lists all the features on your and their status as well
+  as any supplemental information.
+
+drush features export [context]
+
+  This command lets you create a new feature in code from one or more
+  context definitions. It will write a new feature module with a name
+  matching the ->value portion of the context definition.
+
+drush features update [feature]
+
+  This command lets you update a feature that has already been
+  exported. You can use it to push overrides/changes in your database
+  (for example, a new Views display) into the existing code of your
+  feature module.
+
+drush features revert [feature]
+
+  This command lets revert aspects of a feature in your site's database
+  to the state described in your feature module's defaults. For
+  example, if you have overridden one of your feature's contexts, a
+  drush revert command will revert those changes and return the feature
+  on your site to its original state.
 
 For developers
 --------------
