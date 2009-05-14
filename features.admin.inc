@@ -176,19 +176,7 @@ function features_form_submit(&$form, &$form_state) {
     }
   }
 
-  // Clear the cache to respect any changes.
-  features_get_modules(NULL, TRUE);
-  $form['#redirect'] = 'admin/build/features/cache-clear';
-}
-
-/**
- * Cache clear menu callback.
- */
-function features_cache_clear() {
-  drupal_rebuild_theme_registry();
-  node_types_rebuild();
-  menu_rebuild();
-  drupal_goto('admin/build/features');
+  drupal_flush_all_caches();
 }
 
 /**
