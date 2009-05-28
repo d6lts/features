@@ -27,7 +27,8 @@ function features_admin_form($feature = NULL) {
   foreach (features_get_features('', TRUE) as $name => $module) {
     $unmet_dependencies = array();
     if (!empty($module->info['dependencies'])) {
-      foreach ($module->info['dependencies'] as $dependency) {
+      $dependencies = _features_export_maximize_dependencies($module->info['dependencies']);
+      foreach ($dependencies as $dependency) {
         if (empty($modules[$dependency])) {
           $unmet_dependencies[] = theme('features_module_status', FEATURES_MODULE_MISSING, $dependency);
         }
@@ -142,6 +143,8 @@ function features_admin_components($feature) {
  * Submit handler for the 'manage features' form
  */
 function features_form_submit(&$form, &$form_state) {
+  module_load_include('inc', 'features', 'features.export');
+
   $features = $form_state['values']['feature'];
   $install = array();
   $disable = array();
@@ -150,7 +153,8 @@ function features_form_submit(&$form, &$form_state) {
       // Enable feature
       if ($form_state['values']['status'][$name] && !module_exists($name)) {
         if (!empty($feature->info['dependencies'])) {
-          foreach ($feature->info['dependencies'] as $dependency) {
+          $dependencies = _features_export_maximize_dependencies($feature->info['dependencies']);
+          foreach ($dependencies as $dependency) {
             if (!module_exists($dependency)) {
               $install[] = $dependency;
             }
@@ -165,6 +169,7 @@ function features_form_submit(&$form, &$form_state) {
     }
 
     if (!empty($install)) {
+      $install = array_unique($install);
       module_enable($install);
 
       // Make sure the install API is available.

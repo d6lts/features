@@ -369,6 +369,23 @@ function _features_export_minimize_dependencies($dependencies, $module_name = ''
 }
 
 /**
+ * Iterates over a list of dependencies and maximize the list of modules.
+ */
+function _features_export_maximize_dependencies($dependencies, $module_name = '', $first = TRUE) {
+  // Minimize dependencies first.
+  $dependencies = $first ? _features_export_minimize_dependencies($dependencies, $module_name) : $dependencies;
+
+  $maximized = $dependencies;
+  foreach ($dependencies as $k => $v) {
+    $module = features_get_modules($v);
+    if ($module && !empty($module->info['dependencies'])) {
+      $maximized = array_merge($maximized, _features_export_maximize_dependencies($module->info['dependencies'], $module_name, FALSE));
+    }
+  }
+  return array_unique($maximized);
+}
+
+/**
  * Render feature export into an array representing its files.
  *
  * @param $export
