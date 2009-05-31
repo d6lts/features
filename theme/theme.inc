@@ -74,3 +74,79 @@ function theme_features_form_buttons($element) {
   $output = drupal_render($element);
   return !empty($output) ? "<div class='buttons clear-block'>{$output}</div>" : '';
 }
+
+/**
+ * Theme for features management form.
+ */
+function theme_features_form($form) {
+  drupal_add_css(drupal_get_path('module', 'features') .'/features.css');
+  drupal_add_js(drupal_get_path('module', 'features') .'/features.js');
+
+  $output = '';
+
+  $header = array('', t('Feature'), t('Signature'), t('State'), t('Actions'));
+
+  $rows = array();
+  foreach (element_children($form['status']) as $element) {
+    // Yank title & description fields off the form element for
+    // rendering in their own cells.
+    $name = "<div class='feature'>";
+    $name .= "<strong>{$form['status'][$element]['#title']}</strong>";
+    $name .= "<div class='description'>{$form['status'][$element]['#description']}</div>";
+    $name .= "</div>";
+    unset($form['status'][$element]['#title']);
+    unset($form['status'][$element]['#description']);
+
+    $row = array(
+      'status' => drupal_render($form['status'][$element]),
+      'name' => $name,
+      'sign' => drupal_render($form['sign'][$element]),
+      'state' => drupal_render($form['state'][$element]),
+      'actions' => drupal_render($form['actions'][$element]),
+    );
+
+    // Determine row classes
+    $class = $form['status'][$element]['#default_value'] ? 'enabled' : 'disabled';
+
+    // Collect data + classes & add to master array.
+    foreach ($row as $key => $data) {
+      $row[$key] = array('data' => $data, 'class' => $key);
+    }
+    $rows[] = array('data' => $row, 'class' => $class);
+  }
+  $output .= theme('table', $header, $rows, array('id' => 'features-form-table', 'class' => 'features'));
+
+  // Prevent section from being rendered by drupal_render().
+  unset($form['features']);
+
+  $output .= drupal_render($form['buttons']);
+  $output .= drupal_render($form);
+  return $output;
+}
+
+/**
+ * Theme functions ====================================================
+ */
+
+/**
+ * Theme function for features_export_form (step 2)
+ */
+function theme_features_export_form_confirm($form) {
+  drupal_add_css(drupal_get_path('module', 'features') .'/features.css');
+
+  $output = drupal_render($form['step']);
+  $rows = array();
+  foreach (element_children($form['added']) as $element) {
+    $row = array();
+    $row[] = "<strong>{$form['added'][$element]['#title']}</strong>";
+    unset($form['added'][$element]['#title']);
+
+    $row[] = drupal_render($form['detected'][$element]);
+    $row[] = drupal_render($form['added'][$element]);
+    $rows[] = $row;
+  }
+  $output .= theme('table', array('', t('Auto-detected components'), t('Select additional components')), $rows, array('class' => 'features-export'));
+  $output .= drupal_render($form);
+  return $output;
+}
+

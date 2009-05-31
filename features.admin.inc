@@ -10,6 +10,7 @@ function features_admin_form($feature = NULL) {
 
   // Clear the module cache
   module_rebuild_cache();
+  features_rebuild();
 
   $form = array('#theme' => 'features_form');
 
@@ -58,10 +59,10 @@ function features_admin_form($feature = NULL) {
       '#value' => $sign,
     );
 
+    $actions = array(l(t('View'), "admin/build/features/{$name}"));
+    $state = '';
     if ($module->status) {
       $storage = count(features_detect_overrides($module)) ? FEATURES_OVERRIDDEN : FEATURES_DEFAULT;
-      $actions = array();
-      $actions[] = l(t('View'), "admin/build/features/{$name}");
       switch ($storage) {
         case FEATURES_OVERRIDDEN:
           $state = l(theme('features_storage', $storage), "admin/build/features/{$name}/compare", array('html' => TRUE));
@@ -238,54 +239,5 @@ function features_feature_comparison($feature) {
     $output = "<div class='features-empty'>". t('No changes have been made to this feature.') ."</div>";
   }
   $output = "<div class='features-comparison'>{$output}</div>";
-  return $output;
-}
-
-/**
- * Theme for features management form.
- */
-function theme_features_form($form) {
-  drupal_add_css(drupal_get_path('module', 'features') .'/features.css');
-  drupal_add_js(drupal_get_path('module', 'features') .'/features.js');
-
-  $output = '';
-
-  $header = array('', t('Feature'), t('Signature'), t('State'), t('Actions'));
-
-  $rows = array();
-  foreach (element_children($form['status']) as $element) {
-    // Yank title & description fields off the form element for
-    // rendering in their own cells.
-    $name = "<div class='feature'>";
-    $name .= "<strong>{$form['status'][$element]['#title']}</strong>";
-    $name .= "<div class='description'>{$form['status'][$element]['#description']}</div>";
-    $name .= "</div>";
-    unset($form['status'][$element]['#title']);
-    unset($form['status'][$element]['#description']);
-
-    $row = array(
-      'status' => drupal_render($form['status'][$element]),
-      'name' => $name,
-      'sign' => drupal_render($form['sign'][$element]),
-      'state' => drupal_render($form['state'][$element]),
-      'actions' => drupal_render($form['actions'][$element]),
-    );
-
-    // Determine row classes
-    $class = $form['status'][$element]['#default_value'] ? 'enabled' : 'disabled';
-
-    // Collect data + classes & add to master array.
-    foreach ($row as $key => $data) {
-      $row[$key] = array('data' => $data, 'class' => $key);
-    }
-    $rows[] = array('data' => $row, 'class' => $class);
-  }
-  $output .= theme('table', $header, $rows, array('id' => 'features-form-table', 'class' => 'features'));
-
-  // Prevent section from being rendered by drupal_render().
-  unset($form['features']);
-
-  $output .= drupal_render($form['buttons']);
-  $output .= drupal_render($form);
   return $output;
 }

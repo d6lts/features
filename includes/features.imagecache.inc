@@ -2,6 +2,15 @@
 // $Id$
 
 /**
+ * Implementation of hook_features_api().
+ */
+function imagecache_features_api() {
+  return array(
+    'default_hook' => 'imagecache_default_presets',
+  );
+}
+
+/**
  * Implementation of hook_features_export_options().
  */
 function imagecache_features_export_options() {

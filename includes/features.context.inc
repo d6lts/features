@@ -2,6 +2,28 @@
 // $Id$
 
 /**
+ * Implementation of hook_features_api().
+ */
+function context_features_api() {
+  return array(
+    'feature_source' => TRUE,
+    'default_hook' => 'context_default_contexts',
+  );
+}
+
+/**
+ * Implementation of hook_features_export_options();
+ */
+function context_features_export_options() {
+  $contexts = context_enabled_contexts();
+  $options = array();
+  foreach ($contexts as $identifier => $context) {
+    $options[$identifier] = "{$context->namespace} > {$context->attribute} > {$context->value}";
+  }
+  return $options;
+}
+
+/**
  * Implementation of hook_features_export().
  */
 function context_features_export($data, &$export, $module_name = '') {

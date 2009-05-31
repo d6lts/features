@@ -32,7 +32,7 @@ table.features-export div.form-item { white-space:normal; }
 table.features-export select { width:90%; }
 table.features-export td { vertical-align:top; }
 
-table.features-export div.form-checkboxes {
+#features-export-form div.form-checkboxes {
   overflow:auto;
   max-height:15em; /* Not supported by IE */
   }

@@ -2,6 +2,15 @@
 // $Id$
 
 /**
+ * Implementation of hook_features_api().
+ */
+function content_features_api() {
+  return array(
+    'default_hook' => 'content_default_fields',
+  );
+}
+
+/**
  * Implementation of hook_features_export().
  */
 function content_features_export($data, &$export, $module_name = '') {
@@ -120,4 +129,45 @@ function content_features_revert($module = NULL) {
     return FALSE;
   }
   return TRUE;
+}
+
+/**
+ * Implementation of hook_features_rebuild().
+ * Rebuilds CCK field definitions from code defaults.
+ */
+function content_features_rebuild() {
+  module_load_include('inc', 'content', 'includes/content.crud');
+  content_clear_type_cache(TRUE);
+
+  $fields = module_invoke_all('content_default_fields');
+  foreach ($fields as $field) {
+    $conflicts = array();
+    $existing_field = content_fields($field['field_name']);
+    $existing_instance = content_fields($field['field_name'], $field['type_name']);
+
+    // If field storage doesn't exists, create it
+    if (!$existing_field) {
+      content_field_instance_create($field);
+    }
+    // If field storage exists, check that storage and key descriptors don't conflict
+    else {
+      // Iterate through field properties to determine compatibility
+      foreach ($field as $key => $value) {
+        $excluded = array('type_name');
+        if (!is_array($value) && !in_array($key, $excluded)) {
+          if ($value !== $existing_field[$key]) {
+            $conflicts[] = $key;
+          }
+        }
+      }
+      if (!empty($conflicts)) {
+        $tokens = array('!field' => $field['field_name'], '!type' => $field['type_name'], '!list' => implode(', ', $conflicts));
+        $message = t('Field <strong>!field</strong> was not created for <strong>!type</strong> because a conflict was detected for the following properties: <em>!list</em>', $tokens);
+        drupal_set_message($message);
+      }
+      else if (!$existing_instance) {
+        content_field_instance_create($field);
+      }
+    }
+  }
 }

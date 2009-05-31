@@ -108,14 +108,15 @@ function features_menu_alter(&$cache) {
  *  Implementation of hook_theme().
  */
 function features_theme() {
-  $items = array();
   $path = drupal_get_path('module', 'features') .'/theme';
-
+  $items = array();
   $items['features_form'] =
-  $items['features_export_context_form'] =
   $items['features_export_form_confirm'] =
-  $items['features_export_form_final'] = array('arguments' => array('form' => NULL));
-
+  $items['features_export_form_final'] = array(
+    'arguments' => array('form' => NULL),
+    'file' => 'theme.inc',
+    'path' => $path,
+  );
   $items['features_form_buttons'] = array(
     'arguments' => array('element' => NULL),
     'file' => 'theme.inc',
@@ -161,6 +162,25 @@ function features_flush_caches() {
   features_rebuild();
   features_get_modules(NULL, TRUE);
   return array();
+}
+
+/**
+ * Load includes for any modules that implement the features API and
+ * load includes for those provided by features.
+ */
+function features_include() {
+  // Features provides integration on behalf of these modules.
+  $modules = array('block', 'content', 'context', 'imagecache', 'menu', 'node', 'views');
+  foreach ($modules as $module) {
+    module_load_include('inc', 'features', "includes/features.$module");
+  }
+
+  // Check for any other implementing modules and make necessary inclusions.
+  foreach (module_invoke_all('features_api') as $info) {
+    if (is_array($info) && !empty($info['file'])) {
+      require_once $info['file'];
+    }
+  }
 }
 
 /**
@@ -232,13 +252,6 @@ function features_get_module_status($module) {
 }
 
 /**
- * Implementation of hook_form_alter() for features_admin_form.
- */
-function features_form_features_admin_form_alter(&$form) {
-  features_rebuild();
-}
-
-/**
  * Implementation of hook_form_alter() for system_modules form.
  */
 function features_form_system_modules_alter(&$form) {
@@ -260,49 +273,8 @@ function features_form_system_modules_alter(&$form) {
  * Rebuild definitions -- calls various scripts for non-exportables.
  */
 function features_rebuild() {
-  if (module_exists('content')) {
-    features_content_fields_rebuild();
-  }
-}
-
-/**
- * Rebuild CCK field definitions.
- */
-function features_content_fields_rebuild() {
-  module_load_include('inc', 'content', 'includes/content.crud');
-  content_clear_type_cache(TRUE);
-
-  $fields = module_invoke_all('content_default_fields');
-  foreach ($fields as $field) {
-    $conflicts = array();
-    $existing_field = content_fields($field['field_name']);
-    $existing_instance = content_fields($field['field_name'], $field['type_name']);
-
-    // If field storage doesn't exists, create it
-    if (!$existing_field) {
-      content_field_instance_create($field);
-    }
-    // If field storage exists, check that storage and key descriptors don't conflict
-    else {
-      // Iterate through field properties to determine compatibility
-      foreach ($field as $key => $value) {
-        $excluded = array('type_name');
-        if (!is_array($value) && !in_array($key, $excluded)) {
-          if ($value !== $existing_field[$key]) {
-            $conflicts[] = $key;
-          }
-        }
-      }
-      if (!empty($conflicts)) {
-        $tokens = array('!field' => $field['field_name'], '!type' => $field['type_name'], '!list' => implode(', ', $conflicts));
-        $message = t('Field <strong>!field</strong> was not created for <strong>!type</strong> because a conflict was detected for the following properties: <em>!list</em>', $tokens);
-        drupal_set_message($message);
-      }
-      else if (!$existing_instance) {
-        content_field_instance_create($field);
-      }
-    }
-  }
+  features_include();
+  module_invoke_all('features_rebuild');
 }
 
 /**
@@ -321,57 +293,6 @@ function features_menu_links($level = 0, $reset = FALSE) {
   }
   drupal_alter('features_menu_links', $links[$level]);
   return $links[$level];
-}
-
-/**
- * Export var function -- from Views.
- */
-function features_var_export($var, $prefix = '', $init = TRUE) {
-  if (is_array($var)) {
-    if (empty($var)) {
-      $output = 'array()';
-    }
-    else {
-      $output = "array(\n";
-      foreach ($var as $key => $value) {
-        $output .= "  '$key' => " . features_var_export($value, '  ', FALSE) . ",\n";
-      }
-      $output .= ')';
-    }
-  }
-  else if (is_bool($var)) {
-    $output = $var ? 'TRUE' : 'FALSE';
-  }
-  else if (is_string($var) && strpos($var, "\n") !== FALSE) {
-    // Replace line breaks in strings with a token for replacement
-    // at the very end. This protects whitespace in strings from
-    // unintentional indentation.
-    $var = str_replace("\n", "***BREAK***", $var);
-    $output = var_export($var, TRUE);
-  }
-  else {
-    $output = var_export($var, TRUE);
-  }
-
-  if ($prefix) {
-    $output = str_replace("\n", "\n$prefix", $output);
-  }
-
-  if ($init) {
-    $output = str_replace("***BREAK***", "\n", $output);
-  }
-
-  return $output;
-}
-
-/**
- * Helper function to eliminate whitespace differences in code.
- */
-function _features_linetrim($code) {
-  foreach ($code as $k => $line) {
-    $code[$k] = trim($line);
-  }
-  return $code;
 }
 
 /**
@@ -394,4 +315,3 @@ function features_preprocess_page(&$vars) {
     }
   }
 }
-

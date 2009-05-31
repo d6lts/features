@@ -2,16 +2,23 @@
 // $Id$
 
 /**
+ * Implementation of hook_features_api().
+ */
+function menu_features_api() {
+  return array(
+    'default_hook' => 'menu_default_items',
+  );
+}
+
+/**
  * Implementation of hook_features_export_options().
  */
 function menu_features_export_options() {
   $options = array();
-
   $result = db_query("SELECT * FROM {menu_links} WHERE menu_name = 'features' AND depth = 1");
   while ($row = db_fetch_array($result)) {
     $options[$row['link_path']] = $row['link_title'];
   }
-
   return $options;
 }
 

@@ -2,6 +2,16 @@
 // $Id$
 
 /**
+ * Implementation of hook_features_api().
+ */
+function node_features_api() {
+  return array(
+    'feature_source' => TRUE,
+    'default_hook' => 'node_info',
+  );
+}
+
+/**
  * Implementation of hook_features_export_options().
  */
 function node_features_export_options() {

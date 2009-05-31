@@ -5,6 +5,8 @@
  * Export form.
  */
 function features_export_form($form_state, $module = NULL) {
+  features_include();
+
   $steps = array(
     t('Step 1: provide basic information'),
     t('Step 2: choose sources'),
@@ -68,17 +70,16 @@ function features_export_form($form_state, $module = NULL) {
     // Choose a context ===============================================
     case 1:
       $form['sources'] = array('#tree' => TRUE);
-      // By default we provide the ability to use contexts as a base.
-      $contexts = context_enabled_contexts();
-      $form['sources']['context'] = array(
-        '#theme' => 'features_export_context_form',
-        '#context' => $contexts,
-      );
-      foreach ($contexts as $context) {
-        $form['sources']['context']["$context->namespace-$context->attribute-$context->value"] = array(
-          '#title' => $context->value,
-          '#type' => 'checkbox',
-        );
+      $modules = features_get_modules();
+      foreach (module_implements('features_api') as $module_name) {
+        $info = module_invoke($module_name, 'features_api');
+        if (!empty($info['feature_source']) && $options = module_invoke($module_name, 'features_export_options')) {
+          $form['sources'][$module_name] = array(
+            '#type' => 'checkboxes',
+            '#options' => $options,
+            '#title' => $modules[$module_name]->name,
+          );
+        }
       }
       break;
 
@@ -95,35 +96,38 @@ function features_export_form($form_state, $module = NULL) {
       }
 
       // Display each set of components and options for adding to the components
-      foreach ($export['features'] as $module_name => $items) {
+      foreach (module_implements('features_api') as $module_name) {
         $module = features_get_modules($module_name);
+        $export_options = module_hook($module_name, 'features_export_options') ? module_invoke($module_name, 'features_export_options') : array();
+        $detected_components = !empty($export['features'][$module_name]) ? $export['features'][$module_name] : array();
 
-        $form['detected'][$module_name] = array(
-          '#type' => 'markup',
-          '#title' => $module->info['name'],
-          '#value' => theme('item_list', array_keys($items)),
-        );
-
-        $options = features_export_options($module_name);
-        if (!empty($options)) {
-          $options = array_diff_key($options, $items);
-          $form['added'][$module_name] = array(
-            '#type' => 'checkboxes',
-            '#options' => $options,
-          );
-        }
-        else {
-          $form['added'][$module_name] = array(
-            '#type' => 'markup',
-            '#value' => "<em>". t('This module does not support any options.') ."</em>",
-          );
+        if (!empty($detected_components) || !empty($export_options)) {
+          if (!empty($detected_components)) {
+            $form['detected'][$module_name] = array(
+              '#type' => 'markup',
+              '#value' => theme('item_list', array_keys($detected_components)),
+            );
+          }
+          if (!empty($export_options)) {
+            $form['added'][$module_name] = array(
+              '#type' => 'checkboxes',
+              '#title' => $module->info['name'],
+              '#options' => array_diff_key($export_options, $detected_components),
+            );
+          }
+          else {
+            $form['added'][$module_name] = array(
+              '#type' => 'markup',
+              '#title' => $module->info['name'],
+              '#value' => "<em>". t('This module does not support additional options.') ."</em>",
+            );
+          }
         }
       }
 
       // Dependencies
       $form['detected']['dependencies'] = array(
         '#type' => 'markup',
-        '#title' => t('Module dependencies'),
         '#value' => theme('item_list', array_keys($export['dependencies'])),
       );
 
@@ -137,6 +141,7 @@ function features_export_form($form_state, $module = NULL) {
 
       $form['added']['dependencies'] = array(
         '#tree' => TRUE,
+        '#title' => t('Module dependencies'),
         '#type' => 'checkboxes',
         '#options' => $options,
       );
@@ -228,15 +233,13 @@ function features_export_form_submit($form, &$form_state) {
       $export = $form_state['storage']['export'];
 
       // Update export array based on what's been selected
-      foreach ($export['features'] as $module_name => $items) {
-        if (!empty($form_state['values']['added'][$module_name])) {
-          foreach ($form_state['values']['added'][$module_name] as $item => $value) {
-            if ($value) {
-              $export['features'][$module_name][$item] = $item;
-            }
-            else if (!empty($export['features'][$module_name][$item])) {
-              unset($export['features'][$module_name][$item]);
-            }
+      foreach ($form_state['values']['added'] as $module_name => $items) {
+        foreach ($items as $item => $value) {
+          if ($value) {
+            $export['features'][$module_name][$item] = $item;
+          }
+          else if (!empty($export['features'][$module_name][$item])) {
+            unset($export['features'][$module_name][$item]);
           }
         }
       }
@@ -322,11 +325,8 @@ function features_populate($items, $module_name) {
  * @return fully populated $export array.
  */
 function _features_populate($pipe, &$export, $module_name = '') {
+  features_include();
   foreach ($pipe as $module => $data) {
-    // Attempt to load inc file for the module, will fail silently if the file
-    // doesn't exist.
-    module_load_include('inc', 'features', "includes/features.$module");
-
     if (module_hook($module, 'features_export')) {
       $function = "{$module}_features_export";
       // Pass module-specific data and export array (should be done by reference)
@@ -337,7 +337,6 @@ function _features_populate($pipe, &$export, $module_name = '') {
       }
     }
   }
-
   return $export;
 }
 
@@ -399,6 +398,8 @@ function _features_export_maximize_dependencies($dependencies, $module_name = ''
  * @return array of info file and module file contents.
  */
 function features_export_render($export, $module_name, $reset = FALSE) {
+  features_include();
+
   global $base_url;
 
   $code = array();
@@ -434,11 +435,6 @@ function features_export_render($export, $module_name, $reset = FALSE) {
     if (!empty($data)) {
       // Sort the items so that we don't generate different exports based on order
       asort($data);
-
-      // Attempt to load inc file for the module, will fail silently if the file
-      // doesn't exist.
-      module_load_include('inc', 'features', "includes/features.$module");
-
       if (module_hook($module, 'features_export_render')) {
         $hooks = module_invoke($module, 'features_export_render', $module_name, $data);
         foreach ($hooks as $hook_name => $hook_code) {
@@ -464,18 +460,6 @@ function features_export_render($export, $module_name, $reset = FALSE) {
     $code['module'] = "<?php\n\ninclude_once('{$module_name}.features.inc');\n";
   }
   return $code;
-}
-
-/**
- * Retrieve export options suitable for a FormAPI options array for a given module.
- */
-function features_export_options($module) {
-  $options = array();
-  module_load_include('inc', 'features', "includes/features.$module");
-  if (module_hook($module, 'features_export_options')) {
-    $options = module_invoke($module, 'features_export_options');
-  }
-  return $options;
 }
 
 /**
@@ -572,25 +556,21 @@ function features_detect_overrides($module) {
 }
 
 /**
- * Return an array of default functions
+ * Return an array of default hooks for each implementing module.
+ * Currently this limits us to a single item per module.
+ * @TODO: consider refactoring to allow more than 1 exportable type for a given module.
  */
 function features_get_default_hooks() {
-  $hooks = array(
-    'views' => 'views_default_views',
-    'imagecache' => 'imagecache_default_presets',
-    'node' => 'node_info',
-    'context' => 'context_default_contexts',
-    // The following are hooks provided by features.module as a temporary stopgap
-    // modules without exportables.
-    'content' => 'content_default_fields',
-    'menu' => 'menu_default_items',
-  );
-
-  // A module can implement 'hook_features_defaults' to let us know about the
-  // default hook for what it provides. Currently this limits us to a single
-  // item per module. File this under 'todo'.
-  foreach (module_implements('features_defaults') as $module) {
-    $hooks[$module] = module_invoke($module, 'features_defaults');
+  static $hooks;
+  if (!isset($hooks)) {
+    $hooks = array();
+    features_include();
+    foreach (module_implements('features_api') as $module) {
+      $info = module_hook($module, 'features_api');
+      if (!empty($info['default_hook'])) {
+        $hooks[$module] = $info['default_hook'];
+      }
+    }
   }
   return $hooks;
 }
@@ -623,81 +603,6 @@ function features_export_render_defaults($module, $hook, $code) {
   $output[] = $code;
   $output[] = "}";
   return implode("\n", $output);
-}
-
-/**
- * Theme functions ====================================================
- */
-
-/**
- * Display a table of contexts.
- */
-function theme_features_export_context_form($form) {
-  // Add css
-  drupal_add_css(drupal_get_path("module", "context_ui") ."/context_ui.css");
-
-  $rows = $headings = array();
-  foreach (element_children($form) as $key) {
-    $context = $form['#context'][$key];
-    $row = array();
-
-    $namespace = $context->namespace;
-    $attribute = $context->attribute;
-    $value = $context->value;
-    if (isset($context->cid) && $context->cid) {
-      $identifier = $context->cid;
-    }
-    else {
-      $identifier = $key;
-    }
-
-    // If no heading has been printed for this n/a pair, do so
-    if (!isset($rows["$namespace-$attribute"])) {
-      $row = array('', array('data' => "<span class='context-namespace'>$namespace &gt; $attribute</span>", 'colspan' => 2));
-      $rows["$namespace-$attribute"] = $row;
-    }
-    unset($form[$key]['#title']);
-
-    $rows[$key] = array(
-      'data' => array(
-        array(
-          'data' => drupal_render($form[$key]),
-          'class' => 'context-ui-checkbox',
-        ),
-        array(
-          'data' => '<strong>'. $value .'</strong>',
-          'class' => 'context-name',
-        ),
-      ),
-      'class' => 'context-table-row ' . $class,
-    );
-  }
-  $output .= theme('table', array(theme('table_select_header_cell'), t('Context')), $rows, array('class' => 'context-ui-bulk-export context-ui-overview'));
-  $output .= drupal_render($form);
-
-  return $output;
-}
-
-/**
- * Theme function for features_export_form (step 2)
- */
-function theme_features_export_form_confirm($form) {
-  drupal_add_css(drupal_get_path('module', 'features') .'/features.css');
-
-  $output = drupal_render($form['step']);
-  $rows = array();
-  foreach (element_children($form['detected']) as $element) {
-    $row = array();
-    $row[] = "<strong>{$form['detected'][$element]['#title']}</strong>";
-    unset($form['detected'][$element]['#title']);
-
-    $row[] = drupal_render($form['detected'][$element]);
-    $row[] = drupal_render($form['added'][$element]);
-    $rows[] = $row;
-  }
-  $output .= theme('table', array('', t('Auto-detected components'), t('Select additional components')), $rows, array('class' => 'features-export'));
-  $output .= drupal_render($form);
-  return $output;
 }
 
 /**
@@ -794,4 +699,55 @@ function features_tar_create($files) {
     $tar = gzencode($tar);
   }
   return $tar;
+}
+
+/**
+ * Export var function -- from Views.
+ */
+function features_var_export($var, $prefix = '', $init = TRUE) {
+  if (is_array($var)) {
+    if (empty($var)) {
+      $output = 'array()';
+    }
+    else {
+      $output = "array(\n";
+      foreach ($var as $key => $value) {
+        $output .= "  '$key' => " . features_var_export($value, '  ', FALSE) . ",\n";
+      }
+      $output .= ')';
+    }
+  }
+  else if (is_bool($var)) {
+    $output = $var ? 'TRUE' : 'FALSE';
+  }
+  else if (is_string($var) && strpos($var, "\n") !== FALSE) {
+    // Replace line breaks in strings with a token for replacement
+    // at the very end. This protects whitespace in strings from
+    // unintentional indentation.
+    $var = str_replace("\n", "***BREAK***", $var);
+    $output = var_export($var, TRUE);
+  }
+  else {
+    $output = var_export($var, TRUE);
+  }
+
+  if ($prefix) {
+    $output = str_replace("\n", "\n$prefix", $output);
+  }
+
+  if ($init) {
+    $output = str_replace("***BREAK***", "\n", $output);
+  }
+
+  return $output;
+}
+
+/**
+ * Helper function to eliminate whitespace differences in code.
+ */
+function _features_linetrim($code) {
+  foreach ($code as $k => $line) {
+    $code[$k] = trim($line);
+  }
+  return $code;
 }

@@ -2,6 +2,13 @@
 // $Id$
 
 /**
+ * Implementation of hook_features_api().
+ */
+function block_features_api() {
+  return array();
+}
+
+/**
  * Implementation of hook_features_export().
  */
 function block_features_export($data, &$export) {

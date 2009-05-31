@@ -2,19 +2,26 @@
 // $Id$
 
 /**
+ * Implementation of hook_features_api().
+ */
+function views_features_api() {
+  return array(
+    'feature_source' => TRUE,
+    'default_hook' => 'views_default_views',
+  );
+}
+
+/**
  * Implementation of hook_features_export_options().
  */
 function views_features_export_options() {
   $enabled_views = array();
-
   $views = views_get_all_views();
-
   foreach ($views as $view) {
     if (!isset($views[$view->name]->disabled) || !$views[$view->name]->disabled) {
       $enabled_views[$view->name] = $view->name;
     }
   }
-
   ksort($enabled_views);
   return $enabled_views;
 }
