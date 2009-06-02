@@ -477,7 +477,7 @@ function features_detect_overrides($module) {
     }
 
     // Rebuild feature from .info file description.
-    $export = features_populate($module->info['features'], '');
+    $export = features_populate($module->info['features'], $module->name);
 
     // Render and run an export of the current state.
     $export = array_merge($export, $module->info);
@@ -566,7 +566,7 @@ function features_get_default_hooks() {
     $hooks = array();
     features_include();
     foreach (module_implements('features_api') as $module) {
-      $info = module_hook($module, 'features_api');
+      $info = module_invoke($module, 'features_api');
       if (!empty($info['default_hook'])) {
         $hooks[$module] = $info['default_hook'];
       }
