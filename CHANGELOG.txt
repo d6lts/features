@@ -1,4 +1,20 @@
 // $Id$
+features DRUPAL-6--1-ALPHA4
+---------------------------
+- Ensure that a feature module cannot create circular dependencies.
+- #482212 by rszrama: Displaying a friendly message when no features
+  are available.
+- Move all theme functions into theme.inc.
+- Allow any implementing module to specify itself as a feature source.
+- Improve handling of include files.
+- Added hook_features_api() for declaring various info.
+- Show options for any implementer that provides export options on the
+  feature component confirmation form.
+- Fixing issue where only 1st level dependencies were enabled when
+  enabling a feature.
+- Clearing caches after features form submission using
+  hook_flush_caches() rather than piecemeal.
+
 features DRUPAL-6--1-ALPHA3
 ---------------------------
 - Removing field updating nonsense from field rebuilding --
