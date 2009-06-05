@@ -186,7 +186,7 @@ function features_form_submit(&$form, &$form_state) {
 }
 
 /**
- * Page callback to display the differences between what's in code and 
+ * Page callback to display the differences between what's in code and
  * what is in the db.
  *
  * @param $module

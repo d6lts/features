@@ -114,6 +114,11 @@ function theme_features_form($form) {
     }
     $rows[] = array('data' => $row, 'class' => $class);
   }
+
+  if (empty($rows)) {
+    $rows[] = array('', array('data' => t('No features available.'), 'colspan' => 4));
+  }
+
   $output .= theme('table', $header, $rows, array('id' => 'features-form-table', 'class' => 'features'));
 
   // Prevent section from being rendered by drupal_render().
