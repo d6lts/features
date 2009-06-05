@@ -256,8 +256,11 @@ function features_export_form_submit($form, &$form_state) {
       }
 
       // Build final export array
-      $export = array_merge($export, features_populate($export['features'], $module_name));
-      $export['dependencies'] = _features_export_minimize_dependencies($export['dependencies']);
+      $populated = features_populate($export['features'], $module_name);
+      $export['features'] = array_merge($export['features'], $populated['features']);
+      $export['dependencies'] = array_merge($export['dependencies'], $populated['dependencies']);
+      $export['dependencies'] = _features_export_minimize_dependencies($export['dependencies'], $module_name);
+
       $form_state['storage']['export'] = $export;
       break;
   }
@@ -356,9 +359,19 @@ function _features_export_minimize_dependencies($dependencies, $module_name = ''
     else {
       $module = features_get_modules($v);
       if ($module && !empty($module->info['dependencies'])) {
-        foreach ($module->info['dependencies'] as $dependency) {
-          if (!empty($dependencies[$dependency])) {
-            unset($dependencies[$dependency]);
+        // If this dependency depends on the module itself, we have a circular dependency.
+        // Don't let it happen. Only you can prevent forest fires.
+        if (in_array($module_name, $module->info['dependencies'])) {
+          unset($dependencies[$k]);
+        }
+        // Iterate through the dependency's dependencies and remove any dependencies
+        // that are captured by it.
+        else {
+          foreach ($module->info['dependencies'] as $j => $dependency) {
+            if (array_search($dependency, $dependencies) !== FALSE) {
+              $position = array_search($dependency, $dependencies);
+              unset($dependencies[$position]);
+            }
           }
         }
       }
@@ -371,9 +384,6 @@ function _features_export_minimize_dependencies($dependencies, $module_name = ''
  * Iterates over a list of dependencies and maximize the list of modules.
  */
 function _features_export_maximize_dependencies($dependencies, $module_name = '', $first = TRUE) {
-  // Minimize dependencies first.
-  $dependencies = $first ? _features_export_minimize_dependencies($dependencies, $module_name) : $dependencies;
-
   $maximized = $dependencies;
   foreach ($dependencies as $k => $v) {
     $module = features_get_modules($v);
