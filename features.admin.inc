@@ -59,19 +59,23 @@ function features_admin_form($feature = NULL) {
       '#value' => $sign,
     );
 
-    $actions = array(l(t('View'), "admin/build/features/{$name}"));
-    $state = '';
+    $actions = l(t('View'), "admin/build/features/{$name}");
+    $actions .= '<span class="admin-overridden"> | </span>';
+    $actions .= l(t('Re-export'), "admin/build/features/{$name}/export", array(
+      'attributes' => array('class' => 'admin-overridden')
+    ));
+
     if ($module->status) {
-      $storage = count(features_detect_overrides($module)) ? FEATURES_OVERRIDDEN : FEATURES_DEFAULT;
-      switch ($storage) {
-        case FEATURES_OVERRIDDEN:
-          $state = l(theme('features_storage', $storage), "admin/build/features/{$name}/compare", array('html' => TRUE));
-          $actions[] = l(t('Re-export'), "admin/build/features/{$name}/export");
-          break;
-        case FEATURES_DEFAULT:
-          $state = theme('features_storage', $storage);
-          break;
-      }
+      $state = '<span class="admin-loading">' . t('Checking...') . '</span>';
+      $state .= l(t('Check'), "admin/build/features/{$name}/status", array('attributes' => array('class' => 'admin-check')));
+      $state .= l(theme('features_storage', FEATURES_OVERRIDDEN), "admin/build/features/{$name}/compare", array(
+        'html' => TRUE, 
+        'attributes' => array('class' => 'admin-overridden')
+      ));
+      $state .= theme('features_storage', FEATURES_DEFAULT);
+    }
+    else {
+      $state = t('Disabled');
     }
 
     $form['state'][$name] = array(
@@ -80,7 +84,7 @@ function features_admin_form($feature = NULL) {
     );
     $form['actions'][$name] = array(
       '#type' => 'markup',
-      '#value' => !empty($actions) ? implode(' | ', $actions) : '',
+      '#value' => !empty($actions) ? $actions : '',
     );
   }
 
@@ -240,4 +244,13 @@ function features_feature_comparison($feature) {
   }
   $output = "<div class='features-comparison'>{$output}</div>";
   return $output;
+}
+
+/**
+ * Javascript call back that returns the status of a feature.
+ */
+function features_feature_status($feature) {
+  module_load_include('inc', 'features', 'features.export');
+  $storage = count(features_detect_overrides($feature)) ? FEATURES_OVERRIDDEN : FEATURES_DEFAULT;
+  return drupal_json(array('status' => $storage));
 }

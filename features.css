@@ -7,13 +7,18 @@ div.features-empty {
 
 form div.buttons { text-align:center; }
 
+table.features .admin-loading,
 table.features tr.disabled { color:#999; }
 
   table.features a.configure { float:right; font-style:italic; }
   table.features div.feature { float:left; }
   table.features div.feature strong { font-size:13px; }
   table.features div.feature div.description { font-size:11px; margin:0px; }
-  table.features td.name { width:65%; }
+
+  table.features td.name { width:55%; }
+  table.features td.sign { width:15%; }
+  table.features td.state { width:15%; }
+  table.features td.actions { width:15%; }
 
   table.features td.actions { white-space:nowrap; }
 
@@ -24,6 +29,10 @@ table.features tr.disabled { color:#999; }
     }
 
   table.features td.sign * { margin:0px; }
+
+  table.features .admin-check,
+  table.features .admin-default,
+  table.features .admin-overridden { display: none;}
 
 /**
  * Feature export form

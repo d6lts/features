@@ -76,6 +76,14 @@ function features_menu() {
     'file' => "features.export.inc",
     'weight' => 10,
   );
+    $items['admin/build/features/%feature/status'] = array(
+    'title' => 'Status',
+    'description' => 'Javascript status call back.',
+    'page callback' => 'features_feature_status',
+    'page arguments' => array(3),
+    'type' => MENU_CALLBACK,
+    'file' => 'features.admin.inc',
+  );
   foreach ($items as $path => $item) {
     $items[$path]['access callback'] = 'user_access';
     $items[$path]['access arguments'] = array('administer site configuration');
