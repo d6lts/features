@@ -49,9 +49,9 @@ function features_drush_command() {
 /**
  * Implementation of hook_drush_help().
  */
-function example_drush_help($section) {
+function features_drush_help($section) {
   switch ($section) {
-    case 'drush:state list':
+    case 'drush:features':
       return dt("List all the available features for your site.");
     case 'drush:features export':
       return dt("Export a feature from your site into a module.");
@@ -71,7 +71,7 @@ function features_command_list() {
       format_date($m->info['feature_timestamp'])
     );
   }
-  drush_print_table($rows, 2, TRUE);
+  drush_print_table($rows, TRUE);
 }
 
 /**
@@ -101,7 +101,7 @@ function features_command_export() {
     foreach (context_enabled_contexts(NULL, TRUE) as $k => $c) {
       $rows[] = array("{$c->namespace}-{$c->attribute}-{$c->value}");
     }
-    drush_print_table($rows, 2, TRUE);
+    drush_print_table($rows, TRUE);
   }
 }
 
@@ -135,7 +135,7 @@ function features_command_update() {
     foreach (features_get_features(NULL, TRUE) as $name => $info) {
       $rows[] = array($name);
     }
-    drush_print_table($rows, 2, TRUE);
+    drush_print_table($rows, TRUE);
   }
 }
 
@@ -201,7 +201,7 @@ function features_command_revert() {
     foreach (features_get_features(NULL, TRUE) as $name => $info) {
       $rows[] = array($name);
     }
-    drush_print_table($rows, 2, TRUE);
+    drush_print_table($rows, TRUE);
     return;
   }
 
