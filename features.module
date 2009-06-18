@@ -178,7 +178,7 @@ function features_flush_caches() {
  */
 function features_include() {
   // Features provides integration on behalf of these modules.
-  $modules = array('block', 'content', 'context', 'imagecache', 'menu', 'node', 'views', 'user');
+  $modules = array('block', 'content', 'context', 'filter', 'imagecache', 'menu', 'node', 'user', 'views');
   foreach ($modules as $module) {
     module_load_include('inc', 'features', "includes/features.$module");
   }
