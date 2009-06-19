@@ -202,7 +202,8 @@ function features_include() {
   }
 
   // Check for any other implementing modules and make necessary inclusions.
-  foreach (module_invoke_all('features_api') as $info) {
+  foreach (module_implements('features_api') as $module) {
+    $info = module_invoke($module, 'features_api');
     if (is_array($info) && !empty($info['file'])) {
       require_once $info['file'];
     }

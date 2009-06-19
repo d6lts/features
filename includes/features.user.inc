@@ -27,6 +27,8 @@ function user_features_export($data, &$export, $module_name = '') {
       $export['features']['user'][$perm] = $perm;
     }
   }
+
+  $pipe = array();
   return $pipe;
 }
 
