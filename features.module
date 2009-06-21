@@ -74,7 +74,7 @@ function features_menu() {
     'title' => 'Update',
     'description' => 'Update a feature.',
     'page callback' => 'drupal_get_form',
-    'page arguments' => array('features_export_form', 3),
+    'page arguments' => array('features_update_form', 3),
     'access callback' => 'features_access_override_actions',
     'access arguments' => array(3),
     'type' => MENU_LOCAL_TASK,
