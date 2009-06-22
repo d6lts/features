@@ -249,7 +249,7 @@ function features_export_form($form_state, $module = NULL) {
     case 3:
       if ($files = features_export_render($export, $module_name, TRUE)) {
         $filename = !empty($export['version']) ? "{$module_name}-{$export['version']}" : $module_name;
-        $module_display = function_exists('gzencode') ? "{$filename}.tar.gz" : "{$filename}.tar";
+        $module_display = function_exists('gzencode') ? "{$filename}.tgz" : "{$filename}.tar";
 
         $form['module_display'] = array(
           '#type' => 'markup',
@@ -405,7 +405,7 @@ function features_export_download_files($files, $module_name, $filename = '') {
 
   $header = function_exists('gzencode') ? 'Content-type: application/x-gzip' : 'Content-type: application/x-tar';
   $filename = !empty($filename) ? $filename : $module_name;
-  $filename = function_exists('gzencode') ? "{$filename}.tar.gz" : "{$filename}.tar";
+  $filename = function_exists('gzencode') ? "{$filename}.tgz" : "{$filename}.tar";
 
   drupal_set_header($header);
   drupal_set_header('Content-Disposition: attachment; filename="'. $filename .'"');
