@@ -707,7 +707,7 @@ function features_export_render_features($module, $hook, $code) {
 function features_export_render_defaults($module, $hook, $code) {
   $output = array();
   $output[] = "/**";
-  $output[] = " * Helper to implemetation of hook_{$hook}().";
+  $output[] = " * Helper to implementation of hook_{$hook}().";
   $output[] = " */";
   $output[] = "function _{$module}_{$hook}() {";
   $output[] = $code;
