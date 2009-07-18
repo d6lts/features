@@ -272,7 +272,7 @@ function features_revert_form($form_state, $feature) {
   module_load_include('inc', 'features', 'features.export');
   $overrides = features_detect_overrides($feature);  
   foreach (array_keys($overrides) as $component) {
-    if (module_hook($component, 'features_revert')) {
+    if (features_hook($component, 'features_revert')) {
       $form['revert']['#options'][$component] = $component;
       $form['revert']['#default_value'][$component] = $component;
     }
@@ -289,7 +289,7 @@ function features_revert_form_submit(&$form, &$form_state) {
   $module = $form_state['values']['module'];
   foreach ($form_state['values']['revert'] as $component => $status) {
     if ($status) {
-      $result = module_invoke($component, 'features_revert', $module);
+      $result = features_invoke($component, 'features_revert', $module);
       if ($result) {
         drupal_set_message(t('Reverted all <strong>!component</strong> components for <strong>!module</strong>.', array('!component' => $component, '!module' => $module)));
       }

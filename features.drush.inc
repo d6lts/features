@@ -222,12 +222,12 @@ function features_command_revert() {
       drush_print(dt('Skipping !component.', array('!component' => $component)));
       continue;
     }
-    module_load_include('inc', 'features', "features.{$component}");
-    if (!module_hook($component, 'features_revert')) {
+    features_include();
+    if (!features_hook($component, 'features_revert')) {
       drush_print(dt('Features does not know how to revert !component', array('!component' => $component)));
       continue;
     }
-    $result = module_invoke($component, 'features_revert', $module);
+    $result = features_invoke($component, 'features_revert', $module);
     if (!$result) {
       drush_print(dt('Revert !component failed.', array('!component' => $component)));
     }

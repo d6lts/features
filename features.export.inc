@@ -169,13 +169,12 @@ function features_export_form($form_state, $module = NULL) {
     case 1:
       $form['sources'] = array('#tree' => TRUE);
       $modules = features_get_modules();
-      foreach (module_implements('features_api') as $module_name) {
-        $info = module_invoke($module_name, 'features_api');
-        if (!empty($info['feature_source']) && $options = module_invoke($module_name, 'features_export_options')) {
-          $form['sources'][$module_name] = array(
+      foreach (features_get_components(TRUE) as $component => $name) {
+        if ($options = features_invoke($component, 'features_export_options')) {
+          $form['sources'][$component] = array(
             '#type' => 'checkboxes',
             '#options' => $options,
-            '#title' => $modules[$module_name]->name,
+            '#title' => $name,
           );
         }
       }
@@ -194,30 +193,29 @@ function features_export_form($form_state, $module = NULL) {
       }
 
       // Display each set of components and options for adding to the components
-      foreach (module_implements('features_api') as $module_name) {
-        $module = features_get_modules($module_name);
-        $export_options = module_hook($module_name, 'features_export_options') ? module_invoke($module_name, 'features_export_options') : array();
-        $detected_components = !empty($export['features'][$module_name]) ? $export['features'][$module_name] : array();
+      foreach (features_get_components() as $component => $name) {
+        $export_options = features_hook($component, 'features_export_options') ? features_invoke($component, 'features_export_options') : array();
+        $detected_components = !empty($export['features'][$component]) ? $export['features'][$component] : array();
 
         if (!empty($detected_components) || !empty($export_options)) {
           if (!empty($detected_components)) {
-            $form['detected'][$module_name] = array(
+            $form['detected'][$component] = array(
               '#type' => 'markup',
               '#value' => theme('item_list', array_keys($detected_components)),
             );
           }
           if (!empty($export_options)) {
-            $form['added'][$module_name] = array(
+            $form['added'][$component] = array(
               '#type' => 'checkboxes',
-              '#title' => $module->info['name'],
+              '#title' => $name,
               '#options' => array_diff_key($export_options, $detected_components),
             );
           }
           else {
-            $form['added'][$module_name] = array(
+            $form['added'][$component] = array(
               '#type' => 'markup',
-              '#title' => $module->info['name'],
-              '#value' => "<em>". t('This module does not support additional options.') ."</em>",
+              '#title' => $component,
+              '#value' => "<em>". t('This component does not support additional options.') ."</em>",
             );
           }
         }
@@ -340,13 +338,13 @@ function features_export_form_submit($form, &$form_state) {
       $export = $form_state['storage']['export'];
 
       // Update export array based on what's been selected
-      foreach ($form_state['values']['added'] as $module_name => $items) {
+      foreach ($form_state['values']['added'] as $component => $items) {
         foreach ($items as $item => $value) {
           if ($value) {
-            $export['features'][$module_name][$item] = $item;
+            $export['features'][$component][$item] = $item;
           }
-          else if (!empty($export['features'][$module_name][$item])) {
-            unset($export['features'][$module_name][$item]);
+          else if (!empty($export['features'][$component][$item])) {
+            unset($export['features'][$component][$item]);
           }
         }
       }
@@ -440,9 +438,9 @@ function features_populate($items, $module_name) {
  */
 function _features_populate($pipe, &$export, $module_name = '') {
   features_include();
-  foreach ($pipe as $module => $data) {
-    if (module_hook($module, 'features_export')) {
-      $function = "{$module}_features_export";
+  foreach ($pipe as $component => $data) {
+    if (features_hook($component, 'features_export')) {
+      $function = "{$component}_features_export";
       // Pass module-specific data and export array (should be done by reference)
       $more = $function($data, $export, $module_name);
       // Allow for export functions to request additional exports.
@@ -541,12 +539,12 @@ function features_export_render($export, $module_name, $reset = FALSE) {
   $code['defaults.inc'] = $code['features.inc'] = array();
 
   ksort($export['features']);
-  foreach ($export['features'] as $module => $data) {
+  foreach ($export['features'] as $component => $data) {
     if (!empty($data)) {
       // Sort the items so that we don't generate different exports based on order
       asort($data);
-      if (module_hook($module, 'features_export_render')) {
-        $hooks = module_invoke($module, 'features_export_render', $module_name, $data);
+      if (features_hook($component, 'features_export_render')) {
+        $hooks = features_invoke($component, 'features_export_render', $module_name, $data);
         foreach ($hooks as $hook_name => $hook_code) {
           $code['features.inc'][$hook_name] = features_export_render_features($module_name, $hook_name, $hook_code);
           $code['defaults.inc'][$hook_name] = features_export_render_defaults($module_name, $hook_name, $hook_code);
@@ -666,9 +664,7 @@ function features_detect_overrides($module) {
 }
 
 /**
- * Return an array of default hooks for each implementing module.
- * Currently this limits us to a single item per module.
- * @TODO: consider refactoring to allow more than 1 exportable type for a given module.
+ * Gets the available default hooks keyed by components.
  */
 function features_get_default_hooks() {
   static $hooks;
@@ -678,7 +674,8 @@ function features_get_default_hooks() {
     foreach (module_implements('features_api') as $module) {
       $info = module_invoke($module, 'features_api');
       if (!empty($info['default_hook'])) {
-        $hooks[$module] = $info['default_hook'];
+        $default_hooks = is_array($info['default_hook']) ? $info['default_hook'] : array($module => $info['default_hook']);
+        $hooks += $default_hooks;
       }
     }
   }

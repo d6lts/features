@@ -242,6 +242,79 @@ function features_get_modules($name = NULL, $reset = FALSE) {
   return features_get_info('module', $name, $reset);
 }
 
+/**
+ * Returns the array of supported components.
+ *
+ * @param $feature_source
+ *   If set to to TRUE return feature sources only.
+ * @return An array of component labels keyed by the component names.
+ */
+function features_get_components($feature_source = FALSE) {
+  $components = array();
+  // Check for any other implementing modules and make necessary inclusions.
+  foreach (module_implements('features_api') as $module) {
+    $info = module_invoke($module, 'features_api');
+
+    // We default components to the module name if none given.
+    $info += array('components' => array($module => features_get_modules($module)->name), 'feature_source' => FALSE);
+
+    // Gather only components that are declared as feature sources.
+    if ($feature_source) {
+      if (!empty($info['feature_source'])) {
+        // If the module has specified an array of components as sources, merge them in.
+        // Otherwise, default to all declared components for this module.
+        $components += is_array($info['feature_source']) ? $info['feature_source'] : $info['components'];
+      }
+    }
+    // Provide all components.
+    else {
+      $components += $info['components'];
+    }
+  }
+  return $components;
+}
+
+/**
+ * Like module_invoke() but for arbitrary callback base names.
+ */
+function features_invoke() {
+  $args = func_get_args();
+  $base = $args[0];
+  $hook = $args[1];
+  unset($args[0], $args[1]);
+  $function = $base .'_'. $hook;
+  if (features_hook($base, $hook)) {
+    return call_user_func_array($function, $args);
+  }
+}
+
+/**
+ * Like module_invoke_all() but for arbitrary callback base names.
+ */
+function features_invoke_all() {
+  $args = func_get_args();
+  $hook = $args[0];
+  unset($args[0]);
+  $return = array();
+  foreach (features_get_components() as $component) {
+    $result = features_invoke($component, $hook);
+    if (isset($result) && is_array($result)) {
+      $return = array_merge_recursive($return, $result);
+    }
+    else if (isset($result)) {
+      $return[] = $result;
+    }
+  }
+  return $return;
+}
+
+/**
+ * Like module_hook() but for arbitrary callback base names.
+ */
+function features_hook($base, $hook) {
+  return function_exists($base .'_'. $hook);
+}
+
 function features_get_features($name = NULL, $reset = FALSE) {
   return features_get_info('feature', $name, $reset);
 }
@@ -331,7 +404,7 @@ function features_form_system_modules_alter(&$form) {
  */
 function features_rebuild() {
   features_include();
-  module_invoke_all('features_rebuild');
+  features_invoke_all('features_rebuild');
 }
 
 /**
