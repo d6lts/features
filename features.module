@@ -371,14 +371,17 @@ function features_get_feature_title($feature) {
  * override actions for a given feature.
  */
 function features_access_override_actions($feature) {
-  // Find all overridden items
-  features_include();
-  module_load_include('inc', 'features', 'features.export');
-  $overrides = features_detect_overrides($feature);
-  if (!empty($overrides)) {
-    return user_access('administer site configuration');
+  static $access = array();
+
+  if (!isset($access[$feature->name])) {
+    // Find all overridden items
+    features_include();
+    module_load_include('inc', 'features', 'features.export');
+    $overrides = features_detect_overrides($feature);
+    $access[$feature->name] = !empty($overrides) && user_access('administer site configuration');
   }
-  return FALSE;
+
+  return $access[$feature->name];
 }
 
 /**
