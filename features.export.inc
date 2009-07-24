@@ -544,7 +544,7 @@ function features_export_render($export, $module_name, $reset = FALSE) {
       // Sort the items so that we don't generate different exports based on order
       asort($data);
       if (features_hook($component, 'features_export_render')) {
-        $hooks = features_invoke($component, 'features_export_render', $module_name, $data);
+        $hooks = features_invoke($component, 'features_export_render', $module_name, $data, $export);
         foreach ($hooks as $hook_name => $hook_code) {
           $code['features.inc'][$hook_name] = features_export_render_features($module_name, $hook_name, $hook_code);
           $code['defaults.inc'][$hook_name] = features_export_render_defaults($module_name, $hook_name, $hook_code);
