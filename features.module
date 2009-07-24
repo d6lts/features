@@ -204,10 +204,13 @@ function features_flush_caches() {
  */
 function features_include() {
   // Features provides integration on behalf of these modules.
-  $modules = array('block', 'content', 'context', 'filter', 'imagecache', 'menu', 'node', 'user', 'views');
-  foreach ($modules as $module) {
+  $modules = array('block', 'content', 'context', 'filter', 'imagecache', 'node', 'user', 'views');
+
+  foreach (array_filter($modules, 'module_exists') as $module) {
     module_load_include('inc', 'features', "includes/features.$module");
   }
+  // Always load the menu module include to be able to deal with menu items.
+  module_load_include('inc', 'features', "includes/features.menu");
 
   // Check for any other implementing modules and make necessary inclusions.
   foreach (module_implements('features_api') as $module) {
