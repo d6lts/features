@@ -203,22 +203,27 @@ function features_flush_caches() {
  * load includes for those provided by features.
  */
 function features_include() {
-  // Features provides integration on behalf of these modules.
-  $modules = array('block', 'content', 'context', 'filter', 'imagecache', 'node', 'user', 'views');
-
-  foreach (array_filter($modules, 'module_exists') as $module) {
-    module_load_include('inc', 'features', "includes/features.$module");
-  }
-  // Always load the menu module include to be able to deal with menu items.
-  module_load_include('inc', 'features', "includes/features.menu");
-
-  // Check for any other implementing modules and make necessary inclusions.
+  // Check for implementing modules and make necessary inclusions.
   foreach (module_implements('features_api') as $module) {
     $info = module_invoke($module, 'features_api');
     if (is_array($info) && !empty($info['file'])) {
       require_once $info['file'];
     }
   }
+
+  // Always load the menu module include to be able to deal with menu items.
+  module_load_include('inc', 'features', "includes/features.menu");
+
+  // Features provides integration on behalf of these modules.
+  // Note that ctools is placed last because it implements hooks "dynamically" for other modules.
+  $modules = array('block', 'content', 'context', 'filter', 'imagecache', 'node', 'user', 'views', 'ctools');
+
+  foreach (array_filter($modules, 'module_exists') as $module) {
+    module_load_include('inc', 'features', "includes/features.$module");
+  }
+
+  // Clear static cache, since we've now included new implementers.
+  module_implements('features_api', FALSE, TRUE);
 }
 
 /**
@@ -253,7 +258,10 @@ function features_get_modules($name = NULL, $reset = FALSE) {
  * @return An array of component labels keyed by the component names.
  */
 function features_get_components($feature_source = FALSE) {
+  features_include();
+
   $components = array();
+
   // Check for any other implementing modules and make necessary inclusions.
   foreach (module_implements('features_api') as $module) {
     $info = module_invoke($module, 'features_api');

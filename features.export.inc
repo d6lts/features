@@ -168,7 +168,6 @@ function features_export_form($form_state, $module = NULL) {
     // Choose a context ===============================================
     case 1:
       $form['sources'] = array('#tree' => TRUE);
-      $modules = features_get_modules();
       foreach (features_get_components(TRUE) as $component => $name) {
         if ($options = features_invoke($component, 'features_export_options')) {
           $form['sources'][$component] = array(
@@ -440,8 +439,9 @@ function _features_populate($pipe, &$export, $module_name = '') {
   features_include();
   foreach ($pipe as $component => $data) {
     if (features_hook($component, 'features_export')) {
+      // Pass module-specific data and export array.
+      // We don't use features_invoke() here since we need to pass $export by reference.
       $function = "{$component}_features_export";
-      // Pass module-specific data and export array (should be done by reference)
       $more = $function($data, $export, $module_name);
       // Allow for export functions to request additional exports.
       if (!empty($more)) {
@@ -693,7 +693,8 @@ function features_export_render_features($module, $hook, $code) {
   $output[] = " */";
   $output[] = "function {$module}_{$hook}() {";
   $output[] = "  module_load_include('inc', '{$module}', '{$module}.defaults');";
-  $output[] = "  return _{$module}_{$hook}();";
+  $output[] = '  $args = func_get_args();';
+  $output[] = "  return call_user_func_array('_{$module}_{$hook}', ".'$args'.");";
   $output[] = "}";
   return implode("\n", $output);
 }
