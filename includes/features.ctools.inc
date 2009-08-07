@@ -1,0 +1,165 @@
+<?php
+// $Id$
+
+/**
+ * This is a wild hack, but effective.
+ * Dynamically declare functions under a ctools component's namespace if they are not already declared.
+ */
+foreach (_ctools_features_get_info('components') as $component) {
+  $code = '';
+  if (!function_exists("{$component}_features_export")) {
+    $code .= 'function '. $component .'_features_export($data, &$export, $module_name = "") { return ctools_component_features_export("'. $component .'", $data, $export, $module_name); }';
+  }
+  if (!function_exists("{$component}_features_export_options")) {
+    $code .= 'function '. $component .'_features_export_options() { return ctools_component_features_export_options("'. $component .'"); }';
+  }
+  if (!function_exists("{$component}_features_export_render")) {
+    $code .= 'function '. $component .'_features_export_render($module = "foo", $data) { return ctools_component_features_export_render("'. $component .'", $module, $data); }';
+  }
+  eval($code);
+}
+
+/**
+ * Implementation of hook_features_api().
+ */
+function ctools_features_api() {
+  $components = _ctools_features_get_info('components');
+  $components['ctools'] = 'ctools';
+
+  $default_hooks = _ctools_features_get_info('default_hooks');
+  $default_hooks['ctools'] = 'ctools_plugin_api';
+
+  return array(
+    'feature_source' => TRUE,
+    'default_hook' => $default_hooks,
+    'components' => $components,
+  );
+}
+
+/**
+ * Implementation of hook_features_export().
+ * Adds references to the ctools mothership hook, ctools_plugin_api().
+ */
+function ctools_features_export($data, &$export, $module_name = '') {
+  // Add ctools dependency
+  $export['dependencies']['ctools'] = 'ctools';
+
+  // Add the actual ctools components which will
+  // need to be accounted for in hook_ctools_plugin_api().
+  $modules_by_component = _ctools_features_get_info('modules');
+  foreach ($data as $component) {
+    $export['features']['ctools'][$component] = $component;
+  }
+
+  return array();
+}
+
+/**
+ * Implementation of hook_features_export_render().
+ * Adds the ctools mothership hook, ctools_plugin_api().
+ */
+function ctools_features_export_render($module = 'foo', $data) {
+  $modules = _ctools_features_get_info('modules');
+  $default_hooks = _ctools_features_get_info('default_hooks');
+  $versions = _ctools_features_get_info('versions');
+
+  $code = array();
+  $code[] = '  $args = func_get_args();';
+  $code[] = '  $module = array_shift($args);';
+  $code[] = '  $api = array_shift($args);';
+
+  $first = TRUE;
+  foreach ($data as $component) {
+    $module = $modules[$component];
+    $default_hook = $default_hooks[$component];
+    $version = $versions[$component];
+
+    $if = $first ? 'if' : 'else if';
+    $code[] = '  '. $if .' ($module == "'. $module .'" && $api == "'. $default_hook .'") {';
+    $code[] = '    return array("version" => '. $version .');';
+    $code[] = '  }';
+
+    $first = FALSE;
+  }
+  return array('ctools_plugin_api' => implode("\n", $code));
+}
+
+/**
+ * Master implementation of hook_features_export_options() for all ctools components.
+ */
+function ctools_component_features_export_options($component) {
+  $options = array();
+
+  ctools_include('export');
+  $schema = ctools_export_get_schema($component);
+  if ($schema) {
+    $export_key = $schema['export']['key'];
+    if ($objects = ctools_export_load_object($component, 'all')) {
+      foreach ($objects as $object) {
+        $key = $object->{$export_key};
+        $options[$key] = $key;
+      }
+    }
+  }
+  return $options;
+}
+
+/**
+ * Master implementation of hook_features_export() for all ctools components.
+ */
+function ctools_component_features_export($component, $data, &$export, $module_name = '') {
+  // Add the actual implementing module as a dependency
+  $modules_by_component = _ctools_features_get_info('modules');
+  $module = $modules_by_component[$component];
+  $export['dependencies'][$module] = $module;
+
+  // Add the components
+  foreach ($data as $object_name) {
+    $export['features'][$component][$object_name] = $object_name;
+  }
+
+  // Let CTools handle API integration for this component.
+  return array('ctools' => array($component));
+}
+
+/**
+ * Master implementation of hook_features_export_render() for all ctools components.
+ */
+function ctools_component_features_export_render($component, $module = 'foo', $data) {
+  ctools_include('export');
+
+  $schema = drupal_get_schema($component);
+  $code = '  $export = array();'."\n";
+  foreach ($data as $object) {
+    $identifier = $schema['export']['identifier'];
+    $objects = ctools_export_load_object($component, 'names', array($object));
+    $code .= ctools_export_object($component, $objects[$object], '  ', $identifier);
+    $code .= "\n";
+    $code .= '  $export[\''. $object .'\'] = $'. $identifier .';'."\n";
+  }
+  $code .= '  return $export;';
+
+  return array($schema['export']['default hook'] => $code);
+}
+
+/**
+ * Helper function to return various ctools information for components.
+ */
+function _ctools_features_get_info($key = NULL, $reset = FALSE) {
+  static $info;
+  if (!isset($info) || $reset) {
+    ctools_include('export');
+    foreach (ctools_export_get_schemas_by_module() as $module => $schemas) {
+      foreach ($schemas as $table => $schema) {
+        $info['modules'][$table] = $module;
+        $info['components'][$table] = $table;
+        $info['default_hooks'][$table] = $schema['export']['default hook'];
+        $info['versions'][$table]  = $schema['export']['api']['current_version'];
+      }
+    }
+  }
+  if ($key) {
+    return isset($info[$key]) ? $info[$key] : array();
+  }
+  return $info;
+}
