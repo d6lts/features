@@ -614,9 +614,14 @@ function features_detect_overrides($module) {
     $export = array_merge($export, $module->info);
     $eval_namespace = "_features_comparison_{$module->name}";
     $code = features_export_render($export, $eval_namespace);
-    $php = $code['defaults.inc'];
+
+    // Format code for evaluation
+    unset($code['info']);
+    unset($code['module']);
+    $php = implode("\n\n", $code);
     $php = substr_replace($php, '', strpos($php, "<?php"), 5);
 
+    // Eval into comparison namespace
     ob_start();
     eval($php);
     ob_end_clean();
@@ -696,9 +701,9 @@ function features_get_default_hooks() {
     features_include();
     foreach (module_implements('features_api') as $module) {
       $info = module_invoke($module, 'features_api');
-      foreach ($info as $component) {
-        if (isset($component['default_hook'])) {
-          $hooks[] = $component['default_hook'];
+      foreach ($info as $k => $v) {
+        if (isset($v['default_hook'])) {
+          $hooks[$k] = $v['default_hook'];
         }
       }
     }
