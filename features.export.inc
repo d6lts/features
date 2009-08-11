@@ -490,7 +490,7 @@ function _features_export_minimize_dependencies($dependencies, $module_name = ''
       }
     }
   }
-  return $dependencies;
+  return drupal_map_assoc(array_unique($dependencies));
 }
 
 /**
