@@ -7,6 +7,7 @@
 function user_features_api() {
   return array(
     'user' => array(
+      'feature_source' => TRUE,
       'default_hook' => 'user_default_permissions',
     )
   );
@@ -32,6 +33,23 @@ function user_features_export($data, &$export, $module_name = '') {
 
   $pipe = array();
   return $pipe;
+}
+
+/**
+ * Implementation of hook_features_export_options().
+ */
+function user_features_export_options() {
+  $options = array();
+  foreach (module_list() as $module) {
+    $prefix = check_plain($module) .': ';
+    if ($permissions = module_invoke($module, 'perm')) {
+      foreach ($permissions as $permission) {
+        $options[$permission] = $prefix . check_plain($permission);
+      }
+    }
+  }
+  asort($options);
+  return $options;
 }
 
 /**
