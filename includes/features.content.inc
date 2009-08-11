@@ -130,9 +130,14 @@ function content_features_revert($module = NULL) {
     module_load_include('inc', 'content', 'includes/content.crud');
     $default_fields = module_invoke($module, 'content_default_fields');
 
-    // update all fields to their default values
+    // Update all fields to their default values
     foreach($default_fields as $field) {
-      content_field_instance_update($field);
+      // Ensure that the field exists before attempting an update.
+      $params = array('field_name' => $field['field_name'], 'type_name' => $field['type_name']);
+      $field_exists = content_field_instance_read($params);
+      if ($field_exists) {
+        content_field_instance_update($field);
+      }
     }
   }
   else {
