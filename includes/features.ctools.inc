@@ -27,6 +27,7 @@ function ctools_features_api() {
   $components['ctools'] = array(
     'default_hook' => 'ctools_plugin_api',
     'feature_source' => TRUE,
+    'duplicates' => FEATURES_DUPLICATES_ALLOWED,
   );
   return $components;
 }

@@ -36,6 +36,18 @@ define('FEATURES_DEFAULTS_INCLUDED', 1);
 define('FEATURES_DEFAULTS_CUSTOM', 2);
 
 /**
+ * Components with this 'duplicates' flag may not have multiple features provide the
+ * same component key in their info files. This is the default behavior.
+ */
+define('FEATURES_DUPLICATES_CONFLICT', 0);
+
+/**
+ * Components with this 'duplicates' flag are allowed to have multiple features
+ * provide the same component key in their info files.
+ */
+define('FEATURES_DUPLICATES_ALLOWED', 1);
+
+/**
  * Implementation of hook_menu().
  */
 function features_menu() {

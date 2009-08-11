@@ -373,11 +373,15 @@ function features_feature_status($feature) {
  */
 function features_get_conflicts($reset = FALSE) {
   $conflicts = array();
-
+  $component_info = features_get_components();
   $map = features_get_component_map($reset);
+
   foreach ($map as $type => $components) {
     foreach ($components as $component => $modules) {
-      if (count($modules) > 1) {
+      if (isset($component_info[$type]['duplicates']) && $component_info[$type]['duplicates'] == FEATURES_DUPLICATES_ALLOWED) {
+        continue;
+      }
+      else if (count($modules) > 1) {
         foreach ($modules as $module) {
           if (!isset($conflicts[$module])) {
             $conflicts[$module] = array();
