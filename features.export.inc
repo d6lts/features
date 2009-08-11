@@ -165,7 +165,7 @@ function features_export_form($form_state, $module = NULL) {
       drupal_add_js(drupal_get_path('module', 'features') .'/features.js');
       break;
 
-    // Choose a context ===============================================
+    // Choose a feature source ========================================
     case 1:
       $form['sources'] = array('#tree' => TRUE);
       foreach (features_get_components(TRUE) as $component => $info) {
@@ -338,23 +338,24 @@ function features_export_form_submit($form, &$form_state) {
 
       // Update export array based on what's been selected
       foreach ($form_state['values']['added'] as $component => $items) {
-        foreach ($items as $item => $value) {
-          if ($value) {
-            $export['features'][$component][$item] = $item;
-          }
-          else if (!empty($export['features'][$component][$item])) {
-            unset($export['features'][$component][$item]);
+        if ($component == 'dependencies') {
+          foreach ($items as $item => $value) {
+            if ($value) {
+              $export['dependencies'][$item] = $item;
+            }
+            else if (!empty($export['dependencies'][$item])) {
+              unset($export['dependencies'][$item]);
+            }
           }
         }
-      }
-      // Update dependencies
-      if (!empty($form_state['values']['added']['dependencies'])) {
-        foreach ($form_state['values']['added']['dependencies'] as $item => $value) {
-          if ($value) {
-            $export['dependencies'][$item] = $item;
-          }
-          else if (!empty($export['dependencies'][$item])) {
-            unset($export['dependencies'][$item]);
+        else {
+          foreach ($items as $item => $value) {
+            if ($value) {
+              $export['features'][$component][$item] = $item;
+            }
+            else if (!empty($export['features'][$component][$item])) {
+              unset($export['features'][$component][$item]);
+            }
           }
         }
       }
