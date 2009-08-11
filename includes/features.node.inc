@@ -6,8 +6,11 @@
  */
 function node_features_api() {
   return array(
-    'feature_source' => TRUE,
-    'default_hook' => 'node_info',
+    'node' => array(
+      'feature_source' => TRUE,
+      'default_hook' => 'node_info',
+      'default_file' => FEATURES_DEFAULTS_INCLUDED,
+    ),
   );
 }
 

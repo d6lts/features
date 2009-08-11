@@ -6,7 +6,9 @@
  */
 function imagecache_features_api() {
   return array(
-    'default_hook' => 'imagecache_default_presets',
+    'imagecache' => array(
+      'default_hook' => 'imagecache_default_presets',
+    )
   );
 }
 

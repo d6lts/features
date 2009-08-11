@@ -6,7 +6,9 @@
  */
 function user_features_api() {
   return array(
-    'default_hook' => 'user_default_permissions',
+    'user' => array(
+      'default_hook' => 'user_default_permissions',
+    )
   );
 }
 

@@ -16,6 +16,26 @@ define('FEATURES_DEFAULT', 0);
 define('FEATURES_OVERRIDDEN', 1);
 
 /**
+ * Components with this 'default_file' flag will have exports written to the
+ * common defaults file 'MODULENAME.defaults.inc'. This is the default
+ * behavior.
+ */
+define('FEATURES_DEFAULTS_INCLUDED_COMMON', 0);
+
+/**
+ * Components with this 'default_file' flag will have exports written to a
+ * defaults based on the component name like 'MODULENAME.features.COMPONENT-NAME.inc'.
+ */
+define('FEATURES_DEFAULTS_INCLUDED', 1);
+
+/**
+ * Components with this 'default_file' flag must specify a filename for thier
+ * exports. Additionally a stub will NOT be written to 'MODULENAME.features.inc'
+ * allowing the file to be included directly by the implementing module.
+ */
+define('FEATURES_DEFAULTS_CUSTOM', 2);
+
+/**
  * Implementation of hook_menu().
  */
 function features_menu() {
@@ -206,8 +226,10 @@ function features_include() {
   // Check for implementing modules and make necessary inclusions.
   foreach (module_implements('features_api') as $module) {
     $info = module_invoke($module, 'features_api');
-    if (is_array($info) && !empty($info['file'])) {
-      require_once $info['file'];
+    foreach ($info as $component) {
+      if (isset($component['file'])) {
+        require_once $component['file'];
+      }
     }
   }
 
@@ -261,27 +283,22 @@ function features_get_components($feature_source = FALSE) {
   features_include();
 
   $components = array();
-
-  // Check for any other implementing modules and make necessary inclusions.
   foreach (module_implements('features_api') as $module) {
     $info = module_invoke($module, 'features_api');
 
-    // We default components to the module name if none given.
-    $info += array('components' => array($module => features_get_modules($module)->name), 'feature_source' => FALSE);
-
-    // Gather only components that are declared as feature sources.
     if ($feature_source) {
-      if (!empty($info['feature_source'])) {
-        // If the module has specified an array of components as sources, merge them in.
-        // Otherwise, default to all declared components for this module.
-        $components += is_array($info['feature_source']) ? $info['feature_source'] : $info['components'];
+      // Gather only components that are declared as feature sources.
+      foreach ($info as $k => $v) {
+        if ($v['feature_source']) {
+          $components[$k] = $v;
+        }
       }
     }
-    // Provide all components.
     else {
-      $components += $info['components'];
+      $components = array_merge($components, $info);
     }
   }
+
   return $components;
 }
 

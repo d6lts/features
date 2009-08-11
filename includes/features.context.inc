@@ -6,8 +6,10 @@
  */
 function context_features_api() {
   return array(
-    'feature_source' => TRUE,
-    'default_hook' => 'context_default_contexts',
+    'context' => array(
+      'feature_source' => TRUE,
+      'default_hook' => 'context_default_contexts',
+    ),
   );
 }
 

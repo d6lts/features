@@ -6,7 +6,9 @@
  */
 function menu_features_api() {
   return array(
-    'default_hook' => 'menu_default_items',
+    'menu' => array(
+      'default_hook' => 'menu_default_items',
+    ),
   );
 }
 

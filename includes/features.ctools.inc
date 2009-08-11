@@ -5,7 +5,7 @@
  * This is a wild hack, but effective.
  * Dynamically declare functions under a ctools component's namespace if they are not already declared.
  */
-foreach (_ctools_features_get_info('components') as $component) {
+foreach (_ctools_features_get_info() as $component => $info) {
   $code = '';
   if (!function_exists("{$component}_features_export")) {
     $code .= 'function '. $component .'_features_export($data, &$export, $module_name = "") { return ctools_component_features_export("'. $component .'", $data, $export, $module_name); }';
@@ -23,17 +23,12 @@ foreach (_ctools_features_get_info('components') as $component) {
  * Implementation of hook_features_api().
  */
 function ctools_features_api() {
-  $components = _ctools_features_get_info('components');
-  $components['ctools'] = 'ctools';
-
-  $default_hooks = _ctools_features_get_info('default_hooks');
-  $default_hooks['ctools'] = 'ctools_plugin_api';
-
-  return array(
+  $components = _ctools_features_get_info();
+  $components['ctools'] = array(
+    'default_hook' => 'ctools_plugin_api',
     'feature_source' => TRUE,
-    'default_hook' => $default_hooks,
-    'components' => $components,
   );
+  return $components;
 }
 
 /**
@@ -46,7 +41,6 @@ function ctools_features_export($data, &$export, $module_name = '') {
 
   // Add the actual ctools components which will
   // need to be accounted for in hook_ctools_plugin_api().
-  $modules_by_component = _ctools_features_get_info('modules');
   foreach ($data as $component) {
     $export['features']['ctools'][$component] = $component;
   }
@@ -59,9 +53,7 @@ function ctools_features_export($data, &$export, $module_name = '') {
  * Adds the ctools mothership hook, ctools_plugin_api().
  */
 function ctools_features_export_render($module = 'foo', $data) {
-  $modules = _ctools_features_get_info('modules');
-  $default_hooks = _ctools_features_get_info('default_hooks');
-  $versions = _ctools_features_get_info('versions');
+  $info = _ctools_features_get_info();
 
   $code = array();
   $code[] = '  $args = func_get_args();';
@@ -70,9 +62,9 @@ function ctools_features_export_render($module = 'foo', $data) {
 
   $first = TRUE;
   foreach ($data as $component) {
-    $module = $modules[$component];
-    $default_hook = $default_hooks[$component];
-    $version = $versions[$component];
+    $module = $info[$component]['module'];
+    $default_hook = $info[$component]['default_hook'];
+    $version = $info[$component]['current_version'];
 
     $if = $first ? 'if' : 'else if';
     $code[] = '  '. $if .' ($module == "'. $module .'" && $api == "'. $default_hook .'") {';
@@ -109,9 +101,8 @@ function ctools_component_features_export_options($component) {
  */
 function ctools_component_features_export($component, $data, &$export, $module_name = '') {
   // Add the actual implementing module as a dependency
-  $modules_by_component = _ctools_features_get_info('modules');
-  $module = $modules_by_component[$component];
-  $export['dependencies'][$module] = $module;
+  $info = _ctools_features_get_info();
+  $export['dependencies'][$module] = $info[$component]['module'];
 
   // Add the components
   foreach ($data as $object_name) {
@@ -145,21 +136,21 @@ function ctools_component_features_export_render($component, $module = 'foo', $d
 /**
  * Helper function to return various ctools information for components.
  */
-function _ctools_features_get_info($key = NULL, $reset = FALSE) {
-  static $info;
-  if (!isset($info) || $reset) {
+function _ctools_features_get_info($reset = FALSE) {
+  static $components;
+  if (!isset($components) || $reset) {
+    $components = array();
     ctools_include('export');
     foreach (ctools_export_get_schemas_by_module() as $module => $schemas) {
       foreach ($schemas as $table => $schema) {
-        $info['modules'][$table] = $module;
-        $info['components'][$table] = $table;
-        $info['default_hooks'][$table] = $schema['export']['default hook'];
-        $info['versions'][$table]  = $schema['export']['api']['current_version'];
+        $components[$table] = array(
+          'default_hooks' => $schema['export']['default hook'],
+          'current_version' => $schema['export']['api']['current_version'],
+          'module' => $module,
+          'feature_source' => true,
+        );
       }
     }
   }
-  if ($key) {
-    return isset($info[$key]) ? $info[$key] : array();
-  }
-  return $info;
+  return $components;
 }

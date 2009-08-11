@@ -6,7 +6,9 @@
  */
 function filter_features_api() {
   return array(
-    'default_hook' => 'filter_default_formats',
+    'filter' => array(
+      'default_hook' => 'filter_default_formats',
+    ),
   );
 }
 

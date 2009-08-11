@@ -6,8 +6,11 @@
  */
 function views_features_api() {
   return array(
-    'feature_source' => TRUE,
-    'default_hook' => 'views_default_views',
+    'views' => array(
+      'feature_source' => TRUE,
+      'default_hook' => 'views_default_views',
+      'default_file' => FEATURES_DEFAULTS_INCLUDED,
+    ),
   );
 }
 

@@ -6,7 +6,9 @@
  */
 function content_features_api() {
   return array(
-    'default_hook' => 'content_default_fields',
+    'content' => array(
+      'default_hook' => 'content_default_fields',
+    ),
   );
 }
 
