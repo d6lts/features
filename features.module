@@ -336,7 +336,7 @@ function features_invoke_all() {
   $hook = $args[0];
   unset($args[0]);
   $return = array();
-  foreach (features_get_components() as $component) {
+  foreach (features_get_components() as $component => $info) {
     $result = features_invoke($component, $hook);
     if (isset($result) && is_array($result)) {
       $return = array_merge_recursive($return, $result);
