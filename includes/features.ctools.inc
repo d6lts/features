@@ -145,10 +145,10 @@ function _ctools_features_get_info($reset = FALSE) {
     foreach (ctools_export_get_schemas_by_module() as $module => $schemas) {
       foreach ($schemas as $table => $schema) {
         $components[$table] = array(
-          'default_hooks' => $schema['export']['default hook'],
+          'default_hook' => $schema['export']['default hook'],
           'current_version' => $schema['export']['api']['current_version'],
           'module' => $module,
-          'feature_source' => true,
+          'feature_source' => TRUE,
         );
       }
     }
