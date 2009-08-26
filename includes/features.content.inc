@@ -136,7 +136,8 @@ function content_features_revert($module = NULL) {
       $params = array('field_name' => $field['field_name'], 'type_name' => $field['type_name']);
       $field_exists = content_field_instance_read($params);
       if ($field_exists) {
-        content_field_instance_update($field);
+        content_field_instance_update($field, FALSE);
+        variable_set('menu_rebuild_needed', TRUE);
       }
     }
   }
@@ -163,7 +164,8 @@ function content_features_rebuild() {
 
     // If field storage doesn't exists, create it
     if (!$existing_field) {
-      content_field_instance_create($field);
+      content_field_instance_create($field, FALSE);
+      variable_set('menu_rebuild_needed', TRUE);
     }
     // If field storage exists, check that storage and key descriptors don't conflict
     else {
@@ -182,7 +184,8 @@ function content_features_rebuild() {
         drupal_set_message($message);
       }
       else if (!$existing_instance) {
-        content_field_instance_create($field);
+        content_field_instance_create($field, FALSE);
+        variable_set('menu_rebuild_needed', TRUE);
       }
     }
   }
