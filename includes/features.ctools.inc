@@ -64,11 +64,11 @@ function ctools_features_export_render($module = 'foo', $data) {
   $first = TRUE;
   foreach ($data as $component) {
     $module = $info[$component]['module'];
-    $default_hook = $info[$component]['default_hook'];
+    $api = $info[$component]['api'];
     $version = $info[$component]['current_version'];
 
     $if = $first ? 'if' : 'else if';
-    $code[] = '  '. $if .' ($module == "'. $module .'" && $api == "'. $default_hook .'") {';
+    $code[] = '  '. $if .' ($module == "'. $module .'" && $api == "'. $api .'") {';
     $code[] = '    return array("version" => '. $version .');';
     $code[] = '  }';
 
@@ -145,6 +145,7 @@ function _ctools_features_get_info($reset = FALSE) {
     foreach (ctools_export_get_schemas_by_module() as $module => $schemas) {
       foreach ($schemas as $table => $schema) {
         $components[$table] = array(
+          'api' => $schema['export']['api']['api'],
           'default_hook' => $schema['export']['default hook'],
           'current_version' => $schema['export']['api']['current_version'],
           'module' => $module,
