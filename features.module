@@ -370,6 +370,9 @@ function features_get_info($type = 'module', $name = NULL, $reset = FALSE) {
     while ($row = db_fetch_object($result)) {
       $row->info = drupal_parse_info_file(dirname($row->filename) .'/'. $row->name .'.info');
       if (!empty($row->info)) {
+        // Invoke hook_system_info_alter() to give installed modules a chance to
+        // modify the data in the .info files if necessary.
+        drupal_alter('system_info', $row->info, $row);
         if (!empty($row->info['features'])) {
           $data['feature'][$row->name] = $row;
         }
