@@ -120,11 +120,11 @@ function ctools_component_features_export($component, $data, &$export, $module_n
 function ctools_component_features_export_render($component, $module = 'foo', $data) {
   ctools_include('export');
 
-  $schema = drupal_get_schema($component);
+  $schema = ctools_export_get_schema($component);
+  $objects = ctools_export_load_object($component);
   $code = '  $export = array();'."\n";
   foreach ($data as $object) {
     $identifier = $schema['export']['identifier'];
-    $objects = ctools_export_load_object($component, 'names', array($object));
     $code .= ctools_export_object($component, $objects[$object], '  ', $identifier);
     $code .= "\n";
     $code .= '  $export[\''. $object .'\'] = $'. $identifier .';'."\n";
