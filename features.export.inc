@@ -791,9 +791,9 @@ function features_export_info($info) {
           $key = $l;
         }
         if (is_array($m)) {
-          sort($m);
+          asort($m);
           foreach ($m as $n => $o) {
-            $code[] = "{$k}[$key][] = \"{$o}\"";
+            $code[] = "{$k}[$key][] = \"{$n}\"";
           }
         }
         else {
