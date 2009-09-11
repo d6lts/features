@@ -235,11 +235,11 @@ function features_form_submit(&$form, &$form_state) {
   // page callback rather than as part of the submit handler as some modules
   // have includes/other directives of importance in hooks that have already
   // been called in this page load.
-  $form_state['#redirect'] = 'admin/build/features/cache-clear';
+  $form_state['redirect'] = 'admin/build/features/cache-clear';
 }
 
 /**
- * Clear caches after enabling a feature.z
+ * Clear caches after enabling a feature.
  */
 function features_cache_clear() {
   drupal_flush_all_caches();
