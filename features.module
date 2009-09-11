@@ -231,6 +231,39 @@ function features_flush_caches() {
 }
 
 /**
+ * Implementation of hook_form().
+ */
+function features_form($node, $form_state) {
+  return node_content_form($node, $form_state);
+}
+
+/**
+ * Implemenation of hook_access()
+ */
+function features_access($op, $node, $account) {
+  return node_content_access($op, $node, $account);
+}
+
+/**
+ * Implementation of hook_perm().
+ */
+function features_perm() {
+  $perms = array();
+  // Generate permissions for any default node types provided by features.
+  foreach (node_get_types() as $type) {
+    if ($type->module == 'features') {
+      $name = check_plain($type->type);
+      $perms[] = 'create '. $name .' content';
+      $perms[] = 'delete own '. $name .' content';
+      $perms[] = 'delete any '. $name .' content';
+      $perms[] = 'edit own '. $name .' content';
+      $perms[] = 'edit any '. $name .' content';
+    }
+  }
+  return $perms;
+}
+
+/**
  * Load includes for any modules that implement the features API and
  * load includes for those provided by features.
  */
