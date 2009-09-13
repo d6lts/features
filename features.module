@@ -77,13 +77,21 @@ function features_menu() {
     'file' => 'features.admin.inc',
   );
   $items['admin/build/features/export'] = array(
-    'title' => 'Export',
-    'description' => 'Export features to code.',
+    'title' => 'Create feature',
+    'description' => 'Create a new feature.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('features_export_form'),
     'type' => MENU_LOCAL_TASK,
     'file' => "features.export.inc",
     'weight' => 10,
+  );
+  $items['admin/build/features/export/populate'] = array(
+    'title' => 'Populate feature',
+    'description' => 'AHAH callback to populate a feature from selected components.',
+    'page callback' => 'features_export_build_form_populate',
+    'page arguments' => array(),
+    'type' => MENU_CALLBACK,
+    'file' => "features.export.inc",
   );
   $items['admin/build/features/%feature'] = array(
     'title callback' => 'features_get_feature_title',
@@ -100,6 +108,15 @@ function features_menu() {
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => -10,
   );
+  $items['admin/build/features/%feature/update'] = array(
+    'title' => 'Update',
+    'description' => 'Update an existing feature.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('features_export_form', 3),
+    'type' => MENU_LOCAL_TASK,
+    'file' => "features.export.inc",
+    'weight' => 11,
+  );
   $items['admin/build/features/%feature/compare'] = array(
     'title' => 'Compare',
     'description' => 'Compare default and current feature.',
@@ -109,17 +126,6 @@ function features_menu() {
     'access arguments' => array(3),
     'type' => MENU_LOCAL_TASK,
     'file' => 'features.admin.inc',
-  );
-  $items['admin/build/features/%feature/update'] = array(
-    'title' => 'Update',
-    'description' => 'Update a feature.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('features_update_form', 3),
-    'access callback' => 'features_access_override_actions',
-    'access arguments' => array(3),
-    'type' => MENU_LOCAL_TASK,
-    'file' => "features.export.inc",
-    'weight' => 10,
   );
   $items['admin/build/features/%feature/revert'] = array(
     'title' => 'Revert',
@@ -174,36 +180,26 @@ function features_menu_alter(&$cache) {
  *  Implementation of hook_theme().
  */
 function features_theme() {
-  $path = drupal_get_path('module', 'features') .'/theme';
+  $base = array(
+    'path' => drupal_get_path('module', 'features') .'/theme',
+    'file' => 'theme.inc',
+  );
+
   $items = array();
   $items['features_form'] =
-  $items['features_export_form_confirm'] =
-  $items['features_export_form_final'] = array(
-    'arguments' => array('form' => NULL),
-    'file' => 'theme.inc',
-    'path' => $path,
-  );
-  $items['features_form_buttons'] = array(
-    'arguments' => array('element' => NULL),
-    'file' => 'theme.inc',
-    'path' => $path,
-  );
+  $items['features_form_export'] =
+  $items['features_form_components'] =
+  $items['features_component_list'] =
+  $items['features_component_key'] =
+  $items['features_components'] =
+  $items['features_form_buttons'] =
+  $items['features_module_status'] =
+  $items['features_storage'] = $base;
+
   $items['features_admin_components'] = array(
-    'arguments' => array('info' => NULL, 'dependencies' => NULL, 'components' => NULL, 'conflicts' => NULL),
+    'arguments' => array('info' => NULL, 'dependencies' => NULL, 'conflicts' => NULL),
     'template' => 'features-admin-components',
-    'file' => 'theme.inc',
-    'path' => $path,
-  );
-  $items['features_module_status'] = array(
-    'arguments' => array('module' => NULL, 'status' => NULL),
-    'file' => 'theme.inc',
-    'path' => $path,
-  );
-  $items['features_storage'] = array(
-    'arguments' => array('storage' => NULL),
-    'file' => 'theme.inc',
-    'path' => $path,
-  );
+  ) + $base;
   return $items;
 }
 

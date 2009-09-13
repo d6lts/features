@@ -84,9 +84,9 @@ function features_admin_form($feature = NULL) {
     );
 
     $actions = l(t('View'), "admin/build/features/{$name}");
-    $actions .= '<span class="admin-overridden"> | </span>';
+    $actions .= '<span class="admin-update"> | </span>';
     $actions .= l(t('Update'), "admin/build/features/{$name}/update", array(
-      'attributes' => array('class' => 'admin-overridden')
+      'attributes' => array('class' => 'admin-update')
     ));
     $actions .= '<span class="admin-overridden"> | </span>';
     $actions .= l(t('Revert'), "admin/build/features/{$name}/revert", array(
@@ -134,11 +134,7 @@ function features_admin_form($feature = NULL) {
 function features_admin_components($feature) {
   module_load_include('inc', 'features', 'features.export');
   $conflict = features_detect_overrides($feature);
-
-  // Retrieve basic information
-  $info = array();
-  $info['name'] = $feature->info['name'];
-  $info['description'] = $feature->info['description'];
+  $info = $feature->info;
 
   // Iterate over dependencies and retrieve status for display
   $dependencies = array();
@@ -170,7 +166,7 @@ function features_admin_components($feature) {
     }
   }
 
-  return theme('features_admin_components', $info, $dependencies, $components, $conflicts);
+  return theme('features_admin_components', $info, $dependencies, $conflicts);
 }
 
 /**
