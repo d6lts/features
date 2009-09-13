@@ -41,7 +41,7 @@ function node_features_export($data, &$export, $module_name = '') {
     // Poll node module to determine who provides the node type.
     if ($info = node_get_types('module', $type)) {
       $export['dependencies'][$info] = $info;
-      if ($info == 'node') {
+      if (in_array($info, array('node', 'features'))) {
         $export['features']['node'][$type] = $type;
       }
 
