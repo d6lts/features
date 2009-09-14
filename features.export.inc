@@ -348,9 +348,33 @@ function _features_export_preserve_dependencies($dependencies, $module_name = NU
 }
 
 /**
- * Prepare a feature export into an array representing its files and default hooks.
+ * Prepare a feature export array into a finalized info array.
  */
 function features_export_prepare($export, $module_name, $reset = FALSE) {
+  $existing = features_get_modules($module_name, $reset);
+
+  // Prepare info string -- if module exists, merge into its existing info file
+  $defaults = $existing ? $existing->info : array('core' => '6.x', 'package' => 'Features', 'project' => $module_name);
+  $export = array_merge($defaults, $export);
+
+  // Cleanup info array
+  foreach ($export['features'] as $component => $data) {
+    $export['features'][$component] = array_keys($data);
+  }
+  if (isset($export['dependencies'])) {
+    $export['dependencies'] = array_values($export['dependencies']);
+  }
+  if (isset($export['conflicts'])) {
+    unset($export['conflicts']);
+  }
+  ksort($export);
+  return $export;
+}
+
+/**
+ * Generate an array of hooks and their raw code.
+ */
+function features_export_render_hooks($export, $module_name, $reset = FALSE) {
   features_include();
   $code = array();
 
@@ -384,16 +408,10 @@ function features_export_prepare($export, $module_name, $reset = FALSE) {
  * @return array of info file and module file contents.
  */
 function features_export_render($export, $module_name, $reset = FALSE) {
-  $existing = features_get_modules($module_name, $reset);
-  $components = features_get_components();
-
-  // Prepare info string -- if module exists, merge into its existing info file
-  $info = $existing ? $existing->info : array('core' => '6.x', 'package' => 'Features', 'project' => $module_name);
-  $export = array_merge($info, $export);
-
-  // Generate code by component, hook
   $code = array();
-  $component_hooks = features_export_prepare($export, $module_name, $reset);
+
+  // Generate hook code
+  $component_hooks = features_export_render_hooks($export, $module_name, $reset);
 
   // Group component code into their respective files
   foreach ($component_hooks as $component => $hooks) {
@@ -430,16 +448,8 @@ function features_export_render($export, $module_name, $reset = FALSE) {
     $code[$filename] = "<?php\n\n". implode("\n\n", $contents) ."\n";
   }
 
-  // Cleanup info array and generate info file string
-  foreach ($export['features'] as $component => $data) {
-    $export['features'][$component] = array_keys($data);
-  }
-  if (isset($export['dependencies'])) {
-    $export['dependencies'] = array_values($export['dependencies']);
-  }
-  if (isset($export['conflicts'])) {
-    unset($export['conflicts']);
-  }
+  // Generate info file output
+  $export = features_export_prepare($export, $module_name, $reset);
   $code['info'] = features_export_info($export);
 
   // Prepare the module
@@ -473,67 +483,63 @@ function features_detect_overrides($module) {
 
     // Rebuild feature from .info file description and prepare an export from current DB state.
     $export = features_populate($module->info['features'], $module->name);
-    // $export = array_merge($export, $module->info);
-    $code = features_export_prepare($export, "_features_comparison_{$module->name}");
+    $export['dependencies'] = _features_export_preserve_dependencies($export['dependencies'], $module->name);
+    $export = features_export_prepare($export, $module->name);
+    $code = features_export_render_hooks($export, "_features_comparison_{$module->name}");
 
     $overridden = array();
 
-    // First, compare actual component sets and mark if different
-    if (sort(array_keys($export['features'])) != sort(array_keys($module->info['features']))) {
-      $overridden['components'] = array(
-        'default' => sort(array_keys($module->info['features'])),
-        'current' => sort(array_keys($export['features']))
-      );
+    // Compare feature info
+    ksort($module->info);
+    ksort($export);
+    $compare = array(
+      'current' => features_export_info($export),
+      'default' => features_export_info($module->info)
+    );
+    if ($compare['current'] !== $compare['default']) {
+      $overridden['info'] = $compare;
     }
 
     // Merge items from both for comparison
     $merged = array_merge($export['features'], $module->info['features']);
 
     foreach (array_keys($merged) as $component) {
-      if (isset($default_hooks[$component])) {
-        $default_hook = $default_hooks[$component];
-
+      if (isset($default_hooks[$component]) && ($default_hook = $default_hooks[$component])) {
+        $compare = array('current' => array(), 'default' => array());
         // Eval the database version of the export
         if (isset($code[$component][$default_hook])) {
-          $current[$component] = eval($code[$component][$default_hook]);
+          $compare['current'] = eval($code[$component][$default_hook]);
         }
         // Call the existing in-code function and collect results
         if (module_hook($module->name, $default_hook)) {
-          $default[$component] = module_invoke($module->name, $default_hook);
+          $compare['default'] = module_invoke($module->name, $default_hook);
         }
-
-        // Compare, and push differences into the overrides array
-        if (isset($current[$component]) && is_array($current[$component])) {
-          foreach ($current[$component] as $j => $k) {
-            // Special cases for objects -- some (views) provide their own
-            // export methods which we need to respect.
-            if (is_object($current[$component][$j])) {
-              switch (get_class($current[$component][$j])) {
-                case 'view':
-                  $a = $current[$component][$j]->export();
-                  if ($default[$component][$j]) {
-                    $b = $default[$component][$j]->export();
-                  }
-                  break;
-                default:
-                  $a = features_var_export($current[$component][$j]);
-                  $b = features_var_export($default[$component][$j]);
-                  break;
-              }
-              $a = _features_linetrim(explode("\n", $a));
-              $b = _features_linetrim(explode("\n", $b));
-
-              $different = $a !== $b;
+        // Export both versions
+        foreach ($compare as $storage => $items) {
+          foreach ($items as $k => $v) {
+            // Special case for views which provides its own export method
+            if (is_object($v) && get_class($v) == 'view') {
+              $compare[$storage][$k] = $v->export();
             }
             else {
-              $different = $current[$component][$j] !== $default[$component][$j];
+              $compare[$storage][$k] = features_var_export($v);
             }
-            if ($different) {
-              $overridden[$component] = array(
-                'default' => $default[$component][$j],
-                'current' => $current[$component][$j],
-              );
+          }
+        }
+        // Collect differences between the two arrays
+        foreach ($compare['current'] as $k => $v) {
+          if (isset($compare['current'][$k], $compare['default'][$k])) {
+            if (_features_linetrim($compare['current'][$k]) !== _features_linetrim($compare['default'][$k])) {
+              $overridden[$component][$k] = array('current' => $compare['current'][$k], 'default' => $compare['default'][$k]);
             }
+          }
+          else {
+            $overridden[$component][$k] = array('current' => $compare['current'][$k], 'default' => '');
+          }
+        }
+        foreach ($compare['default'] as $k => $v) {
+          if (!isset($compare['current'][$k])) {
+            $overridden[$component][$k] = array('current' => '', 'default' => $compare['default'][$k]);
           }
         }
       }
@@ -746,8 +752,9 @@ function features_translatables_export($translatables, $prefix = '') {
  * Helper function to eliminate whitespace differences in code.
  */
 function _features_linetrim($code) {
+  $code = explode("\n", $code);
   foreach ($code as $k => $line) {
     $code[$k] = trim($line);
   }
-  return $code;
+  return implode("\n", $code);
 }
