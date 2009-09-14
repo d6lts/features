@@ -412,6 +412,7 @@ function features_export_render($export, $module_name, $reset = FALSE) {
 
   // Generate hook code
   $component_hooks = features_export_render_hooks($export, $module_name, $reset);
+  $components = features_get_components();
 
   // Group component code into their respective files
   foreach ($component_hooks as $component => $hooks) {
@@ -454,11 +455,12 @@ function features_export_render($export, $module_name, $reset = FALSE) {
 
   // Prepare the module
   // If module exists, let it be and include it in the files
+  $existing = features_get_modules($module_name, TRUE);
   if ($existing) {
     $code['module'] = file_get_contents($existing->filename);
   }
   // Add a stub module to include the defaults
-  elseif (!empty($code['features'])) {
+  else if (!empty($code['features'])) {
     $code['module'] = "<?php\n\ninclude_once('{$module_name}.features.inc');\n";
   }
   return $code;
