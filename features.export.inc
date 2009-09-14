@@ -509,10 +509,12 @@ function features_detect_overrides($module) {
         // Eval the database version of the export
         if (isset($code[$component][$default_hook])) {
           $compare['current'] = eval($code[$component][$default_hook]);
+          $compare['current'] = is_array($compare['current']) ? $compare['current'] : array();
         }
         // Call the existing in-code function and collect results
         if (module_hook($module->name, $default_hook)) {
           $compare['default'] = module_invoke($module->name, $default_hook);
+          $compare['default'] = is_array($compare['default']) ? $compare['default'] : array();
         }
         // Export both versions
         foreach ($compare as $storage => $items) {
