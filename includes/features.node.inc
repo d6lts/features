@@ -80,6 +80,8 @@ function node_features_export_render($module = 'foo', $data) {
     'title_label' => TRUE,
     'has_body' => FALSE,
     'body_label' => TRUE,
+    'min_word_count' => FALSE,
+    'help' => TRUE,
   );
   $output = array();
   $output[] = '  $items = array(';
