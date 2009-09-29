@@ -136,7 +136,7 @@ function theme_features_form_export($form) {
  * Theme a set of features export components.
  */
 function theme_features_form_components($form) {
-  $options = '';
+  $output = '';
   foreach (element_children($form) as $key) {
     unset($form[$key]['#title']);
     $output .= "<div class='features-select features-select-{$key}'>". drupal_render($form[$key]) ."</div>";
