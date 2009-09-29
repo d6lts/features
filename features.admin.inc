@@ -90,7 +90,8 @@ function features_admin_form($feature = NULL) {
     ));
     $actions .= '<span class="admin-overridden"> | </span>';
     $actions .= l(t('Revert'), "admin/build/features/{$name}/revert", array(
-      'attributes' => array('class' => 'admin-overridden')
+      'attributes' => array('class' => 'admin-overridden'),
+      'query' => drupal_get_destination(),
     ));
 
     if ($module->status) {
