@@ -587,10 +587,6 @@ function features_get_default($module_name, $component, $reset = FALSE) {
     if (isset($default_hooks[$component])) {
       $cache[$module_name][$component] = module_invoke($module_name, $default_hooks[$component]);
     }
-    if ($component == 'imagecache') {
-      $foo = $cache[$module_name][$component];
-      _features_sanitize($foo);
-    }
   }
   return isset($cache[$module_name][$component]) ? $cache[$module_name][$component] : FALSE;;
 }
