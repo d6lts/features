@@ -12,8 +12,10 @@ define('FEATURES_MODULE_ENABLED', 1);
 define('FEATURES_MODULE_DISABLED', 0);
 define('FEATURES_MODULE_MISSING', -1);
 
+define('FEATURES_REBUILDABLE', -1);
 define('FEATURES_DEFAULT', 0);
 define('FEATURES_OVERRIDDEN', 1);
+define('FEATURES_NEEDS_REVIEW', 2);
 
 /**
  * Components with this 'default_file' flag will have exports written to the
@@ -76,13 +78,13 @@ function features_menu() {
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'file' => 'features.admin.inc',
   );
-  $items['admin/build/features/export'] = array(
+  $items['admin/build/features/create'] = array(
     'title' => 'Create feature',
     'description' => 'Create a new feature.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('features_export_form'),
     'type' => MENU_LOCAL_TASK,
-    'file' => "features.export.inc",
+    'file' => "features.admin.inc",
     'weight' => 10,
   );
   $items['admin/build/features/export/populate'] = array(
@@ -91,14 +93,14 @@ function features_menu() {
     'page callback' => 'features_export_build_form_populate',
     'page arguments' => array(),
     'type' => MENU_CALLBACK,
-    'file' => "features.export.inc",
+    'file' => "features.admin.inc",
   );
   $items['admin/build/features/%feature'] = array(
     'title callback' => 'features_get_feature_title',
     'title arguments' => array(3),
     'description' => 'Display components of a feature.',
-    'page callback' => 'features_admin_components',
-    'page arguments' => array(3),
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('features_admin_components', 3),
     'load arguments' => array(3, TRUE),
     'type' => MENU_CALLBACK,
     'file' => 'features.admin.inc',
@@ -109,39 +111,29 @@ function features_menu() {
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => -10,
   );
-  $items['admin/build/features/%feature/update'] = array(
-    'title' => 'Update',
-    'description' => 'Update an existing feature.',
+  $items['admin/build/features/%feature/recreate'] = array(
+    'title' => 'Recreate',
+    'description' => 'Recreate an existing feature.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('features_export_form', 3),
     'load arguments' => array(3, TRUE),
     'type' => MENU_LOCAL_TASK,
-    'file' => "features.export.inc",
-    'weight' => 11,
-  );
-  $items['admin/build/features/%feature/compare'] = array(
-    'title' => 'Compare',
-    'description' => 'Compare default and current feature.',
-    'page callback' => 'features_feature_comparison',
-    'page arguments' => array(3),
-    'load arguments' => array(3, TRUE),
-    'access callback' => 'features_access_override_actions',
-    'access arguments' => array(3),
-    'type' => MENU_LOCAL_TASK,
-    'file' => 'features.admin.inc',
-  );
-  $items['admin/build/features/%feature/revert'] = array(
-    'title' => 'Revert',
-    'description' => 'Revert a feature.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('features_revert_form', 3),
-    'load arguments' => array(3, TRUE),
-    'access callback' => 'features_access_override_actions',
-    'access arguments' => array(3),
-    'type' => MENU_LOCAL_TASK,
     'file' => "features.admin.inc",
     'weight' => 11,
   );
+  if (module_exists('diff')) {
+    $items['admin/build/features/%feature/diff'] = array(
+      'title' => 'Review overrides',
+      'description' => 'Compare default and current feature.',
+      'page callback' => 'features_feature_diff',
+      'page arguments' => array(3, 5),
+      'load arguments' => array(3, TRUE),
+      'access callback' => 'features_access_override_actions',
+      'access arguments' => array(3),
+      'type' => MENU_LOCAL_TASK,
+      'file' => 'features.admin.inc',
+    );
+  }
   $items['admin/build/features/%feature/status'] = array(
     'title' => 'Status',
     'description' => 'Javascript status call back.',
@@ -199,10 +191,10 @@ function features_theme() {
   $items['features_components'] =
   $items['features_form_buttons'] =
   $items['features_module_status'] =
-  $items['features_storage'] = $base;
+  $items['features_storage_link'] = $base;
 
   $items['features_admin_components'] = array(
-    'arguments' => array('info' => NULL, 'dependencies' => NULL, 'conflicts' => NULL),
+    'arguments' => array('form' => NULL),
     'template' => 'features-admin-components',
   ) + $base;
   return $items;
@@ -249,7 +241,8 @@ function features_access($op, $node, $account) {
  * Implementation of hook_perm().
  */
 function features_perm() {
-  $perms = array();
+  $perms = array('administer features');
+
   // Generate permissions for any default node types provided by features.
   foreach (node_get_types() as $type) {
     if ($type->module == 'features') {
@@ -389,10 +382,17 @@ function features_hook($base, $hook) {
   return function_exists($base .'_'. $hook);
 }
 
+/**
+ * Wrapper around features_get_info() that returns an array
+ * of module info objects that are features.
+ */
 function features_get_features($name = NULL, $reset = FALSE) {
   return features_get_info('feature', $name, $reset);
 }
 
+/**
+ * Helper for retrieving info from system table.
+ */
 function features_get_info($type = 'module', $name = NULL, $reset = FALSE) {
   static $cache;
   if (!isset($cache)) {
@@ -424,21 +424,6 @@ function features_get_info($type = 'module', $name = NULL, $reset = FALSE) {
 }
 
 /**
- * Simple wrapper returns the status of a module.
- */
-function features_get_module_status($module) {
-  if (module_exists($module)) {
-    return FEATURES_MODULE_ENABLED;
-  }
-  else if (features_get_modules($module)) {
-    return FEATURES_MODULE_DISABLED;
-  }
-  else {
-    return FEATURES_MODULE_MISSING;
-  }
-}
-
-/**
  * Menu title callback.
  */
 function features_get_feature_title($feature) {
@@ -455,11 +440,9 @@ function features_access_override_actions($feature) {
     // Set a value first. We may get called again from within features_detect_overrides().
     $access[$feature->name] = FALSE;
 
-    // Find all overridden items
     features_include();
     module_load_include('inc', 'features', 'features.export');
-    $overrides = features_detect_overrides($feature);
-    $access[$feature->name] = !empty($overrides) && user_access('administer site configuration');
+    $access[$feature->name] = in_array(features_get_storage($feature->name), array(FEATURES_OVERRIDDEN, FEATURES_NEEDS_REVIEW)) && user_access('administer site configuration');
   }
   return $access[$feature->name];
 }
@@ -483,11 +466,56 @@ function features_form_system_modules_alter(&$form) {
 }
 
 /**
- * Rebuild definitions -- calls various scripts for non-exportables.
+ * Restore the specified modules to the default state.
  */
-function features_rebuild() {
+function _features_restore($op, $items = array()) {
+  module_load_include('inc', 'features', 'features.export');
   features_include();
-  features_invoke_all('features_rebuild');
+
+  switch ($op) {
+    case 'revert':
+      $restore_states = array(FEATURES_OVERRIDDEN, FEATURES_REBUILDABLE, FEATURES_NEEDS_REVIEW);
+      $restore_hook = 'features_revert';
+     break;
+    case 'rebuild':
+      $restore_states = array(FEATURES_REBUILDABLE);
+      $restore_hook = 'features_rebuild';
+      break;
+  }
+
+  if (empty($items)) {
+    $states = features_get_component_states();
+    foreach ($states as $module_name => $components) {
+      foreach ($components as $component => $state) {
+        if (in_array($state, $restore_states)) {
+          $items[$module_name][] = $component;
+        }
+      }
+    }
+  }
+
+  foreach ($items as $module_name => $components) {
+    foreach ($components as $component) {
+      if (features_hook($component, $restore_hook)) {
+        features_invoke($component, $restore_hook, $module_name);
+        features_set_signature($module_name, $component);
+      }
+    }
+  }
+}
+
+/**
+ * Wrapper around _features_restore().
+ */
+function features_revert($revert = array()) {
+  return _features_restore('revert', $revert);
+}
+
+/**
+ * Wrapper around _features_restore().
+ */
+function features_rebuild($rebuild = array()) {
+  return _features_restore('rebuild', $rebuild);
 }
 
 /**

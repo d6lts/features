@@ -68,11 +68,16 @@ Drupal.features = {
       if (uri) {
         $.get(uri, [], function(data) {
           $(elem).find('.admin-loading').hide();
-          if (data.status == 1) {
-            $(elem).find('.admin-overridden').show();
-          }
-          else {
-            $(elem).find('.admin-default').show();
+          switch (data.storage) {
+            case 2:
+              $(elem).find('.admin-needs-review').show();
+              break;
+            case 1:
+              $(elem).find('.admin-overridden').show();
+              break;
+            default:
+              $(elem).find('.admin-default').show();
+              break;
           }
           Drupal.features.checkStatus();
         }, 'json');

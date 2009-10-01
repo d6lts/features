@@ -6,17 +6,61 @@
  */
 function template_preprocess_features_admin_components(&$vars) {
   drupal_add_css(drupal_get_path('module', 'features') .'/features.css');
+  $form = $vars['form'];
 
+  // Basic info
+  $vars['name'] = $form['#info']['name'];
+  $vars['description'] = $form['#info']['description'];
+
+  // Dependencies
   $rows = array();
-  foreach ($vars['dependencies'] as $dependency => $status) {
-    $row = array(
+  foreach ($form['#dependencies'] as $dependency => $status) {
+    $rows[] = array(
       array('data' => $dependency, 'class' => 'component'),
       theme('features_module_status', $status),
     );
-    $rows[] = $row;
   }
   $vars['dependencies'] = theme('table', array(t('Dependency'), t('Status')), $rows);
-  $vars['components'] = theme('features_components', $vars['info'], $vars['info']['features'], $vars['conflicts']);
+
+  // Components
+  $rows = array();
+  if (!empty($form['#info']['features'])) {
+    foreach ($form['#info']['features'] as $component => $items) {
+      if (!empty($items)) {
+        $header = $data = array();
+        if (element_children($form['revert'])) {
+          $header[] = array(
+            'data' => isset($form['revert'][$component]) ? drupal_render($form['revert'][$component]) : '',
+            'header' => TRUE
+          );
+        }
+        $header[] = array(
+          'data' => $component,
+          'header' => TRUE
+        );
+        $header[] = array(
+          'data' => drupal_render($form['components'][$component]),
+          'header' => TRUE
+        );
+        $rows[] = $header;
+
+        if (element_children($form['revert'])) {
+          $data[] = '';
+        }
+        $data[] = array(
+          'data' => theme('features_component_list', $items, $items),
+          'colspan' => 2,
+          'class' => 'component'
+        );
+        $rows[] = $data;
+      }
+    }
+  }
+  $vars['components'] = theme('table', array(), $rows);
+
+  // Other elements
+  $vars['buttons'] = drupal_render($form['buttons']);
+  $vars['form'] = drupal_render($form);
 }
 
 /**
@@ -39,12 +83,23 @@ function theme_features_module_status($status, $module = NULL) {
 /**
  * Themes a module status display.
  */
-function theme_features_storage($storage) {
-  switch ($storage) {
-    case FEATURES_OVERRIDDEN:
-      return "<span class='admin-overridden'>". t('Overridden') ."</span>";
-    case FEATURES_DEFAULT:
-      return "<span class='admin-default'>". t('Default') ."</span>";
+function theme_features_storage_link($storage, $path = NULL, $options = array()) {
+  $classes = array(
+    FEATURES_OVERRIDDEN => 'admin-overridden',
+    FEATURES_DEFAULT => 'admin-default',
+    FEATURES_NEEDS_REVIEW => 'admin-needs-review',
+  );
+  $text = array(
+    FEATURES_OVERRIDDEN => t('Overridden'),
+    FEATURES_DEFAULT => t('Default'),
+    FEATURES_NEEDS_REVIEW => t('Needs review'),
+  );
+  if ($path) {
+    $options['attributes']['class'] = $classes[$storage] . ' features-storage';
+    return l($text[$storage], $path, $options);
+  }
+  else {
+    return "<span class='{$classes[$storage]} features-storage'>{$text[$storage]}</span>";
   }
 }
 
@@ -67,7 +122,7 @@ function theme_features_form($form) {
 
   $output = '';
 
-  $header = array('', t('Feature'), t('Signature'), t('State'), t('Actions'));
+  $header = array('', t('Feature'), t('Signature'), t('State'));
 
   $rows = array();
   foreach (element_children($form['status']) as $element) {
@@ -85,7 +140,6 @@ function theme_features_form($form) {
       'name' => $name,
       'sign' => drupal_render($form['sign'][$element]),
       'state' => drupal_render($form['state'][$element]),
-      'actions' => drupal_render($form['actions'][$element]),
     );
 
     // Determine row classes
@@ -147,27 +201,24 @@ function theme_features_form_components($form) {
 /**
  * Theme a set of features export components.
  */
-function theme_features_components($info, $sources = array(), $conflicts = array(), $show_dependencies = FALSE) {
+function theme_features_components($info, $sources = array()) {
   $output = '';
   $rows = array();
   if (!empty($info['features']) || !empty($info['dependencies']) || !empty($sources)) {
     foreach ($info['features'] as $component => $items) {
       if (!empty($items) || !empty($sources[$component])) {
-        $rows[] = array(
-          array('data' => $component, 'header' => TRUE),
-          array('data' => $conflicts[$component], 'header' => TRUE),
-        );
         $source_items = isset($sources[$component]) ? $sources[$component] : array();
-        $rows[] = array(array('data' => theme('features_component_list', $items, $source_items), 'colspan' => 2, 'class' => 'component'));
+        $rows[] = array(array('data' => $component, 'header' => TRUE));
+        $rows[] = array(array('data' => theme('features_component_list', $items, $source_items), 'class' => 'component'));
       }
     }
-    if ($show_dependencies && !empty($info['dependencies'])) {
-      $rows[] = array(array('data' => t('dependencies'), 'header' => TRUE, 'colspan' => 2));
+    if (!empty($info['dependencies'])) {
       $source_items = isset($sources['dependencies']) ? $sources['dependencies'] : $info['dependencies'];
-      $rows[] = array(array('data' => theme('features_component_list', $info['dependencies'], $source_items), 'colspan' => 2, 'class' => 'component'));
+      $rows[] = array(array('data' => t('dependencies'), 'header' => TRUE));
+      $rows[] = array(array('data' => theme('features_component_list', $info['dependencies'], $source_items), 'class' => 'component'));
     }
     $output .= theme('table', array(), $rows);
-    $output .= $show_dependencies ? theme('features_component_key') : '';
+    $output .= theme('features_component_key');
   }
   return $output;
 }
