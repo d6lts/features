@@ -31,6 +31,7 @@ function features_export_form($form_state, $feature = NULL) {
     '#required' => TRUE,
     '#default_value' => !empty($feature->name) ? $feature->name : '',
     '#attributes' => array('class' => 'feature-project'),
+    '#element_validate' => array('features_export_form_validate_field'),
   );
   $form['info']['description'] = array(
     '#title' => t('Description'),
@@ -46,6 +47,7 @@ function features_export_form($form_state, $feature = NULL) {
     '#required' => FALSE,
     '#default_value' => !empty($feature->info['version']) ? $feature->info['version'] : '',
     '#size' => 30,
+    '#element_validate' => array('features_export_form_validate_field'),
   );
   $form['info']['project_status_url'] = array(
     '#title' => t('URL of update XML'),
@@ -54,6 +56,7 @@ function features_export_form($form_state, $feature = NULL) {
     '#required' => FALSE,
     '#default_value' => !empty($feature->info['project status url']) ? $feature->info['project status url'] : '',
     '#size' => 30,
+    '#element_validate' => array('features_export_form_validate_field'),
   );
 
   // User-selected feature source components.
@@ -123,9 +126,36 @@ function features_export_form($form_state, $feature = NULL) {
 }
 
 /**
+ * Validation for project field.
+ */
+function features_export_form_validate_field($element, &$form_state) {
+  switch ($element['#name']) {
+    case 'project':
+      if (!preg_match('!^[a-z0-9_]+$!', $element['#value'])) {
+        form_error($element, t('The machine-readable name must contain only lowercase letters, numbers, and underscores.'));
+      }
+      break;
+    case 'project_status_url':
+      if (!empty($element['#value']) && !valid_url($element['#value'])) {
+        form_error($element, t('The URL %url is invalid. Please enter a fully-qualified URL, such as http://www.example.com/feed.xml.', array('%url' => $element['#value'])));
+      }
+      break;
+    case 'version':
+      preg_match('/^(?<core>\d+\.x)-(?<major>\d+)\.(?<patch>\d+)-?(?<extra>\w+)?$/', $element['#value'], $matches);
+      if (!empty($element['#value']) && !isset($matches['core'], $matches['major'])) {
+        form_error($element, t('Please enter a valid version with core and major version number. Example: !example', array('!example' => '6.x-1.0')));
+      };
+      break;
+  }
+}
+
+/**
  * Submit handler for features_export_form_build().
  */
 function features_export_build_form_submit($form, &$form_state) {
+  module_load_include('inc', 'features', 'features.export');
+  features_include();
+
   // Assemble the combined component list
   $stub = array();
   $components = array_keys(features_get_components());
