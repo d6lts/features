@@ -436,29 +436,6 @@ function features_get_info($type = 'module', $name = NULL, $reset = FALSE) {
 }
 
 /**
- * Return an array of all enabled modules that depend on the given module.
- */
-function features_get_dependents($module, $reset = FALSE) {
-  static $dependencies;
-
-  // Generate an array of dependencies => dependents.
-  if (!isset($dependencies) || $reset) {
-    module_load_include('inc', 'features', 'features.export');
-    $modules = module_list(FALSE, FALSE);
-    foreach ($modules as $enabled) {
-      $info = features_get_modules($enabled);
-      if (isset($info->info['dependencies'])) {
-        foreach (_features_export_maximize_dependencies($info->info['dependencies']) as $dependency) {
-          $dependencies[$dependency][$module] = $module;
-        }
-      }
-    }
-  }
-
-  return isset($dependencies[$module]) ? $dependencies[$module] : array();
-}
-
-/**
  * Generate an array of feature dependencies that have been orphaned.
  */
 function features_get_orphans($reset = FALSE) {
@@ -477,15 +454,23 @@ function features_get_orphans($reset = FALSE) {
     $dependencies['enabled'] = array_unique($dependencies['enabled']);
     $dependencies['disabled'] = array_unique($dependencies['disabled']);
 
-    // Find the list of orphaned feature.
+    // Find the list of orphaned modules.
     $orphaned = array_diff($dependencies['disabled'], $dependencies['enabled']);
     $orphaned = array_intersect($orphaned, module_list(FALSE, FALSE));
 
     // Build final list of modules that can be disabled.
+    $modules = features_get_modules(NULL, TRUE);
+    $enabled = module_list();
+    _module_build_dependencies($modules);
+
     foreach ($orphaned as $module) {
-      if (!features_get_dependents($module)) {
-        $info = features_get_modules($module);
-        $orphans[$module] = $info;
+      if (!empty($modules[$module]->info['dependents'])) {
+        // Determine whether any dependents are actually enabled.
+        $dependents = array_intersect($modules[$module]->info['dependents'], $enabled);
+        if (empty($dependents)) {
+          $info = features_get_modules($module);
+          $orphans[$module] = $info;
+        }
       }
     }
   }
