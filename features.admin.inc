@@ -343,28 +343,26 @@ function features_admin_form($feature = NULL) {
 
     // Add status link
     $item = menu_get_item("admin/build/features/{$name}");
-    if ($module->status) {
-      $path = $item && $item['access'] ? $item['href'] : NULL;
-      $state = '<span class="admin-loading features-storage">' . t('Checking...') . '</span>';
-      $state .= l(t('Check'), "admin/build/features/{$name}/status", array('attributes' => array('class' => 'admin-check')));
-      $state .= theme('features_storage_link', FEATURES_NEEDS_REVIEW, $path);
-      $state .= theme('features_storage_link', FEATURES_OVERRIDDEN, $path);
-      $state .= theme('features_storage_link', FEATURES_DEFAULT, $path);
-    }
-    else {
-      $state = '<span class="features-storage">'. t('Disabled') .'</span>';
-    }
-
-    // Add in update link
-    $item = menu_get_item("admin/build/features/{$name}/recreate");
     if ($item && $item['access']) {
-      $state .= l($item['title'], $item['href'], array('attributes' => array('class' => 'admin-update')));
+      if ($module->status) {
+        $state = '<span class="admin-loading features-storage">' . t('Checking...') . '</span>';
+        $state .= l(t('Check'), "admin/build/features/{$name}/status", array('attributes' => array('class' => 'admin-check')));
+        $state .= theme('features_storage_link', FEATURES_NEEDS_REVIEW, $item['href']);
+        $state .= theme('features_storage_link', FEATURES_OVERRIDDEN, $item['href']);
+        $state .= theme('features_storage_link', FEATURES_DEFAULT, $item['href']);
+      }
+      else {
+        $state = '<span class="features-storage">'. t('Disabled') .'</span>';
+      }
+      // Add in recreate link
+      if ($recreate = menu_get_item("admin/build/features/{$name}/recreate")) {
+        $state .= l($recreate['title'], $recreate['href'], array('attributes' => array('class' => 'admin-update')));
+      }
+      $form['state'][$name] = array(
+        '#type' => 'markup',
+        '#value' => !empty($state) ? $state : '',
+      );
     }
-
-    $form['state'][$name] = array(
-      '#type' => 'markup',
-      '#value' => !empty($state) ? $state : '',
-    );
   }
 
   $form['buttons'] = array(
@@ -403,7 +401,7 @@ function features_admin_components($form_state, $feature) {
   $states = features_get_component_states(array($feature->name), FALSE);
   $form['revert']['#tree'] = TRUE;
   foreach ($feature->info['features'] as $component => $items) {
-    if (in_array($states[$feature->name][$component], array(FEATURES_OVERRIDDEN, FEATURES_NEEDS_REVIEW))) {
+    if (user_access('administer features') && in_array($states[$feature->name][$component], array(FEATURES_OVERRIDDEN, FEATURES_NEEDS_REVIEW))) {
       switch ($states[$feature->name][$component]) {
         case FEATURES_OVERRIDDEN:
           $revert = TRUE;
@@ -417,7 +415,8 @@ function features_admin_components($form_state, $feature) {
         '#default_value' => FALSE,
       );
     }
-    $path = ($states[$feature->name][$component] != FEATURES_DEFAULT && module_exists('diff')) ? "admin/build/features/{$feature->name}/diff/{$component}" : NULL;
+    $item = menu_get_item("admin/build/features/{$feature->name}/diff/{$component}");
+    $path = ($item && $item['access']) ? $item['href'] : NULL;
     $conflicts[$component] = theme('features_storage_link', $states[$feature->name][$component], $path);
     $form['components'][$component] = array(
       '#type' => 'markup',

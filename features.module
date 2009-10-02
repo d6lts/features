@@ -56,7 +56,7 @@ function features_menu() {
   $items = array();
   $items['admin/build/features'] = array(
     'title' => 'Features',
-    'description' => 'Administer features.',
+    'description' => 'Manage features.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('features_admin_form'),
     'type' => MENU_NORMAL_ITEM,
@@ -83,6 +83,8 @@ function features_menu() {
     'description' => 'Create a new feature.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('features_export_form'),
+    'access callback' => 'user_access',
+    'access arguments' => array('administer features'),
     'type' => MENU_LOCAL_TASK,
     'file' => "features.admin.inc",
     'weight' => 10,
@@ -92,6 +94,8 @@ function features_menu() {
     'description' => 'AHAH callback to populate a feature from selected components.',
     'page callback' => 'features_export_build_form_populate',
     'page arguments' => array(),
+    'access callback' => 'user_access',
+    'access arguments' => array('administer features'),
     'type' => MENU_CALLBACK,
     'file' => "features.admin.inc",
   );
@@ -102,12 +106,16 @@ function features_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('features_admin_components', 3),
     'load arguments' => array(3, TRUE),
+    'access callback' => 'user_access',
+    'access arguments' => array('administer features'),
     'type' => MENU_CALLBACK,
     'file' => 'features.admin.inc',
   );
   $items['admin/build/features/%feature/view'] = array(
     'title' => 'View',
     'description' => 'Display components of a feature.',
+    'access callback' => 'user_access',
+    'access arguments' => array('administer features'),
     'type' => MENU_DEFAULT_LOCAL_TASK,
     'weight' => -10,
   );
@@ -117,6 +125,8 @@ function features_menu() {
     'page callback' => 'drupal_get_form',
     'page arguments' => array('features_export_form', 3),
     'load arguments' => array(3, TRUE),
+    'access callback' => 'user_access',
+    'access arguments' => array('administer features'),
     'type' => MENU_LOCAL_TASK,
     'file' => "features.admin.inc",
     'weight' => 11,
@@ -140,13 +150,15 @@ function features_menu() {
     'page callback' => 'features_feature_status',
     'page arguments' => array(3),
     'load arguments' => array(3, TRUE),
+    'access callback' => 'user_access',
+    'access arguments' => array('administer features'),
     'type' => MENU_CALLBACK,
     'file' => 'features.admin.inc',
   );
   foreach ($items as $path => $item) {
-    if (!isset($items[$path]['access callback'])) {
+    if (!isset($item['access callback'])) {
       $items[$path]['access callback'] = 'user_access';
-      $items[$path]['access arguments'] = array('administer site configuration');
+      $items[$path]['access arguments'] = array('manage features');
     }
   }
   return $items;
@@ -241,8 +253,7 @@ function features_access($op, $node, $account) {
  * Implementation of hook_perm().
  */
 function features_perm() {
-  $perms = array('administer features');
-
+  $perms = array('administer features', 'manage features');
   // Generate permissions for any default node types provided by features.
   foreach (node_get_types() as $type) {
     if ($type->module == 'features') {
@@ -442,7 +453,7 @@ function features_access_override_actions($feature) {
 
     features_include();
     module_load_include('inc', 'features', 'features.export');
-    $access[$feature->name] = in_array(features_get_storage($feature->name), array(FEATURES_OVERRIDDEN, FEATURES_NEEDS_REVIEW)) && user_access('administer site configuration');
+    $access[$feature->name] = in_array(features_get_storage($feature->name), array(FEATURES_OVERRIDDEN, FEATURES_NEEDS_REVIEW)) && user_access('administer features');
   }
   return $access[$feature->name];
 }

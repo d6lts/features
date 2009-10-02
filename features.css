@@ -18,11 +18,12 @@ table.features tr.disabled { color:#999; }
   table.features div.feature strong { font-size:13px; }
   table.features div.feature div.description { font-size:11px; margin:0px; }
 
-  table.features td.name { width:55%; }
-  table.features td.sign { width:15%; }
-  table.features td.state { width:30%; }
+  table.features-manage td.name { width:85%; }
+  table.features-manage td.sign { width:15%; }
 
-  table.features td.actions { white-space:nowrap; }
+  table.features-admin td.name { width:55%; }
+  table.features-admin td.sign { width:15%; }
+  table.features-admin td.state { width:30%; }
 
   table.features td.sign {
     font-size:9px;
@@ -112,12 +113,14 @@ span.features-component-list span {
 
   a.admin-update { background:transparent; }
 
-  a.admin-overridden {
+  a.admin-overridden,
+  span.admin-overridden {
     color:#fff;
     background:#666;
     }
 
-  a.admin-needs-review {
+  a.admin-needs-review,
+  span.admin-needs-review {
     color:#963;
     background:#fe6;
     }

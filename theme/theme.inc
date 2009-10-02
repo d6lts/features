@@ -122,7 +122,10 @@ function theme_features_form($form) {
 
   $output = '';
 
-  $header = array('', t('Feature'), t('Signature'), t('State'));
+  $header = array('', t('Feature'), t('Signature'));
+  if (isset($form['state'])) {
+    $header[] = t('State');
+  }
 
   $rows = array();
   foreach (element_children($form['status']) as $element) {
@@ -135,28 +138,26 @@ function theme_features_form($form) {
     unset($form['status'][$element]['#title']);
     unset($form['status'][$element]['#description']);
 
-    $row = array(
-      'status' => drupal_render($form['status'][$element]),
-      'name' => $name,
-      'sign' => drupal_render($form['sign'][$element]),
-      'state' => drupal_render($form['state'][$element]),
-    );
-
-    // Determine row classes
+    // Determine row & cell classes
     $class = $form['status'][$element]['#default_value'] ? 'enabled' : 'disabled';
 
-    // Collect data + classes & add to master array.
-    foreach ($row as $key => $data) {
-      $row[$key] = array('data' => $data, 'class' => $key);
+    $row = array(
+      'status' => array('data' => drupal_render($form['status'][$element]), 'class' => 'status'),
+      'name' => array('data' => $name, 'class' => 'name'),
+      'sign' => array('data' => drupal_render($form['sign'][$element]), 'class' => 'sign'),
+    );
+    if (isset($form['state'])) {
+      $row['state'] = array('data' => drupal_render($form['state'][$element]), 'class' => 'state');
     }
     $rows[] = array('data' => $row, 'class' => $class);
   }
 
   if (empty($rows)) {
-    $rows[] = array('', array('data' => t('No features available.'), 'colspan' => 4));
+    $rows[] = array('', array('data' => t('No features available.'), 'colspan' => count($header)));
   }
 
-  $output .= theme('table', $header, $rows, array('id' => 'features-form-table', 'class' => 'features'));
+  $class = count($header) > 3 ? 'features features-admin' : 'features features-manage';
+  $output .= theme('table', $header, $rows, array('id' => 'features-form-table', 'class' => $class));
 
   // Prevent section from being rendered by drupal_render().
   unset($form['features']);
