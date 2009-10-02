@@ -64,6 +64,33 @@ function template_preprocess_features_admin_components(&$vars) {
 }
 
 /**
+ * Preprocessor for theme('features_form').
+ */
+function template_preprocess_features_form(&$vars) {
+  drupal_add_css(drupal_get_path('module', 'features') .'/features.css');
+  drupal_add_js(drupal_get_path('module', 'features') .'/features.js');
+
+  $first = TRUE;
+  $package_links = array();
+  foreach (element_children($vars['form']) as $package) {
+    if (!empty($vars['form'][$package]['status'])) {
+      $package_links[$package] = array(
+        'title' => $vars['form'][$package]['#title'],
+        'href' => $_GET['q'],
+        'fragment' => $package,
+      );
+      $class = $first ? "$package features-package-active" : $package;
+      $package_links[$package]['attributes'] = $first ? array('class' => 'features-package-active') : array();
+      $vars['packages'][$class] = $vars['form'][$package];
+
+      unset($vars['form'][$package]);
+      $first = FALSE;
+    }
+  }
+  $vars['package_links'] = $package_links;
+}
+
+/**
  * Themes a module status display.
  */
 function theme_features_module_status($status, $module = NULL) {
@@ -116,7 +143,7 @@ function theme_features_form_buttons($element) {
 /**
  * Theme for features management form.
  */
-function theme_features_form($form) {
+function theme_features_form_package($form) {
   drupal_add_css(drupal_get_path('module', 'features') .'/features.css');
   drupal_add_js(drupal_get_path('module', 'features') .'/features.js');
 
@@ -125,6 +152,9 @@ function theme_features_form($form) {
   $header = array('', t('Feature'), t('Signature'));
   if (isset($form['state'])) {
     $header[] = t('State');
+  }
+  if (isset($form['actions'])) {
+    $header[] = t('Actions');
   }
 
   $rows = array();
@@ -148,6 +178,9 @@ function theme_features_form($form) {
     );
     if (isset($form['state'])) {
       $row['state'] = array('data' => drupal_render($form['state'][$element]), 'class' => 'state');
+    }
+    if (isset($form['actions'])) {
+      $row['actions'] = array('data' => drupal_render($form['actions'][$element]), 'class' => 'actions');
     }
     $rows[] = array('data' => $row, 'class' => $class);
   }

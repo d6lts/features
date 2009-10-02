@@ -267,25 +267,32 @@ function features_admin_form($form_state) {
   module_rebuild_cache();
   features_rebuild();
 
-  $form = array('#theme' => 'features_form');
-
-  $form['feature'] =
-  $form['links'] =
-  $form['version'] =
-  $form['weight'] =
-  $form['status'] = array(
-    '#tree' => TRUE,
-  );
-
+  $features = features_get_features('', TRUE);
   $modules = features_get_modules('', TRUE);
   $conflicts = features_get_conflicts();
 
+  $form = array(
+    'features' => array('#type' => 'value', '#value' => $features),
+    '#theme' => 'features_form',
+  );
+
   // Generate features form.
-  foreach (features_get_features('', TRUE) as $name => $module) {
-    $form['feature'][$name] = array(
-      '#type' => 'value',
-      '#value' => $module,
-    );
+  foreach ($features as $name => $module) {
+    $package = !empty($module->info['package']) ? $module->info['package'] : 'other';
+
+    // Set up package elements
+    if (!isset($form[$package])) {
+      $form[$package] = array(
+        '#tree' => FALSE,
+        '#title' => t($package),
+        '#theme' => 'features_form_package'
+      );
+      $form[$package]['links'] =
+      $form[$package]['version'] =
+      $form[$package]['weight'] =
+      $form[$package]['status'] =
+      $form[$package]['action'] = array('#tree' => TRUE);
+    }
 
     $disabled = FALSE;
     $description = $module->info['description'];
@@ -320,7 +327,7 @@ function features_admin_form($form_state) {
       $description .= "<div class='conflicts'>". t('Incompatible with: !conflicts', array('!conflicts' => implode(', ', $module_conflicts))) ."</div>";
     }
 
-    $form['status'][$name] = array(
+    $form[$package]['status'][$name] = array(
       '#type' => 'checkbox',
       '#title' => $module->info['name'],
       '#description' => $description,
@@ -339,7 +346,7 @@ function features_admin_form($form_state) {
     }
     $version = !empty($module->info['version']) ? $module->info['version'] : '';
     $version = !empty($version) ? "<div class='description'>$version</div>" : '';
-    $form['sign'][$name] = array('#type' => 'markup', '#value' => "{$uri} {$version}");
+    $form[$package]['sign'][$name] = array('#type' => 'markup', '#value' => "{$uri} {$version}");
 
     // Add status link
     $item = menu_get_item("admin/build/features/{$name}");
@@ -354,13 +361,17 @@ function features_admin_form($form_state) {
       else {
         $state = '<span class="features-storage">'. t('Disabled') .'</span>';
       }
-      // Add in recreate link
-      if ($recreate = menu_get_item("admin/build/features/{$name}/recreate")) {
-        $state .= l($recreate['title'], $recreate['href'], array('attributes' => array('class' => 'admin-update')));
-      }
-      $form['state'][$name] = array(
+      $form[$package]['state'][$name] = array(
         '#type' => 'markup',
         '#value' => !empty($state) ? $state : '',
+      );
+    }
+    // Add in recreate link
+    $item = menu_get_item("admin/build/features/{$name}/recreate");
+    if ($item && $item['access']) {
+      $form[$package]['actions'][$name] = array(
+        '#type' => 'markup',
+        '#value' => l($item['title'], $item['href'], array('attributes' => array('class' => 'admin-update'))),
       );
     }
   }
@@ -497,7 +508,7 @@ function features_form_validate(&$form, &$form_state) {
 function features_form_submit(&$form, &$form_state) {
   module_load_include('inc', 'features', 'features.export');
 
-  $features = $form_state['values']['feature'];
+  $features = $form_state['values']['features'];
   $install = array();
   $disable = array();
 
