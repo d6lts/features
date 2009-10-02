@@ -259,7 +259,7 @@ function features_export_build_form_populate() {
 /**
  * admin/build/features page callback.
  */
-function features_admin_form($feature = NULL) {
+function features_admin_form($form_state) {
   // Load export functions to use in comparison.
   module_load_include('inc', 'features', 'features.export');
 
@@ -500,6 +500,13 @@ function features_form_submit(&$form, &$form_state) {
   $features = $form_state['values']['feature'];
   $install = array();
   $disable = array();
+
+  // Clear drupal caches after enabling a feature. We do this in a separate
+  // page callback rather than as part of the submit handler as some modules
+  // have includes/other directives of importance in hooks that have already
+  // been called in this page load.
+  $form_state['redirect'] = 'admin/build/features/cleanup/clear';
+
   if (!empty($features)) {
     foreach ($features as $name => $feature) {
       // Enable feature
@@ -532,20 +539,58 @@ function features_form_submit(&$form, &$form_state) {
       module_disable($disable);
     }
   }
-
-  // Clear drupal caches after enabling a feature. We do this in a separate
-  // page callback rather than as part of the submit handler as some modules
-  // have includes/other directives of importance in hooks that have already
-  // been called in this page load.
-  $form_state['redirect'] = 'admin/build/features/cache-clear';
 }
 
 /**
- * Clear caches after enabling a feature.
+ * Form for disabling orphaned dependencies.
  */
-function features_cache_clear() {
-  drupal_flush_all_caches();
-  drupal_goto('admin/build/features');
+function features_cleanup_form($form_state, $cache_clear = FALSE) {
+  $form = array();
+
+  // Clear caches if we're getting a post-submit redirect that requests it.
+  if ($cache_clear) {
+    drupal_flush_all_caches();
+  }
+
+  $orphans = features_get_orphans();
+  if (!empty($orphans)) {
+    $options = array();
+    foreach ($orphans as $module) {
+      $options[$module->name] = check_plain($module->info['name']);
+    }
+    $form['orphans'] = array(
+      '#title' => t('Orphaned dependencies'),
+      '#description' => t('These modules are dependencies of features that have been disabled. They may be disabled without affecting other components of your website.'),
+      '#type' => 'checkboxes',
+      '#options' => $options,
+    );
+    $form['buttons'] = array('#tree' => TRUE, '#theme' => 'features_form_buttons');
+    $form['buttons']['disable'] = array(
+      '#type' => 'submit',
+      '#value' => t('Disable selected modules'),
+      '#submit' => array('features_cleanup_form_disable'),
+    );
+    $form['buttons']['ignore'] = array(
+      '#type' => 'markup',
+      '#value' => l(t('Leave enabled'), 'admin/build/features'),
+    );
+  }
+  else {
+    drupal_goto('admin/build/features');
+  }
+  return $form;
+}
+
+/**
+ * Submit handler for disable action on features_cleanup_form().
+ */
+function features_cleanup_form_disable(&$form, &$form_state) {
+  if (!empty($form_state['values']['orphans'])) {
+    $disable = array_keys(array_filter($form_state['values']['orphans']));
+    module_disable($disable);
+    drupal_flush_all_caches();
+  }
+  $form_state['redirect'] = 'admin/build/features/cleanup';
 }
 
 /**

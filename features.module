@@ -62,13 +62,14 @@ function features_menu() {
     'type' => MENU_NORMAL_ITEM,
     'file' => 'features.admin.inc',
   );
-  $items['admin/build/features/cache-clear'] = array(
-    'title' => 'Clear caches',
-    'description' => 'Page callback for clearing caches after modules are enabled.',
-    'page callback' => 'features_cache_clear',
-    'page arguments' => array(),
+  $items['admin/build/features/cleanup'] = array(
+    'title' => 'Cleanup',
+    'description' => 'Detect and disable any orphaned feature dependencies.',
+    'page callback' => 'drupal_get_form',
+    'page arguments' => array('features_cleanup_form', 4),
     'type' => MENU_CALLBACK,
     'file' => 'features.admin.inc',
+    'weight' => 1,
   );
   $items['admin/build/features/manage'] = array(
     'title' => 'Manage',
@@ -432,6 +433,63 @@ function features_get_info($type = 'module', $name = NULL, $reset = FALSE) {
     return !empty($cache->data[$type][$name]) ? $cache->data[$type][$name] : array();
   }
   return !empty($cache->data[$type]) ? $cache->data[$type] : array();
+}
+
+/**
+ * Return an array of all enabled modules that depend on the given module.
+ */
+function features_get_dependents($module, $reset = FALSE) {
+  static $dependencies;
+
+  // Generate an array of dependencies => dependents.
+  if (!isset($dependencies) || $reset) {
+    module_load_include('inc', 'features', 'features.export');
+    $modules = module_list(FALSE, FALSE);
+    foreach ($modules as $enabled) {
+      $info = features_get_modules($enabled);
+      if (isset($info->info['dependencies'])) {
+        foreach (_features_export_maximize_dependencies($info->info['dependencies']) as $dependency) {
+          $dependencies[$dependency][$module] = $module;
+        }
+      }
+    }
+  }
+
+  return isset($dependencies[$module]) ? $dependencies[$module] : array();
+}
+
+/**
+ * Generate an array of feature dependencies that have been orphaned.
+ */
+function features_get_orphans($reset = FALSE) {
+  static $orphans;
+  if (!isset($orphans) || $reset) {
+    module_load_include('inc', 'features', 'features.export');
+    $orphans = array();
+
+    // Build a list of all dependencies for enabled and disabled features.
+    $dependencies = array('enabled' => array(), 'disabled' => array());
+    $features = features_get_features();
+    foreach ($features as $feature) {
+      $key = module_exists($feature->name) ? 'enabled' : 'disabled';
+      $dependencies[$key] = array_merge($dependencies[$key], _features_export_maximize_dependencies($feature->info['dependencies']));
+    }
+    $dependencies['enabled'] = array_unique($dependencies['enabled']);
+    $dependencies['disabled'] = array_unique($dependencies['disabled']);
+
+    // Find the list of orphaned feature.
+    $orphaned = array_diff($dependencies['disabled'], $dependencies['enabled']);
+    $orphaned = array_intersect($orphaned, module_list(FALSE, FALSE));
+
+    // Build final list of modules that can be disabled.
+    foreach ($orphaned as $module) {
+      if (!features_get_dependents($module)) {
+        $info = features_get_modules($module);
+        $orphans[$module] = $info;
+      }
+    }
+  }
+  return $orphans;
 }
 
 /**
