@@ -12,5 +12,6 @@
     <div class='features-form-links'><?php print theme('links', $package_links, array('id' => 'features-form-links')) ?></div>
   <?php else: ?>
     <?php print drupal_render($packages) ?>
+    <?php print drupal_render($form) ?>
   <?php endif; ?>
 </div>
