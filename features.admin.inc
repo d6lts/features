@@ -206,6 +206,11 @@ function features_export_build_form_submit($form, &$form_state) {
     $filename = !empty($filename) ? $filename : $module_name;
     $filename = function_exists('gzencode') ? "{$filename}.tgz" : "{$filename}.tar";
 
+    // Clear out output buffer to remove any garbage from tar output.
+    if (ob_get_level()) {
+      ob_end_clean();
+    }
+
     drupal_set_header($header);
     drupal_set_header('Content-Disposition: attachment; filename="'. $filename .'"');
     print $tar;
