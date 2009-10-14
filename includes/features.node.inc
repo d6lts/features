@@ -32,8 +32,11 @@ function node_features_export($data, &$export, $module_name = '') {
   $modules = module_implements('node_info');
   foreach ($modules as $module) {
     $callback = $module ."_node_info";
-    foreach (call_user_func($callback) as $module_type => $module_info) {
-      $type_map[$module_type] = $module;
+    $node_types = call_user_func($callback);
+    if (is_array($node_types)) {
+      foreach ($node_types as $module_type => $module_info) {
+        $type_map[$module_type] = $module;
+      }
     }
   }
 
