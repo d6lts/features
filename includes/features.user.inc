@@ -150,7 +150,7 @@ function _user_features_permission_map($reset = FALSE) {
  * Represent the current state of permissions as a perm to role name array map.
  */
 function _user_features_get_permissions() {
-  $result = db_query("SELECT p.perm, r.name FROM {role} r INNER JOIN {permission} p ON p.rid = r.rid");
+  $result = db_query("SELECT p.perm, r.name FROM {role} r INNER JOIN {permission} p ON p.rid = r.rid ORDER BY r.rid ASC, p.perm ASC");
   $permissions = array();
   while ($row = db_fetch_object($result)) {
     $role = $row->name;
