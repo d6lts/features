@@ -440,12 +440,7 @@ function features_tar_create($files) {
  */
 function features_var_export($var, $prefix = '', $init = TRUE) {
   if (is_object($var)) {
-    if (method_exists($var, 'export')) {
-      $output = $var->export();
-    }
-    else {
-      $output = var_export($output);
-    }
+    $output = method_exists($var, 'export') ? $var->export() : features_var_export((array) $output);
   }
   else if (is_array($var)) {
     if (empty($var)) {
@@ -532,9 +527,12 @@ function features_get_signature($state = 'default', $module_name, $component) {
       $objects = features_get_normal($module_name, $component);
       break;
   }
-  $objects = (array) $objects;
-  _features_sanitize($objects);
-  return md5(_features_linetrim(features_var_export($objects)));
+  if (!empty($objects)) {
+    $objects = (array) $objects;
+    _features_sanitize($objects);
+    return md5(_features_linetrim(features_var_export($objects)));
+  }
+  return FALSE;
 }
 
 /**
@@ -563,7 +561,7 @@ function features_get_normal($module_name, $component, $reset = FALSE) {
     $export = $module->info;
     if ($module && isset($module->info['features'][$component]) && features_hook($component, 'features_export_render') && $default_hook = $default_hooks[$component]) {
       $code = features_invoke($component, 'features_export_render', $module_name, $module->info['features'][$component], $export);
-      $cache[$module_name][$component] = eval($code[$default_hook]);
+      $cache[$module_name][$component] = isset($code[$default_hook]) ? eval($code[$default_hook]) : FALSE;
     }
 
     // Clear out vars for memory's sake.
@@ -584,11 +582,14 @@ function features_get_default($module_name, $component, $reset = FALSE) {
   if (!isset($cache[$module_name][$component])) {
     features_include();
     $default_hooks = features_get_default_hooks();
-    if (isset($default_hooks[$component])) {
+    if (isset($default_hooks[$component]) && module_hook($module_name, $default_hooks[$component])) {
       $cache[$module_name][$component] = module_invoke($module_name, $default_hooks[$component]);
     }
+    else {
+      $cache[$module_name][$component] = FALSE;
+    }
   }
-  return isset($cache[$module_name][$component]) ? $cache[$module_name][$component] : FALSE;;
+  return isset($cache[$module_name][$component]) ? $cache[$module_name][$component] : FALSE;
 }
 
 /**
@@ -621,7 +622,10 @@ function features_get_component_states($features = array(), $rebuild_only = TRUE
           $normal    = features_get_signature('normal', $feature, $component);
           $default   = features_get_signature('default', $feature, $component);
 
-          if ($normal == $default) {
+          if (!features_hook($component, 'features_rebuild') && $normal == $default) {
+            $cache[$feature][$component] = FEATURES_DEFAULT;
+          }
+          else if (features_hook($component, 'features_rebuild') && !empty($normal) && !empty($default) && $normal == $default) {
             $cache[$feature][$component] = FEATURES_DEFAULT;
           }
           else if (features_hook($component, 'features_rebuild') && (!$codecache || $codecache == $normal)) {
