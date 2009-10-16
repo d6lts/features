@@ -277,19 +277,20 @@ function features_admin_form($form_state) {
   $conflicts = features_get_conflicts();
 
   $form = array(
-    'features' => array('#type' => 'value', '#value' => $features),
+    '#features' => $features,
     '#theme' => 'features_form',
   );
 
   // Generate features form.
   foreach ($features as $name => $module) {
-    $package = !empty($module->info['package']) ? $module->info['package'] : 'other';
+    $package_title = !empty($module->info['package']) ? $module->info['package'] : t('Other');
+    $package = strtolower(preg_replace('/[^a-zA-Z0-9-]+/', '-', $package_title));
 
     // Set up package elements
     if (!isset($form[$package])) {
       $form[$package] = array(
         '#tree' => FALSE,
-        '#title' => t($package),
+        '#title' => t($package_title),
         '#theme' => 'features_form_package'
       );
       $form[$package]['links'] =
@@ -513,7 +514,7 @@ function features_form_validate(&$form, &$form_state) {
 function features_form_submit(&$form, &$form_state) {
   module_load_include('inc', 'features', 'features.export');
 
-  $features = $form_state['values']['features'];
+  $features = $form['#features'];
   $install = array();
   $disable = array();
 
