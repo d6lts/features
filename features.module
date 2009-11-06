@@ -513,17 +513,6 @@ function features_access_override_actions($feature) {
  */
 function features_form_system_modules_alter(&$form) {
   features_rebuild();
-
-  // Hide feature module from admin/build/modules
-  foreach ($form['validation_modules']['#value'] as $name => $module) {
-    if (isset($module->info['features'])) {
-      unset($form['validation_modules']['#value'][$name]);
-      foreach (array('name', 'version', 'description') as $key) {
-        unset($form[$key][$name]);
-      }
-      unset($form['status']['#options'][$name]);
-    }
-  }
 }
 
 /**
