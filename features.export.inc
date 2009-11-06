@@ -676,17 +676,19 @@ function _features_linetrim($code) {
  * - Remove any null or empty values for associative arrays (array_filter()).
  */
 function _features_sanitize(&$array) {
-  $is_assoc = (array_keys($array) != range(0, count($array) - 1));
-  if ($is_assoc) {
-    ksort($array);
-    $array = array_filter($array);
-  }
-  else {
-    sort($array);
-  }
-  foreach ($array as $k => $v) {
-    if (is_array($v)) {
-      _features_sanitize($array[$k]);
+  if (is_array($array)) {
+    $is_assoc = (array_keys($array) != range(0, count($array) - 1));
+    if ($is_assoc) {
+      ksort($array);
+      $array = array_filter($array);
+    }
+    else {
+      sort($array);
+    }
+    foreach ($array as $k => $v) {
+      if (is_array($v)) {
+        _features_sanitize($array[$k]);
+      }
     }
   }
 }
