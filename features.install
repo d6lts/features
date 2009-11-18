@@ -10,6 +10,15 @@ function features_install() {
 }
 
 /**
+ * Implementation of hook_uninstall().
+ */
+function features_uninstall() {
+  variable_del('features_codecache');
+  variable_del('features_semaphore');
+  variable_del('features_ignored_orphans');
+}
+
+/**
  * Create menu. See menu.install for an example.
  */
 function _features_install_menu() {

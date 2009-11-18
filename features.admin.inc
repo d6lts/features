@@ -521,10 +521,10 @@ function features_form_submit(&$form, &$form_state) {
   $features = $form['#features'];
   if (!empty($features)) {
     $status = $form_state['values']['status'];
-    $install = array_keys($status, 1);
-    $disable = array_keys($status, 0);
+    $install = array_keys(array_filter($status));
+    $disable = array_diff(array_keys($status), $install);
 
-    features_install_modules($install, $features);
+    features_install_modules($install);
     module_disable($disable);
   }
 }
@@ -540,17 +540,26 @@ function features_cleanup_form($form_state, $cache_clear = FALSE) {
     drupal_flush_all_caches();
   }
 
+  // Retrieve orphaned modules and provide them as optional modules to be disabled.
+  // Exclude any modules that have been added to the 'ignored' list.
+  $options = array();
   $orphans = features_get_orphans();
+  $ignored = variable_get('features_ignored_orphans', array());
   if (!empty($orphans)) {
-    $options = array();
     foreach ($orphans as $module) {
-      $options[$module->name] = check_plain($module->info['name']);
+      if (!in_array($module->name, $ignored, TRUE)) {
+        $options[$module->name] = check_plain($module->info['name']);
+      }
     }
+  }
+
+  if (!empty($options)) {
     $form['orphans'] = array(
       '#title' => t('Orphaned dependencies'),
       '#description' => t('These modules are dependencies of features that have been disabled. They may be disabled without affecting other components of your website.'),
       '#type' => 'checkboxes',
       '#options' => $options,
+      '#default_value' => array_keys($options),
     );
     $form['buttons'] = array('#tree' => TRUE, '#theme' => 'features_form_buttons');
     $form['buttons']['disable'] = array(
@@ -559,8 +568,9 @@ function features_cleanup_form($form_state, $cache_clear = FALSE) {
       '#submit' => array('features_cleanup_form_disable'),
     );
     $form['buttons']['ignore'] = array(
-      '#type' => 'markup',
-      '#value' => l(t('Leave enabled'), 'admin/build/features'),
+      '#type' => 'submit',
+      '#value' => t('Leave enabled'),
+      '#submit' => array('features_cleanup_form_ignore'),
     );
   }
   else {
@@ -575,8 +585,33 @@ function features_cleanup_form($form_state, $cache_clear = FALSE) {
 function features_cleanup_form_disable(&$form, &$form_state) {
   if (!empty($form_state['values']['orphans'])) {
     $disable = array_keys(array_filter($form_state['values']['orphans']));
+    $ignored = array_diff(array_keys($form_state['values']['orphans']), $disable);
+
+    // Disable any orphans that have been selected.
     module_disable($disable);
     drupal_flush_all_caches();
+
+    // Add enabled modules to ignored orphans list.
+    $ignored_orphans = variable_get('features_ignored_orphans', array());
+    foreach ($ignored as $module) {
+      $ignored_orphans[$module] = $module;
+    }
+    variable_set('features_ignored_orphans', $ignored_orphans);
+  }
+  $form_state['redirect'] = 'admin/build/features/cleanup';
+}
+
+/**
+ * Submit handler for ignore action on features_cleanup_form().
+ */
+function features_cleanup_form_ignore(&$form, &$form_state) {
+  if (!empty($form_state['values']['orphans'])) {
+    $ignored = array_keys($form_state['values']['orphans']);
+    $ignored_orphans = variable_get('features_ignored_orphans', array());
+    foreach ($ignored as $module) {
+      $ignored_orphans[$module] = $module;
+    }
+    variable_set('features_ignored_orphans', $ignored_orphans);
   }
   $form_state['redirect'] = 'admin/build/features/cleanup';
 }

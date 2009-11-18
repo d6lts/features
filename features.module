@@ -414,14 +414,9 @@ function features_hook($base, $hook) {
  * @param $reset
  *   Clear the module info cache.
  */
-function features_install_modules($modules, $reset = FALSE) {
+function features_install_modules($modules) {
   module_load_include('inc', 'features', 'features.export');
-
-  if ($reset) {
-    $files = module_rebuild_cache();
-    features_rebuild();
-    features_get_features('', TRUE);
-  }
+  $files = module_rebuild_cache();
 
   // Build maximal list of dependencies.
   $install = array();
@@ -467,12 +462,18 @@ function features_get_info($type = 'module', $name = NULL, $reset = FALSE) {
   }
   if (empty($cache) || $reset) {
     $data = array();
+    $ignored = variable_get('features_ignored_orphans', array());
     $result = db_query("SELECT filename, name, type, status, throttle, schema_version FROM {system} WHERE type = 'module' ORDER BY name ASC");
     while ($row = db_fetch_object($result)) {
+      // If module is no longer enabled, remove it from the ignored orphans list.
+      if (in_array($row->name, $ignored, TRUE) && !$row->status) {
+        $key = array_search($row->name, $ignored, TRUE);
+        unset($ignored[$key]);
+      }
+
+      // Parse and allow modules to alter the info file if necessary.
       $row->info = drupal_parse_info_file(dirname($row->filename) .'/'. $row->name .'.info');
       if (!empty($row->info)) {
-        // Invoke hook_system_info_alter() to give installed modules a chance to
-        // modify the data in the .info files if necessary.
         drupal_alter('system_info', $row->info, $row);
         if (!empty($row->info['features'])) {
           $data['feature'][$row->name] = $row;
@@ -480,6 +481,7 @@ function features_get_info($type = 'module', $name = NULL, $reset = FALSE) {
         $data['module'][$row->name] = $row;
       }
     }
+    variable_set('features_ignored_orphans', $ignored);
     cache_set("features_module_info", $data);
     $cache = new stdClass();
     $cache->data = $data;
