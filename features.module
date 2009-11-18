@@ -405,6 +405,51 @@ function features_hook($base, $hook) {
 }
 
 /**
+ * Enables and installs an array of modules, ignoring those
+ * already enabled & installed. Consider this a helper or
+ * extension to drupal_install_modules().
+ *
+ * @param $modules
+ *   An array of modules to install.
+ * @param $reset
+ *   Clear the module info cache.
+ */
+function features_install_modules($modules, $reset = FALSE) {
+  module_load_include('inc', 'features', 'features.export');
+
+  if ($reset) {
+    $files = module_rebuild_cache();
+    features_rebuild();
+    features_get_features('', TRUE);
+  }
+
+  // Build maximal list of dependencies.
+  $install = array();
+  foreach ($modules as $name) {
+    if ($file = $files[$name]) {
+      $install[] = $name;
+      if (!empty($file->info['dependencies'])) {
+        $dependencies = _features_export_maximize_dependencies($file->info['dependencies']);
+        foreach ($dependencies as $dependency) {
+          $install[] = $dependency;
+        }
+      }
+    }
+  }
+
+  // Filter out enabled modules.
+  $enabled = array_filter($install, 'module_exists');
+  $install = array_diff($install, $enabled);
+
+  if (!empty($install)) {
+    // Make sure the install API is available.
+    $install = array_unique($install);
+    include_once './includes/install.inc';
+    drupal_install_modules($install);
+  }
+}
+
+/**
  * Wrapper around features_get_info() that returns an array
  * of module info objects that are features.
  */

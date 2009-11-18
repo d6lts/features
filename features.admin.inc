@@ -512,49 +512,20 @@ function features_form_validate(&$form, &$form_state) {
  * Submit handler for the 'manage features' form
  */
 function features_form_submit(&$form, &$form_state) {
-  module_load_include('inc', 'features', 'features.export');
-
-  $features = $form['#features'];
-  $install = array();
-  $disable = array();
-
   // Clear drupal caches after enabling a feature. We do this in a separate
   // page callback rather than as part of the submit handler as some modules
   // have includes/other directives of importance in hooks that have already
   // been called in this page load.
   $form_state['redirect'] = 'admin/build/features/cleanup/clear';
 
+  $features = $form['#features'];
   if (!empty($features)) {
-    foreach ($features as $name => $feature) {
-      // Enable feature
-      if ($form_state['values']['status'][$name] && !module_exists($name)) {
-        if (!empty($feature->info['dependencies'])) {
-          $dependencies = _features_export_maximize_dependencies($feature->info['dependencies']);
-          foreach ($dependencies as $dependency) {
-            if (!module_exists($dependency)) {
-              $install[] = $dependency;
-            }
-          }
-        }
-        $install[] = $name;
-      }
-      // Disable feature
-      else if (!$form_state['values']['status'][$name] && module_exists($name)) {
-        $disable[] = $name;
-      }
-    }
+    $status = $form_state['values']['status'];
+    $install = array_keys($status, 1);
+    $disable = array_keys($status, 0);
 
-    if (!empty($install)) {
-      $install = array_unique($install);
-      module_enable($install);
-
-      // Make sure the install API is available.
-      include_once './includes/install.inc';
-      drupal_install_modules($install);
-    }
-    if (!empty($disable)) {
-      module_disable($disable);
-    }
+    features_install_modules($install, $features);
+    module_disable($disable);
   }
 }
 
