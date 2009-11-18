@@ -63,10 +63,6 @@ function features_update_6100() {
  * have been installed prior to this version of Features. This prevents
  * automatic rebuilds from occurring against any rebuildable components
  * that have been overridden.
- *
- * Any feature implementing a node component that was exported prior to this
- * version of the features.module will need to have its 'module' declaration
- * in hook_node_info() changed from 'node' to 'features'.
  */
 function features_update_6101() {
   // Ensure all of our own API functions still exist in in this version
