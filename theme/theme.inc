@@ -247,7 +247,7 @@ function theme_features_components($info, $sources = array()) {
       if (!empty($items) || !empty($sources[$component])) {
         $source_items = isset($sources[$component]) ? $sources[$component] : array();
         $rows[] = array(array('data' => $component, 'header' => TRUE));
-        $rows[] = array(array('data' => theme('features_component_list', array_keys($items), $source_items), 'class' => 'component'));
+        $rows[] = array(array('data' => theme('features_component_list', $items, $source_items), 'class' => 'component'));
       }
     }
     if (!empty($info['dependencies'])) {
@@ -264,9 +264,9 @@ function theme_features_components($info, $sources = array()) {
 /**
  * Theme individual components in a component list.
  */
-function theme_features_component_list($components, $source = array()) {
+function theme_features_component_list($items, $source = array()) {
   $list = array();
-  foreach ($components as $component) {
+  foreach ($items as $component) {
     // If component is not in source list, it was autodetected
     if (!in_array($component, $source)) {
       $list[] = "<span class='features-detected'>{$component}</span>";
@@ -278,7 +278,7 @@ function theme_features_component_list($components, $source = array()) {
   foreach ($source as $component) {
     // If a source component is no longer in the items, it was removed because
     // it is provided by a dependency.
-    if (!in_array($component, $components)) {
+    if (!in_array($component, $items)) {
       $list[] = "<span class='features-dependency'>{$component}</span>";
     }
   }
