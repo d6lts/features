@@ -80,6 +80,9 @@ Drupal.features = {
         $.get(uri, [], function(data) {
           $(elem).find('.admin-loading').hide();
           switch (data.storage) {
+            case 3:
+              $(elem).find('.admin-rebuilding').show();
+              break;
             case 2:
               $(elem).find('.admin-needs-review').show();
               break;

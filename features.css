@@ -91,7 +91,8 @@ table.features tr.disabled { color:#999; }
   table.features .admin-check,
   table.features .admin-default,
   table.features .admin-overridden,
-  table.features .admin-needs-review { display: none;}
+  table.features .admin-rebuilding,
+  table.features .admin-needs-review { display:none; }
 
 /**
  * Feature export form (admin/build/features/export).
@@ -178,6 +179,13 @@ span.features-component-list span {
   span.admin-needs-review {
     color:#963;
     background:#fe6;
+    }
+
+  a.admin-rebuilding:link,
+  a.admin-rebuilding:visited,
+  span.admin-rebuilding {
+    color:#fff;
+    background:#699;
     }
 
 table.features-diff td.diff-addedline,

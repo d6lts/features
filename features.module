@@ -16,6 +16,10 @@ define('FEATURES_REBUILDABLE', -1);
 define('FEATURES_DEFAULT', 0);
 define('FEATURES_OVERRIDDEN', 1);
 define('FEATURES_NEEDS_REVIEW', 2);
+define('FEATURES_REBUILDING', 3);
+
+// Duration of rebuild semaphore: 5 minutes.
+define('FEATURES_SEMAPHORE_TIMEOUT', 5 * 60);
 
 /**
  * Components with this 'default_file' flag will have exports written to the
@@ -519,6 +523,14 @@ function features_form_system_modules_alter(&$form) {
  * Restore the specified modules to the default state.
  */
 function _features_restore($op, $items = array()) {
+  // Since we can't ensure that users will run update.php immediately after
+  // updating the features codebase, we must check the schema version explicitly
+  // to ensure that we will not blow away any overrides.
+  module_load_install('features');
+  if (drupal_get_installed_schema_version('features', TRUE) < 6101) {
+    return;
+  }
+
   module_load_include('inc', 'features', 'features.export');
   features_include();
 
@@ -526,10 +538,12 @@ function _features_restore($op, $items = array()) {
     case 'revert':
       $restore_states = array(FEATURES_OVERRIDDEN, FEATURES_REBUILDABLE, FEATURES_NEEDS_REVIEW);
       $restore_hook = 'features_revert';
-     break;
+      $log_action = 'Revert';
+      break;
     case 'rebuild':
       $restore_states = array(FEATURES_REBUILDABLE);
       $restore_hook = 'features_rebuild';
+      $log_action = 'Rebuild';
       break;
   }
 
@@ -547,8 +561,15 @@ function _features_restore($op, $items = array()) {
   foreach ($items as $module_name => $components) {
     foreach ($components as $component) {
       if (features_hook($component, $restore_hook)) {
+        // Set a semaphore to prevent other instances of the same script from running concurrently.
+        watchdog('features', '@actioning @module_name / @component.', array('@action' => $log_action, '@component' => $component, '@module_name' => $module_name));
+        features_set_semaphore($module_name, $component);
         features_invoke($component, $restore_hook, $module_name);
+
+        // If the script completes, remove the semaphore and set the code signature.
+        features_del_semaphore($module_name, $component);
         features_set_signature($module_name, $component);
+        watchdog('features', '@action completed for @module_name / @component.', array('@action' => $log_action, '@component' => $component, '@module_name' => $module_name));
       }
     }
   }

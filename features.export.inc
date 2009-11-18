@@ -546,6 +546,34 @@ function features_set_signature($module, $component, $signature = NULL) {
 }
 
 /**
+ * Retrieve the processing semaphore for a module/component pair.
+ */
+function features_get_semaphore($module_name, $component) {
+  $semaphore = variable_get('features_semaphore', array());
+  return isset($semaphore[$module_name][$component]) ? $semaphore[$module_name][$component] : FALSE;
+}
+
+/**
+ * Set the processing semaphore for a module/component pair.
+ */
+function features_set_semaphore($module_name, $component) {
+  $semaphore = variable_get('features_semaphore', array());
+  $semaphore[$module_name][$component] = time();
+  variable_set('features_semaphore', $semaphore);
+}
+
+/**
+ * Delete the processing semaphore for a module/component pair.
+ */
+function features_del_semaphore($module_name, $component) {
+  $semaphore = variable_get('features_semaphore', array());
+  if (isset($semaphore[$module_name][$component])) {
+    unset($semaphore[$module_name][$component]);
+    variable_set('features_semaphore', $semaphore);
+  }
+}
+
+/**
  * Get normal objects for a given module/component pair.
  */
 function features_get_normal($module_name, $component, $reset = FALSE) {
@@ -618,30 +646,54 @@ function features_get_component_states($features = array(), $rebuild_only = TRUE
     if (module_exists($feature)) {
       foreach ($components as $component) {
         if (!isset($cache[$feature][$component])) {
+          $normal = features_get_signature('normal', $feature, $component);
+          $default = features_get_signature('default', $feature, $component);
           $codecache = features_get_signature('cache', $feature, $component);
-          $normal    = features_get_signature('normal', $feature, $component);
-          $default   = features_get_signature('default', $feature, $component);
+          $semaphore = features_get_semaphore($feature, $component);
 
-          if (!features_hook($component, 'features_rebuild') && $normal == $default) {
+          // DB and code states match, there is nothing more to check.
+          if ($normal == $default) {
             $cache[$feature][$component] = FEATURES_DEFAULT;
+
+            // Stale semaphores can be deleted.
+            features_del_semaphore($feature, $component);
+
+            // Update code cache if it is stale, clear out semaphore if it stale.
+            if ($default != $codecache) {
+              features_set_signature($feature, $component, $default);
+            }
           }
-          else if (features_hook($component, 'features_rebuild') && !empty($normal) && !empty($default) && $normal == $default) {
-            $cache[$feature][$component] = FEATURES_DEFAULT;
-          }
-          else if (features_hook($component, 'features_rebuild') && (!$codecache || $codecache == $normal)) {
-            $cache[$feature][$component] = FEATURES_REBUILDABLE;
-          }
-          else if ($codecache && $codecache != $default) {
-            $cache[$feature][$component] = FEATURES_NEEDS_REVIEW;
-          }
-          else {
+          // Component properly implements exportables.
+          else if (!features_hook($component, 'features_rebuild')) {
             $cache[$feature][$component] = FEATURES_OVERRIDDEN;
           }
-
-          // Our code cache is stale, update.
-          // All other code cache updates occur when a component is restored.
-          if (($normal == $default && $default != $codecache) || (!$codecache && !features_hook($component, 'features_rebuild'))) {
-            features_set_signature($component, $feature, $default);
+          // Component does not implement exportables.
+          else {
+            if (empty($semaphore)) {
+              // Code has not changed, but DB does not match. User has DB overrides.
+              if ($codecache == $default) {
+                $cache[$feature][$component] = FEATURES_OVERRIDDEN;
+              }
+              // DB has no modifications to prior code state (or this is initial install).
+              else if ($codecache == $normal || empty($codecache)) {
+                $cache[$feature][$component] = FEATURES_REBUILDABLE;
+              }
+              // None of the states match. Requires user intervention.
+              else if ($codecache != $default) {
+                $cache[$feature][$component] = FEATURES_NEEDS_REVIEW;
+              }
+            }
+            else {
+              // Semaphore is still within processing horizon. Do nothing.
+              if ((time() - $semaphore) < FEATURES_SEMAPHORE_TIMEOUT) {
+                $cache[$feature][$component] = FEATURES_REBUILDING;
+              }
+              // A stale semaphore means a previous rebuild attempt did not complete.
+              // Attempt to complete the rebuild.
+              else {
+                $cache[$feature][$component] = FEATURES_REBUILDABLE;
+              }
+            }
           }
         }
       }
