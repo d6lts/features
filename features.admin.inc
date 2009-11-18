@@ -433,8 +433,13 @@ function features_admin_components($form_state, $feature) {
         '#default_value' => FALSE,
       );
     }
-    $item = menu_get_item("admin/build/features/{$feature->name}/diff/{$component}");
-    $path = ($item && $item['access']) ? $item['href'] : NULL;
+    if (module_exists('diff')) {
+      $item = menu_get_item("admin/build/features/{$feature->name}/diff/{$component}");
+      $path = ($item && $item['access']) ? $item['href'] : NULL;
+    }
+    else {
+      $path = NULL;
+    }
     $form['components'][$component] = array(
       '#type' => 'markup',
       '#value' => theme('features_storage_link', $states[$feature->name][$component], $path),
