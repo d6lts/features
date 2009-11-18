@@ -10,8 +10,10 @@
       <?php print drupal_render($form) ?>
     </div>
     <div class='features-form-links'><?php print theme('links', $package_links, array('id' => 'features-form-links')) ?></div>
-  <?php else: ?>
+  <?php elseif (count($packages) == 1): ?>
     <?php print drupal_render($packages) ?>
     <?php print drupal_render($form) ?>
+  <?php else: ?>
+    <?php print t('No features; consider <a href="!url">adding one.</a>', array('!url' => url('admin/build/features/create'))); ?>
   <?php endif; ?>
 </div>

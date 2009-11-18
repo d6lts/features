@@ -7,6 +7,7 @@
 function content_features_api() {
   return array(
     'content' => array(
+      'name' => t('CCK'),
       'default_hook' => 'content_default_fields',
     ),
   );

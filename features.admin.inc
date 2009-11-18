@@ -60,7 +60,7 @@ function features_export_form($form_state, $feature = NULL) {
   );
 
   // User-selected feature source components.
-  $components = array_keys(features_get_components());
+  $components = features_get_components();
   $components[] = 'dependencies';
   $form['export'] = array(
     '#type' => 'fieldset',
@@ -77,7 +77,7 @@ function features_export_form($form_state, $feature = NULL) {
     '#tree' => TRUE,
     '#theme' => 'features_form_components',
   );
-  foreach ($components as $component) {
+  foreach ($components as $component => $component_info) {
     // Tack on dependency options as they are not a feature component proper.
     if ($component == 'dependencies') {
       $required = drupal_required_modules();
@@ -88,13 +88,15 @@ function features_export_form($form_state, $feature = NULL) {
         }
       }
       $default_value = !empty($feature->info['dependencies']) ? $feature->info['dependencies'] : array();
+      $component_info = array('name' => t('Dependencies'));
+      $component = 'dependencies';
     }
     else {
       $options = features_invoke($component, 'features_export_options');
       $default_value = !empty($feature->info['features'][$component]) ? $feature->info['features'][$component] : array();
     }
     if ($options) {
-      $form['export']['components']['#options'][$component] = $component;
+      $form['export']['components']['#options'][$component] = (isset($component_info['name']) ? $component_info['name'] : $component);
       $form['export']['sources'][$component] = array(
         '#type' => 'checkboxes',
         '#options' => $options,

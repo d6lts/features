@@ -7,6 +7,7 @@
 function menu_features_api() {
   return array(
     'menu' => array(
+      'name' => t('Menu items'),
       'default_hook' => 'menu_default_items',
     ),
   );

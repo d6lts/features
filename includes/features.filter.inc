@@ -7,6 +7,7 @@
 function filter_features_api() {
   return array(
     'filter' => array(
+      'name' => t('Filter formats'),
       'default_hook' => 'filter_default_formats',
     ),
   );

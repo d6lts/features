@@ -7,6 +7,7 @@
 function user_features_api() {
   return array(
     'user' => array(
+      'name' => t('Permissions'),
       'feature_source' => TRUE,
       'default_hook' => 'user_default_permissions',
     )

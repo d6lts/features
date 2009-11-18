@@ -7,6 +7,7 @@
 function context_features_api() {
   return array(
     'context' => array(
+      'name' => t('Contexts'),
       'feature_source' => TRUE,
       'default_hook' => 'context_default_contexts',
     ),

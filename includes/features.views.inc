@@ -7,6 +7,7 @@
 function views_features_api() {
   return array(
     'views' => array(
+      'name' => t('Views'),
       'feature_source' => TRUE,
       'default_hook' => 'views_default_views',
       'default_file' => FEATURES_DEFAULTS_INCLUDED,
