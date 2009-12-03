@@ -18,8 +18,8 @@ define('FEATURES_OVERRIDDEN', 1);
 define('FEATURES_NEEDS_REVIEW', 2);
 define('FEATURES_REBUILDING', 3);
 
-// Duration of rebuild semaphore: 5 minutes.
-define('FEATURES_SEMAPHORE_TIMEOUT', 5 * 60);
+// Duration of rebuild semaphore: 10 minutes.
+define('FEATURES_SEMAPHORE_TIMEOUT', 10 * 60);
 
 /**
  * Components with this 'default_file' flag will have exports written to the
@@ -678,11 +678,11 @@ function _features_restore($op, $items = array()) {
       if (features_hook($component, $restore_hook)) {
         // Set a semaphore to prevent other instances of the same script from running concurrently.
         watchdog('features', '@actioning @module_name / @component.', array('@action' => $log_action, '@component' => $component, '@module_name' => $module_name));
-        features_set_semaphore($module_name, $component);
+        features_semaphore('set', $component);
         features_invoke($component, $restore_hook, $module_name);
 
         // If the script completes, remove the semaphore and set the code signature.
-        features_del_semaphore($module_name, $component);
+        features_semaphore('del', $component);
         features_set_signature($module_name, $component);
         watchdog('features', '@action completed for @module_name / @component.', array('@action' => $log_action, '@component' => $component, '@module_name' => $module_name));
       }

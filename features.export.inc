@@ -546,30 +546,28 @@ function features_set_signature($module, $component, $signature = NULL) {
 }
 
 /**
- * Retrieve the processing semaphore for a module/component pair.
+ * Processing semaphore operations.
  */
-function features_get_semaphore($module_name, $component) {
-  $semaphore = variable_get('features_semaphore', array());
-  return isset($semaphore[$module_name][$component]) ? $semaphore[$module_name][$component] : FALSE;
-}
+function features_semaphore($op, $component) {
+  // Note: we don't use variable_get() here as the inited variable
+  // static cache may be stale. Retrieving directly from the DB narrows
+  // the possibility of collision.
+  $semaphore = db_result(db_query("SELECT value FROM {variable} WHERE name = 'features_semaphore'"));
+  $semaphore = !empty($semaphore) ? unserialize($semaphore) : array();
 
-/**
- * Set the processing semaphore for a module/component pair.
- */
-function features_set_semaphore($module_name, $component) {
-  $semaphore = variable_get('features_semaphore', array());
-  $semaphore[$module_name][$component] = time();
-  variable_set('features_semaphore', $semaphore);
-}
-
-/**
- * Delete the processing semaphore for a module/component pair.
- */
-function features_del_semaphore($module_name, $component) {
-  $semaphore = variable_get('features_semaphore', array());
-  if (isset($semaphore[$module_name][$component])) {
-    unset($semaphore[$module_name][$component]);
-    variable_set('features_semaphore', $semaphore);
+  switch ($op) {
+    case 'get':
+      return isset($semaphore[$component]) ? $semaphore[$component] : FALSE;
+    case 'set':
+      $semaphore[$component] = time();
+      variable_set('features_semaphore', $semaphore);
+      break;
+    case 'del':
+      if (isset($semaphore[$component])) {
+        unset($semaphore[$component]);
+        variable_set('features_semaphore', $semaphore);
+      }
+      break;
   }
 }
 
@@ -649,14 +647,14 @@ function features_get_component_states($features = array(), $rebuild_only = TRUE
           $normal = features_get_signature('normal', $feature, $component);
           $default = features_get_signature('default', $feature, $component);
           $codecache = features_get_signature('cache', $feature, $component);
-          $semaphore = features_get_semaphore($feature, $component);
+          $semaphore = features_semaphore('get', $component);
 
           // DB and code states match, there is nothing more to check.
           if ($normal == $default) {
             $cache[$feature][$component] = FEATURES_DEFAULT;
 
             // Stale semaphores can be deleted.
-            features_del_semaphore($feature, $component);
+            features_semaphore('del', $component);
 
             // Update code cache if it is stale, clear out semaphore if it stale.
             if ($default != $codecache) {
