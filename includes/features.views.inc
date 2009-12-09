@@ -248,8 +248,9 @@ function views_features_revert($module = NULL) {
 
     // Delete Normal / Overridden views that are defined in code
     foreach ($default_views as $default_view) {
-      $current_view = views_get_view($default_view->name);
-      $current_view->delete();
+      if ($current_view = views_get_view($default_view->name)) {
+        $current_view->delete();
+      }
     }
   }
   else {
