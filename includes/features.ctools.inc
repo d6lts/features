@@ -16,6 +16,9 @@ foreach (_ctools_features_get_info() as $component => $info) {
   if (!function_exists("{$component}_features_export_render")) {
     $code .= 'function '. $component .'_features_export_render($module = "foo", $data) { return ctools_component_features_export_render("'. $component .'", $module, $data); }';
   }
+  if (!function_exists("{$component}_features_revert")) {
+    $code .= 'function '. $component .'_features_revert($module = "foo") { return ctools_component_features_revert("'. $component .'", $module); }';
+  }
   eval($code);
 }
 
@@ -132,6 +135,20 @@ function ctools_component_features_export_render($component, $module = 'foo', $d
   $code .= '  return $export;';
 
   return array($schema['export']['default hook'] => $code);
+}
+
+/**
+ * Master implementation of hook_features_revert() for all ctools components.
+ */
+function ctools_component_features_revert($component, $module = 'foo') {
+  $info = _ctools_features_get_info();
+  $objects = module_invoke($module, $info[$component]['default_hook']);
+  if (!empty($objects)) {
+    $schema = ctools_export_get_schema($component);
+    $export = $schema['export'];
+    $names = db_placeholders(array_keys($objects), $schema['fields'][$export['key']]['type']);
+    db_query("DELETE FROM {{$component}} WHERE {$export['key']} IN ({$names})", array_keys($objects));
+  }
 }
 
 /**
