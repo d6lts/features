@@ -32,14 +32,14 @@ function features_drush_command() {
     'callback' => 'features_command_update',
     'description' => "Update a feature module on your site.",
     'arguments' => array(
-      'feature' => 'Feature name to export.',
+      'feature' => 'A space delimited list of features.',
     ),
   );
   $items['features revert'] = array(
     'callback' => 'features_command_revert',
     'description' => "Revert a feature module on your site.",
     'arguments' => array(
-      'feature' => 'Feature name to revert.',
+      'feature' => 'A space delimited list of features.',
     ),
   );
 
@@ -129,29 +129,26 @@ function features_command_export() {
  * Create a feature module based on a list of contexts.
  */
 function features_command_update() {
-  $args = func_get_args();
-
-  if (count($args) == 1) {
-    $module = array_shift($args);
-    $feature = feature_load($module, TRUE);
-
-    if ($feature && module_exists($module)) {
-      $stub = $feature->info['features'];
-
-      // Construct the correct destination path
-      $destination = dirname($feature->filename);
-      $split = explode('/', $destination);
-      if ($feature->name == array_pop($split)) {
-        $destination = implode('/', $split);
+  if ($args = func_get_args()) {
+    foreach ($args as $module) {
+      if (($feature = feature_load($module, TRUE)) && module_exists($module)) {
+        $stub = $feature->info['features'];
+  
+        // Construct the correct destination path
+        $destination = dirname($feature->filename);
+        $split = explode('/', $destination);
+        if ($feature->name == array_pop($split)) {
+          $destination = implode('/', $split);
+        }
+  
+        _features_command_export($stub, $feature->name, $destination);
       }
-
-      _features_command_export($stub, $feature->name, $destination);
-    }
-    else if ($feature && !module_exists($module)) {
-      drush_die('The feature '. $module .' is not enabled.');
-    }
-    else {
-      drush_die('The feature '. $module .' could not be found.');
+      else if ($feature) {
+        _features_drush_set_error($module, 'FEATURES_FEATURE_NOT_ENABLED');
+      }
+      else {
+        _features_drush_set_error($module);
+      }
     }
   }
   else {
@@ -214,50 +211,70 @@ function _features_command_export($stub, $module_name = NULL, $destination = 'si
  * Revert a feature to it's code definition.
  */
 function features_command_revert() {
-  $args = func_get_args();
-
-  if (count($args) == 1) {
-    $module = array_shift($args);
-    $feature = feature_load($module, TRUE);
-
-    if ($feature && module_exists($module)) {
-      // Find all overridden items
-      module_load_include('inc', 'features', 'features.export');
-
-      $components = array();
-      $states = features_get_component_states(array($feature->name), FALSE);
-      foreach ($states[$feature->name] as $component => $state) {
-        if (in_array($state, array(FEATURES_OVERRIDDEN, FEATURES_NEEDS_REVIEW)) && features_hook($component, 'features_revert')) {
-          $components[] = $component;
-        }
-      }
-
-      if (!empty($components)) {
-        foreach ($components as $component) {
-          if (drush_confirm(dt('Do you really want to revert !component?', array('!component' => $component)))) {
-            features_revert(array($module => array($component)));
-            drush_print(dt('Reverted !component.', array('!component' => $component)));
-          }
-          else {
-            drush_print(dt('Skipping !component.', array('!component' => $component)));
+  if ($args = func_get_args()) {
+    foreach ($args as $module) {
+      if (($feature = feature_load($module, TRUE)) && module_exists($module)) {
+        // Find all overridden items
+        module_load_include('inc', 'features', 'features.export');
+  
+        $components = array();
+        $states = features_get_component_states(array($feature->name), FALSE);
+        foreach ($states[$feature->name] as $component => $state) {
+          if (in_array($state, array(FEATURES_OVERRIDDEN, FEATURES_NEEDS_REVIEW)) && features_hook($component, 'features_revert')) {
+            $components[] = $component;
           }
         }
-        return;
+  
+        if (empty($components)) {
+          drush_print(dt('Current state already matches defaults, aborting.'));
+        }
+        else {
+          foreach ($components as $component) {
+            if (drush_confirm(dt('Do you really want to revert !component?', array('!component' => $component)))) {
+              features_revert(array($module => array($component)));
+              drush_print(dt('Reverted !component.', array('!component' => $component)));
+            }
+            else {
+              drush_print(dt('Skipping !component.', array('!component' => $component)));
+            }
+          }
+        }
       }
-      drush_print(dt('Current state already matches defaults, aborting.'));
-      return;
-    }
-    else if ($feature && !module_exists($module)) {
-      drush_print(dt('The feature '. $module .' is not enabled.'));
-      return;
-    }
-    else {
-      drush_print(dt('The feature '. $module .' could not be found.'));
-      return;
+      else if ($feature) {
+        _features_drush_set_error($module, 'FEATURES_FEATURE_NOT_ENABLED');
+      }
+      else {
+        _features_drush_set_error($module);
+      }
     }
   }
   else {
     features_command_list();
     return;
   }
+}
+
+/**
+ * Helper function to call drush_set_error().
+ *
+ * @param $feature
+ *   The string name of the feature.
+ * @param $error
+ *   A text string identifying the type of error.
+ * @return 
+ *   FALSE.  See drush_set_error().
+ */
+function _features_drush_set_error($feature, $error) {
+  $args = array('!feature' => $feature);
+
+  switch ($error) {
+    case 'FEATURES_FEATURE_NOT_ENABLED':
+      $message = 'The feature !feature is not enabled.';
+      break;
+    default:
+      $error = 'FEATURES_FEATURE_NOT_FOUND';
+      $message = 'The feature !feature could not be found.';
+  }
+
+  return drush_set_error($error, dt($message, $args));
 }
