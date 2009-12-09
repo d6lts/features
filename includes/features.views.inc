@@ -253,7 +253,7 @@ function views_features_revert($module = NULL) {
     }
   }
   else {
-    drupal_set_message(t('Could not load default node types.'), 'error');
+    drupal_set_message(t('Could not load default views.'), 'error');
     return FALSE;
   }
   return TRUE;
