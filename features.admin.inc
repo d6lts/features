@@ -230,9 +230,6 @@ function features_export_build_form_populate() {
   $form_state = array();
   $submitted = $_POST;
 
-  // Only uncomment this for debugging AJAX action
-  $submitted = !empty($_POST) ? $_POST : $_GET;
-
   if ($form = form_get_cache($submitted['form_build_id'], $form_state)) {
     $stub = array();
 
