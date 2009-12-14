@@ -88,9 +88,15 @@ function ctools_component_features_export_options($component) {
 
   ctools_include('export');
   $schema = ctools_export_get_schema($component);
-  if ($schema) {
+  if ($schema && $schema['export']['bulk export']) {
     $export_key = $schema['export']['key'];
-    if ($objects = ctools_export_load_object($component, 'all')) {
+    // If a list callback is available use it, otherwise fallback to generating
+    // options from ctools_export_load_object().
+    if (function_exists($schema['export']['list callback'])) {
+      $objects = $schema['export']['list callback']();
+      $options = drupal_map_assoc(array_keys($objects));
+    }
+    elseif ($objects = ctools_export_load_object($component, 'all')) {
       foreach ($objects as $object) {
         $key = $object->{$export_key};
         $options[$key] = $key;
@@ -124,15 +130,36 @@ function ctools_component_features_export_render($component, $module = 'foo', $d
   ctools_include('export');
 
   $schema = ctools_export_get_schema($component);
-  $objects = ctools_export_load_object($component);
-  $code = '  $export = array();'."\n";
-  foreach ($data as $object) {
-    $identifier = $schema['export']['identifier'];
-    $code .= ctools_export_object($component, $objects[$object], '  ', $identifier);
-    $code .= "\n";
-    $code .= '  $export[\''. $object .'\'] = $'. $identifier .';'."\n";
+  if (function_exists('page_manager_page_manager_handlers_list')) {
+    page_manager_page_manager_handlers_list();
   }
-  $code .= '  return $export;';
+  if (function_exists($schema['export']['to hook code callback'])) {
+    $list = $schema['export']['list callback']();
+    $export = $schema['export']['to hook code callback']($data, $module);
+    $code = explode("{\n", $export);
+    array_shift($code);
+    $code = explode('}', implode($code, "{\n"));
+    array_pop($code);
+    $code = implode('}', $code);
+  }
+  else {
+    $code = '  $export = array();'."\n";
+    foreach ($data as $object) {
+      $identifier = $schema['export']['identifier'];
+      $objects = ctools_export_load_object($component, 'names', array($object));
+      // Support objects that have a defined export callback, but fall back to.
+      // ctools_export_object().
+      if (function_exists($schema['export']['export callback'])) {
+        $code .= $schema['export']['export callback']($objects[$object], '  ');
+      }
+      else {
+        $code .= ctools_export_object($component, $objects[$object], '  ', $identifier);
+      }
+      $code .= "\n";
+      $code .= '  $export[\''. $object .'\'] = $'. $identifier .';'."\n";
+    }
+    $code .= '  return $export;';
+  }
 
   return array($schema['export']['default hook'] => $code);
 }
@@ -161,13 +188,15 @@ function _ctools_features_get_info($reset = FALSE) {
     ctools_include('export');
     foreach (ctools_export_get_schemas_by_module() as $module => $schemas) {
       foreach ($schemas as $table => $schema) {
-        $components[$table] = array(
-          'api' => $schema['export']['api']['api'],
-          'default_hook' => $schema['export']['default hook'],
-          'current_version' => $schema['export']['api']['current_version'],
-          'module' => $module,
-          'feature_source' => TRUE,
-        );
+        if ($schema['export']['bulk export']) {
+          $components[$table] = array(
+            'api' => $schema['export']['api']['api'],
+            'default_hook' => $schema['export']['default hook'],
+            'current_version' => $schema['export']['api']['current_version'],
+            'module' => $module,
+            'feature_source' => TRUE,
+          );
+        }
       }
     }
   }
