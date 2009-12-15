@@ -302,7 +302,9 @@ function features_include() {
   $modules = array('block', 'content', 'context', 'filter', 'imagecache', 'node', 'user', 'views', 'ctools');
 
   foreach (array_filter($modules, 'module_exists') as $module) {
-    module_load_include('inc', 'features', "includes/features.$module");
+    if (!module_hook($module, 'features_api')) {
+      module_load_include('inc', 'features', "includes/features.$module");
+    }
   }
 
   // Clear static cache, since we've now included new implementers.
