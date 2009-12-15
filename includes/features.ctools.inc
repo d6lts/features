@@ -7,6 +7,9 @@
  */
 foreach (_ctools_features_get_info() as $component => $info) {
   $code = '';
+  if (!function_exists("{$component}_features_api")) {
+    $code .= 'function '. $component .'_features_api() { return ctools_component_features_api("'. $component .'"); }';
+  }
   if (!function_exists("{$component}_features_export")) {
     $code .= 'function '. $component .'_features_export($data, &$export, $module_name = "") { return ctools_component_features_export("'. $component .'", $data, $export, $module_name); }';
   }
@@ -26,13 +29,13 @@ foreach (_ctools_features_get_info() as $component => $info) {
  * Implementation of hook_features_api().
  */
 function ctools_features_api() {
-  $components = _ctools_features_get_info();
-  $components['ctools'] = array(
-    'default_hook' => 'ctools_plugin_api',
-    'feature_source' => TRUE,
-    'duplicates' => FEATURES_DUPLICATES_ALLOWED,
+  return array(
+    'ctools' => array(
+      'default_hook' => 'ctools_plugin_api',
+      'feature_source' => TRUE,
+      'duplicates' => FEATURES_DUPLICATES_ALLOWED,
+    ),
   );
-  return $components;
 }
 
 /**
@@ -78,6 +81,17 @@ function ctools_features_export_render($module = 'foo', $data) {
     $first = FALSE;
   }
   return array('ctools_plugin_api' => implode("\n", $code));
+}
+
+/**
+ * Master implementation of hook_features_api() for all ctools components.
+ */
+function ctools_component_features_api($component) {
+  $info = _ctools_features_get_info();
+  if (isset($info[$component])) {
+    return array($component => $info[$component]);
+  }
+  return array();
 }
 
 /**
