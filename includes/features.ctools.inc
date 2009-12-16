@@ -7,8 +7,8 @@
  */
 foreach (_ctools_features_get_info() as $component => $info) {
   $code = '';
-  if (!function_exists("{$component}_features_api")) {
-    $code .= 'function '. $component .'_features_api() { return ctools_component_features_api("'. $component .'"); }';
+  if (!function_exists("{$info['module']}_features_api")) {
+    $code .= 'function '. $info['module'] .'_features_api() { return ctools_component_features_api("'. $info['module'] .'"); }';
   }
   if (!function_exists("{$component}_features_export")) {
     $code .= 'function '. $component .'_features_export($data, &$export, $module_name = "") { return ctools_component_features_export("'. $component .'", $data, $export, $module_name); }';
@@ -85,13 +85,18 @@ function ctools_features_export_render($module = 'foo', $data) {
 
 /**
  * Master implementation of hook_features_api() for all ctools components.
+ *
+ * Note that this master hook does not use $component like the others, but uses the
+ * component module's namespace instead.
  */
-function ctools_component_features_api($component) {
-  $info = _ctools_features_get_info();
-  if (isset($info[$component])) {
-    return array($component => $info[$component]);
+function ctools_component_features_api($module_name) {
+  $api = array();
+  foreach (_ctools_features_get_info() as $component => $info) {
+    if ($info['module'] === $module_name) {
+      $api[$component] = $info;
+    }
   }
-  return array();
+  return $api;
 }
 
 /**
