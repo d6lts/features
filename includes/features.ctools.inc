@@ -135,7 +135,9 @@ function ctools_component_features_export($component, $data, &$export, $module_n
 
   // Add the components
   foreach ($data as $object_name) {
-    $export['features'][$component][$object_name] = $object_name;
+    if (ctools_export_load_object($component, 'names', array($object_name))) {
+      $export['features'][$component][$object_name] = $object_name;
+    }
   }
 
   // Let CTools handle API integration for this component.
