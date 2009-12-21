@@ -200,7 +200,7 @@ function _features_command_export($stub, $module_name = NULL, $destination = 'si
       }
       drush_op('file_put_contents', "{$directory}/{$module_name}.$extension", $file_contents);
     }
-    drush_print(dt("Created module: !module in !directory", array('!module' => $module_name, '!directory' => $directory)));
+    drush_log(dt("Created module: !module in !directory", array('!module' => $module_name, '!directory' => $directory)), 'ok');
   }
   else {
     drush_die(dt('Couldn\'t locate site root'));
@@ -226,16 +226,16 @@ function features_command_revert() {
         }
   
         if (empty($components)) {
-          drush_print(dt('Current state already matches defaults, aborting.'));
+          drush_log(dt('Current state already matches defaults, aborting.'), 'ok');
         }
         else {
           foreach ($components as $component) {
             if (drush_confirm(dt('Do you really want to revert !component?', array('!component' => $component)))) {
               features_revert(array($module => array($component)));
-              drush_print(dt('Reverted !component.', array('!component' => $component)));
+              drush_log(dt('Reverted !component.', array('!component' => $component)), 'ok');
             }
             else {
-              drush_print(dt('Skipping !component.', array('!component' => $component)));
+              drush_log(dt('Skipping !component.', array('!component' => $component)), 'ok');
             }
           }
         }
