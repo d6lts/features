@@ -100,7 +100,7 @@ function _filter_get_formats() {
       'roles' => $format_roles,
       'filters' => array(),
     );
-    foreach (filter_list_format($row->format) as $filter) {
+    foreach (_filter_list_format($row->format, TRUE) as $filter) {
       $formats[$row->format]['filters'][] = array(
         'module' => $filter->module,
         'delta' => $filter->delta,
@@ -111,6 +111,35 @@ function _filter_get_formats() {
 
   return $formats;
 }
+
+/**
+ * Direct copy of filter_list_format() but with a way to clear the static.
+ */
+function _filter_list_format($format, $reset = FALSE) {
+  static $filters = array();
+
+  if (!isset($filters[$format]) || $reset) {
+    $result = db_query("SELECT * FROM {filters} WHERE format = %d ORDER BY weight, module, delta", $format);
+    if (db_affected_rows($result) == 0 && !db_result(db_query("SELECT 1 FROM {filter_formats} WHERE format = %d", $format))) {
+      // The format has no filters and does not exist, use the default input
+      // format.
+      $filters[$format] = filter_list_format(variable_get('filter_default_format', 1));
+    }
+    else {
+      $filters[$format] = array();
+      while ($filter = db_fetch_object($result)) {
+        $list = module_invoke($filter->module, 'filter', 'list');
+        if (isset($list) && is_array($list) && isset($list[$filter->delta])) {
+          $filter->name = $list[$filter->delta];
+          $filters[$format][$filter->module .'/'. $filter->delta] = $filter;
+        }
+      }
+    }
+  }
+
+  return $filters[$format];
+}
+
 
 /**
  * Helper function for updating/inserting formats.
