@@ -80,10 +80,15 @@ function features_export_form($form_state, $feature = NULL) {
   foreach ($components as $component => $component_info) {
     // Tack on dependency options as they are not a feature component proper.
     if ($component == 'dependencies') {
-      $required = drupal_required_modules();
+      // Excluded modules.
+      $excluded = drupal_required_modules();
+      // Don't allow feature to depend on itself.
+      if (isset($feature->name)) {
+        $excluded[] = $feature->name;
+      }
       $options = array();
       foreach (features_get_modules() as $module_name => $info) {
-        if (!in_array($module_name, $required) && $info->status && !empty($info->info)) {
+        if (!in_array($module_name, $excluded) && $info->status && !empty($info->info)) {
           $options[$module_name] = $info->info['name'];
         }
       }
