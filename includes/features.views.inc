@@ -41,7 +41,7 @@ function views_features_export_render($module = 'foo', $data) {
   // Build views & add to export array
   foreach ($data as $view_name) {
     // Build the view
-    $view = views_get_view($view_name);
+    $view = views_get_view($view_name, TRUE);
     if ($view) {
       $code[] = '  // Exported view: '. $view_name;
       $code[] = $view->export('  ');
@@ -71,7 +71,7 @@ function views_features_export($data, &$export, $module_name = '') {
     $export['features']['views'][$view_name] = $view_name;
 
     // Build the view
-    $view = views_get_view($view_name);
+    $view = views_get_view($view_name, TRUE);
     if ($view) {
       $view->build();
       $views[$view_name] = $view;
