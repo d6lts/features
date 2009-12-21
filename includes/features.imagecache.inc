@@ -56,7 +56,9 @@ function imagecache_features_export($data, &$export, $module_name = '') {
 function imagecache_features_export_render($module_name, $data) {
   $items = array();
   foreach ($data as $key) {
-    $preset = imagecache_preset_by_name($key);
+    // This second argument to clear the static cache relies on patch in
+    // http://drupal.org/node/665284.
+    $preset = imagecache_preset_by_name($key, TRUE);
     _imagecache_features_preset_sanitize($preset);
     $items[$key] = $preset;
   }
