@@ -515,16 +515,16 @@ function features_get_storage($module_name) {
  * defaults/normal object array. Can be used to compare normal/default states
  * of a module's component.
  */
-function features_get_signature($state = 'default', $module_name, $component) {
+function features_get_signature($state = 'default', $module_name, $component, $reset = FALSE) {
   switch ($state) {
     case 'cache':
       $codecache = variable_get('features_codecache', array());
       return isset($codecache[$module_name][$component]) ? $codecache[$module_name][$component] : FALSE;
     case 'default':
-      $objects = features_get_default($module_name, $component);
+      $objects = features_get_default($module_name, $component, $reset);
       break;
     case 'normal':
-      $objects = features_get_normal($module_name, $component);
+      $objects = features_get_normal($module_name, $component, $reset);
       break;
   }
   if (!empty($objects)) {
@@ -540,7 +540,7 @@ function features_get_signature($state = 'default', $module_name, $component) {
  */
 function features_set_signature($module, $component, $signature = NULL) {
   $var_codecache = variable_get('features_codecache', array());
-  $signature = isset($signature) ? $signature : features_get_signature('default', $module, $component);
+  $signature = isset($signature) ? $signature : features_get_signature('default', $module, $component, TRUE);
   $var_codecache[$module][$component] = $signature;
   variable_set('features_codecache', $var_codecache);
 }
@@ -644,9 +644,9 @@ function features_get_component_states($features = array(), $rebuild_only = TRUE
     if (module_exists($feature)) {
       foreach ($components as $component) {
         if (!isset($cache[$feature][$component])) {
-          $normal = features_get_signature('normal', $feature, $component);
-          $default = features_get_signature('default', $feature, $component);
-          $codecache = features_get_signature('cache', $feature, $component);
+          $normal = features_get_signature('normal', $feature, $component, $reset);
+          $default = features_get_signature('default', $feature, $component, $reset);
+          $codecache = features_get_signature('cache', $feature, $component, $reset);
           $semaphore = features_semaphore('get', $component);
 
           // DB and code states match, there is nothing more to check.
