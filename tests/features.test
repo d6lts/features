@@ -38,7 +38,7 @@ class FeaturesUserTestCase extends DrupalWebTestCase {
     // Run a features rebuild to ensure our feature is fully installed.
     features_rebuild();
 
-    $admin_user = $this->drupalCreateUser(array('administer imagecache', 'administer features'));
+    $admin_user = $this->drupalCreateUser(array('administer features'));
     $this->drupalLogin($admin_user);
   }
 
