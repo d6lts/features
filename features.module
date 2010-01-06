@@ -619,7 +619,6 @@ function features_get_feature_title($feature) {
  */
 function features_access_override_actions($feature) {
   if (user_access('administer features')) {
-    drupal_set_message('checked');
     static $access = array();
     if (!isset($access[$feature->name])) {
       // Set a value first. We may get called again from within features_detect_overrides().
