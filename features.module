@@ -224,20 +224,6 @@ function features_theme() {
 }
 
 /**
- * Implementation of hook_theme_registry_alter().
- */
-function features_theme_registry_alter(&$theme_registry) {
-  // Ensures that features_preprocess_page() comes immediately after
-  // template_preprocess_page().
-  if ($position = array_search('features_preprocess_page', $theme_registry['page']['preprocess functions'])) {
-    unset($theme_registry['page']['preprocess functions'][$position]);
-  }
-  $position = array_search('template_preprocess_page', $theme_registry['page']['preprocess functions']);
-  $position = $position ? $position + 1 : 2;
-  array_splice($theme_registry['page']['preprocess functions'], $position, 0, 'features_preprocess_page');
-}
-
-/**
  * Implementation of hook_flush_caches().
  */
 function features_flush_caches() {
@@ -708,45 +694,6 @@ function features_revert($revert = array()) {
  */
 function features_rebuild($rebuild = array()) {
   return _features_restore('rebuild', $rebuild);
-}
-
-/**
- * Returns a links array in the theme_links() format for the features menu.
- *
- * @return
- *   Array of links.
- */
-function features_menu_links($level = 0, $reset = FALSE) {
-  static $links;
-  if (!isset($links[$level]) || $reset) {
-    if (!isset($links)) {
-      $links = array();
-    }
-    $links[$level] = menu_navigation_links('features', $level);
-  }
-  drupal_alter('features_menu_links', $links[$level]);
-  return $links[$level];
-}
-
-/**
- * Theme functions ====================================================
- */
-
-/**
- * Preprocess function for features links.
- */
-function features_preprocess_page(&$vars) {
-  if (variable_get('menu_primary_links_source', 'primary-links') == 'features') {
-    $vars['primary_links'] = features_menu_links();
-  }
-  if (variable_get('menu_secondary_links_source', 'secondary-links') == 'features') {
-    if (variable_get('menu_secondary_links_source', 'primary-links') == 'features') {
-      $vars['secondary_links'] = features_menu_links(1);
-    }
-    else {
-      $vars['secondary_links'] = features_menu_links();
-    }
-  }
 }
 
 /**
