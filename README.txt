@@ -66,20 +66,20 @@ drush features
   This command lists all the features on your and their status as well
   as any supplemental information.
 
-drush features export [context]
+drush features-export [context]
 
   This command lets you create a new feature in code from one or more
   context definitions. It will write a new feature module with a name
   matching the ->value portion of the context definition.
 
-drush features update [feature]
+drush features-update [feature]
 
   This command lets you update a feature that has already been
   exported. You can use it to push overrides/changes in your database
   (for example, a new Views display) into the existing code of your
   feature module.
 
-drush features revert [feature]
+drush features-revert [feature]
 
   This command lets revert aspects of a feature in your site's database
   to the state described in your feature module's defaults. For
