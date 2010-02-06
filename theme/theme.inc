@@ -24,6 +24,7 @@ function template_preprocess_features_admin_components(&$vars) {
 
   // Components
   $rows = array();
+  $components = features_get_components();
   if (!empty($form['#info']['features'])) {
     foreach ($form['#info']['features'] as $component => $items) {
       if (!empty($items)) {
@@ -35,7 +36,7 @@ function template_preprocess_features_admin_components(&$vars) {
           );
         }
         $header[] = array(
-          'data' => $component,
+          'data' => isset($components[$component]['name']) ? $components[$component]['name'] : $component,
           'header' => TRUE
         );
         $header[] = array(
