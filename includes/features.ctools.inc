@@ -166,16 +166,18 @@ function ctools_component_features_export_render($component, $module = 'foo', $d
     foreach ($data as $object) {
       $identifier = $schema['export']['identifier'];
       $objects = ctools_export_load_object($component, 'names', array($object));
-      // Support objects that have a defined export callback, but fall back to.
-      // ctools_export_object().
-      if (function_exists($schema['export']['export callback'])) {
-        $code .= $schema['export']['export callback']($objects[$object], '  ');
+      if (!empty($objects[$object])) {
+        // Support objects that have a defined export callback, but fall back to.
+        // ctools_export_object().
+        if (function_exists($schema['export']['export callback'])) {
+          $code .= $schema['export']['export callback']($objects[$object], '  ');
+        }
+        else {
+          $code .= ctools_export_object($component, $objects[$object], '  ', $identifier);
+        }
+        $code .= "\n";
+        $code .= '  $export[\''. $object .'\'] = $'. $identifier .';'."\n";
       }
-      else {
-        $code .= ctools_export_object($component, $objects[$object], '  ', $identifier);
-      }
-      $code .= "\n";
-      $code .= '  $export[\''. $object .'\'] = $'. $identifier .';'."\n";
     }
     $code .= '  return $export;';
   }
