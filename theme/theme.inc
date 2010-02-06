@@ -14,9 +14,13 @@ function template_preprocess_features_admin_components(&$vars) {
 
   // Dependencies
   $rows = array();
+  $modules = features_get_info();
   foreach ($form['#dependencies'] as $dependency => $status) {
     $rows[] = array(
-      array('data' => $dependency, 'class' => 'component'),
+      array(
+        'data' => isset($modules[$dependency]->info['name']) ? $modules[$dependency]->info['name'] : $dependency,
+        'class' => 'component'
+      ),
       theme('features_module_status', $status),
     );
   }
