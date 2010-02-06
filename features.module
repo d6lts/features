@@ -491,7 +491,9 @@ function features_get_orphans($reset = FALSE) {
     $features = features_get_features();
     foreach ($features as $feature) {
       $key = module_exists($feature->name) ? 'enabled' : 'disabled';
-      $dependencies[$key] = array_merge($dependencies[$key], _features_export_maximize_dependencies($feature->info['dependencies']));
+      if (!empty($feature->info['dependencies'])) {
+        $dependencies[$key] = array_merge($dependencies[$key], _features_export_maximize_dependencies($feature->info['dependencies']));
+      }
     }
     $dependencies['enabled'] = array_unique($dependencies['enabled']);
     $dependencies['disabled'] = array_unique($dependencies['disabled']);
