@@ -31,6 +31,7 @@ foreach (_ctools_features_get_info() as $component => $info) {
 function ctools_features_api() {
   return array(
     'ctools' => array(
+      'name' => 'CTools export API',
       'default_hook' => 'ctools_plugin_api',
       'feature_source' => TRUE,
       'duplicates' => FEATURES_DUPLICATES_ALLOWED,
@@ -206,15 +207,19 @@ function _ctools_features_get_info($reset = FALSE) {
   static $components;
   if (!isset($components) || $reset) {
     $components = array();
+    $modules = features_get_info();
     ctools_include('export');
     foreach (ctools_export_get_schemas_by_module() as $module => $schemas) {
       foreach ($schemas as $table => $schema) {
         if ($schema['export']['bulk export']) {
+          // Let the API owner take precedence as the owning module.
+          $api_module = isset($schema['export']['api']['owner']) ? $schema['export']['api']['owner'] : $module;
           $components[$table] = array(
+            'name' => isset($modules[$api_module]->info['name']) ? $modules[$api_module]->info['name'] : $api_module,
             'api' => $schema['export']['api']['api'],
             'default_hook' => $schema['export']['default hook'],
             'current_version' => $schema['export']['api']['current_version'],
-            'module' => isset($schema['export']['api']['owner']) ? $schema['export']['api']['owner'] : $module,
+            'module' => $api_module,
             'feature_source' => TRUE,
           );
         }
