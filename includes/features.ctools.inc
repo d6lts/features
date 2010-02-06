@@ -119,6 +119,7 @@ function ctools_component_features_export_options($component) {
       $options = drupal_map_assoc(array_keys($objects));
     }
   }
+  ksort($options);
   return $options;
 }
 
