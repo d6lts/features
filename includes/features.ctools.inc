@@ -212,7 +212,7 @@ function _ctools_features_get_info($reset = FALSE) {
             'api' => $schema['export']['api']['api'],
             'default_hook' => $schema['export']['default hook'],
             'current_version' => $schema['export']['api']['current_version'],
-            'module' => $module,
+            'module' => isset($schema['export']['api']['owner']) ? $schema['export']['api']['owner'] : $module,
             'feature_source' => TRUE,
           );
         }
