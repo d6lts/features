@@ -69,6 +69,12 @@ function node_features_export($data, &$export, $module_name = '') {
             $pipe['variable'][] = "content_extra_weights_{$type}";
           }
         }
+        // Create a pipe for Fieldgroups
+        if (function_exists('fieldgroup_groups') && $groups = fieldgroup_groups($type)) {
+          foreach ($groups as $group) {
+            $pipe['fieldgroup'][] = "{$type}-{$group['group_name']}";
+          }
+        }
       }
     }
   }

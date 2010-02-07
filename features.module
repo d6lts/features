@@ -285,7 +285,7 @@ function features_include() {
 
   // Features provides integration on behalf of these modules.
   // Note that ctools is placed last because it implements hooks "dynamically" for other modules.
-  $modules = array('block', 'content', 'context', 'filter', 'imagecache', 'node', 'user', 'views', 'ctools');
+  $modules = array('block', 'content', 'context', 'fieldgroup', 'filter', 'imagecache', 'node', 'user', 'views', 'ctools');
 
   foreach (array_filter($modules, 'module_exists') as $module) {
     if (!module_hook($module, 'features_api')) {
