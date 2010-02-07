@@ -92,6 +92,7 @@ function template_preprocess_features_form(&$vars) {
       $first = FALSE;
     }
   }
+  ksort($package_links);
   $vars['package_links'] = $package_links;
 }
 
