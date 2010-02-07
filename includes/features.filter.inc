@@ -85,13 +85,14 @@ function filter_features_rebuild($module) {
 function _filter_get_formats() {
   $formats = array();
 
-  $roles = user_roles();
+  // We cannot use user_roles() here because it has the names translated.
+  $roles = _features_get_roles();
   $result = db_query("SELECT * FROM {filter_formats}");
   while ($row = db_fetch_object($result)) {
     $format_roles = array();
     // Prepare a roles array with roles that may access the filter.
-    foreach ($roles as $rid => $name) {
-      if (strstr($row->roles, ",$rid,")) {
+    foreach ($roles as $name => $role) {
+      if (strstr($row->roles, ','. $role['rid'] .',')) {
         $format_roles[] = $name;
       }
     }
