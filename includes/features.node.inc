@@ -63,9 +63,13 @@ function node_features_export($data, &$export, $module_name = '') {
           foreach ($content_info['fields'] as $key => $field) {
             $pipe['content'][] = "{$type}-{$field['field_name']}";
           }
+          // If strongarm is present, create a pipe for the extra field weights
+          // variable to be exported.
+          if (module_exists('strongarm')) {
+            $pipe['variable'][] = "content_extra_weights_{$type}";
+          }
         }
       }
-
     }
   }
 
