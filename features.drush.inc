@@ -41,6 +41,9 @@ function features_drush_command() {
     'arguments' => array(
       'feature' => 'A space delimited list of features.',
     ),
+    'options' => array(
+      '--force' => "Force revert even if Features assumes components' state are default.",
+    ),
   );
 
   return $items;
@@ -212,6 +215,8 @@ function _features_command_export($stub, $module_name = NULL, $destination = 'si
  */
 function features_command_revert() {
   if ($args = func_get_args()) {
+    // Determine if revert should be forced.
+    $force = drush_get_option('force');
     foreach ($args as $module) {
       if (($feature = feature_load($module, TRUE)) && module_exists($module)) {
         // Find all overridden items
@@ -220,7 +225,7 @@ function features_command_revert() {
         $components = array();
         $states = features_get_component_states(array($feature->name), FALSE);
         foreach ($states[$feature->name] as $component => $state) {
-          if (in_array($state, array(FEATURES_OVERRIDDEN, FEATURES_NEEDS_REVIEW)) && features_hook($component, 'features_revert')) {
+          if ($force || (in_array($state, array(FEATURES_OVERRIDDEN, FEATURES_NEEDS_REVIEW)) && features_hook($component, 'features_revert'))) {
             $components[] = $component;
           }
         }
