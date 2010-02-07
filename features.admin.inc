@@ -141,6 +141,11 @@ function features_export_form_validate_field($element, &$form_state) {
       if (!preg_match('!^[a-z0-9_]+$!', $element['#value'])) {
         form_error($element, t('The machine-readable name must contain only lowercase letters, numbers, and underscores.'));
       }
+      // If user is filling out the feature name for the first time and uses
+      // the name of an existing module throw an error.
+      else if (empty($element['#default_value']) && features_get_info('module', $element['#value'])) {
+        form_error($element, t('A module by the name @name already exists on your site. Please choose a different name.', array('@name' => $element['#value'])));
+      }
       break;
     case 'project_status_url':
       if (!empty($element['#value']) && !valid_url($element['#value'])) {
