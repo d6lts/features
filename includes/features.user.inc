@@ -165,7 +165,9 @@ function _user_features_get_permissions() {
       if (!isset($permissions[$perm])) {
         $permissions[$perm] = array();
       }
-      $permissions[$perm][] = $role;
+      if(!in_array($role, $permissions[$perm])) {
+        $permissions[$perm][] = $role;
+      }
     }
   }
   return $permissions;
