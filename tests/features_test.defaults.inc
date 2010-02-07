@@ -56,12 +56,210 @@ function _features_test_content_default_fields() {
     ),
   );
 
+  // Exported field: field_features_test_child_a
+  $fields[] = array(
+    'field_name' => 'field_features_test_child_a',
+    'type_name' => 'features_test',
+    'display_settings' => array(
+      'label' => array(
+        'format' => 'above',
+        'exclude' => 0,
+      ),
+      '5' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      'teaser' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      'full' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      '4' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      '2' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      '3' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      'token' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+    ),
+    'widget_active' => '1',
+    'type' => 'text',
+    'required' => '0',
+    'multiple' => '0',
+    'module' => 'text',
+    'active' => '1',
+    'text_processing' => '0',
+    'max_length' => '',
+    'allowed_values' => '',
+    'allowed_values_php' => '',
+    'widget' => array(
+      'rows' => 5,
+      'size' => '60',
+      'default_value' => array(
+        '0' => array(
+          'value' => '',
+          '_error_element' => 'default_value_widget][field_features_test_child_a][0][value',
+        ),
+      ),
+      'default_value_php' => NULL,
+      'label' => 'Test childfield',
+      'weight' => '31',
+      'description' => '',
+      'type' => 'text_textfield',
+      'module' => 'text',
+    ),
+  );
+
+  // Exported field: field_features_test_child_b
+  $fields[] = array(
+    'field_name' => 'field_features_test_child_b',
+    'type_name' => 'features_test',
+    'display_settings' => array(
+      'label' => array(
+        'format' => 'above',
+        'exclude' => 0,
+      ),
+      '5' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      'teaser' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      'full' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      '4' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      '2' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      '3' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+      'token' => array(
+        'format' => 'default',
+        'exclude' => 0,
+      ),
+    ),
+    'widget_active' => '1',
+    'type' => 'text',
+    'required' => '0',
+    'multiple' => '0',
+    'module' => 'text',
+    'active' => '1',
+    'text_processing' => '0',
+    'max_length' => '',
+    'allowed_values' => '',
+    'allowed_values_php' => '',
+    'widget' => array(
+      'rows' => 5,
+      'size' => '60',
+      'default_value' => array(
+        '0' => array(
+          'value' => '',
+          '_error_element' => 'default_value_widget][field_features_test_child_b][0][value',
+        ),
+      ),
+      'default_value_php' => NULL,
+      'label' => 'Test childfield',
+      'weight' => '32',
+      'description' => '',
+      'type' => 'text_textfield',
+      'module' => 'text',
+    ),
+  );
+
   // Translatables
   array(
     t('Test'),
+    t('Test childfield'),
   );
 
   return $fields;
+}
+
+/**
+ * Helper to implementation of hook_fieldgroup_default_groups().
+ */
+function _features_test_fieldgroup_default_groups() {
+  $groups = array();
+
+  // Exported group: group_features_test
+  $groups[] = array(
+    'group_type' => 'standard',
+    'type_name' => 'features_test',
+    'group_name' => 'group_features_test',
+    'label' => 'Test fieldgroup',
+    'settings' => array(
+      'form' => array(
+        'style' => 'fieldset',
+        'description' => '',
+      ),
+      'display' => array(
+        'description' => '',
+        'label' => 'above',
+        '5' => array(
+          'format' => 'fieldset',
+          'exclude' => 0,
+        ),
+        'teaser' => array(
+          'format' => 'fieldset',
+          'exclude' => 0,
+        ),
+        'full' => array(
+          'format' => 'fieldset',
+          'exclude' => 0,
+        ),
+        '4' => array(
+          'format' => 'fieldset',
+          'exclude' => 0,
+        ),
+        '2' => array(
+          'format' => 'fieldset',
+          'exclude' => 0,
+        ),
+        '3' => array(
+          'format' => 'fieldset',
+          'exclude' => 0,
+        ),
+        'token' => array(
+          'format' => 'fieldset',
+          'exclude' => 0,
+        ),
+      ),
+    ),
+    'weight' => '35',
+    'fields' => array(
+      '0' => 'field_features_test_child_a',
+      '1' => 'field_features_test_child_b',
+    ),
+  );
+
+  // Translatables
+  array(
+    t('Test fieldgroup'),
+  );
+
+  return $groups;
 }
 
 /**

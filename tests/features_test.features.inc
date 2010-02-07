@@ -10,6 +10,15 @@ function features_test_content_default_fields() {
 }
 
 /**
+ * Implementation of hook_fieldgroup_default_groups().
+ */
+function features_test_fieldgroup_default_groups() {
+  module_load_include('inc', 'features_test', 'features_test.defaults');
+  $args = func_get_args();
+  return call_user_func_array('_features_test_fieldgroup_default_groups', $args);
+}
+
+/**
  * Implementation of hook_filter_default_formats().
  */
 function features_test_filter_default_formats() {
