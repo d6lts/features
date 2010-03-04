@@ -536,8 +536,11 @@ function features_form_submit(&$form, &$form_state) {
     $install = array_keys(array_filter($status));
     $disable = array_diff(array_keys($status), $install);
 
-    features_install_modules($install);
+    // Disable first. If there are any features that are disabled that are
+    // dependencies of features that have been queued for install, they will
+    // be re-enabled.
     module_disable($disable);
+    features_install_modules($install);
   }
 }
 
