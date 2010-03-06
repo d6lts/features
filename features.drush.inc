@@ -186,7 +186,8 @@ function _features_command_export($stub, $module_name = NULL, $destination = 'si
   }
   $files = features_export_render($export, $module_name, TRUE);
 
-  if ($root = drush_locate_root()) {
+  $root = drush_get_option(array('r', 'root'), drush_locate_root());
+  if ($root) {
     $directory = "$destination/{$module_name}";
     if (is_dir($directory)) {
       drush_print(dt('Module appears to already exist in !dir', array('!dir' => $directory)));
