@@ -15,5 +15,5 @@
       <div class='buttons clear-block'><?php print $buttons ?></div>
     </div>
   </div>
-  <?php print $form ?>
+  <?php print drupal_render_children($form) ?>
 </div>

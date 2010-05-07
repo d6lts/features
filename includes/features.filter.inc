@@ -9,8 +9,21 @@ function filter_features_api() {
     'filter' => array(
       'name' => t('Filter formats'),
       'default_hook' => 'filter_default_formats',
+      'feature_source' => TRUE
     ),
   );
+}
+
+
+/**
+ * Implementation of hook_features_export_options().
+ */
+function filter_features_export_options() {
+  $options = array();
+  foreach (filter_formats() as $name => $info) {
+    $options[$info->name] = $info->name;
+  }
+  return $options;
 }
 
 /**
@@ -21,15 +34,16 @@ function filter_features_export($data, &$export, $module_name = '') {
   // features module so we need to add it as a dependency.
   $export['dependencies']['features'] = 'features';
 
-  $formats = _filter_get_formats();
-  foreach ($formats as $format) {
-    if (in_array($format['name'], $data)) {
+  $formats = filter_formats();
+  foreach ($formats as $key => $format) {
+    $filters = filter_list_format($key);
+    if (in_array($format->name, $data)) {
       // Add format to exports
-      $export['features']['filter'][$format['name']] = $format['name'];
+      $export['features']['filter'][$format->name] = $format->name;
 
       // Iterate through filters and ensure each filter's module is included as a dependency
-      foreach ($format['filters'] as $filter) {
-        $export['dependencies'][$filter['module']] = $filter['module'];
+      foreach ($filters as $filter) {
+        $export['dependencies'][$filter->module] = $filter->module;
       }
     }
   }
@@ -49,8 +63,8 @@ function filter_features_export_render($module = 'foo', $data) {
   $formats = _filter_get_formats();
   foreach ($formats as $format) {
     if (in_array($format['name'], $data)) {
-      $code[] = '  // Exported format: '. $format['name'];
-      $code[] = '  $formats[] = '. features_var_export($format, '  ') .';';
+      $code[] = '  // Exported format: ' . $format['name'];
+      $code[] = '  $formats[] = ' . features_var_export($format, '  ') . ';';
       $code[] = '';
     }
   }
@@ -87,12 +101,12 @@ function _filter_get_formats() {
 
   // We cannot use user_roles() here because it has the names translated.
   $roles = _features_get_roles();
-  $result = db_query("SELECT * FROM {filter_formats}");
-  while ($row = db_fetch_object($result)) {
+  $result = db_query("SELECT * FROM {filter_format}");
+  while ($row = $result->fetchObject()) {
     $format_roles = array();
     // Prepare a roles array with roles that may access the filter.
     foreach ($roles as $name => $role) {
-      if (strstr($row->roles, ','. $role['rid'] .',')) {
+      if (strstr($row->roles, ',' . $role['rid'] . ',')) {
         $format_roles[] = $name;
       }
     }
@@ -101,44 +115,17 @@ function _filter_get_formats() {
       'roles' => $format_roles,
       'filters' => array(),
     );
-    foreach (_filter_list_format($row->format, TRUE) as $filter) {
+    foreach (filter_list_format($row->format) as $filter) {
       $formats[$row->format]['filters'][] = array(
         'module' => $filter->module,
-        'delta' => $filter->delta,
+        'name' => $filter->name,
         'weight' => $filter->weight,
       );
+      filter_formats_reset();
     }
   }
 
   return $formats;
-}
-
-/**
- * Direct copy of filter_list_format() but with a way to clear the static.
- */
-function _filter_list_format($format, $reset = FALSE) {
-  static $filters = array();
-
-  if (!isset($filters[$format]) || $reset) {
-    $result = db_query("SELECT * FROM {filters} WHERE format = %d ORDER BY weight, module, delta", $format);
-    if (db_affected_rows($result) == 0 && !db_result(db_query("SELECT 1 FROM {filter_formats} WHERE format = %d", $format))) {
-      // The format has no filters and does not exist, use the default input
-      // format.
-      $filters[$format] = filter_list_format(variable_get('filter_default_format', 1));
-    }
-    else {
-      $filters[$format] = array();
-      while ($filter = db_fetch_object($result)) {
-        $list = module_invoke($filter->module, 'filter', 'list');
-        if (isset($list) && is_array($list) && isset($list[$filter->delta])) {
-          $filter->name = $list[$filter->delta];
-          $filters[$format][$filter->module .'/'. $filter->delta] = $filter;
-        }
-      }
-    }
-  }
-
-  return $filters[$format];
 }
 
 
@@ -146,7 +133,7 @@ function _filter_list_format($format, $reset = FALSE) {
  * Helper function for updating/inserting formats.
  */
 function _filter_features_update($format) {
-  $format_id = db_result(db_query("SELECT format FROM {filter_formats} WHERE name = '%s'", $format['name']));
+  $format_id = db_query("SELECT format FROM {filter_format} WHERE name = :name", array(':name' => $format['name']))->fetchField();
 
   // Format the role IDs into something that can be inserted into the database.
   // This is so painful. See filter.admin.inc line 218. : (
@@ -167,24 +154,26 @@ function _filter_features_update($format) {
     }
   }
   if ($format_id && $format_id == variable_get('filter_default_format', 1)) {
-    $format['roles'] = ','. implode(',', array_keys(user_roles())) .',';
+    $format['roles'] = ',' . implode(',', array_keys(user_roles())) . ',';
   }
   else {
-    $format['roles'] = ','. implode(',', $format_rids) .',';
+    $format['roles'] = ',' . implode(',', $format_rids) . ',';
   }
 
   // Update or insert the format
   if ($format_id) {
     $format['format'] = $format_id;
-    drupal_write_record('filter_formats', $format, 'format');
+    drupal_write_record('filter_format', $format, 'format');
   }
   else {
-    drupal_write_record('filter_formats', $format);
+    drupal_write_record('filter_format', $format);
   }
 
   // Update the filters for the format
   if ($format['format']) {
-    db_query("DELETE FROM {filters} WHERE format = %d", $format['format']);
+    db_delete('filters')
+    ->condition('format', $format['format'])
+  ->execute();
     foreach ($format['filters'] as $filter) {
       $filter['format'] = $format['format'];
       drupal_write_record('filters', $filter);

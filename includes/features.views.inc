@@ -43,7 +43,7 @@ function views_features_export_render($module = 'foo', $data) {
     // Build the view
     $view = views_get_view($view_name, TRUE);
     if ($view) {
-      $code[] = '  // Exported view: '. $view_name;
+      $code[] = '  // Exported view: ' . $view_name;
       $code[] = $view->export('  ');
       $code[] = '  $views[$view->name] = $view;';
       $code[] = '';

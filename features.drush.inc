@@ -7,8 +7,8 @@
  */
 
 /**
- * Implementation of hook_drush_command().
- * 
+ * Implements hook_drush_command().
+ *
  * @See drush_parse_command() for a list of recognized keys.
  *
  * @return
@@ -23,7 +23,6 @@ function features_drush_command() {
     'drupal dependencies' => array('features'),
   );
   $items['features-export'] = array(
-    'callback' => 'features_command_export',
     'description' => "Export a feature from your site into a module.",
     'arguments' => array(
       'feature' => 'Feature name to export.',
@@ -54,7 +53,7 @@ function features_drush_command() {
 }
 
 /**
- * Implementation of hook_drush_help().
+ * Implements hook_drush_help().
  */
 function features_drush_help($section) {
   switch ($section) {
@@ -97,7 +96,7 @@ function features_command_list() {
 /**
  * Create a feature module based on a list of contexts.
  */
-function features_command_export() {
+function drush_features_export() {
   $args = func_get_args();
 
   if (count($args) == 1) {
@@ -108,7 +107,7 @@ function features_command_export() {
     _features_command_export($stub, $component);
   }
   elseif (count($args) > 1) {
-    // Assume that the user intends to create a new module based on a list of 
+    // Assume that the user intends to create a new module based on a list of
     // contexts. First argument is assumed to be the name.
     $name = array_shift($args);
     $stub = array();
@@ -120,15 +119,14 @@ function features_command_export() {
   }
   else {
     drush_print(dt('Available sources'));
-    $rows = array(dt('Available sources'));
     foreach (features_get_components(TRUE) as $component => $info) {
       if ($options = features_invoke($component, 'features_export_options')) {
         foreach ($options as $key => $value) {
-          $rows[] = array($component .':'. $key);
+          $rows[] = array($component . ':' . $key);
         }
       }
     }
-    drush_print_table($rows, TRUE);
+    drush_print_table($rows, FALSE);
   }
 }
 
@@ -140,14 +138,14 @@ function features_command_update() {
     foreach ($args as $module) {
       if (($feature = feature_load($module, TRUE)) && module_exists($module)) {
         $stub = $feature->info['features'];
-  
+
         // Construct the correct destination path
         $destination = dirname($feature->filename);
         $split = explode('/', $destination);
         if ($feature->name == array_pop($split)) {
           $destination = implode('/', $split);
         }
-  
+
         _features_command_export($stub, $feature->name, $destination);
       }
       else if ($feature) {
@@ -226,7 +224,7 @@ function features_command_revert() {
       if (($feature = feature_load($module, TRUE)) && module_exists($module)) {
         // Find all overridden items
         module_load_include('inc', 'features', 'features.export');
-  
+
         $components = array();
         $states = features_get_component_states(array($feature->name), FALSE);
         foreach ($states[$feature->name] as $component => $state) {
@@ -234,7 +232,7 @@ function features_command_revert() {
             $components[] = $component;
           }
         }
-  
+
         if (empty($components)) {
           drush_log(dt('Current state already matches defaults, aborting.'), 'ok');
         }
@@ -271,7 +269,7 @@ function features_command_revert() {
  *   The string name of the feature.
  * @param $error
  *   A text string identifying the type of error.
- * @return 
+ * @return
  *   FALSE.  See drush_set_error().
  */
 function _features_drush_set_error($feature, $error) {

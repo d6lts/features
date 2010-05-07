@@ -8,19 +8,19 @@
 foreach (_ctools_features_get_info() as $component => $info) {
   $code = '';
   if (!function_exists("{$info['module']}_features_api")) {
-    $code .= 'function '. $info['module'] .'_features_api() { return ctools_component_features_api("'. $info['module'] .'"); }';
+    $code .= 'function ' . $info['module'] . '_features_api() { return ctools_component_features_api("' . $info['module'] . '"); }';
   }
   if (!function_exists("{$component}_features_export")) {
-    $code .= 'function '. $component .'_features_export($data, &$export, $module_name = "") { return ctools_component_features_export("'. $component .'", $data, $export, $module_name); }';
+    $code .= 'function ' . $component . '_features_export($data, &$export, $module_name = "") { return ctools_component_features_export("' . $component . '", $data, $export, $module_name); }';
   }
   if (!function_exists("{$component}_features_export_options")) {
-    $code .= 'function '. $component .'_features_export_options() { return ctools_component_features_export_options("'. $component .'"); }';
+    $code .= 'function ' . $component . '_features_export_options() { return ctools_component_features_export_options("' . $component . '"); }';
   }
   if (!function_exists("{$component}_features_export_render")) {
-    $code .= 'function '. $component .'_features_export_render($module = "foo", $data) { return ctools_component_features_export_render("'. $component .'", $module, $data); }';
+    $code .= 'function ' . $component . '_features_export_render($module = "foo", $data) { return ctools_component_features_export_render("' . $component . '", $module, $data); }';
   }
   if (!function_exists("{$component}_features_revert")) {
-    $code .= 'function '. $component .'_features_revert($module = "foo") { return ctools_component_features_revert("'. $component .'", $module); }';
+    $code .= 'function ' . $component . '_features_revert($module = "foo") { return ctools_component_features_revert("' . $component . '", $module); }';
   }
   eval($code);
 }
@@ -75,8 +75,8 @@ function ctools_features_export_render($module = 'foo', $data) {
     $version = $info[$component]['current_version'];
 
     $if = $first ? 'if' : 'else if';
-    $code[] = '  '. $if .' ($module == "'. $module .'" && $api == "'. $api .'") {';
-    $code[] = '    return array("version" => '. $version .');';
+    $code[] = '  ' . $if . ' ($module == "' . $module . '" && $api == "' . $api . '") {';
+    $code[] = '    return array("version" => ' . $version . ');';
     $code[] = '  }';
 
     $first = FALSE;
@@ -175,7 +175,7 @@ function ctools_component_features_export_render($component, $module = 'foo', $d
     $code = implode('}', $code);
   }
   else {
-    $code = '  $export = array();'."\n";
+    $code = '  $export = array();' . "\n";
     foreach ($data as $object) {
       $identifier = $schema['export']['identifier'];
       $objects = ctools_export_load_object($component, 'names', array($object));
@@ -189,7 +189,7 @@ function ctools_component_features_export_render($component, $module = 'foo', $d
           $code .= ctools_export_object($component, $objects[$object], '  ', $identifier);
         }
         $code .= "\n";
-        $code .= '  $export[\''. $object .'\'] = $'. $identifier .';'."\n";
+        $code .= '  $export[\'' . $object . '\'] = $' . $identifier . ';' . "\n";
       }
     }
     $code .= '  return $export;';

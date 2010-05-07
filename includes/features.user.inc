@@ -41,10 +41,10 @@ function user_features_export($data, &$export, $module_name = '') {
  */
 function user_features_export_options() {
   $options = array();
-  foreach (module_list() as $module) {
-    $prefix = check_plain($module) .': ';
-    if ($permissions = module_invoke($module, 'perm')) {
-      foreach ($permissions as $permission) {
+  foreach (module_implements('permission') as $module) {
+    $prefix = check_plain($module) . ': ';
+    if ($permissions = module_invoke($module, 'permission')) {
+      foreach ($permissions as $permission => $info) {
         $options[$permission] = $prefix . check_plain($permission);
       }
     }
@@ -74,8 +74,8 @@ function user_features_export_render($module = 'foo', $data) {
       $permission['roles'] = array();
     }
 
-    $code[] = '  // Exported permission: '. $perm_name;
-    $code[] = '  $permissions[] = '. features_var_export($permission, '  ') .';';
+    $code[] = '  // Exported permission: ' . $perm_name;
+    $code[] = '  $permissions[] = ' . features_var_export($permission, '  ') . ';';
     $code[] = '';
   }
 
@@ -141,9 +141,9 @@ function _user_features_permission_map($reset = FALSE) {
   static $map;
   if (!isset($map) || $reset) {
     $map = array();
-    foreach (module_implements('perm') as $module) {
-      if ($permissions = module_invoke($module, 'perm')) {
-        foreach ($permissions as $permission) {
+    foreach (module_implements('permission') as $module) {
+      if ($permissions = module_invoke($module, 'permission')) {
+        foreach ($permissions as $permission => $info) {
           $map[$permission] = $module;
         }
       }
@@ -156,18 +156,14 @@ function _user_features_permission_map($reset = FALSE) {
  * Represent the current state of permissions as a perm to role name array map.
  */
 function _user_features_get_permissions() {
-  $result = db_query("SELECT p.perm, r.name FROM {role} r INNER JOIN {permission} p ON p.rid = r.rid ORDER BY r.rid ASC, p.perm ASC");
+  $result = db_query("SELECT p.permission, r.name FROM {role} r INNER JOIN {role_permission} p ON p.rid = r.rid ORDER BY r.rid ASC, p.permission ASC");
   $permissions = array();
-  while ($row = db_fetch_object($result)) {
-    $role = $row->name;
-    $role_perms = explode(', ', $row->perm);
-    foreach ($role_perms as $perm) {
-      if (!isset($permissions[$perm])) {
-        $permissions[$perm] = array();
-      }
-      if(!in_array($role, $permissions[$perm])) {
-        $permissions[$perm][] = $role;
-      }
+  while ($row = $result->fetchObject()) {
+    if (!isset($permissions[$row->permission])) {
+      $permissions[$row->permission] = array();
+    }
+    if (!in_array($row->name, $permissions[$row->permission])) {
+      $permissions[$row->permission][] = $row->name;
     }
   }
   return $permissions;
@@ -179,7 +175,9 @@ function _user_features_get_permissions() {
 function _user_features_save_roles($roles) {
   // Write the updated permissions.
   foreach ($roles as $role) {
-    db_query("DELETE FROM {permission} WHERE rid = %d", $role['rid']);
+    db_delete('permission')
+    ->condition('rid', $role['rid'])
+  ->execute();
     $role['perm'] = implode(', ', $role['perm']);
     drupal_write_record('permission', $role);
   }

@@ -18,8 +18,8 @@ function menu_features_api() {
  */
 function menu_features_export_options() {
   $options = array();
-  $result = db_query("SELECT * FROM {menu_links} WHERE menu_name = 'features' AND depth = 1");
-  while ($row = db_fetch_array($result)) {
+  $result = db_query("SELECT * FROM {menu_links} WHERE menu_name = :menu_name AND depth = :depth", array(':menu_name' => 'features', ':depth' => 1));
+  while ($row = $result->fetchAssoc()) {
     $options[$row['link_path']] = $row['link_title'];
   }
   return $options;
@@ -36,8 +36,8 @@ function menu_features_export($data, &$export) {
 
   foreach ($data as $path) {
     // Query for links in the features table... if they exist, add to export object.
-    $result = db_query("SELECT * FROM {menu_links} WHERE link_path = '%s' AND menu_name = 'features'", $path);
-    while ($row = db_fetch_array($result)) {
+    $result = db_query("SELECT * FROM {menu_links} WHERE link_path = :link_path AND menu_name = :menu_name", array(':link_path' => $path, ':menu_name' => 'features'));
+    while ($row = $result->fetchAssoc()) {
       $export['features']['menu'][$path] = $path;
       break;
     }
@@ -59,8 +59,8 @@ function menu_features_export_render($module = 'foo', $data) {
 
   foreach ($data as $path) {
     // Query for links only in the features table
-    $result = db_query("SELECT * FROM {menu_links} WHERE link_path = '%s' AND menu_name = 'features'", $path);
-    while ($row = db_fetch_array($result)) {
+    $result = db_query("SELECT * FROM {menu_links} WHERE link_path = :link_path AND menu_name = :menu_name", array(':link_path' => $path, ':menu_name' => 'features'));
+    while ($row = $result->fetchAssoc()) {
       $link = array(
         'title' => $row['link_title'],
         'path' => $row['link_path'],
@@ -75,7 +75,7 @@ function menu_features_export_render($module = 'foo', $data) {
         $translatables[] = $options['attributes']['title'];
       }
 
-      $code[] = "  \$items[] = ". features_var_export($link, '  ') .";";
+      $code[] = "  \$items[] = " . features_var_export($link, '  ') . ";";
       break;
     }
   }

@@ -1,4 +1,4 @@
-core = "6.x"
+core = 7.x
 dependencies[] = "fieldgroup"
 dependencies[] = "views"
 dependencies[] = "text"
@@ -15,3 +15,10 @@ features[user][] = "create features_test content"
 features[views][] = "features_test"
 name = "Features Tests"
 package = "Testing"
+
+files[] = features.test
+files[] = features_test.defaults.inc
+files[] = features_test.features.inc
+files[] = features_test.features.node.inc
+files[] = features_test.features.views.inc
+files[] = features_test.module

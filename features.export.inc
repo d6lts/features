@@ -120,6 +120,13 @@ function _features_export_preserve_dependencies($dependencies, $module_name = NU
     $feature = feature_load($module_name);
     $existing = !empty($feature->info['dependencies']) ? $feature->info['dependencies'] : array();
   }
+
+  // in certain situations the minimize_dependencies function sets the dependencies as 'false'.
+  // instantiate as array in this case.
+  if (!is_array($dependencies)) {
+    $dependencies = array();
+  }
+
   $merged = array_merge($existing, $dependencies);
   $merged = array_unique($merged);
   ksort($merged);
@@ -133,7 +140,7 @@ function features_export_prepare($export, $module_name, $reset = FALSE) {
   $existing = features_get_modules($module_name, $reset);
 
   // Prepare info string -- if module exists, merge into its existing info file
-  $defaults = $existing ? $existing->info : array('core' => '6.x', 'package' => 'Features', 'project' => $module_name);
+  $defaults = $existing ? $existing->info : array('core' => '7.x', 'package' => 'Features', 'project' => $module_name);
   $export = array_merge($defaults, $export);
 
   // Cleanup info array
@@ -146,6 +153,7 @@ function features_export_prepare($export, $module_name, $reset = FALSE) {
   if (isset($export['conflicts'])) {
     unset($export['conflicts']);
   }
+
   ksort($export);
   return $export;
 }
@@ -223,9 +231,14 @@ function features_export_render($export, $module_name, $reset = FALSE) {
     }
   }
 
+  $export['files'][] = $module_name . '.module';
+
   // Finalize strings to be written to files
   foreach ($code as $filename => $contents) {
-    $code[$filename] = "<?php\n\n". implode("\n\n", $contents) ."\n";
+    $code[$filename] = "<?php\n\n" . implode("\n\n", $contents) . "\n";
+
+    // make sure each file is present in the info file
+    $export['files'][] = $module_name . '.' . $filename . '.inc';
   }
 
   // Generate info file output
@@ -336,7 +349,7 @@ function features_export_render_features($module, $hook, $filename = 'defaults')
   $output[] = "function {$module}_{$hook}() {";
   $output[] = "  module_load_include('inc', '{$module}', '{$module}.{$filename}');";
   $output[] = '  $args = func_get_args();';
-  $output[] = "  return call_user_func_array('_{$module}_{$hook}', ".'$args'.");";
+  $output[] = "  return call_user_func_array('_{$module}_{$hook}', " . '$args' . ");";
   $output[] = "}";
   return implode("\n", $output);
 }
@@ -405,7 +418,7 @@ function features_tar_create($files) {
       '   765 ', // UID,
       '   765 ', // GID,
       sprintf("%11s ", decoct(strlen($contents))), // Filesize,
-      sprintf("%11s", decoct(time())) // Creation time
+      sprintf("%11s", decoct(REQUEST_TIME)) // Creation time
     );
     $binary_data_last = pack("a1a100a6a2a32a32a8a8a155a12", '', '', '', '', '', '', '', '', '', '');
 
@@ -552,14 +565,14 @@ function features_semaphore($op, $component) {
   // Note: we don't use variable_get() here as the inited variable
   // static cache may be stale. Retrieving directly from the DB narrows
   // the possibility of collision.
-  $semaphore = db_result(db_query("SELECT value FROM {variable} WHERE name = 'features_semaphore'"));
+  $semaphore = db_query("SELECT value FROM {variable} WHERE name = :name", array(':name' => 'features_semaphore'))->fetchField();
   $semaphore = !empty($semaphore) ? unserialize($semaphore) : array();
 
   switch ($op) {
     case 'get':
       return isset($semaphore[$component]) ? $semaphore[$component] : FALSE;
     case 'set':
-      $semaphore[$component] = time();
+      $semaphore[$component] = REQUEST_TIME;
       variable_set('features_semaphore', $semaphore);
       break;
     case 'del':
@@ -684,7 +697,7 @@ function features_get_component_states($features = array(), $rebuild_only = TRUE
             }
             else {
               // Semaphore is still within processing horizon. Do nothing.
-              if ((time() - $semaphore) < FEATURES_SEMAPHORE_TIMEOUT) {
+              if ((REQUEST_TIME - $semaphore) < FEATURES_SEMAPHORE_TIMEOUT) {
                 $cache[$feature][$component] = FEATURES_REBUILDING;
               }
               // A stale semaphore means a previous rebuild attempt did not complete.

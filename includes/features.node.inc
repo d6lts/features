@@ -19,7 +19,7 @@ function node_features_api() {
  * Implementation of hook_features_export_options().
  */
 function node_features_export_options() {
-  return node_get_types('names');
+  return node_type_get_names();
 }
 
 /**
@@ -28,56 +28,47 @@ function node_features_export_options() {
 function node_features_export($data, &$export, $module_name = '') {
   $pipe = array();
 
-  // Collect a real node type to module map
-  $type_map = array();
+  $type_map = node_type_get_types();
+
+  $module_map = array();
+
   $modules = module_implements('node_info');
   foreach ($modules as $module) {
-    $callback = $module ."_node_info";
+    $callback = $module . "_node_info";
     $node_types = call_user_func($callback);
     if (is_array($node_types)) {
       foreach ($node_types as $module_type => $module_info) {
-        $type_map[$module_type] = $module;
+        $module_map[$module_type] = $module;
       }
     }
   }
 
-  foreach ($data as $type) {
+
+
+  foreach ($data as $type)  {
     // Poll node module to determine who provides the node type.
-    if ($info = node_get_types('module', $type)) {
-      $export['dependencies'][$info] = $info;
-      if (in_array($info, array('node', 'features'))) {
+    if ($info = $type_map[$type]->base) {
+      if (in_array($info, array('node_content', 'features'))) {
+        $export['dependencies']['node'] = 'node';
+        $export['dependencies']['features'] = 'features';
         $export['features']['node'][$type] = $type;
       }
 
       // If this node type is provided by a different module, add it as a dependency
-      $module = $type_map[$type];
+      $module = $module_map[$type];
       if ($module && $module != $module_name) {
         $export['dependencies'][$module] = $module;
         unset($export['features']['node'][$type]);
       }
 
-      // Create a pipe for CCK fields
-      if (module_exists('content')) {
-        $content_info = content_types($type);
-        if (!empty($content_info['fields'])) {
-          foreach ($content_info['fields'] as $key => $field) {
-            $pipe['content'][] = "{$type}-{$field['field_name']}";
-          }
-          // If strongarm is present, create a pipe for the extra field weights
-          // variable to be exported.
-          if (module_exists('strongarm')) {
-            $pipe['variable'][] = "content_extra_weights_{$type}";
-          }
-        }
-        // Create a pipe for Fieldgroups
-        if (function_exists('fieldgroup_groups') && $groups = fieldgroup_groups($type)) {
-          foreach ($groups as $group) {
-            $pipe['fieldgroup'][] = "{$type}-{$group['group_name']}";
-          }
-        }
+      $fields = field_info_instances('node', $type);
+      foreach ($fields as $name => $field) {
+        $pipe['field'][] = "{$field['bundle']}-{$field['field_name']}";
       }
+	 	
     }
   }
+
 
   return $pipe;
 }
@@ -88,24 +79,23 @@ function node_features_export($data, &$export, $module_name = '') {
 function node_features_export_render($module = 'foo', $data) {
   $elements = array(
     'name' => TRUE,
-    'module' => FALSE,
+    'base' => FALSE,
     'description' => TRUE,
     'has_title' => FALSE,
     'title_label' => TRUE,
     'has_body' => FALSE,
     'body_label' => TRUE,
-    'min_word_count' => FALSE,
     'help' => TRUE,
   );
   $output = array();
   $output[] = '  $items = array(';
   foreach ($data as $type) {
-    $info = node_get_types('type', $type);
+    $info = node_type_get_type($type);
 
     // Force module name to be 'features' if set to 'node. If we leave as
     // 'node' the content type will be assumed to be database-stored by
     // the node module.
-    $info->module = ($info->module === 'node') ? 'features' : $info->module;
+    $info->base = ($info->base === 'node') ? 'features' : $info->base;
 
     $output[] = "    '{$type}' => array(";
     foreach ($elements as $key => $t) {
@@ -134,7 +124,7 @@ function node_features_export_render($module = 'foo', $data) {
  */
 function node_features_revert($module = NULL) {
   // Get default node types
-  if (module_hook($module, 'node_info')){
+  if (module_hook($module, 'node_info')) {
     $default_types = module_invoke($module, 'node_info');
 
     // Delete node types
@@ -143,7 +133,9 @@ function node_features_revert($module = NULL) {
     // This can lead to bad consequences like CCK deleting field
     // storage in the DB.
     foreach ($default_types as $type_name => $type_info) {
-      db_query("DELETE FROM {node_type} WHERE type = '%s'", $type_name);
+      db_delete('node_type')
+    ->condition('type', $type_name)
+  ->execute();
     }
   }
   else {

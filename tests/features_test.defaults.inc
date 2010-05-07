@@ -189,7 +189,7 @@ function _features_test_content_default_fields() {
   );
 
   // Translatables
-  array(
+  $translatables = array(
     t('Test'),
     t('Test childfield'),
   );
@@ -255,7 +255,7 @@ function _features_test_fieldgroup_default_groups() {
   );
 
   // Translatables
-  array(
+  $translatables = array(
     t('Test fieldgroup'),
   );
 
