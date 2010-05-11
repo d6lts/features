@@ -81,7 +81,7 @@ function ctools_features_export_render($module = 'foo', $data) {
       list($module, $api, $version) = explode(':', $component);
     }
 
-    $if = $first ? 'if' : 'else if';
+    $if = $first ? 'if' : 'elseif';
     $code[] = '  '. $if .' ($module == "'. $module .'" && $api == "'. $api .'") {';
     $code[] = '    return array("version" => '. $version .');';
     $code[] = '  }';
