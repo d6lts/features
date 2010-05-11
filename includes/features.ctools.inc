@@ -70,9 +70,16 @@ function ctools_features_export_render($module = 'foo', $data) {
 
   $first = TRUE;
   foreach ($data as $component) {
-    $module = $info[$component]['module'];
-    $api = $info[$component]['api'];
-    $version = $info[$component]['current_version'];
+    if (isset($info[$component])) {
+      $module = $info[$component]['module'];
+      $api = $info[$component]['api'];
+      $version = $info[$component]['current_version'];
+    }
+    // Allow other CTools plugin APIs that a feature may need to support be
+    // specified by module:api:version in feature info files.
+    else if (strpos($component, ':') !== FALSE) {
+      list($module, $api, $version) = explode(':', $component);
+    }
 
     $if = $first ? 'if' : 'else if';
     $code[] = '  '. $if .' ($module == "'. $module .'" && $api == "'. $api .'") {';
