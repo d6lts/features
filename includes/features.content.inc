@@ -143,6 +143,12 @@ function content_features_rebuild($module) {
         content_field_instance_update($field, FALSE);
       }
       else {
+        // Summary: content_field_instance_create() will fall back to prior
+        // instance values for weight, label, desc if not set. 
+        // See http://drupal.org/node/686240#comment-2786162
+        $field['weight'] = $field['widget']['weight'];
+        $field['label'] = $field['widget']['label'];
+        $field['description'] = $field['widget']['description'];
         content_field_instance_create($field, FALSE);
       }
       variable_set('menu_rebuild_needed', TRUE);
