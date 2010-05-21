@@ -47,10 +47,14 @@ function ctools_features_export($data, &$export, $module_name = '') {
   // Add ctools dependency
   $export['dependencies']['ctools'] = 'ctools';
 
-  // Add the actual ctools components which will
-  // need to be accounted for in hook_ctools_plugin_api().
+  // Add the actual ctools components which will need to be accounted for in
+  // hook_ctools_plugin_api(). The components are actually identified by a
+  // delimited list of values: `module_name:api:current_version`
   foreach ($data as $component) {
-    $export['features']['ctools'][$component] = $component;
+    if ($info = _ctools_features_get_info($component)) {
+      $identifier = "{$info['module']}:{$info['api']}:{$info['current_version']}";
+      $export['features']['ctools'][$identifier] = $identifier;
+    }
   }
 
   return array();
@@ -61,8 +65,6 @@ function ctools_features_export($data, &$export, $module_name = '') {
  * Adds the ctools mothership hook, ctools_plugin_api().
  */
 function ctools_features_export_render($module = 'foo', $data) {
-  $info = _ctools_features_get_info();
-
   $code = array();
   $code[] = '  $args = func_get_args();';
   $code[] = '  $module = array_shift($args);';
@@ -70,23 +72,14 @@ function ctools_features_export_render($module = 'foo', $data) {
 
   $first = TRUE;
   foreach ($data as $component) {
-    if (isset($info[$component])) {
-      $module = $info[$component]['module'];
-      $api = $info[$component]['api'];
-      $version = $info[$component]['current_version'];
-    }
-    // Allow other CTools plugin APIs that a feature may need to support be
-    // specified by module:api:version in feature info files.
-    else if (strpos($component, ':') !== FALSE) {
-      list($module, $api, $version) = explode(':', $component);
-    }
+    if ($info = _ctools_features_get_info($component)) {
+      $if = $first ? 'if' : 'elseif';
+      $code[] = '  '. $if .' ($module == "'. $info['module'] .'" && $api == "'. $info['api'] .'") {';
+      $code[] = '    return array("version" => '. $info['current_version'] .');';
+      $code[] = '  }';
 
-    $if = $first ? 'if' : 'elseif';
-    $code[] = '  '. $if .' ($module == "'. $module .'" && $api == "'. $api .'") {';
-    $code[] = '    return array("version" => '. $version .');';
-    $code[] = '  }';
-
-    $first = FALSE;
+      $first = FALSE;
+    }
   }
   return array('ctools_plugin_api' => implode("\n", $code));
 }
@@ -224,7 +217,7 @@ function ctools_component_features_revert($component, $module = 'foo') {
 /**
  * Helper function to return various ctools information for components.
  */
-function _ctools_features_get_info($reset = FALSE) {
+function _ctools_features_get_info($identifier = NULL, $reset = FALSE) {
   static $components;
   if (!isset($components) || $reset) {
     $components = array();
@@ -247,5 +240,29 @@ function _ctools_features_get_info($reset = FALSE) {
       }
     }
   }
+
+  // Return information specific to a particular component.
+  if (isset($identifier)) {
+    // Identified by the table name.
+    if (isset($components[$identifier])) {
+      return $components[$identifier];
+    }
+    // New API identifier. Allows non-exportables related CTools APIs to be
+    // supported by an explicit `module:api:current_version` key. 
+    else if (substr_count($identifier, ':') === 2) {
+      list($module, $api, $current_version) = explode(':', $identifier);
+      // If a schema component matches the provided identifier, provide that
+      // information. This also ensures that the version number is up to date.
+      foreach ($components as $table => $info) {
+        if ($info['module'] == $module && $info['api'] == $api && $info['current_version'] >= $current_version) {
+          return $info;
+        }
+      }
+      // Fallback to just giving back what was provided to us.
+      return array('module' => $module, 'api' => $api, 'current_version' => $current_version);
+    }
+    return FALSE;
+  }
+
   return $components;
 }
