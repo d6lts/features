@@ -137,7 +137,9 @@ function ctools_component_features_export_options($component) {
 function ctools_component_features_export($component, $data, &$export, $module_name = '') {
   // Add the actual implementing module as a dependency
   $info = _ctools_features_get_info();
-  $export['dependencies'][$module] = $info[$component]['module'];
+  if ($module_name !== $info[$component]['module']) {
+    $export['dependencies'][$module] = $info[$component]['module'];
+  }
 
   // Add the components
   foreach ($data as $object_name) {
