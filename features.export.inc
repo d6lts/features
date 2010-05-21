@@ -429,6 +429,8 @@ function features_tar_create($files) {
       $tar .= pack("a512", $item);
     }
   }
+  $tar .= pack("a1024","");
+
   if (function_exists('gzencode')) {
     $tar = gzencode($tar);
   }
