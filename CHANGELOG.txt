@@ -2,6 +2,8 @@
 
 features DRUPAL-6--1-BETA7
 --------------------------
+- #778250: Fix for php 5.3 issue with CTools.
+- Added static cache to ensure features_include() runs only once.
 - #522794 by Skorpjon, kenorb: Fixes for tar archive creation.
 - #686240 by David Stosik: Ensure field settings are properly captured accross
   instances.
