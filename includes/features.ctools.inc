@@ -32,9 +32,11 @@ function ctools_features_api() {
   return array(
     'ctools' => array(
       'name' => 'CTools export API',
-      'default_hook' => 'ctools_plugin_api',
       'feature_source' => TRUE,
       'duplicates' => FEATURES_DUPLICATES_ALLOWED,
+      // CTools API integration does not include a default hook declaration as
+      // it is not a proper default hook.
+      // 'default_hook' => 'ctools_plugin_api',
     ),
   );
 }
