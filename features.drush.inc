@@ -37,6 +37,7 @@ function features_drush_command() {
       'feature' => 'A space delimited list of features.',
     ),
     'drupal dependencies' => array('features'),
+    'aliases' => array('fu'),
   );
   $items['features-update-all'] = array(
     'callback' => 'features_command_update_all',
@@ -45,6 +46,7 @@ function features_drush_command() {
       'feature_exclude' => 'A space-delimited list of features to exclude from being updated.',
     ),
     'drupal dependencies' => array('features'),
+    'aliases' => array('fu-all', 'fua'),
   );
   $items['features-revert'] = array(
     'callback' => 'features_command_revert',
@@ -56,6 +58,7 @@ function features_drush_command() {
       '--force' => "Force revert even if Features assumes components' state are default.",
     ),
     'drupal dependencies' => array('features'),
+    'aliases' => array('fr'),
   );
   $items['features-revert-all'] = array(
     'callback' => 'features_command_revert_all',
@@ -67,6 +70,7 @@ function features_drush_command() {
       '--force' => "Force revert even if Features assumes components' state are default.",
     ),
     'drupal dependencies' => array('features'),
+    'aliases' => array('fr-all', 'fra'),
   );
 
   return $items;
