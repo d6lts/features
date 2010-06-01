@@ -57,9 +57,8 @@ function context_features_export_options() {
 function context_features_export($data, &$export, $module_name = '') {
   // 3.x
   if (context_features_get_version() === 3) {
-    ctools_component_features_export('context', $data, $export, $module_name);
+    $pipe = ctools_component_features_export('context', $data, $export, $module_name);
 
-    $pipe = array();
     $contexts = context_load();
     foreach ($data as $identifier) {
       if (isset($contexts[$identifier])) {
