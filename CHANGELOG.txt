@@ -1,5 +1,10 @@
 // $Id$
 
+features DRUPAL-6--1-BETA8
+--------------------------
+- #814414: Fix context integration to properly integrate with CTools.
+- #810958 by q0rban: Add censored expletives to my daily workflow.
+
 features DRUPAL-6--1-BETA7
 --------------------------
 - #778250: Fix for php 5.3 issue with CTools.
