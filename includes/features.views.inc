@@ -165,8 +165,7 @@ function views_features_export($data, &$export, $module_name = '') {
             // If view is default, we add the providing module as a dependency and exclude it from the Views export
             else if ($v->type == 'Default') {
               unset($export['features']['views'][$view_name]);
-              $tokens = array('!view_name' => $view_name, '!module' => $m);
-              $export['conflicts']['status'][] = t('The view <strong>!view_name</strong> will not be exported with your feature because it is provided by <strong>!module</strong> which has been added as a dependency.', $tokens);
+              $tokens = array('!view_name' => $view_name, '!module_name' => $m);
               $export['dependencies'][$m] = $m;
             }
           }
@@ -175,12 +174,9 @@ function views_features_export($data, &$export, $module_name = '') {
     }
   }
   if ($conflicts) {
-    $message = '<p>A conflict was detected with the following overridden view(s):</p>';
-    $message .= '<ul><li><strong>Views</strong>: !views</li><li><strong>Providing modules</strong>: !modules</li></ul>';
-    $message .= '<p>To resolve this problem you should either:</p>';
-    $message .= '<ol><li>Revert each overridden view</li><li>Clone each view so that the modified version(s) can be exported with your feature</li></ol>';
-    $tokens = array('!views' => implode(', ', $conflicts), '!modules' => implode(', ', array_keys($conflicts)));
-    $export['conflicts']['error'][] = t($message, $tokens);
+    $message = 'The following overridden view(s) are provided by other modules: !views. To resolve this problem either revert each view or clone each view so that modified versions can be exported withy our feature.';
+    $tokens = array('!views' => implode(', ', $conflicts));
+    features_log(t($message, $tokens), 'warning');
   }
 }
 
@@ -254,7 +250,7 @@ function views_features_revert($module = NULL) {
     }
   }
   else {
-    drupal_set_message(t('Could not load default views.'), 'error');
+    features_log(t('Could not load default views.'), 'error');
     return FALSE;
   }
   return TRUE;

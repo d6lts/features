@@ -231,7 +231,7 @@ function context_features_revert($module = NULL) {
     }
   }
   else {
-    drupal_set_message(t('Could not load default contexts.'), 'error');
+    features_log(t('Could not load default contexts.'), 'error');
     return FALSE;
   }
   return TRUE;

@@ -721,3 +721,26 @@ function _features_get_roles() {
   }
   return $roles;
 }
+
+/**
+ * Log a message, environment agnostic.
+ *
+ * @param $message
+ *   The message to log.
+ * @param $severity
+ *   The severity of the message: status, warning or error.
+ */
+function features_log($message, $severity = 'status') {
+  if (function_exists('drush_verify_cli')) {
+    if ($severity == 'status') {
+      $severity = 'ok';
+    }
+    elseif ($severity == 'error') {
+      drush_set_error($message);
+      return;
+    }
+    drush_log($message, $severity);
+    return;
+  }
+  drupal_set_message($message, $severity, FALSE);
+}
