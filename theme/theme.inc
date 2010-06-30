@@ -12,6 +12,9 @@ function template_preprocess_features_admin_components(&$vars) {
   $vars['name'] = $form['#info']['name'];
   $vars['description'] = $form['#info']['description'];
 
+  // Legend/key
+  $vars['key'] = array();
+
   // Dependencies
   $rows = array();
   $modules = features_get_info();
@@ -29,6 +32,25 @@ function template_preprocess_features_admin_components(&$vars) {
   // Components
   $rows = array();
   $components = features_get_components();
+  $conflicts = features_get_conflicts();
+  if (!module_exists($form['module']['#value']) && isset($form['module']['#value'])) {
+    $module_conflicts = $conflicts[$form['module']['#value']];
+    $conflicts = array();
+    foreach ($module_conflicts as $conflict) {
+      $conflicts = array_merge_recursive($conflict, $conflicts);
+    }
+  }
+  else {
+    $conflicts = array();
+  }
+  // Display key for conflicting elements.
+  if (!empty($conflicts)) {
+    $vars['key'][] = array(
+      'title' => theme('features_storage_link', FEATURES_CONFLICT, t('Conflicts with another feature')),
+      'html' => TRUE,
+    );
+  }
+
   if (!empty($form['#info']['features'])) {
     foreach ($form['#info']['features'] as $component => $items) {
       if (!empty($items)) {
@@ -53,7 +75,7 @@ function template_preprocess_features_admin_components(&$vars) {
           $data[] = '';
         }
         $data[] = array(
-          'data' => theme('features_component_list', $items, $items),
+          'data' => theme('features_component_list', $items, $items, $conflicts[$component]),
           'colspan' => 2,
           'class' => 'component'
         );
@@ -116,27 +138,32 @@ function theme_features_module_status($status, $module = NULL) {
 /**
  * Themes a module status display.
  */
-function theme_features_storage_link($storage, $path = NULL, $options = array()) {
+function theme_features_storage_link($storage, $text = NULL, $path = NULL, $options = array()) {
   $classes = array(
     FEATURES_OVERRIDDEN => 'admin-overridden',
     FEATURES_DEFAULT => 'admin-default',
     FEATURES_NEEDS_REVIEW => 'admin-needs-review',
     FEATURES_REBUILDING => 'admin-rebuilding',
     FEATURES_REBUILDABLE => 'admin-rebuilding',
+    FEATURES_CONFLICT => 'admin-conflict',
+    FEATURES_DISABLED => 'admin-disabled',
   );
-  $text = array(
+  $default_text = array(
     FEATURES_OVERRIDDEN => t('Overridden'),
     FEATURES_DEFAULT => t('Default'),
     FEATURES_NEEDS_REVIEW => t('Needs review'),
     FEATURES_REBUILDING => t('Rebuilding'),
     FEATURES_REBUILDABLE => t('Rebuilding'),
+    FEATURES_CONFLICT => t('Conflict'),
+    FEATURES_DISABLED => t('Disabled'),
   );
+  $text = isset($text) ? $text : $default_text[$storage];
   if ($path) {
     $options['attributes']['class'] = $classes[$storage] . ' features-storage';
-    return l($text[$storage], $path, $options);
+    return l($text, $path, $options);
   }
   else {
-    return "<span class='{$classes[$storage]} features-storage'>{$text[$storage]}</span>";
+    return "<span class='{$classes[$storage]} features-storage'>{$text}</span>";
   }
 }
 
@@ -270,12 +297,15 @@ function theme_features_components($info, $sources = array()) {
 /**
  * Theme individual components in a component list.
  */
-function theme_features_component_list($components, $source = array()) {
+function theme_features_component_list($components, $source = array(), $conflicts = array()) {
   $list = array();
   foreach ($components as $component) {
     // If component is not in source list, it was autodetected
     if (!in_array($component, $source)) {
       $list[] = "<span class='features-detected'>{$component}</span>";
+    }
+    elseif (is_array($conflicts) && in_array($component, $conflicts)) {
+      $list[] = "<span class='features-conflict'>{$component}</span>";
     }
     else {
       $list[] = "<span class='features-source'>{$component}</span>";

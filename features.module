@@ -17,6 +17,8 @@ define('FEATURES_DEFAULT', 0);
 define('FEATURES_OVERRIDDEN', 1);
 define('FEATURES_NEEDS_REVIEW', 2);
 define('FEATURES_REBUILDING', 3);
+define('FEATURES_CONFLICT', 4);
+define('FEATURES_DISABLED', 5);
 
 // Duration of rebuild semaphore: 10 minutes.
 define('FEATURES_SEMAPHORE_TIMEOUT', 10 * 60);
@@ -549,7 +551,7 @@ function features_get_conflicts($reset = FALSE) {
           }
           foreach ($modules as $m) {
             if ($m != $module) {
-              $conflicts[$module][$m] = $m;
+              $conflicts[$module][$m][$type][] = $component;
             }
           }
         }

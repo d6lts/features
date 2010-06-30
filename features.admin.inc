@@ -340,7 +340,7 @@ function features_admin_form($form_state) {
     // Detect potential conflicts
     if (!empty($conflicts[$name])) {
       $module_conflicts = array();
-      foreach ($conflicts[$name] as $conflict) {
+      foreach (array_keys($conflicts[$name]) as $conflict) {
         $module_conflicts[] = theme('features_module_status', FEATURES_MODULE_MISSING, $conflict);
         // Only disable modules with conflicts if they are not already enabled.
         // If they are already enabled, somehow the user got themselves into a
@@ -349,7 +349,7 @@ function features_admin_form($form_state) {
           $disabled = TRUE;
         }
       }
-      $description .= "<div class='conflicts'>". t('Incompatible with: !conflicts', array('!conflicts' => implode(', ', $module_conflicts))) ."</div>";
+      $description .= "<div class='conflicts'>". t('Conflicts with: !conflicts', array('!conflicts' => implode(', ', $module_conflicts))) ."</div>";
     }
 
     $form[$package]['status'][$name] = array(
@@ -379,13 +379,16 @@ function features_admin_form($form_state) {
       if ($module->status) {
         $state = '<span class="admin-loading features-storage">' . t('Checking...') . '</span>';
         $state .= l(t('Check'), "admin/build/features/{$name}/status", array('attributes' => array('class' => 'admin-check')));
-        $state .= theme('features_storage_link', FEATURES_REBUILDING, $href);
-        $state .= theme('features_storage_link', FEATURES_NEEDS_REVIEW, $href);
-        $state .= theme('features_storage_link', FEATURES_OVERRIDDEN, $href);
-        $state .= theme('features_storage_link', FEATURES_DEFAULT, $href);
+        $state .= theme('features_storage_link', FEATURES_REBUILDING, NULL, $href);
+        $state .= theme('features_storage_link', FEATURES_NEEDS_REVIEW, NULL, $href);
+        $state .= theme('features_storage_link', FEATURES_OVERRIDDEN, NULL, $href);
+        $state .= theme('features_storage_link', FEATURES_DEFAULT, NULL, $href);
+      }
+      elseif (!empty($conflicts[$name])) {
+        $state = theme('features_storage_link', FEATURES_CONFLICT, NULL, $href);
       }
       else {
-        $state = '<span class="features-storage">'. t('Disabled') .'</span>';
+        $state = theme('features_storage_link', FEATURES_DISABLED, NULL, $href);
       }
       $form[$package]['state'][$name] = array(
         '#type' => 'markup',
@@ -459,7 +462,7 @@ function features_admin_components($form_state, $feature) {
     }
     $form['components'][$component] = array(
       '#type' => 'markup',
-      '#value' => theme('features_storage_link', $states[$feature->name][$component], $path),
+      '#value' => theme('features_storage_link', $states[$feature->name][$component], NULL, $path),
     );
   }
 
@@ -521,7 +524,7 @@ function features_form_validate(&$form, &$form_state) {
   $conflicts = features_get_conflicts();
   foreach ($form_state['values']['status'] as $module => $status) {
     if ($status && !empty($conflicts[$module])) {
-      foreach ($conflicts[$module] as $conflict) {
+      foreach (array_keys($conflicts[$module]) as $conflict) {
         if (!empty($form_state['values']['status'][$conflict])) {
           form_set_error('status', t('The feature !module cannot be enabled because it conflicts with !conflict.', array('!module' => $module, '!conflict' => $conflict)));
         }
