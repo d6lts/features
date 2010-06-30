@@ -203,29 +203,38 @@ function features_export_build_form_submit($form, &$form_state) {
   // Generate download
   if ($files = features_export_render($export, $export['project'], TRUE)) {
     $module_name = $export['project'];
-    $filename = !empty($export['version']) ? "{$module_name}-{$export['version']}" : $module_name;
-
-    $tar = array();
-    foreach ($files as $extension => $file_contents) {
-      if (!in_array($extension, array('module', 'info'))) {
-        $extension .= '.inc';
-      }
-      $tar["{$module_name}/{$module_name}.$extension"] = $file_contents;
-    }
-    $tar = features_tar_create($tar);
-
-    $header = function_exists('gzencode') ? 'Content-type: application/x-tar-gz' : 'Content-type: application/x-tar';
-    $filename = !empty($filename) ? $filename : $module_name;
-    $filename = function_exists('gzencode') ? "{$filename}.tgz" : "{$filename}.tar";
+    $filename = (!empty($export['version']) ? "{$module_name}-{$export['version']}" : $module_name) . '.tar';
 
     // Clear out output buffer to remove any garbage from tar output.
     if (ob_get_level()) {
       ob_end_clean();
     }
 
-    drupal_set_header($header);
+    drupal_set_header('Content-type: application/x-tar');
     drupal_set_header('Content-Disposition: attachment; filename="'. $filename .'"');
-    print $tar;
+
+    $tar = array();
+    $filenames = array();
+    foreach ($files as $extension => $file_contents) {
+      if (!in_array($extension, array('module', 'info'))) {
+        $extension .= '.inc';
+      }
+      $filenames[] = "{$module_name}.$extension";
+      print features_tar_create("{$module_name}/{$module_name}.$extension", $file_contents);
+    }
+    if (features_get_modules($module_name, TRUE)) {
+      $module_path = drupal_get_path('module', $module_name);
+      foreach (file_scan_directory($module_path, '.*') as $file) {
+        $filename = substr($file->filename, strlen($module_path) + 1);
+        if (!in_array($filename, $filenames)) {
+          // Add this file.
+          $contents = file_get_contents($file->filename);
+          print features_tar_create("{$module_name}/{$filename}", $contents);
+          unset($contents);
+        }
+      }
+    }
+    print pack("a1024","");
     exit;
   }
 }

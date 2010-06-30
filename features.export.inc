@@ -235,8 +235,7 @@ function features_export_render($export, $module_name, $reset = FALSE) {
 
   // Prepare the module
   // If module exists, let it be and include it in the files
-  $existing = features_get_modules($module_name, TRUE);
-  if ($existing) {
+  if ($existing = features_get_modules($module_name, TRUE)) {
     $code['module'] = file_get_contents($existing->filename);
   }
   // Add a stub module to include the defaults
@@ -403,50 +402,44 @@ function features_export_info($info, $parents = array()) {
 /**
  * Tar creation function. Written by dmitrig01.
  *
- * @param $files
- *   A keyed array where the key is the filepath and the value is the
- *   string contents of the file.
+ * @param $name
+ *   Filename of the file to be tarred.
+ * @param $contents
+ *   String contents of the file.
  *
  * @return
  *   A string of the tar file contents.
  */
-function features_tar_create($files) {
+function features_tar_create($name, $contents) {
   $tar = '';
-  foreach ($files as $name => $contents) {
-    $binary_data_first = pack("a100a8a8a8a12A12",
-      $name,
-      '100644 ', // File permissions
-      '   765 ', // UID,
-      '   765 ', // GID,
-      sprintf("%11s ", decoct(strlen($contents))), // Filesize,
-      sprintf("%11s", decoct(time())) // Creation time
-    );
-    $binary_data_last = pack("a1a100a6a2a32a32a8a8a155a12", '', '', '', '', '', '', '', '', '', '');
-
-    $checksum = 0;
-    for ($i = 0; $i < 148; $i++) {
-      $checksum += ord(substr($binary_data_first, $i, 1));
-    }
-    for ($i = 148; $i < 156; $i++) {
-      $checksum += ord(' ');
-    }
-    for ($i = 156, $j = 0; $i < 512; $i++, $j++) {
-      $checksum += ord(substr($binary_data_last, $j, 1));
-    }
-
-    $tar .= $binary_data_first;
-    $tar .= pack("a8", sprintf("%6s ", decoct($checksum)));
-    $tar .= $binary_data_last;
-
-    $buffer = str_split($contents, 512);
-    foreach ($buffer as $item) {
-      $tar .= pack("a512", $item);
-    }
+  $binary_data_first = pack("a100a8a8a8a12A12",
+    $name,
+    '100644 ', // File permissions
+    '   765 ', // UID,
+    '   765 ', // GID,
+    sprintf("%11s ", decoct(strlen($contents))), // Filesize,
+    sprintf("%11s", decoct(time())) // Creation time
+  );
+  $binary_data_last = pack("a1a100a6a2a32a32a8a8a155a12", '', '', '', '', '', '', '', '', '', '');
+  
+  $checksum = 0;
+  for ($i = 0; $i < 148; $i++) {
+    $checksum += ord(substr($binary_data_first, $i, 1));
   }
-  $tar .= pack("a1024","");
-
-  if (function_exists('gzencode')) {
-    $tar = gzencode($tar);
+  for ($i = 148; $i < 156; $i++) {
+    $checksum += ord(' ');
+  }
+  for ($i = 156, $j = 0; $i < 512; $i++, $j++) {
+    $checksum += ord(substr($binary_data_last, $j, 1));
+  }
+  
+  $tar .= $binary_data_first;
+  $tar .= pack("a8", sprintf("%6s ", decoct($checksum)));
+  $tar .= $binary_data_last;
+  
+  $buffer = str_split($contents, 512);
+  foreach ($buffer as $item) {
+    $tar .= pack("a512", $item);
   }
   return $tar;
 }
