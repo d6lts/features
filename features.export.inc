@@ -13,6 +13,7 @@ function features_populate($items, $module_name) {
   // Populate stub
   $stub = array('features' => array(), 'dependencies' => array(), 'conflicts' => array());
   $export = _features_populate($items, $stub, $module_name);
+  drupal_alter('features_export', $export);
   $export['dependencies'] = _features_export_minimize_dependencies($export['dependencies'], $module_name);
 
   // Clean up and standardize order
@@ -46,6 +47,8 @@ function _features_populate($pipe, &$export, $module_name = '') {
       // We don't use features_invoke() here since we need to pass $export by reference.
       $function = "{$component}_features_export";
       $more = $function($data, $export, $module_name);
+      // Allow other modules to manipulate the pipe to add in additional modules.
+      drupal_alter('features_pipe_' . $component, $more, $data, $export, $module_name);
       // Allow for export functions to request additional exports.
       if (!empty($more)) {
         _features_populate($more, $export, $module_name);
