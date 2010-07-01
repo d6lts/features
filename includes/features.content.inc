@@ -34,14 +34,13 @@ function content_features_export($data, &$export, $module_name = '') {
   }
 
   foreach ($data as $instance) {
-    // If this field is already provided by another module, remove the field
-    // and add the other module as a dependency.
+    // If this field is already provided by another module remove the field.
+    // We do not add the other module as a dependency as the field-providing
+    // module may be extending the content type in question.
     if (isset($map[$instance]) && $map[$instance] != $module_name) {
       if (isset($export['features']['content'][$instance])) {
         unset($export['features']['content'][$instance]);
       }
-      $module = $map[$instance];
-      $export['dependencies'][$module] = $module;
     }
     // If the field has not yet been exported, add it
     else {
