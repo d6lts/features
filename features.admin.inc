@@ -104,7 +104,7 @@ function features_export_form($form_state, $feature = NULL) {
       $form['export']['components']['#options'][$component] = (isset($component_info['name']) ? $component_info['name'] : $component);
       $form['export']['sources'][$component] = array(
         '#type' => 'checkboxes',
-        '#options' => $options,
+        '#options' => features_dom_encode_options($options),
         '#title' => $component,
         '#default_value' => $default_value,
         '#ahah' => array(
@@ -174,7 +174,7 @@ function features_export_build_form_submit($form, &$form_state) {
   foreach ($components as $component) {
     // User-selected components take precedence.
     if (!empty($form_state['values']['sources'][$component])) {
-      $stub[$component] = array_filter($form_state['values']['sources'][$component]);
+      $stub[$component] = features_dom_decode_options(array_filter($form_state['values']['sources'][$component]));
     }
     // Only fallback to an existing feature's values if there are no export options for the component.
     else if (!empty($form['#feature']->info['features'][$component])) {
@@ -257,7 +257,7 @@ function features_export_build_form_populate() {
     foreach ($components as $component) {
       // User-selected components take precedence.
       if (!empty($submitted['sources'][$component])) {
-        $stub[$component] = $submitted['sources'][$component];
+        $stub[$component] = features_dom_decode_options(array_filter($submitted['sources'][$component]));
       }
       // Only fallback to an existing feature's values if there are no export options for the component.
       else if (!isset($form['export']['sources'][$component]) && !empty($form['#feature']->info['features'][$component])) {
@@ -700,4 +700,39 @@ function features_feature_diff($feature, $component = NULL) {
 function features_feature_status($feature) {
   module_load_include('inc', 'features', 'features.export');
   return drupal_json(array('storage' => features_get_storage($feature->name)));
+}
+
+/**
+ * Make a Drupal options array safe for usage with jQuery DOM selectors.
+ * Encodes known bad characters into __[ordinal]__ so that they may be
+ * safely referenced by JS behaviors.
+ */
+function features_dom_encode_options($options = array(), $keys_only = TRUE) {
+  $replacements = array(
+    ':' => '__'. ord(':') .'__',
+    '/' => '__'. ord('/') .'__',
+    ',' => '__'. ord(',') .'__',
+  );
+  $encoded = array();
+  foreach ($options as $key => $value) {
+    $encoded[strtr($key, $replacements)] = $keys_only ? $value : strtr($value, $replacements);
+  }
+  return $encoded;
+}
+
+/**
+ * Decode an array of option values that have been encoded by
+ * features_dom_encode_options().
+ */
+function features_dom_decode_options($options, $keys_only = FALSE) {
+  $replacements = array_flip(array(
+    ':' => '__'. ord(':') .'__',
+    '/' => '__'. ord('/') .'__',
+    ',' => '__'. ord(',') .'__',
+  ));
+  $encoded = array();
+  foreach ($options as $key => $value) {
+    $encoded[strtr($key, $replacements)] = $keys_only ? $value : strtr($value, $replacements);
+  }
+  return $encoded;
 }
