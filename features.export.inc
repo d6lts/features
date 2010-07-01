@@ -6,15 +6,17 @@
  * @param $module_name
  * @return
  */
-function features_populate($items, $module_name) {
+function features_populate($items, $dependencies, $module_name) {
   // Sanitize items.
   $items = array_filter($items);
+  $items['dependencies'] = drupal_map_assoc(array_filter($dependencies));
 
   // Populate stub
   $stub = array('features' => array(), 'dependencies' => array(), 'conflicts' => array());
   $export = _features_populate($items, $stub, $module_name);
-  drupal_alter('features_export', $export);
-  $export['dependencies'] = _features_export_minimize_dependencies($export['dependencies'], $module_name);
+
+  // Allow other modules to alter the export.
+  drupal_alter('features_export', $export, $module_name);
 
   // Clean up and standardize order
   foreach (array_keys($export['features']) as $k) {
@@ -113,20 +115,6 @@ function _features_export_maximize_dependencies($dependencies, $module_name = ''
     }
   }
   return array_unique($maximized);
-}
-
-/**
- * Preserve existing dependencies.
- */
-function _features_export_preserve_dependencies($dependencies, $module_name = NULL, $existing = array()) {
-  if (!empty($module_name)) {
-    $feature = feature_load($module_name);
-    $existing = !empty($feature->info['dependencies']) ? $feature->info['dependencies'] : array();
-  }
-  $merged = array_merge($existing, $dependencies);
-  $merged = array_unique($merged);
-  ksort($merged);
-  return $merged;
 }
 
 /**
@@ -269,8 +257,7 @@ function features_detect_overrides($module) {
     }
 
     // Rebuild feature from .info file description and prepare an export from current DB state.
-    $export = features_populate($module->info['features'], $module->name);
-    $export['dependencies'] = _features_export_preserve_dependencies($export['dependencies'], $module->name);
+    $export = features_populate($module->info['features'], $module->info['dependencies'], $module->name);
     $export = features_export_prepare($export, $module->name);
 
     $overridden = array();
@@ -599,11 +586,20 @@ function features_get_normal($module_name, $component, $reset = FALSE) {
   }
   if (!isset($cache[$module_name][$component])) {
     features_include();
+    $code = NULL;
     $module = features_get_features($module_name);
-    $default_hook = features_get_default_hooks($component);
-    if ($module && $default_hook && isset($module->info['features'][$component]) && features_hook($component, 'features_export_render')) {
-      $code = features_invoke($component, 'features_export_render', $module_name, $module->info['features'][$component]);
-      $cache[$module_name][$component] = isset($code[$default_hook]) ? eval($code[$default_hook]) : FALSE;
+
+    // Special handling for dependencies component.
+    if ($component === 'dependencies') {
+      $cache[$module_name][$component] = isset($module->info['dependencies']) ? array_filter($module->info['dependencies'], 'module_exists') : array();
+    }
+    // All other components.
+    else {
+      $default_hook = features_get_default_hooks($component);
+      if ($module && $default_hook && isset($module->info['features'][$component]) && features_hook($component, 'features_export_render')) {
+        $code = features_invoke($component, 'features_export_render', $module_name, $module->info['features'][$component]);
+        $cache[$module_name][$component] = isset($code[$default_hook]) ? eval($code[$default_hook]) : FALSE;
+      }
     }
 
     // Clear out vars for memory's sake.
@@ -623,13 +619,25 @@ function features_get_default($module_name, $component, $reset = FALSE) {
   }
   if (!isset($cache[$module_name][$component])) {
     features_include();
-    $default_hook = features_get_default_hooks($component);
-    if ($default_hook && module_hook($module_name, $default_hook)) {
-      $cache[$module_name][$component] = module_invoke($module_name, $default_hook);
+
+    // Special handling for dependencies component.
+    if ($component === 'dependencies') {
+      $module = features_get_features($module_name);
+      $cache[$module_name][$component] = isset($module->info['dependencies']) ? $module->info['dependencies'] : array();
     }
+    // All other components.
     else {
-      $cache[$module_name][$component] = FALSE;
+      $default_hook = features_get_default_hooks($component);
+      if ($default_hook && module_hook($module_name, $default_hook)) {
+        $cache[$module_name][$component] = module_invoke($module_name, $default_hook);
+      }
+      else {
+        $cache[$module_name][$component] = FALSE;
+      }
     }
+
+    // Clear out vars for memory's sake.
+    unset($module);
   }
   return isset($cache[$module_name][$component]) ? $cache[$module_name][$component] : FALSE;
 }
@@ -685,17 +693,24 @@ function features_get_component_states($features = array(), $rebuild_only = TRUE
           // Component does not implement exportables.
           else {
             if (empty($semaphore)) {
-              // Code has not changed, but DB does not match. User has DB overrides.
-              if ($codecache == $default) {
-                $cache[$feature][$component] = FEATURES_OVERRIDDEN;
-              }
-              // DB has no modifications to prior code state (or this is initial install).
-              else if ($codecache == $normal || empty($codecache)) {
+              // Exception for dependencies. Dependencies are always rebuildable.
+              if ($component === 'dependencies') {
                 $cache[$feature][$component] = FEATURES_REBUILDABLE;
               }
-              // None of the states match. Requires user intervention.
-              else if ($codecache != $default) {
-                $cache[$feature][$component] = FEATURES_NEEDS_REVIEW;
+              // All other rebuildable components require comparison.
+              else {
+                // Code has not changed, but DB does not match. User has DB overrides.
+                if ($codecache == $default) {
+                  $cache[$feature][$component] = FEATURES_OVERRIDDEN;
+                }
+                // DB has no modifications to prior code state (or this is initial install).
+                else if ($codecache == $normal || empty($codecache)) {
+                  $cache[$feature][$component] = FEATURES_REBUILDABLE;
+                }
+                // None of the states match. Requires user intervention.
+                else if ($codecache != $default) {
+                  $cache[$feature][$component] = FEATURES_NEEDS_REVIEW;
+                }
               }
             }
             else {

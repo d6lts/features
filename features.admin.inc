@@ -61,7 +61,6 @@ function features_export_form($form_state, $feature = NULL) {
 
   // User-selected feature source components.
   $components = features_get_components();
-  $components[] = 'dependencies';
   $form['export'] = array(
     '#type' => 'fieldset',
     '#tree' => FALSE,
@@ -78,26 +77,11 @@ function features_export_form($form_state, $feature = NULL) {
     '#theme' => 'features_form_components',
   );
   foreach ($components as $component => $component_info) {
-    // Tack on dependency options as they are not a feature component proper.
-    if ($component == 'dependencies') {
-      // Excluded modules.
-      $excluded = drupal_required_modules();
-      // Don't allow feature to depend on itself.
-      if (isset($feature->name)) {
-        $excluded[] = $feature->name;
-      }
-      $options = array();
-      foreach (features_get_modules() as $module_name => $info) {
-        if (!in_array($module_name, $excluded) && $info->status && !empty($info->info)) {
-          $options[$module_name] = $info->info['name'];
-        }
-      }
+    $options = features_invoke($component, 'features_export_options');
+    if ($component === 'dependencies') {
       $default_value = !empty($feature->info['dependencies']) ? $feature->info['dependencies'] : array();
-      $component_info = array('name' => t('Dependencies'));
-      $component = 'dependencies';
     }
     else {
-      $options = features_invoke($component, 'features_export_options');
       $default_value = !empty($feature->info['features'][$component]) ? $feature->info['features'][$component] : array();
     }
     if ($options) {
@@ -183,7 +167,7 @@ function features_export_build_form_submit($form, &$form_state) {
   }
 
   // Generate populated feature
-  $export = features_populate($stub, $form_state['values']['project']);
+  $export = features_populate($stub, $form_state['values']['sources']['dependencies'], $form_state['values']['project']);
 
   // Directly copy the following attributes
   $attr = array('name', 'description', 'project', 'version');
@@ -192,12 +176,6 @@ function features_export_build_form_submit($form, &$form_state) {
   }
   if (!empty($form_state['values']['project_status_url'])) {
     $export['project status url'] = $form_state['values']['project_status_url'];
-  }
-
-  // Minimize detected dependencies and then merge in existing dependencies
-  if (!empty($form_state['values']['sources']['dependencies'])) {
-    $dependencies = array_filter($form_state['values']['sources']['dependencies']);
-    $export['dependencies'] = _features_export_preserve_dependencies($export['dependencies'], NULL, $dependencies);
   }
 
   // Generate download
@@ -265,12 +243,11 @@ function features_export_build_form_populate() {
       }
     }
 
-    // Ensure source dependencies are populated
-    $stub['dependencies'] = isset($submitted['sources']['dependencies']) ? $submitted['sources']['dependencies'] : array();
+    // Assemble dependencies
+    $dependencies = isset($submitted['sources']['dependencies']) ? $submitted['sources']['dependencies'] : array();
 
     // Generate populated feature
-    $export = features_populate($stub, $submitted['project']);
-    $export['dependencies'] = _features_export_preserve_dependencies($export['dependencies'], NULL, $stub['dependencies']);
+    $export = features_populate($stub, $dependencies, $submitted['project']);
 
     $output = theme('features_components', $export, $stub) . theme('status_messages');
     drupal_json(array('status' => TRUE, 'data' => $output));

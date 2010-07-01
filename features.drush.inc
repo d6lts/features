@@ -115,7 +115,7 @@ function features_drush_help($section) {
 function features_command_list() {
   module_load_include('inc', 'features', 'features.export');
   $rows = array(array(dt('Name'), dt('Feature'), dt('Status'), dt('State')));
-  foreach (features_get_features() as $k => $m) {
+  foreach (features_get_features(NULL, TRUE) as $k => $m) {
     switch (features_get_storage($m->name)) {
       case FEATURES_DEFAULT:
       case FEATURES_REBUILDABLE:
@@ -139,7 +139,7 @@ function features_command_list() {
 }
 
 /**
- * Create a feature module based on a list of contexts.
+ * Create a feature module based on a list of components.
  */
 function features_command_export() {
   $args = func_get_args();
@@ -160,7 +160,7 @@ function features_command_export() {
       list($source, $component) = explode(':', $v);
       $stub[$source][] = $component;
     }
-    _features_command_export($stub, $name);
+    _features_command_export($stub, array(), $name);
   }
   else {
     drush_print(dt('Available sources'));
@@ -183,16 +183,13 @@ function features_command_update() {
   if ($args = func_get_args()) {
     foreach ($args as $module) {
       if (($feature = feature_load($module, TRUE)) && module_exists($module)) {
-        $stub = $feature->info['features'];
-
         // Construct the correct destination path
         $destination = dirname($feature->filename);
         $split = explode('/', $destination);
         if ($feature->name == array_pop($split)) {
           $destination = implode('/', $split);
         }
-
-        _features_command_export($stub, $feature->name, $destination);
+        _features_command_export($feature->info['features'], $feature->info['dependencies'], $feature->name, $destination);
       }
       else if ($feature) {
         _features_drush_set_error($module, 'FEATURES_FEATURE_NOT_ENABLED');
@@ -241,18 +238,14 @@ function features_command_update_all() {
  * @param $requests
  *   An array of the context requested in this export.
  * @param $module_name
- *  Optional. The name for the exported module, it omitted will be generated
- *  from the first listed context.
+ *  Optional. The name for the exported module.
  */
-function _features_command_export($stub, $module_name = NULL, $destination = 'sites/all/modules') {
+function _features_command_export($stub, $dependencies, $module_name = NULL, $destination = 'sites/all/modules') {
   drupal_flush_all_caches();
 
   module_load_include('inc', 'features', 'features.export');
-  $export = features_populate($stub, $module_name);
-  if ($feature = feature_load($module_name)) {
-    $export['dependencies'] = _features_export_preserve_dependencies($export['dependencies'], $module_name);
-  }
-  else {
+  $export = features_populate($stub, $dependencies, $module_name);
+  if (!feature_load($module_name)) {
     $export['name'] = $module_name;
   }
   $files = features_export_render($export, $module_name, TRUE);
