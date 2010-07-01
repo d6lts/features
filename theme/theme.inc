@@ -33,7 +33,7 @@ function template_preprocess_features_admin_components(&$vars) {
   $rows = array();
   $components = features_get_components();
   $conflicts = features_get_conflicts();
-  if (!module_exists($form['module']['#value']) && isset($form['module']['#value'])) {
+  if (!module_exists($form['module']['#value']) && isset($form['module']['#value']) && !empty($conflicts[$form['module']['#value']])) {
     $module_conflicts = $conflicts[$form['module']['#value']];
     $conflicts = array();
     foreach ($module_conflicts as $conflict) {
