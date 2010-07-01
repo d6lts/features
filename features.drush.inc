@@ -72,6 +72,15 @@ function features_drush_command() {
     'drupal dependencies' => array('features'),
     'aliases' => array('fr-all', 'fra'),
   );
+  $items['features-diff'] = array(
+    'callback' => 'features_command_diff',
+    'description' => "Show the difference between the default and overridden state of a feature.",
+    'arguments' => array(
+      'feature' => 'The feature in question.',
+    ),
+    'drupal dependencies' => array('features', 'diff'),
+    'aliases' => array('fd'),
+  );
 
   return $items;
 }
@@ -93,6 +102,10 @@ function features_drush_help($section) {
       return dt("Revert a feature module on your site.");
     case 'drush:features-revert-all':
       return dt("Revert all enabled feature module on your site.");
+    case 'drush:features-revert':
+      return dt("Revert a feature module on your site.");
+    case 'drush:features-diff':
+      return dt("Show a diff of a feature module.");
   }
 }
 
@@ -342,13 +355,65 @@ function features_command_revert_all() {
 }
 
 /**
+ * Show the diff of a feature module.
+ */
+function features_command_diff() {
+  if (!$args = func_get_args()) {
+    features_command_list();
+    return;
+  }
+  $module = $args[0];
+  $feature = feature_load($module);
+  if (!module_exists($module)) {
+    drush_log(dt('No such feature is enabled: ' . $module), 'error');
+    return;
+  }
+  module_load_include('inc', 'features', 'features.export');
+  $overrides = features_detect_overrides($feature);
+  if (empty($overrides)) {
+    drush_log(dt('Feature is in its default state. No diff needed.'), 'ok');
+    return;
+  }
+  module_load_include('php', 'diff', 'DiffEngine');
+  $formatter = new DiffFormatter();
+  $formatter->leading_context_lines = 2;
+  $formatter->trailing_context_lines = 2;
+  $formatter->show_header = FALSE;
+
+  foreach ($overrides as $component => $items) {
+    $diff = new Diff(explode("\n", $items['default']), explode("\n", $items['normal']));
+    drush_print();
+    drush_print(dt("Component: !component", array('!component' => $component)));
+    $rows = explode("\n", $formatter->format($diff));
+    if (drush_get_context('DRUSH_NOCOLOR')) {
+      $red = $green = "%s";
+    }
+    else {
+      $red = "\033[31;40m\033[1m%s\033[0m";
+      $green = "\033[0;32;40m\033[1m%s\033[0m";
+    }
+    foreach ($rows as $row) {
+      if (strpos($row, '>') === 0) {
+        drush_print(sprintf($green, $row));
+      }
+      elseif (strpos($row, '<') === 0) {
+        drush_print(sprintf($red, $row));
+      }
+      else {
+        drush_print($row);
+      }
+    }
+  }
+}
+
+/**
  * Helper function to call drush_set_error().
  *
  * @param $feature
  *   The string name of the feature.
  * @param $error
  *   A text string identifying the type of error.
- * @return 
+ * @return
  *   FALSE.  See drush_set_error().
  */
 function _features_drush_set_error($feature, $error) {
