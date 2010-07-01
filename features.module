@@ -734,6 +734,7 @@ function _features_get_roles() {
  */
 function features_log($message, $severity = 'status') {
   if (function_exists('drush_verify_cli')) {
+    $message = strip_tags($message);
     if ($severity == 'status') {
       $severity = 'ok';
     }
