@@ -17,21 +17,20 @@
 function features_drush_command() {
   $items = array();
 
-  $items['features'] = array(
-    'callback' => 'features_command_list',
+  $items['features-list'] = array(
     'description' => "List all the available features for your site.",
     'drupal dependencies' => array('features'),
+    'aliases' => array('fl', 'features'),
   );
   $items['features-export'] = array(
-    'callback' => 'features_command_export',
     'description' => "Export a feature from your site into a module.",
     'arguments' => array(
       'feature' => 'Feature name to export.',
     ),
     'drupal dependencies' => array('features'),
+    'aliases' => array('fe'),
   );
   $items['features-update'] = array(
-    'callback' => 'features_command_update',
     'description' => "Update a feature module on your site.",
     'arguments' => array(
       'feature' => 'A space delimited list of features.',
@@ -40,7 +39,6 @@ function features_drush_command() {
     'aliases' => array('fu'),
   );
   $items['features-update-all'] = array(
-    'callback' => 'features_command_update_all',
     'description' => "Update all feature modules on your site.",
     'arguments' => array(
       'feature_exclude' => 'A space-delimited list of features to exclude from being updated.',
@@ -49,7 +47,6 @@ function features_drush_command() {
     'aliases' => array('fu-all', 'fua'),
   );
   $items['features-revert'] = array(
-    'callback' => 'features_command_revert',
     'description' => "Revert a feature module on your site.",
     'arguments' => array(
       'feature' => 'A space delimited list of features.',
@@ -61,7 +58,6 @@ function features_drush_command() {
     'aliases' => array('fr'),
   );
   $items['features-revert-all'] = array(
-    'callback' => 'features_command_revert_all',
     'description' => "Revert all enabled feature module on your site.",
     'arguments' => array(
       'feature_exclude' => 'A space-delimited list of features to exclude from being reverted.',
@@ -73,7 +69,6 @@ function features_drush_command() {
     'aliases' => array('fr-all', 'fra'),
   );
   $items['features-diff'] = array(
-    'callback' => 'features_command_diff',
     'description' => "Show the difference between the default and overridden state of a feature.",
     'arguments' => array(
       'feature' => 'The feature in question.',
@@ -112,7 +107,7 @@ function features_drush_help($section) {
 /**
  * Get a list of all feature modules.
  */
-function features_command_list() {
+function drush_features_list() {
   module_load_include('inc', 'features', 'features.export');
   $rows = array(array(dt('Name'), dt('Feature'), dt('Status'), dt('State')));
   foreach (features_get_features(NULL, TRUE) as $k => $m) {
@@ -141,7 +136,7 @@ function features_command_list() {
 /**
  * Create a feature module based on a list of components.
  */
-function features_command_export() {
+function drush_features_export() {
   $args = func_get_args();
 
   if (count($args) == 1) {
@@ -149,7 +144,7 @@ function features_command_export() {
     // "value" of the component.
     list($source, $component) = explode(':', $args[0]);
     $stub = array($source => array($component));
-    _features_command_export($stub, $component);
+    _drush_features_export($stub, $component);
   }
   elseif (count($args) > 1) {
     // Assume that the user intends to create a new module based on a list of 
@@ -160,7 +155,7 @@ function features_command_export() {
       list($source, $component) = explode(':', $v);
       $stub[$source][] = $component;
     }
-    _features_command_export($stub, array(), $name);
+    _drush_features_export($stub, array(), $name);
   }
   else {
     drush_print(dt('Available sources'));
@@ -179,7 +174,7 @@ function features_command_export() {
 /**
  * Update an existing feature module.
  */
-function features_command_update() {
+function drush_features_update() {
   if ($args = func_get_args()) {
     foreach ($args as $module) {
       if (($feature = feature_load($module, TRUE)) && module_exists($module)) {
@@ -189,7 +184,7 @@ function features_command_update() {
         if ($feature->name == array_pop($split)) {
           $destination = implode('/', $split);
         }
-        _features_command_export($feature->info['features'], $feature->info['dependencies'], $feature->name, $destination);
+        _drush_features_export($feature->info['features'], $feature->info['dependencies'], $feature->name, $destination);
       }
       else if ($feature) {
         _features_drush_set_error($module, 'FEATURES_FEATURE_NOT_ENABLED');
@@ -213,7 +208,7 @@ function features_command_update() {
  * Update all enabled features. Optionally pass in a list of features to
  * exclude from being updated.
  */
-function features_command_update_all() {
+function drush_features_update_all() {
   $features_to_update = array();
   $features_to_exclude = func_get_args();
   foreach (features_get_features() as $module) {
@@ -240,7 +235,7 @@ function features_command_update_all() {
  * @param $module_name
  *  Optional. The name for the exported module.
  */
-function _features_command_export($stub, $dependencies, $module_name = NULL, $destination = 'sites/all/modules') {
+function _drush_features_export($stub, $dependencies, $module_name = NULL, $destination = 'sites/all/modules') {
   drupal_flush_all_caches();
 
   module_load_include('inc', 'features', 'features.export');
@@ -278,7 +273,7 @@ function _features_command_export($stub, $dependencies, $module_name = NULL, $de
 /**
  * Revert a feature to it's code definition.
  */
-function features_command_revert() {
+function drush_features_revert() {
   if ($args = func_get_args()) {
     // Determine if revert should be forced.
     $force = drush_get_option('force');
@@ -319,7 +314,7 @@ function features_command_revert() {
     }
   }
   else {
-    features_command_list();
+    drush_features_list();
     return;
   }
 }
@@ -328,7 +323,7 @@ function features_command_revert() {
  * Revert all enabled features to their definitions in code. Optionally pass in
  * a list of features to exclude from being reverted.
  */
-function features_command_revert_all() {
+function drush_features_revert_all() {
   $features_to_revert = array();
   $features_to_exclude = func_get_args();
   foreach (features_get_features() as $module) {
@@ -350,9 +345,9 @@ function features_command_revert_all() {
 /**
  * Show the diff of a feature module.
  */
-function features_command_diff() {
+function drush_features_diff() {
   if (!$args = func_get_args()) {
-    features_command_list();
+    drush_features_list();
     return;
   }
   $module = $args[0];
