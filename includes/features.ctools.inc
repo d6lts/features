@@ -68,9 +68,7 @@ function ctools_features_export($data, &$export, $module_name = '') {
  */
 function ctools_features_export_render($module = 'foo', $data) {
   $code = array();
-  $code[] = '  $args = func_get_args();';
-  $code[] = '  $module = array_shift($args);';
-  $code[] = '  $api = array_shift($args);';
+  $code[] = '  list($module, $api) = func_get_args();';
 
   $first = TRUE;
   foreach ($data as $component) {
@@ -234,6 +232,8 @@ function _ctools_features_get_info($identifier = NULL, $reset = FALSE) {
             'name' => isset($modules[$api_module]->info['name']) ? $modules[$api_module]->info['name'] : $api_module,
             'api' => $schema['export']['api']['api'],
             'default_hook' => $schema['export']['default hook'],
+            'default_file' => FEATURES_DEFAULTS_CUSTOM,
+            'default_filename' => $schema['export']['api']['api'],
             'current_version' => $schema['export']['api']['current_version'],
             'module' => $api_module,
             'feature_source' => TRUE,

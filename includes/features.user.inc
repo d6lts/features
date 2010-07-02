@@ -10,6 +10,7 @@ function user_features_api() {
       'name' => t('Permissions'),
       'feature_source' => TRUE,
       'default_hook' => 'user_default_permissions',
+      'default_file' => FEATURES_DEFAULTS_INCLUDED,
     )
   );
 }
@@ -99,6 +100,7 @@ function user_features_revert($module) {
  *   The module whose default user permissions should be rebuilt.
  */
 function user_features_rebuild($module) {
+  features_include_defaults('user');
   $defaults = module_invoke($module, 'user_default_permissions');
   if (!empty($defaults)) {
     $roles = _features_get_roles();

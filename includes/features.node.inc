@@ -10,7 +10,6 @@ function node_features_api() {
       'name' => t('Content types'),
       'feature_source' => TRUE,
       'default_hook' => 'node_info',
-      'default_file' => FEATURES_DEFAULTS_INCLUDED,
     ),
   );
 }

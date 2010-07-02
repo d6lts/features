@@ -186,7 +186,7 @@ function features_export_render($export, $module_name, $reset = FALSE) {
 
   // Group component code into their respective files
   foreach ($component_hooks as $component => $hooks) {
-    $file = array('name' => 'defaults', 'stub' => TRUE);
+    $file = array('name' => 'features');
     if (isset($components[$component]['default_file'])) {
       switch ($components[$component]['default_file']) {
         case FEATURES_DEFAULTS_INCLUDED:
@@ -194,7 +194,6 @@ function features_export_render($export, $module_name, $reset = FALSE) {
           break;
         case FEATURES_DEFAULTS_CUSTOM:
           $file['name'] = $components[$component]['default_filename'];
-          $file['stub'] = FALSE;
           break;
       }
     }
@@ -204,14 +203,7 @@ function features_export_render($export, $module_name, $reset = FALSE) {
     }
 
     foreach ($hooks as $hook_name => $hook_code) {
-      if ($file['stub']) {
-        $code['features'] = !isset($code['features']) ? array() : $code['features'];
-        $code['features'][$hook_name] = features_export_render_features($module_name, $hook_name, $file['name']);
-        $code[$file['name']][$hook_name] = features_export_render_defaults($module_name, $hook_name, $hook_code, $file['stub']);
-      }
-      else {
-        $code[$file['name']][$hook_name] = features_export_render_defaults($module_name, $hook_name, $hook_code, $file['stub']);
-      }
+      $code[$file['name']][$hook_name] = features_export_render_defaults($module_name, $hook_name, $hook_code);
     }
   }
 
@@ -233,6 +225,19 @@ function features_export_render($export, $module_name, $reset = FALSE) {
     // set a warning message.
     if (isset($code['features']) && strpos($code['module'], "{$module_name}.features.inc") === FALSE) {
       features_log(t('@module does not appear to include the @include file.', array('@module' => "{$module_name}.module", '@include' => "{$module_name}.features.inc")), 'warning');
+    }
+
+    // Deprecated files. Display a message for any of these files letting the
+    // user know that they may be removed.
+    $deprecated = array(
+      "{$module_name}.defaults",
+      "{$module_name}.features.views",
+      "{$module_name}.features.node"
+    );
+    foreach (file_scan_directory(drupal_get_path('module', $module_name), '.*') as $file) {
+      if (in_array($file->name, $deprecated, TRUE)) {
+        features_log(t('The file @filename has been deprecated and can be removed.', array('@filename' => $file->basename)), 'status');
+      }
     }
   }
   // Add a stub module to include the defaults
@@ -315,52 +320,16 @@ function features_get_default_hooks($component = NULL, $reset = FALSE) {
 }
 
 /**
- * Return a code string representing an implementation of a module hook.
- * Includes the module's defaults .inc and calls the private helper function.
- *
- * @param $module
- *   The name of the module being generated
- * @param $hook
- *   The name of the hook, without the "hook_" prefix. "hook_node_info" should
- *   be "node_info"
- * @param $filename
- *   Name of the include file. For a module 'foo', and filename'defaults'
- *   becomes 'foo.defaults.inc'.
+ * Return a code string representing an implementation of a defaults module hook.
  */
-function features_export_render_features($module, $hook, $filename = 'defaults') {
+function features_export_render_defaults($module, $hook, $code) {
   $output = array();
   $output[] = "/**";
   $output[] = " * Implementation of hook_{$hook}().";
   $output[] = " */";
   $output[] = "function {$module}_{$hook}() {";
-  $output[] = "  module_load_include('inc', '{$module}', '{$module}.{$filename}');";
-  $output[] = '  $args = func_get_args();';
-  $output[] = "  return call_user_func_array('_{$module}_{$hook}', ".'$args'.");";
+  $output[] = $code;
   $output[] = "}";
-  return implode("\n", $output);
-}
-
-/**
- * Return a code string representing an implementation of a defaults module hook.
- */
-function features_export_render_defaults($module, $hook, $code, $has_stub = TRUE) {
-  $output = array();
-  if ($has_stub) {
-    $output[] = "/**";
-    $output[] = " * Helper to implementation of hook_{$hook}().";
-    $output[] = " */";
-    $output[] = "function _{$module}_{$hook}() {";
-    $output[] = $code;
-    $output[] = "}";
-  }
-  else {
-    $output[] = "/**";
-    $output[] = " * Implementation of hook_{$hook}().";
-    $output[] = " */";
-    $output[] = "function {$module}_{$hook}() {";
-    $output[] = $code;
-    $output[] = "}";
-  }
   return implode("\n", $output);
 }
 
@@ -619,7 +588,7 @@ function features_get_default($module_name, $component, $reset = FALSE) {
   }
   if (!isset($cache[$module_name][$component])) {
     features_include();
-
+    features_include_defaults($component);
     // Special handling for dependencies component.
     if ($component === 'dependencies') {
       $module = features_get_features($module_name);

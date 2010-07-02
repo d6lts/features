@@ -9,6 +9,7 @@ function fieldgroup_features_api() {
     'fieldgroup' => array(
       'name' => t('Fieldgroup'),
       'default_hook' => 'fieldgroup_default_groups',
+      'default_file' => FEATURES_DEFAULTS_INCLUDED,
     ),
   );
 }
@@ -17,6 +18,7 @@ function fieldgroup_features_api() {
  * Implementation of hook_features_export().
  */
 function fieldgroup_features_export($data, &$export, $module_name = '') {
+  features_include_defaults('fieldgroup');
   $pipe = array();
 
   // The hook_fieldgroup_default_groups() hook integration is provided by the
@@ -106,6 +108,7 @@ function fieldgroup_features_revert($module) {
  * Rebuilds CCK fieldgroup definitions from code defaults.
  */
 function fieldgroup_features_rebuild($module) {
+  features_include_defaults('fieldgroup');
   $groups = module_invoke($module, 'fieldgroup_default_groups');
   if (!empty($groups)) {
     content_clear_type_cache(TRUE);

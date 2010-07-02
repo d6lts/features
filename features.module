@@ -25,7 +25,7 @@ define('FEATURES_SEMAPHORE_TIMEOUT', 10 * 60);
 
 /**
  * Components with this 'default_file' flag will have exports written to the
- * common defaults file 'MODULENAME.defaults.inc'. This is the default
+ * common defaults file 'MODULENAME.features.inc'. This is the default
  * behavior.
  */
 define('FEATURES_DEFAULTS_INCLUDED_COMMON', 0);
@@ -33,11 +33,13 @@ define('FEATURES_DEFAULTS_INCLUDED_COMMON', 0);
 /**
  * Components with this 'default_file' flag will have exports written to a
  * defaults based on the component name like 'MODULENAME.features.COMPONENT-NAME.inc'.
+ * Any callers to this component's defaults hook must call
+ * features_include_defaults('component') in order to include this file.
  */
 define('FEATURES_DEFAULTS_INCLUDED', 1);
 
 /**
- * Components with this 'default_file' flag must specify a filename for thier
+ * Components with this 'default_file' flag must specify a filename for their
  * exports. Additionally a stub will NOT be written to 'MODULENAME.features.inc'
  * allowing the file to be included directly by the implementing module.
  */
@@ -176,6 +178,7 @@ function features_menu() {
  */
 function features_menu_alter(&$cache) {
   // Collect exported menu items and graft them into the features menu.
+  features_include_defaults('menu');
   $items = module_invoke_all('menu_default_items');
   drupal_alter('menu_default_items', $items);
 
@@ -302,6 +305,56 @@ function features_include($reset = FALSE) {
 
     // Clear static cache, since we've now included new implementers.
     module_implements('features_api', FALSE, TRUE);
+  }
+}
+
+/**
+ * Load features includes for all components that require includes before
+ * collecting defaults.
+ */
+function features_include_defaults($components = NULL, $reset = FALSE) {
+  static $included = array();
+  static $include_components;
+
+  // Build an array of components that require inclusion:
+  // Views, CTools components and those using FEATURES_DEFAULTS_INCLUDED.
+  if (!isset($include_components) || $reset) {
+    $include_components = features_get_components();
+    foreach ($include_components as $component => $info) {
+      if ($component !== 'views' && !isset($info['api']) && $info['default_file'] !== FEATURES_DEFAULTS_INCLUDED) {
+        unset($include_components[$component]);
+      }
+    }
+  }
+
+  // If components are specified, only include for the specified components.
+  if (isset($components)) {
+    $components = is_array($components) ? $components : array($components);
+  }
+  // Use all include components if none are explicitly specified.
+  else {
+    $components = $include_components;
+  }
+  foreach ($components as $component) {
+    if (isset($include_components[$component]) && (!isset($included[$component]) || $reset)) {
+      $info = $include_components[$component];
+      // Inclusion of defaults for Views.
+      if ($component === 'views') {
+        views_include_default_views();
+      }
+      // Inclusion of defaults for CTools.
+      else if (isset($info['api'], $info['module'], $info['current_version'])) {
+        ctools_plugin_api_include($info['module'], $info['api'], $info['current_version'], $info['current_version']);
+      }
+      // Inclusion of defaults for components using FEATURES_DEFAULTS_INCLUDED.
+      else {
+        $features = isset($features) ? $features : features_get_features(NULL, $reset);
+        foreach ($features as $feature) {
+          module_load_include('inc', $feature->name, "{$feature->name}.features.{$component}");
+        }
+      }
+      $included[$component] = TRUE;
+    }
   }
 }
 

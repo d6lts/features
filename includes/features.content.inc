@@ -9,6 +9,7 @@ function content_features_api() {
     'content' => array(
       'name' => t('CCK'),
       'default_hook' => 'content_default_fields',
+      'default_file' => FEATURES_DEFAULTS_INCLUDED,
     ),
   );
 }
@@ -17,6 +18,7 @@ function content_features_api() {
  * Implementation of hook_features_export().
  */
 function content_features_export($data, &$export, $module_name = '') {
+  features_include_defaults('content');
   $pipe = array();
 
   // The content_default_fields() hook integration is provided by the
@@ -130,6 +132,7 @@ function content_features_revert($module) {
  * Rebuilds CCK field definitions from code defaults.
  */
 function content_features_rebuild($module) {
+  features_include_defaults('content');
   $fields = module_invoke($module, 'content_default_fields');
   if (!empty($fields)) {
     module_load_include('inc', 'content', 'includes/content.crud');

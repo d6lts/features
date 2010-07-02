@@ -23,6 +23,8 @@ function context_features_api() {
       'api' => 'context',
       'current_version' => 3,
       'module' => 'context',
+      'default_file' => FEATURES_DEFAULTS_CUSTOM,
+      'default_filename' => 'context',
     );
   }
   // 2.x

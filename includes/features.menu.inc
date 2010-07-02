@@ -9,6 +9,7 @@ function menu_features_api() {
     'menu' => array(
       'name' => t('Menu items'),
       'default_hook' => 'menu_default_items',
+      'default_file' => FEATURES_DEFAULTS_INCLUDED,
     ),
   );
 }
