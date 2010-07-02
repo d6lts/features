@@ -409,7 +409,7 @@ function features_command_diff() {
  * @return
  *   FALSE.  See drush_set_error().
  */
-function _features_drush_set_error($feature, $error) {
+function _features_drush_set_error($feature, $error = '') {
   $args = array('!feature' => $feature);
 
   switch ($error) {
