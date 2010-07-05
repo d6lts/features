@@ -54,6 +54,21 @@ also re-create features to bring the module code up to date with any changes
 that have occurred in the database.
 
 
+Including custom code and adding to your feature
+------------------------------------------------
+Once you've exported your feature you will see that you have several files:
+
+    myfeature.info
+    myfeature.module
+    myfeature.[*].inc
+
+You can add custom code (e.g. custom hook implementations, other functionality,
+etc.) to your feature in `myfeature.module` as you would with any other module.
+Do not change or add to any of the features `.inc` files unless you know what
+you are doing. These files are written to by features on updates so any custom
+changes may be overwritten.
+
+
 Using Features to manage development
 ------------------------------------
 Because Features provides a centralized way to manage exportable components and
