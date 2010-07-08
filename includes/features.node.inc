@@ -55,6 +55,14 @@ function node_features_export($data, &$export, $module_name = '') {
         unset($export['features']['node'][$type]);
       }
 
+      // Create a pipe for taxonomy vocabularies.
+      $vocabularies = _taxonomy_features_get_vocabularies();
+      foreach ($vocabularies as $machine_name => $vocabulary) {
+        if (isset($vocabulary->nodes[$type])) {
+          $pipe['taxonomy'][] = $machine_name;
+        }
+      }
+
       // Create a pipe for CCK fields
       if (module_exists('content')) {
         $content_info = content_types($type);

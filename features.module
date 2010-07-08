@@ -295,7 +295,7 @@ function features_include($reset = FALSE) {
     // Features provides integration on behalf of these modules.
     // The features include provides handling for the feature dependencies.
     // Note that ctools is placed last because it implements hooks "dynamically" for other modules.
-    $modules = array('features', 'block', 'content', 'context', 'fieldgroup', 'filter', 'imagecache', 'node', 'user', 'views', 'ctools');
+    $modules = array('features', 'block', 'content', 'context', 'fieldgroup', 'filter', 'imagecache', 'node', 'taxonomy', 'user', 'views', 'ctools');
 
     foreach (array_filter($modules, 'module_exists') as $module) {
       if (!module_hook($module, 'features_api')) {
@@ -801,3 +801,12 @@ function features_log($message, $severity = 'status') {
   }
   drupal_set_message($message, $severity, FALSE);
 }
+
+/**
+ * Targeted form_alter for vocabulary edit pages.
+ */
+function features_form_taxonomy_form_vocabulary_alter(&$form, &$form_state) {
+  module_load_include('inc', 'features', "includes/features.taxonomy");
+  _features_form_taxonomy_form_vocabulary_alter($form, $form_state);
+}
+
