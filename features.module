@@ -271,6 +271,20 @@ function features_perm() {
 }
 
 /**
+ * Implementation of hook_help().
+ */
+function features_help($path, $arg) {
+  switch ($path) {
+    case 'admin/help#features':
+      $output = '<p>'. t('The features module enables the capture and management of features in Drupal. A feature is a collection of Drupal entities which taken together satisfy a certain use-case.') .'</p>';
+      $output .= '<p>'. t('Features provides a UI and API for taking different site building components from modules with exportables and bundling them together in a single feature module. A feature module is like any other Drupal module except that it declares its components (e.g. views, contexts, CCK fields, etc.) in its `.info` file so that it can be checked, updated, or reverted programmatically.') .'</p>';
+      return $output;
+    case 'admin/build/features':
+      return '<p>'. t('A "Feature" is a certain type of Drupal module with contains a package of configuration that, when enabled, provides a new set of functionality for your Drupal site. Enable features by selecting the checkboxes below and clicking the Save configuration button. If the configuration of the feature has been changed its "State" will be either "overridden" or "needs review", otherwise it will be "default", indicating that the configuration has not been changed. Click on the state to see more details about the feature and its components.') .'</p>';
+  }
+}
+
+/**
  * Load includes for any modules that implement the features API and
  * load includes for those provided by features.
  */
