@@ -125,7 +125,7 @@ function _features_form_taxonomy_form_vocabulary_alter(&$form, &$form_state) {
   $elem = array(
     '#type' => 'textfield',
     '#title' => t('Machine name'),
-    '#help' => t('A system name for this vocabulary, may not be changed once is has been set.'),
+    '#description' => t('A system name for this vocabulary, may not be changed once it has been set.'),
   );
 
   if (!isset($form['module']) || $form['module']['#value'] == 'taxonomy') {
