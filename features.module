@@ -335,7 +335,7 @@ function features_include_defaults($components = NULL, $reset = FALSE) {
   if (!isset($include_components) || $reset) {
     $include_components = features_get_components();
     foreach ($include_components as $component => $info) {
-      if ($component !== 'views' && !isset($info['api']) && $info['default_file'] !== FEATURES_DEFAULTS_INCLUDED) {
+      if ($component !== 'views' && !isset($info['api']) && (!isset($info['default_file']) || $info['default_file'] !== FEATURES_DEFAULTS_INCLUDED)) {
         unset($include_components[$component]);
       }
     }
@@ -776,7 +776,7 @@ function features_rebuild($rebuild = array()) {
 /**
  * Utility functions ==================================================
  */
- 
+
 /**
  * Represent the current state of permissions as a role name to role/perm array.
  */
