@@ -174,28 +174,6 @@ function features_menu() {
 }
 
 /**
- * Implementation of hook_menu_alter().
- */
-function features_menu_alter(&$cache) {
-  // Collect exported menu items and graft them into the features menu.
-  features_include_defaults('menu');
-  $items = module_invoke_all('menu_default_items');
-  drupal_alter('menu_default_items', $items);
-
-  foreach ($items as $item) {
-    if (!empty($item['path'])) {
-      $path = $item['path'];
-      unset($item['path']);
-      if (!empty($cache[$path])) {
-        $cache[$path] = array_merge($cache[$path], $item);
-        $cache[$path]['type'] = MENU_NORMAL_ITEM;
-        $cache[$path]['menu_name'] = 'features';
-      }
-    }
-  }
-}
-
-/**
  *  Implementation of hook_theme().
  */
 function features_theme() {
