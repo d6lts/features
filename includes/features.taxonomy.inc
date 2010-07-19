@@ -10,6 +10,7 @@ function taxonomy_features_api() {
       'name' => t('Taxonomy'),
       'feature_source' => TRUE,
       'default_hook' => 'taxonomy_default_vocabularies',
+      'default_file' => FEATURES_DEFAULTS_INCLUDED,
     ),
   );
 }
@@ -31,6 +32,8 @@ function taxonomy_features_export_options() {
  * @todo Test adding existing dependencies.
  */
 function taxonomy_features_export($data, &$export, $module_name = '') {
+  features_include_defaults('taxonomy');
+
   // taxonomy_default_vocabularies integration is provided by Features.
   $export['dependencies']['features'] = 'features';
   $export['dependencies']['taxonomy'] = 'taxonomy';
@@ -86,12 +89,15 @@ function taxonomy_features_revert($module) {
  * Rebuilds Taxonomy vocabularies from code defaults.
  */
 function taxonomy_features_rebuild($module) {
+  features_include_defaults('taxonomy');
   $vocabularies = module_invoke($module, 'taxonomy_default_vocabularies');
-  foreach ($vocabularies as $machine_name => $vocabulary) {
-    if ($vid = db_result(db_query("SELECT vid FROM {vocabulary} WHERE module = '%s'", 'features_' . $machine_name))) {
-      $vocabulary['vid'] = $vid;
+  if (!empty($vocabularies)) {
+    foreach ($vocabularies as $machine_name => $vocabulary) {
+      if ($vid = db_result(db_query("SELECT vid FROM {vocabulary} WHERE module = '%s'", 'features_' . $machine_name))) {
+        $vocabulary['vid'] = $vid;
+      }
+      taxonomy_save_vocabulary($vocabulary);
     }
-    taxonomy_save_vocabulary($vocabulary);
   }
 }
 
