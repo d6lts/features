@@ -56,10 +56,11 @@ function node_features_export($data, &$export, $module_name = '') {
       }
 
       // Create a pipe for taxonomy vocabularies.
-      $vocabularies = _taxonomy_features_get_vocabularies();
-      foreach ($vocabularies as $machine_name => $vocabulary) {
-        if (isset($vocabulary->nodes[$type])) {
-          $pipe['taxonomy'][] = $machine_name;
+      if (function_exists('_taxonomy_features_get_vocabularies') && $vocabularies = _taxonomy_features_get_vocabularies()) {
+        foreach ($vocabularies as $machine_name => $vocabulary) {
+          if (isset($vocabulary->nodes[$type])) {
+            $pipe['taxonomy'][] = $machine_name;
+          }
         }
       }
 
