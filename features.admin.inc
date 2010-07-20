@@ -67,7 +67,7 @@ function features_export_form($form_state, $feature = NULL) {
     '#theme' => 'features_form_export',
   );
   $form['export']['components'] = array(
-    '#title' => t('Add components'),
+    '#title' => t('Edit components'),
     '#type' => 'select',
     '#options' => array('------'),
     '#attributes' => array('class' => 'features-select-components'),
