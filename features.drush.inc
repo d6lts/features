@@ -158,8 +158,7 @@ function drush_features_export() {
     _drush_features_export($stub, array(), $name);
   }
   else {
-    drush_print(dt('Available sources'));
-    $rows = array(dt('Available sources'));
+    $rows = array(array(dt('Available sources')));
     foreach (features_get_components(TRUE) as $component => $info) {
       if ($options = features_invoke($component, 'features_export_options')) {
         foreach ($options as $key => $value) {
@@ -178,13 +177,7 @@ function drush_features_update() {
   if ($args = func_get_args()) {
     foreach ($args as $module) {
       if (($feature = feature_load($module, TRUE)) && module_exists($module)) {
-        // Construct the correct destination path
-        $destination = dirname($feature->filename);
-        $split = explode('/', $destination);
-        if ($feature->name == array_pop($split)) {
-          $destination = implode('/', $split);
-        }
-        _drush_features_export($feature->info['features'], $feature->info['dependencies'], $feature->name, $destination);
+        _drush_features_export($feature->info['features'], $feature->info['dependencies'], $feature->name, dirname($feature->filename));
       }
       else if ($feature) {
         _features_drush_set_error($module, 'FEATURES_FEATURE_NOT_ENABLED');
@@ -235,7 +228,7 @@ function drush_features_update_all() {
  * @param $module_name
  *  Optional. The name for the exported module.
  */
-function _drush_features_export($stub, $dependencies, $module_name = NULL, $destination = 'sites/all/modules') {
+function _drush_features_export($stub, $dependencies, $module_name = NULL, $directory = NULL) {
   drupal_flush_all_caches();
 
   module_load_include('inc', 'features', 'features.export');
@@ -247,7 +240,7 @@ function _drush_features_export($stub, $dependencies, $module_name = NULL, $dest
 
   $root = drush_get_option(array('r', 'root'), drush_locate_root());
   if ($root) {
-    $directory = "$destination/{$module_name}";
+    $directory = isset($directory) ? $directory : 'sites/all/modules/' . $module_name;
     if (is_dir($directory)) {
       drush_print(dt('Module appears to already exist in !dir', array('!dir' => $directory)));
       if (!drush_confirm(dt('Do you really want to continue?'))) {
@@ -257,13 +250,18 @@ function _drush_features_export($stub, $dependencies, $module_name = NULL, $dest
     else {
       drush_op('mkdir', $directory);
     }
-    foreach ($files as $extension => $file_contents) {
-      if (!in_array($extension, array('module', 'info'))) {
-        $extension .= '.inc';
+    if (is_dir($directory)) {
+      foreach ($files as $extension => $file_contents) {
+        if (!in_array($extension, array('module', 'info'))) {
+          $extension .= '.inc';
+        }
+        drush_op('file_put_contents', "{$directory}/{$module_name}.$extension", $file_contents);
       }
-      drush_op('file_put_contents', "{$directory}/{$module_name}.$extension", $file_contents);
+      drush_log(dt("Created module: !module in !directory", array('!module' => $module_name, '!directory' => $directory)), 'ok');
     }
-    drush_log(dt("Created module: !module in !directory", array('!module' => $module_name, '!directory' => $directory)), 'ok');
+    else {
+      drush_die(dt('Couldn\'t create directory !directory', array('!directory' => $directory)));
+    }
   }
   else {
     drush_die(dt('Couldn\'t locate site root'));
