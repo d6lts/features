@@ -10,7 +10,7 @@ function template_preprocess_features_admin_components(&$vars) {
 
   // Basic info
   $vars['name'] = $form['#info']['name'];
-  $vars['description'] = $form['#info']['description'];
+  $vars['description'] = isset($form['#info']['description']) ? $form['#info']['description'] : '';
 
   // Legend/key
   $vars['key'] = array();

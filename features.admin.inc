@@ -314,7 +314,7 @@ function features_admin_form($form_state) {
     }
 
     $disabled = FALSE;
-    $description = $module->info['description'];
+    $description = isset($module->info['description']) ? $module->info['description'] : '';
 
     // Detect unmet dependencies
     if (!empty($module->info['dependencies'])) {
