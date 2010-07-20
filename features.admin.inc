@@ -672,6 +672,7 @@ function features_feature_diff($feature, $component = NULL) {
 
   $overrides = features_detect_overrides($feature);
 
+  $output = '';
   if (!empty($overrides)) {
     // Filter overrides down to specified component.
     if (isset($component) && isset($overrides[$component])) {
