@@ -275,18 +275,31 @@ function theme_features_form_components($form) {
 function theme_features_components($info, $sources = array()) {
   $output = '';
   $rows = array();
+  $components = features_get_components();
   if (!empty($info['features']) || !empty($info['dependencies']) || !empty($sources)) {
-    foreach ($info['features'] as $component => $items) {
-      if (!empty($items) || !empty($sources[$component])) {
-        $source_items = isset($sources[$component]) ? $sources[$component] : array();
-        $rows[] = array(array('data' => $component, 'header' => TRUE));
-        $rows[] = array(array('data' => theme('features_component_list', $items, $source_items), 'class' => 'component'));
+    $export = array_unique(array_merge(
+      array_keys($info['features']),
+      array_keys($sources),
+      array('dependencies')
+    ));
+    foreach ($export as $component) {
+      if ($component === 'dependencies') {
+        $feature_items = isset($info[$component]) ? $info[$component] : array();
       }
-    }
-    if (!empty($info['dependencies'])) {
-      $source_items = isset($sources['dependencies']) ? $sources['dependencies'] : $info['dependencies'];
-      $rows[] = array(array('data' => t('dependencies'), 'header' => TRUE));
-      $rows[] = array(array('data' => theme('features_component_list', $info['dependencies'], $source_items), 'class' => 'component'));
+      else {
+        $feature_items = isset($info['features'][$component]) ? $info['features'][$component] : array();
+      }
+      $source_items = isset($sources[$component]) ? $sources[$component] : array();
+      if (!empty($feature_items) || !empty($source_items)) {
+        $rows[] = array(array(
+          'data' => isset($components[$component]['name']) ? $components[$component]['name'] : $component,
+          'header' => TRUE
+        ));
+        $rows[] = array(array(
+          'data' => theme('features_component_list', $feature_items, $source_items),
+          'class' => 'component'
+        ));
+      }
     }
     $output .= theme('table', array(), $rows);
     $output .= theme('features_component_key');
