@@ -74,8 +74,9 @@ function template_preprocess_features_admin_components(&$vars) {
         if (element_children($form['revert'])) {
           $data[] = '';
         }
+        $component_conflicts = isset($conflicts[$component]) ? $conflicts[$component] : array();
         $data[] = array(
-          'data' => theme('features_component_list', $items, $items, $conflicts[$component]),
+          'data' => theme('features_component_list', $items, $items, $component_conflicts),
           'colspan' => 2,
           'class' => 'component'
         );
