@@ -85,6 +85,10 @@ function features_export_form($form_state, $feature = NULL) {
       $default_value = !empty($feature->info['features'][$component]) ? $feature->info['features'][$component] : array();
     }
     if ($options) {
+      // Ensure all options are stripped of potentially bad values.
+      foreach ($options as $k => $v) {
+        $options[$k] = check_plain($v);
+      }
       $form['export']['components']['#options'][$component] = (isset($component_info['name']) ? $component_info['name'] : $component);
       $form['export']['sources'][$component] = array(
         '#type' => 'checkboxes',
