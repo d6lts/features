@@ -225,7 +225,7 @@ function menu_links_features_revert($module) {
  * Implementation of hook_features_export_rebuild().
  */
 function menu_links_features_rebuild($module) {
-  if ($menu_links = features_get_default($module, 'menu_links')) {
+  if ($menu_links = features_get_default('menu_links', $module)) {
     foreach ($menu_links as $link) {
       // Retrieve the mlid if this is an existing item.
       if ($existing = features_menu_link_load("{$link['menu_name']}:{$link['link_path']}")) {
