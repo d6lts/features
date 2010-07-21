@@ -50,9 +50,11 @@ function filter_features_export_render($module = 'foo', $data) {
   $formats = _filter_get_formats();
   foreach ($formats as $format) {
     if (in_array($format['name'], $data)) {
-      $code[] = '  // Exported format: '. $format['name'];
-      $code[] = '  $formats[] = '. features_var_export($format, '  ') .';';
-      $code[] = '';
+      $format_export = features_var_export($format, '  ');
+      $format_identifier = features_var_export($format['name']);
+      $code[] = "  // Exported format: {$format['name']}";
+      $code[] = "  \$formats[{$format_identifier}] = {$format_export};";
+      $code[] = "";
     }
   }
 
@@ -72,9 +74,7 @@ function filter_features_revert($module) {
  * Implementation of hook_features_rebuild().
  */
 function filter_features_rebuild($module) {
-  features_include_defaults('filter');
-  $defaults = module_invoke($module, 'filter_default_formats');
-  if (!empty($defaults)) {
+  if ($defaults = features_get_default('filter', $module)) {
     foreach ($defaults as $format) {
       _filter_features_update($format);
     }

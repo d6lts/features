@@ -74,10 +74,11 @@ function user_features_export_render($module = 'foo', $data) {
     else {
       $permission['roles'] = array();
     }
-
-    $code[] = '  // Exported permission: '. $perm_name;
-    $code[] = '  $permissions[] = '. features_var_export($permission, '  ') .';';
-    $code[] = '';
+    $perm_identifier = features_var_export($perm_name);
+    $perm_export = features_var_export($permission, '  ');
+    $code[] = "  // Exported permission: {$perm_name}";
+    $code[] = "  \$permissions[{$perm_identifier}] = {$perm_export};";
+    $code[] = "";
   }
 
   $code[] = '  return $permissions;';
@@ -100,9 +101,7 @@ function user_features_revert($module) {
  *   The module whose default user permissions should be rebuilt.
  */
 function user_features_rebuild($module) {
-  features_include_defaults('user');
-  $defaults = module_invoke($module, 'user_default_permissions');
-  if (!empty($defaults)) {
+  if ($defaults = features_get_default('user', $module)) {
     $roles = _features_get_roles();
     foreach ($defaults as $permission) {
       $perm = $permission['name'];

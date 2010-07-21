@@ -26,15 +26,7 @@ function fieldgroup_features_export($data, &$export, $module_name = '') {
   $export['dependencies']['features'] = 'features';
 
   // Collect a group to module map
-  $map = array();
-  $modules = module_implements('fieldgroup_default_groups');
-  foreach ($modules as $module) {
-    $groups = module_invoke($module, 'fieldgroup_default_groups');
-    foreach ($groups as $group) {
-      $map["{$group['type_name']}-{$group['group_name']}"] = $module;
-    }
-  }
-
+  $map = features_get_default_map('fieldgroup', NULL, 'fieldgroup_features_identifier');
   foreach ($data as $instance) {
     // If this group is already provided by another module, remove the group
     // and add the other module as a dependency.
@@ -79,9 +71,11 @@ function fieldgroup_features_export_render($module = 'foo', $data) {
     // Clean up the fields to only list the names.
     $group['fields'] = array_keys((array) $group['fields']);
 
-    $code[] = '  // Exported group: '. $group_name;
-    $code[] = '  $groups[] = '. features_var_export($group, '  ') .';';
-    $code[] = '';
+    $group_identifier = features_var_export(fieldgroup_features_identifier($group));
+    $group_export = features_var_export($group, '  ');
+    $code[] = "  // Exported group: {$group_name}";
+    $code[] = "  \$groups[{$group_identifier}] = {$group_export};";
+    $code[] = "";
 
     // Add any labels to translatables array.
     if (!empty($group['label'])) {
@@ -108,9 +102,7 @@ function fieldgroup_features_revert($module) {
  * Rebuilds CCK fieldgroup definitions from code defaults.
  */
 function fieldgroup_features_rebuild($module) {
-  features_include_defaults('fieldgroup');
-  $groups = module_invoke($module, 'fieldgroup_default_groups');
-  if (!empty($groups)) {
+  if ($groups = features_get_default('fieldgroup', $module)) {
     content_clear_type_cache(TRUE);
 
     foreach ($groups as $group) {
@@ -156,4 +148,11 @@ function fieldgroup_features_rebuild($module) {
       }
     }
   }
+}
+
+/**
+ * Callback for generating an identifier for a fieldgroup.
+ */
+function fieldgroup_features_identifier($object) {
+  return isset($object['type_name'], $object['group_name']) ? "{$object['type_name']}-{$object['group_name']}" : FALSE;
 }

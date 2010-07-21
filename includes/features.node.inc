@@ -26,33 +26,20 @@ function node_features_export_options() {
  */
 function node_features_export($data, &$export, $module_name = '') {
   $pipe = array();
-
-  // Collect a real node type to module map
-  $type_map = array();
-  $modules = module_implements('node_info');
-  foreach ($modules as $module) {
-    $callback = $module ."_node_info";
-    $node_types = call_user_func($callback);
-    if (is_array($node_types)) {
-      foreach ($node_types as $module_type => $module_info) {
-        $type_map[$module_type] = $module;
-      }
-    }
-  }
+  $map = features_get_default_map('node');
 
   foreach ($data as $type) {
     // Poll node module to determine who provides the node type.
     if ($info = node_get_types('module', $type)) {
       $export['dependencies'][$info] = $info;
-      if (in_array($info, array('node', 'features'))) {
-        $export['features']['node'][$type] = $type;
-      }
 
       // If this node type is provided by a different module, add it as a dependency
-      $module = $type_map[$type];
-      if ($module && $module != $module_name) {
-        $export['dependencies'][$module] = $module;
-        unset($export['features']['node'][$type]);
+      if (isset($map[$type]) && $map[$type] != $module_name) {
+        $export['dependencies'][$map[$type]] = $map[$type];
+      }
+      // Otherwise export the node type.
+      elseif (in_array($info, array('node', 'features'))) {
+        $export['features']['node'][$type] = $type;
       }
 
       // Create a pipe for taxonomy vocabularies.
@@ -141,10 +128,7 @@ function node_features_export_render($module = 'foo', $data) {
  * name of module to revert content for
  */
 function node_features_revert($module = NULL) {
-  // Get default node types
-  if (module_hook($module, 'node_info')){
-    $default_types = module_invoke($module, 'node_info');
-
+  if ($default_types = features_get_default('node', $module)) {
     // Delete node types
     // We don't use node_type_delete() because we do not actually
     // want to delete the node type (and invoke hook_node_type()).
@@ -153,12 +137,10 @@ function node_features_revert($module = NULL) {
     foreach ($default_types as $type_name => $type_info) {
       db_query("DELETE FROM {node_type} WHERE type = '%s'", $type_name);
     }
+    node_types_rebuild();
+    menu_rebuild();
+    return TRUE;
   }
-  else {
-    features_log(t('Could not load default node types.'), 'error');
-    return FALSE;
-  }
-  node_types_rebuild();
-  menu_rebuild();
-  return TRUE;
+  features_log(t('Could not load default node types.'), 'error');
+  return FALSE;
 }

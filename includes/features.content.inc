@@ -26,15 +26,7 @@ function content_features_export($data, &$export, $module_name = '') {
   $export['dependencies']['features'] = 'features';
 
   // Collect a field to module map
-  $map = array();
-  $modules = module_implements('content_default_fields');
-  foreach ($modules as $module) {
-    $fields = module_invoke($module, 'content_default_fields');
-    foreach ($fields as $field) {
-      $map["{$field['type_name']}-{$field['field_name']}"] = $module;
-    }
-  }
-
+  $map = features_get_default_map('content', NULL, 'content_features_identifier');
   foreach ($data as $instance) {
     // If this field is already provided by another module remove the field.
     // We do not add the other module as a dependency as the field-providing
@@ -102,10 +94,12 @@ function content_features_export_render($module = 'foo', $data) {
     unset($field['columns']);
     unset($field['locked']);
     unset($field['db_storage']);
+    $field_identifier = features_var_export(content_features_identifier($field));
+    $field_export = features_var_export($field, '  ');
 
-    $code[] = '  // Exported field: '. $field_name;
-    $code[] = '  $fields[] = '. features_var_export($field, '  ') .';';
-    $code[] = '';
+    $code[] = "  // Exported field: {$field_name}";
+    $code[] = "  \$fields[{$field_identifier}] = {$field_export};";
+    $code[] = "";
 
     // Add any labels to translatables array.
     if (!empty($field['widget']['label'])) {
@@ -132,9 +126,7 @@ function content_features_revert($module) {
  * Rebuilds CCK field definitions from code defaults.
  */
 function content_features_rebuild($module) {
-  features_include_defaults('content');
-  $fields = module_invoke($module, 'content_default_fields');
-  if (!empty($fields)) {
+  if ($fields = features_get_default('content', $module)) {
     module_load_include('inc', 'content', 'includes/content.crud');
     content_clear_type_cache(TRUE);
 
@@ -156,4 +148,11 @@ function content_features_rebuild($module) {
       variable_set('menu_rebuild_needed', TRUE);
     }
   }
+}
+
+/**
+ * Callback for generating the field exportable identifier for a field.
+ */
+function content_features_identifier($field) {
+  return isset($field['type_name'], $field['field_name']) ? "{$field['type_name']}-{$field['field_name']}" : FALSE;
 }

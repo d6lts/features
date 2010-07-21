@@ -100,15 +100,7 @@ function context_features_export($data, &$export, $module_name = '') {
   $export['dependencies']['context'] = 'context';
 
   // Collect a context to module map
-  $map = array();
-  $modules = module_implements('context_default_contexts');
-  foreach ($modules as $module) {
-    $contexts = module_invoke($module, 'context_default_contexts');
-    foreach ($contexts as $context) {
-      $map["{$context['namespace']}-{$context['attribute']}-{$context['value']}"] = $module;
-    }
-  }
-
+  $map = features_get_default_map('context', NULL, 'context_features_identifier_2');
   $pipe = array();
   $contexts = context_enabled_contexts();
   foreach ($data as $identifier) {
@@ -197,7 +189,9 @@ function context_features_export_render($module, $data) {
       }
     }
 
-    $code[] = '  $items[] = '. context_var_export($context, '  ') .';';
+    $context_identifier = context_var_export($identifier);
+    $context_export = context_var_export($context, '  ');
+    $code[] = "  \$items[{$context_identifier}] = {$context_export};";
   }
 
   $code[] = '  return $items;';
@@ -219,10 +213,7 @@ function context_features_revert($module = NULL) {
     return $return;
   }
   // 2.x
-  if (module_hook($module, 'context_default_contexts')) {
-    $default_contexts = module_invoke($module, 'context_default_contexts');
-
-    // Delete overridden contexts
+  if ($default_contexts = features_get_default('context', $module)) {
     foreach($default_contexts as $default_context) {
       $current_context = new StdClass();
       $current_context->namespace = $default_context['namespace'];
@@ -237,4 +228,11 @@ function context_features_revert($module = NULL) {
     return FALSE;
   }
   return TRUE;
+}
+
+/**
+ * 2.x: Callback for generating the context exportable identifier.
+ */
+function context_features_identifier_2($object) {
+  return isset($object->namespace, $object->attribute, $object->value) ? "{$object->namespace}-{$object->attribute}-{$object->value}" : FALSE;
 }

@@ -63,17 +63,8 @@ function menu_custom_features_export($data, &$export, $module_name = '') {
   $export['dependencies']['menu'] = 'menu';
 
   // Collect a menu to module map
-  $map = array();
-  $modules = module_implements('menu_default_menu_custom');
-  foreach ($modules as $module) {
-    if ($menus = module_invoke($module, 'menu_default_menu_custom')) {
-      foreach ($menus as $identifier => $menu) {
-        $map[$identifier] = $module;
-      }
-    }
-  }
-
   $pipe = array();
+  $map = features_get_default_map('menu_custom', 'menu_name');
   foreach ($data as $menu_name) {
     // If this menu is provided by a different module, add it as a dependency.
     if (isset($map[$menu_name]) && $map[$menu_name] != $module_name) {
@@ -126,9 +117,7 @@ function menu_custom_features_revert($module) {
  * Implementation of hook_features_export_rebuild().
  */
 function menu_custom_features_rebuild($module) {
-  features_include_defaults('menu_custom');
-  $defaults = module_invoke($module, 'menu_default_menu_custom');
-  if (!empty($defaults)) {
+  if ($defaults = features_get_default('menu_custom', $module)) {
     foreach ($defaults as $menu) {
       $existing = db_result(db_query("SELECT menu_name FROM {menu_custom} WHERE menu_name = '%s'", $menu['menu_name']));
       drupal_write_record('menu_custom', $menu, $existing ? array('menu_name') : array());
@@ -146,11 +135,18 @@ function menu_links_features_export_options() {
     list($menu_name, $mlid) = explode(':', $key);
     if ($mlid != 0) {
       $link = menu_link_load($mlid);
-      $identifier = "{$link['menu_name']}:{$link['link_path']}";
+      $identifier = menu_links_features_identifier($link);
       $options[$identifier] = "{$menu_name}: {$name}";
     }
   }
   return $options;
+}
+
+/**
+ * Callback for generating the menu link exportable identifier.
+ */
+function menu_links_features_identifier($link) {
+  return isset($link['menu_name'], $link['link_path']) ? "{$link['menu_name']}:{$link['link_path']}" : FALSE;
 }
 
 /**
@@ -163,22 +159,13 @@ function menu_links_features_export($data, &$export, $module_name = '') {
   $export['dependencies']['menu'] = 'menu';
 
   // Collect a link to module map
-  $map = array();
-  $modules = module_implements('menu_default_menu_links');
-  foreach ($modules as $module) {
-    if ($links = module_invoke($module, 'menu_default_menu_links')) {
-      foreach ($links as $identifier => $link) {
-        $map[$identifier] = $module;
-      }
-    }
-  }
-
   $pipe = array();
+  $map = features_get_default_map('menu_links', 'menu_links_features_identifier');
   foreach ($data as $identifier) {
     if ($link = features_menu_link_load($identifier)) {
       // If this link is provided by a different module, add it as a dependency.
-      if (isset($map[$identifer]) && $map[$identifer] != $module_name) {
-        $export['dependencies'][$map[$identifer]] = $map[$identifer];
+      if (isset($map[$identifier]) && $map[$identifier] != $module_name) {
+        $export['dependencies'][$map[$identifier]] = $map[$identifier];
       }
       else {
         $export['features']['menu_links'][$identifier] = $identifier;
@@ -238,9 +225,7 @@ function menu_links_features_revert($module) {
  * Implementation of hook_features_export_rebuild().
  */
 function menu_links_features_rebuild($module) {
-  features_include_defaults('menu_links');
-  $menu_links = module_invoke($module, 'menu_default_menu_links');
-  if (!empty($menu_links)) {
+  if ($menu_links = features_get_default($module, 'menu_links')) {
     foreach ($menu_links as $link) {
       // Retrieve the mlid if this is an existing item.
       if ($existing = features_menu_link_load("{$link['menu_name']}:{$link['link_path']}")) {

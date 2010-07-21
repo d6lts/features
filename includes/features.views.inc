@@ -2,22 +2,6 @@
 // $Id$
 
 /**
- * Implementation of hook_features_api().
- */
-function views_api_features_api() {
-  return array(
-    'views_api' => array(
-      'name' => t('Views API'),
-      'feature_source' => FALSE,
-      'duplicates' => FEATURES_DUPLICATES_ALLOWED,
-      // Views API integration does not include a default hook declaration as
-      // it is not a proper default hook.
-      // 'default_hook' => 'views_api',
-    ),
-  );
-}
-
-/**
  * Implementation of hook_features_export().
  */
 function views_api_features_export($data, &$export, $module_name = '') {
@@ -67,6 +51,14 @@ function views_features_api() {
       'default_file' => FEATURES_DEFAULTS_CUSTOM,
       'default_filename' => 'views_default',
     ),
+    'views_api' => array(
+      'name' => t('Views API'),
+      'feature_source' => FALSE,
+      'duplicates' => FEATURES_DUPLICATES_ALLOWED,
+      // Views API integration does not include a default hook declaration as
+      // it is not a proper default hook.
+      // 'default_hook' => 'views_api',
+    )
   );
 }
 
@@ -113,25 +105,39 @@ function views_features_export_render($module = 'foo', $data) {
  * Implementation of hook_features_export().
  */
 function views_features_export($data, &$export, $module_name = '') {
-  views_include('view');
-
-  if (!isset($export['features']['views'])) {
-    $export['features']['views'] = array();
-  }
-
   // Build views & add to export array
+  $map = features_get_default_map('views', 'name');
   $views = array();
+  $conflicts = array();
   foreach ($data as $view_name) {
-    // Add to exports
-    $export['features']['views_api']['api:'. views_api_version()] = 'api:'. views_api_version();
-    $export['features']['views'][$view_name] = $view_name;
-
-    // Build the view
-    $view = views_get_view($view_name, TRUE);
-    if ($view) {
-      $view->build();
+    if ($view = views_get_view($view_name, TRUE)) {
       $views[$view_name] = $view;
+
+      // Ensure Views API hook is written.
+      $export['features']['views_api']['api:'. views_api_version()] = 'api:'. views_api_version();
+
+      // This view is provided by another module. Add it as a dependency or
+      // display a conflict message if the View is overridden.
+      if (isset($map[$view_name]) && $map[$view_name] !== $module_name) {
+        if ($v = views_get_view($view_name)) {
+          if ($v->type === 'Overridden') {
+            $conflicts[$map[$view_name]] = $view_name;
+          }
+          elseif ($v->type === 'Default') {
+            $export['dependencies'][$map[$view_name]] = $map[$view_name];
+          }
+        }
+      }
+      // Otherwise just add to exports
+      else {
+        $export['features']['views'][$view_name] = $view_name;
+      }
     }
+  }
+  if (!empty($conflicts)) {
+    $message = 'The following overridden view(s) are provided by other modules: !views. To resolve this problem either revert each view or clone each view so that modified versions can be exported withy our feature.';
+    $tokens = array('!views' => implode(', ', $conflicts));
+    features_log(t($message, $tokens), 'warning');
   }
 
   // Add views as a dependency
@@ -154,85 +160,44 @@ function views_features_export($data, &$export, $module_name = '') {
 
   foreach ($views as $view) {
     foreach ($view->display as $display) {
-      if (is_object($display->handler) && method_exists($display->handler, 'get_option')) {
-
-        // Handlers
-        foreach ($handlers as $handler) {
-          $items = $display->handler->get_option($handler);
-          if (!empty($items)) {
-            foreach ($items as $item) {
+      // Handlers
+      foreach ($handlers as $handler) {
+        if (isset($display->display_options[$handler])) {
+          foreach ($display->display_options[$handler] as $item) {
+            if ($item['table'] && isset($handler_dependencies[$item['table']])) {
               $module = $handler_dependencies[$item['table']];
               $export['dependencies'][$module] = $module;
             }
           }
         }
+      }
 
-        // Plugins
-        foreach ($plugins as $plugin_type) {
-          switch ($plugin_type) {
-            case 'display':
+      // Plugins
+      foreach ($plugins as $plugin_type) {
+        $plugin_name = '';
+        switch ($plugin_type) {
+          case 'display':
+            if (isset($display->display_plugin)) {
               $plugin_name = $display->display_plugin;
-              break;
-            case 'access':
-              $access = $display->handler->get_option("access");
-              if (!empty($access['type']) && $access['type'] != 'none') {
-                $plugin_name = $access['type'];
-              }
-              else {
-                $plugin_name = '';
-              }
-              break;
-            default:
-              $plugin_name = $display->handler->get_option("{$plugin_type}_plugin");
-              break;
-          }
-          if (!empty($plugin_name)) {
-            $module = $plugin_dependencies[$plugin_type][$plugin_name];
-            $export['dependencies'][$module] = $module;
-          }
+            }
+            break;
+          case 'access':
+            if (isset($display->display_options['access'], $display->display_options['access']['type']) && $display->display_options['access']['type'] != 'none') {
+              $plugin_name = $display->display_options['access']['type'];
+            }
+            break;
+          default:
+            if (isset($display->display_options["{$plugin_type}_plugin"])) {
+              $plugin_name = $display->display_options["{$plugin_type}_plugin"];
+            }
+            break;
+        }
+        if (!empty($plugin_name) && isset($plugin_dependencies[$plugin_type][$plugin_name])) {
+          $module = $plugin_dependencies[$plugin_type][$plugin_name];
+          $export['dependencies'][$module] = $module;
         }
       }
     }
-  }
-
-  // It's possible that a module provides the view for us so we need to
-  // detect this and prevent elusive array_merge_recusive bugs.
-  // To do so we do two things:
-  //   1. remove any views in the export that are default views.
-  //   2. add as a dependency the module that provides the view.
-  //
-  // If the view in question is overridden, the user needs to take action
-  // to resolve the conflict. We display a message in this situation.
-  views_include_default_views();
-  $modules = module_implements('views_default_views');
-  $conflicts = array();
-  foreach ($modules as $m) {
-    $m_default_views = module_invoke($m, 'views_default_views');
-    if (is_array($m_default_views)) {
-      foreach ($m_default_views as $view_name => $view) {
-        if (array_key_exists($view_name, $export['features']['views']) && ($m != $module_name)) {
-          $v = views_get_view($view_name);
-          if ($v) {
-            // If view is overridden we display an error message and bail.
-            if ($v->type == 'Overridden') {
-              $conflicts[$m] = $view_name;
-              unset($export['features']['views'][$view_name]);
-            }
-            // If view is default, we add the providing module as a dependency and exclude it from the Views export
-            else if ($v->type == 'Default') {
-              unset($export['features']['views'][$view_name]);
-              $tokens = array('!view_name' => $view_name, '!module_name' => $m);
-              $export['dependencies'][$m] = $m;
-            }
-          }
-        }
-      }
-    }
-  }
-  if ($conflicts) {
-    $message = 'The following overridden view(s) are provided by other modules: !views. To resolve this problem either revert each view or clone each view so that modified versions can be exported withy our feature.';
-    $tokens = array('!views' => implode(', ', $conflicts));
-    features_log(t($message, $tokens), 'warning');
   }
 }
 
@@ -287,27 +252,16 @@ function views_plugin_dependencies() {
 
 /**
  * Implementation of hook_features_revert().
- *
- * @param $module
- * name of module to revert content for
  */
-function views_features_revert($module = NULL) {
-  views_include('view');
-
-  // Get default views from feature
-  if (module_hook($module, 'views_default_views')) {
-    $default_views = module_invoke($module, 'views_default_views');
-
-    // Delete Normal / Overridden views that are defined in code
+function views_features_revert($module) {
+  if ($default_views = features_get_default('views', $module)) {
     foreach ($default_views as $default_view) {
       if ($current_view = views_get_view($default_view->name)) {
         $current_view->delete();
       }
     }
+    return TRUE;
   }
-  else {
-    features_log(t('Could not load default views.'), 'error');
-    return FALSE;
-  }
-  return TRUE;
+  features_log(t('Could not load default views.'), 'error');
+  return FALSE;
 }

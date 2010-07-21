@@ -259,11 +259,6 @@ function features_detect_overrides($module) {
     $cache = array();
   }
   if (!isset($cache[$module->name])) {
-    // Make necessary inclusions
-    if (module_exists('views')) {
-      views_include('view');
-    }
-
     // Rebuild feature from .info file description and prepare an export from current DB state.
     $export = features_populate($module->info['features'], $module->info['dependencies'], $module->name);
     $export = features_export_prepare($export, $module->name);
@@ -283,8 +278,8 @@ function features_detect_overrides($module) {
     $states = features_get_component_states(array($module->name), FALSE);
     foreach ($states[$module->name] as $component => $state) {
       if ($state != FEATURES_DEFAULT) {
-        $normal = features_get_normal($module->name, $component);
-        $default = features_get_default($module->name, $component);
+        $normal = features_get_normal($component, $module->name);
+        $default = features_get_default($component, $module->name);
         _features_sanitize($normal);
         _features_sanitize($default);
 
@@ -498,10 +493,10 @@ function features_get_signature($state = 'default', $module_name, $component, $r
       $codecache = variable_get('features_codecache', array());
       return isset($codecache[$module_name][$component]) ? $codecache[$module_name][$component] : FALSE;
     case 'default':
-      $objects = features_get_default($module_name, $component, $reset);
+      $objects = features_get_default($component, $module_name, $reset);
       break;
     case 'normal':
-      $objects = features_get_normal($module_name, $component, $reset);
+      $objects = features_get_normal($component, $module_name, $reset);
       break;
   }
   if (!empty($objects)) {
@@ -551,7 +546,7 @@ function features_semaphore($op, $component) {
 /**
  * Get normal objects for a given module/component pair.
  */
-function features_get_normal($module_name, $component, $reset = FALSE) {
+function features_get_normal($component, $module_name, $reset = FALSE) {
   static $cache;
   if (!isset($cache) || $reset) {
     $cache = array();
@@ -584,34 +579,87 @@ function features_get_normal($module_name, $component, $reset = FALSE) {
 /**
  * Get defaults for a given module/component pair.
  */
-function features_get_default($module_name, $component, $reset = FALSE) {
-  static $cache;
-  if (!isset($cache) || $reset) {
-    $cache = array();
-  }
-  if (!isset($cache[$module_name][$component])) {
-    features_include();
-    features_include_defaults($component);
-    // Special handling for dependencies component.
-    if ($component === 'dependencies') {
-      $module = features_get_features($module_name);
-      $cache[$module_name][$component] = isset($module->info['dependencies']) ? $module->info['dependencies'] : array();
-    }
-    // All other components.
-    else {
-      $default_hook = features_get_default_hooks($component);
-      if ($default_hook && module_hook($module_name, $default_hook)) {
-        $cache[$module_name][$component] = module_invoke($module_name, $default_hook);
-      }
-      else {
-        $cache[$module_name][$component] = FALSE;
-      }
-    }
+function features_get_default($component, $module_name = NULL, $reset = FALSE) {
+  static $cache = array();
+  features_include();
+  features_include_defaults($component);
+  $default_hook = features_get_default_hooks($component);
+  $components = features_get_components();
 
-    // Clear out vars for memory's sake.
-    unset($module);
+  // Collect defaults for all modules if no module name was specified.
+  if (isset($module_name)) {
+    $modules = array($module_name);
   }
-  return isset($cache[$module_name][$component]) ? $cache[$module_name][$component] : FALSE;
+  else {
+    $modules = ($component === 'dependencies') ? array_keys(features_get_features()) : module_implements($default_hook);
+  }
+
+  // Collect and cache information for each specified module.
+  foreach ($modules as $m) {
+    if (!isset($cache[$component][$m]) || $reset) {
+      // Special handling for dependencies component.
+      if ($component === 'dependencies') {
+        $module = features_get_features($m);
+        $cache[$component][$m] = isset($module->info['dependencies']) ? $module->info['dependencies'] : array();
+        unset($module);
+      }
+      // All other components
+      else {
+        $cache[$component][$m] = ($default_hook && module_hook($m, $default_hook)) ? module_invoke($m, $default_hook) : FALSE;
+      }
+    }
+  }
+
+  // A specific module was specified. Retrieve only its components.
+  if (isset($module_name)) {
+    return isset($cache[$component][$module_name]) ? $cache[$component][$module_name] : FALSE;
+  }
+  // No module was specified. Retrieve all components.
+  $all_defaults = array();
+  foreach (array_filter($cache[$component]) as $module_components) {
+    $all_defaults = array_merge($all_defaults, $module_components);
+  }
+  return $all_defaults;
+}
+
+/**
+ * Get a map of components to their providing modules.
+ */
+function features_get_default_map($component, $attribute = NULL, $callback = NULL, $reset = FALSE) {
+  static $map = array();
+  features_include();
+  features_include_defaults($component);
+  if ((!isset($map[$component]) || $reset) && $default_hook = features_get_default_hooks($component)) {
+    $map[$component] = array();
+    foreach (module_implements($default_hook) as $module) {
+      if ($defaults = features_get_default($component, $module)) {
+        foreach ($defaults as $key => $object) {
+          if (isset($callback)) {
+            if ($object_key = $callback($object)) {
+              $map[$component][$object_key] = $module;
+            }
+          }
+          elseif (isset($attribute)) {
+            if (is_object($object) && isset($object->{$attribute})) {
+              $map[$component][$object->{$attribute}] = $module;
+            }
+            elseif (is_array($object) && isset($object[$attribute])) {
+              $map[$component][$object[$attribute]] = $module;
+            }
+          }
+          elseif (!isset($attribute) && !isset($callback)) {
+            if (!is_numeric($key)) {
+              $map[$component][$key] = $module;
+            }
+          }
+          else {
+            return FALSE;
+          }
+        }
+      }
+    }
+  }
+  return isset($map[$component]) ? $map[$component] : FALSE;
 }
 
 /**
@@ -623,7 +671,7 @@ function features_get_component_states($features = array(), $rebuild_only = TRUE
     $cache = array();
   }
 
-  $features = !empty($features) ? $features : array_keys(features_get_features(NULL, TRUE));
+  $features = !empty($features) ? $features : array_keys(features_get_features());
 
   // Retrieve only rebuildable components if requested.
   features_include();

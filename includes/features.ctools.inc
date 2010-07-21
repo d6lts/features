@@ -131,7 +131,7 @@ function ctools_component_features_export($component, $data, &$export, $module_n
   // Add the actual implementing module as a dependency
   $info = _ctools_features_get_info();
   if ($module_name !== $info[$component]['module']) {
-    $export['dependencies'][$module] = $info[$component]['module'];
+    $export['dependencies'][$info[$component]['module']] = $info[$component]['module'];
   }
 
   // Add the components
@@ -204,9 +204,7 @@ function ctools_component_features_export_render($component, $module = 'foo', $d
  * Master implementation of hook_features_revert() for all ctools components.
  */
 function ctools_component_features_revert($component, $module = 'foo') {
-  $info = _ctools_features_get_info();
-  $objects = module_invoke($module, $info[$component]['default_hook']);
-  if (!empty($objects)) {
+  if ($objects = features_get_default($component, $module)) {
     $schema = ctools_export_get_schema($component);
     $export = $schema['export'];
     $names = db_placeholders(array_keys($objects), $schema['fields'][$export['key']]['type']);
