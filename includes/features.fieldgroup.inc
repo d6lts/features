@@ -67,19 +67,20 @@ function fieldgroup_features_export_render($module = 'foo', $data) {
     $type_name = $instance[0];
     $group_name = $instance[1];
     $groups = fieldgroup_groups($type_name, FALSE, TRUE);
-    $group = $groups[$group_name];
-    // Clean up the fields to only list the names.
-    $group['fields'] = array_keys((array) $group['fields']);
+    if (isset($groups[$group_name]) && $group = $groups[$group_name]) {
+      // Clean up the fields to only list the names.
+      $group['fields'] = array_keys((array) $group['fields']);
 
-    $group_identifier = features_var_export(fieldgroup_features_identifier($group));
-    $group_export = features_var_export($group, '  ');
-    $code[] = "  // Exported group: {$group_name}";
-    $code[] = "  \$groups[{$group_identifier}] = {$group_export};";
-    $code[] = "";
+      $group_identifier = features_var_export(fieldgroup_features_identifier($group));
+      $group_export = features_var_export($group, '  ');
+      $code[] = "  // Exported group: {$group_name}";
+      $code[] = "  \$groups[{$group_identifier}] = {$group_export};";
+      $code[] = "";
 
-    // Add any labels to translatables array.
-    if (!empty($group['label'])) {
-      $translatables[] = $group['label'];
+      // Add any labels to translatables array.
+      if (!empty($group['label'])) {
+        $translatables[] = $group['label'];
+      }
     }
   }
   if (!empty($translatables)) {

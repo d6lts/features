@@ -89,21 +89,21 @@ function content_features_export_render($module = 'foo', $data) {
     $instance = explode('-', $instance);
     $type_name = $instance[0];
     $field_name = $instance[1];
+    if ($field = content_fields($field_name, $type_name)) {
+      unset($field['columns']);
+      unset($field['locked']);
+      unset($field['db_storage']);
+      $field_identifier = features_var_export(content_features_identifier($field));
+      $field_export = features_var_export($field, '  ');
 
-    $field = content_fields($field_name, $type_name);
-    unset($field['columns']);
-    unset($field['locked']);
-    unset($field['db_storage']);
-    $field_identifier = features_var_export(content_features_identifier($field));
-    $field_export = features_var_export($field, '  ');
+      $code[] = "  // Exported field: {$field_name}";
+      $code[] = "  \$fields[{$field_identifier}] = {$field_export};";
+      $code[] = "";
 
-    $code[] = "  // Exported field: {$field_name}";
-    $code[] = "  \$fields[{$field_identifier}] = {$field_export};";
-    $code[] = "";
-
-    // Add any labels to translatables array.
-    if (!empty($field['widget']['label'])) {
-      $translatables[] = $field['widget']['label'];
+      // Add any labels to translatables array.
+      if (!empty($field['widget']['label'])) {
+        $translatables[] = $field['widget']['label'];
+      }
     }
   }
   if (!empty($translatables)) {

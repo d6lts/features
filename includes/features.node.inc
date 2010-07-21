@@ -95,25 +95,24 @@ function node_features_export_render($module = 'foo', $data) {
   $output = array();
   $output[] = '  $items = array(';
   foreach ($data as $type) {
-    $info = node_get_types('type', $type);
-
-    // Force module name to be 'features' if set to 'node. If we leave as
-    // 'node' the content type will be assumed to be database-stored by
-    // the node module.
-    $info->module = ($info->module === 'node') ? 'features' : $info->module;
-
-    $output[] = "    '{$type}' => array(";
-    foreach ($elements as $key => $t) {
-      if ($t) {
-        $text = str_replace("'", "\'", $info->$key);
-        $text = !empty($text) ? "t('{$text}')" : "''";
-        $output[] = "      '{$key}' => {$text},";
+    if ($info = node_get_types('type', $type)) {
+      // Force module name to be 'features' if set to 'node. If we leave as
+      // 'node' the content type will be assumed to be database-stored by
+      // the node module.
+      $info->module = ($info->module === 'node') ? 'features' : $info->module;
+      $output[] = "    '{$type}' => array(";
+      foreach ($elements as $key => $t) {
+        if ($t) {
+          $text = str_replace("'", "\'", $info->$key);
+          $text = !empty($text) ? "t('{$text}')" : "''";
+          $output[] = "      '{$key}' => {$text},";
+        }
+        else {
+          $output[] = "      '{$key}' => '{$info->$key}',";
+        }
       }
-      else {
-        $output[] = "      '{$key}' => '{$info->$key}',";
-      }
+      $output[] = "    ),";
     }
-    $output[] = "    ),";
   }
   $output[] = '  );';
   $output[] = '  return $items;';
