@@ -101,7 +101,7 @@ function template_preprocess_features_form(&$vars) {
   $first = TRUE;
   $package_links = array();
   $packages = element_children($vars['form']);
-		sort($packages);
+  sort($packages);
   foreach ($packages as $package) {
     if (!empty($vars['form'][$package]['status'])) {
       $package_links[$package] = array(
