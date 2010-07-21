@@ -223,11 +223,6 @@ function context_features_revert($module = NULL) {
       context_delete_context($context_to_delete);
     }
   }
-  else {
-    features_log(t('Could not load default contexts.'), 'error');
-    return FALSE;
-  }
-  return TRUE;
 }
 
 /**
