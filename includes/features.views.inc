@@ -113,9 +113,6 @@ function views_features_export($data, &$export, $module_name = '') {
     if ($view = views_get_view($view_name, TRUE)) {
       $views[$view_name] = $view;
 
-      // Ensure Views API hook is written.
-      $export['features']['views_api']['api:'. views_api_version()] = 'api:'. views_api_version();
-
       // This view is provided by another module. Add it as a dependency or
       // display a conflict message if the View is overridden.
       if (isset($map[$view_name]) && $map[$view_name] !== $module_name) {
@@ -140,8 +137,11 @@ function views_features_export($data, &$export, $module_name = '') {
     features_log(t($message, $tokens), 'warning');
   }
 
-  // Add views as a dependency
-  $export['dependencies']['views'] = 'views';
+  // Only add Views API hook if there are actually views to export.
+  if (!empty($export['features']['views'])) {
+    $export['features']['views_api']['api:'. views_api_version()] = 'api:'. views_api_version();
+    $export['dependencies']['views'] = 'views';
+  }
 
   // Discover module dependencies
   // We need to find dependencies based on:
