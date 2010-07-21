@@ -100,7 +100,9 @@ function template_preprocess_features_form(&$vars) {
 
   $first = TRUE;
   $package_links = array();
-  foreach (element_children($vars['form']) as $package) {
+  $packages = element_children($vars['form']);
+		sort($packages);
+  foreach ($packages as $package) {
     if (!empty($vars['form'][$package]['status'])) {
       $package_links[$package] = array(
         'title' => $vars['form'][$package]['#title'],
@@ -115,7 +117,6 @@ function template_preprocess_features_form(&$vars) {
       $first = FALSE;
     }
   }
-  ksort($package_links);
   $vars['package_links'] = $package_links;
 }
 
