@@ -229,15 +229,6 @@ function drush_features_update_all() {
  *  Optional. The name for the exported module.
  */
 function _drush_features_export($stub, $dependencies, $module_name = NULL, $directory = NULL) {
-  drupal_flush_all_caches();
-
-  module_load_include('inc', 'features', 'features.export');
-  $export = features_populate($stub, $dependencies, $module_name);
-  if (!feature_load($module_name)) {
-    $export['name'] = $module_name;
-  }
-  $files = features_export_render($export, $module_name, TRUE);
-
   $root = drush_get_option(array('r', 'root'), drush_locate_root());
   if ($root) {
     $directory = isset($directory) ? $directory : 'sites/all/modules/' . $module_name;
@@ -251,6 +242,13 @@ function _drush_features_export($stub, $dependencies, $module_name = NULL, $dire
       drush_op('mkdir', $directory);
     }
     if (is_dir($directory)) {
+      drupal_flush_all_caches();
+      module_load_include('inc', 'features', 'features.export');
+      $export = features_populate($stub, $dependencies, $module_name);
+      if (!feature_load($module_name)) {
+        $export['name'] = $module_name;
+      }
+      $files = features_export_render($export, $module_name, TRUE);
       foreach ($files as $extension => $file_contents) {
         if (!in_array($extension, array('module', 'info'))) {
           $extension .= '.inc';
