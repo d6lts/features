@@ -275,8 +275,9 @@ function features_admin_form($form_state) {
   module_rebuild_cache();
   features_rebuild();
 
-  $features = features_get_features('', TRUE);
-  $modules = features_get_modules('', TRUE);
+  features_get_info(NULL, NULL, TRUE);
+  $modules = features_get_modules();
+  $features = features_get_features();
   $conflicts = features_get_conflicts();
 
   foreach ($modules as $key => $module) {

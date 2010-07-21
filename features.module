@@ -114,7 +114,6 @@ function features_menu() {
     'description' => 'Display components of a feature.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('features_admin_components', 3),
-    'load arguments' => array(3, TRUE),
     'access callback' => 'user_access',
     'access arguments' => array('administer features'),
     'type' => MENU_CALLBACK,
@@ -133,7 +132,6 @@ function features_menu() {
     'description' => 'Recreate an existing feature.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('features_export_form', 3),
-    'load arguments' => array(3, TRUE),
     'access callback' => 'user_access',
     'access arguments' => array('administer features'),
     'type' => MENU_LOCAL_TASK,
@@ -146,7 +144,6 @@ function features_menu() {
       'description' => 'Compare default and current feature.',
       'page callback' => 'features_feature_diff',
       'page arguments' => array(3, 5),
-      'load arguments' => array(3, TRUE),
       'access callback' => 'features_access_override_actions',
       'access arguments' => array(3),
       'type' => MENU_LOCAL_TASK,
@@ -158,7 +155,6 @@ function features_menu() {
     'description' => 'Javascript status call back.',
     'page callback' => 'features_feature_status',
     'page arguments' => array(3),
-    'load arguments' => array(3, TRUE),
     'access callback' => 'user_access',
     'access arguments' => array('administer features'),
     'type' => MENU_CALLBACK,
@@ -332,6 +328,7 @@ function features_include_defaults($components = NULL, $reset = FALSE) {
       $info = $include_components[$component];
       // Inclusion of defaults for Views.
       if ($component === 'views') {
+        views_include('view');
         views_include_default_views();
       }
       // Inclusion of defaults for CTools.
@@ -381,27 +378,23 @@ function features_get_modules($name = NULL, $reset = FALSE) {
  *   If set to to TRUE return feature sources only.
  * @return An array of component labels keyed by the component names.
  */
-function features_get_components($feature_source = FALSE) {
+function features_get_components($feature_source = FALSE, $reset = FALSE) {
   features_include();
-
-  $components = array();
-  foreach (module_implements('features_api') as $module) {
-    $info = module_invoke($module, 'features_api');
-
-    if ($feature_source) {
-      // Gather only components that are declared as feature sources.
+  static $components_all;
+  static $components_source;
+  if (!isset($components_all) || $reset) {
+    $components_all = $components_source = array();
+    foreach (module_implements('features_api') as $module) {
+      $info = module_invoke($module, 'features_api');
       foreach ($info as $k => $v) {
-        if ($v['feature_source']) {
-          $components[$k] = $v;
+        $components_all[$k] = $v;
+        if (!empty($v['feature_source'])) {
+          $components_source[$k] = $v;
         }
       }
     }
-    else {
-      $components = array_merge($components, $info);
-    }
   }
-
-  return $components;
+  return $feature_source ? $components_source : $components_all;
 }
 
 /**
@@ -616,7 +609,7 @@ function features_get_component_map($reset = FALSE) {
 
   if (!isset($map) || $reset) {
     $map = array();
-    $features = features_get_features('', TRUE);
+    $features = features_get_features(NULL, $reset);
     foreach ($features as $feature) {
       foreach ($feature->info['features'] as $type => $components) {
         if (!isset($map[$type])) {
