@@ -211,13 +211,14 @@ function views_handler_dependencies() {
   if (!isset($map)) {
     $map = array();
     foreach (module_implements('views_data') as $module) {
-      $tables = module_invoke($module, 'views_data');
-      foreach ($tables as $table => $info) {
-        if (isset($info['table'])) {
-          $map[$table] = $module;
-        }
-        else if (!isset($map[$table])) {
-          $map[$table] = $module;
+      if ($tables = module_invoke($module, 'views_data')) {
+        foreach ($tables as $table => $info) {
+          if (isset($info['table'])) {
+            $map[$table] = $module;
+          }
+          else if (!isset($map[$table])) {
+            $map[$table] = $module;
+          }
         }
       }
     }
