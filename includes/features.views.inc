@@ -260,8 +260,5 @@ function views_features_revert($module) {
         $current_view->delete();
       }
     }
-    return TRUE;
   }
-  features_log(t('Could not load default views.'), 'error');
-  return FALSE;
 }

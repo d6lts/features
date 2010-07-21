@@ -139,8 +139,5 @@ function node_features_revert($module = NULL) {
     }
     node_types_rebuild();
     menu_rebuild();
-    return TRUE;
   }
-  features_log(t('Could not load default node types.'), 'error');
-  return FALSE;
 }
