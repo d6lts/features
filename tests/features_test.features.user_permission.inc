@@ -12,7 +12,6 @@ function features_test_user_default_permissions() {
     'roles' => array(
       '0' => 'anonymous user',
       '1' => 'authenticated user',
-      '2' => 'manager',
     ),
   );
 
