@@ -61,6 +61,8 @@ function features_export_form($form_state, $feature = NULL) {
 
   // User-selected feature source components.
   $components = features_get_components();
+  ksort($components);
+
   $form['export'] = array(
     '#type' => 'fieldset',
     '#tree' => FALSE,
@@ -85,21 +87,38 @@ function features_export_form($form_state, $feature = NULL) {
       $default_value = !empty($feature->info['features'][$component]) ? $feature->info['features'][$component] : array();
     }
     if ($options) {
+      // Find all default components that are not provided by this feature and
+      // strip them out of the possible options.
+      $map = features_get_default_map($component);
+      foreach ($map as $k => $v) {
+        if (isset($options[$k]) && (!isset($feature->name) || $v !== $feature->name)) {
+          unset($options[$k]);
+        }
+      }
       // Ensure all options are stripped of potentially bad values.
       foreach ($options as $k => $v) {
         $options[$k] = check_plain($v);
       }
       $form['export']['components']['#options'][$component] = (isset($component_info['name']) ? $component_info['name'] : $component);
-      $form['export']['sources'][$component] = array(
-        '#type' => 'checkboxes',
-        '#options' => features_dom_encode_options($options),
-        '#title' => $component,
-        '#default_value' => $default_value,
-        '#ahah' => array(
-          'path' => 'admin/build/features/export/populate',
-          'wrapper' => 'features-export-populated',
-        ),
-      );
+      if (!empty($options)) {
+        $form['export']['sources'][$component] = array(
+          '#type' => 'checkboxes',
+          '#options' => features_dom_encode_options($options),
+          '#title' => $component,
+          '#default_value' => $default_value,
+          '#ahah' => array(
+            'path' => 'admin/build/features/export/populate',
+            'wrapper' => 'features-export-populated',
+          ),
+        );
+      }
+      else {
+        $form['export']['sources'][$component] = array(
+          '#type' => 'item',
+          '#title' => $component,
+          '#value' => t('All components of this type are exported by other features or modules.'),
+        );
+      }
     }
   }
   $form['export']['features'] = array(
