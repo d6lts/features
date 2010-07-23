@@ -242,6 +242,12 @@ function features_export_build_form_populate() {
     foreach ($components as $component) {
       // User-selected components take precedence.
       if (!empty($submitted['sources'][$component])) {
+        // Validate and set the default value for each selected option. This
+        foreach ($submitted['sources'][$component] as $key => $value) {
+          if (isset($form['export']['sources'][$component]['#options'][$key])) {
+            $form['export']['sources'][$component]['#default_value'][$key] = $value;
+          }
+        }
         $stub[$component] = features_dom_decode_options(array_filter($submitted['sources'][$component]));
       }
       // Only fallback to an existing feature's values if there are no export options for the component.
@@ -256,8 +262,15 @@ function features_export_build_form_populate() {
     // Generate populated feature
     $export = features_populate($stub, $dependencies, $submitted['project']);
 
-    $output = theme('features_components', $export, $stub) . theme('status_messages');
-    drupal_json(array('status' => TRUE, 'data' => $output));
+    // Render component display
+    $components_rendered = theme('features_components', $export, $stub);
+    $form['export']['features']['#value'] = $components_rendered;
+
+    // Re-cache form. This ensures that if the form fails to validate, selected
+    // values are preserved for the user.
+    form_set_cache($submitted['form_build_id'], $form, $form_state);
+
+    drupal_json(array('status' => TRUE, 'data' => $components_rendered . theme('status_messages')));
     exit;
   }
   drupal_json(array('status' => FALSE, 'data' => ''));
