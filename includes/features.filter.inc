@@ -42,7 +42,7 @@ function filter_features_export($data, &$export, $module_name = '') {
 /**
  * Implementation of hook_features_export_render().
  */
-function filter_features_export_render($module = 'foo', $data) {
+function filter_features_export_render($module, $data) {
   $code = array();
   $code[] = '  $formats = array();';
   $code[] = '';

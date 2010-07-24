@@ -80,7 +80,7 @@ function menu_custom_features_export($data, &$export, $module_name = '') {
 /**
  * Implementation of hook_features_export_render()
  */
-function menu_custom_features_export_render($module = 'foo', $data) {
+function menu_custom_features_export_render($module, $data) {
   $code = array();
   $code[] = '  $menus = array();';
   $code[] = '';
@@ -184,7 +184,7 @@ function menu_links_features_export($data, &$export, $module_name = '') {
 /**
  * Implementation of hook_features_export_render()
  */
-function menu_links_features_export_render($module = 'foo', $data) {
+function menu_links_features_export_render($module, $data) {
   $code = array();
   $code[] = '  $menu_links = array();';
   $code[] = '';

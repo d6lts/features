@@ -80,7 +80,7 @@ function views_features_export_options() {
 /**
  * Implementation of hook_features_export_render().
  */
-function views_features_export_render($module = 'foo', $data) {
+function views_features_export_render($module, $data) {
   $code = array();
   $code[] = '  $views = array();';
   $code[] = '';

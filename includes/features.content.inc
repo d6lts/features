@@ -80,7 +80,7 @@ function content_features_export($data, &$export, $module_name = '') {
 /**
  * Implementation of hook_features_export_render().
  */
-function content_features_export_render($module = 'foo', $data) {
+function content_features_export_render($module, $data) {
   $translatables = $code = array();
 
   $code[] = '  $fields = array();';
