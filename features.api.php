@@ -135,12 +135,16 @@ function hook_features_export_options() {
  *   The name of the feature module to be exported.
  * @param array $data
  *   An array of machine name identifiers for the objects to be rendered.
+ * @param array $export
+ *   The full export array of the current feature being exported. This is only
+ *   passed when hook_features_export_render() is invoked for an actual feature
+ *   update or recreate, not during state checks or other operations.
  * @return array
  *   An associative array of rendered PHP code where the key is the name of the
  *   hook that should wrap the PHP code. The hook should not include the name
  *   of the module, e.g. the key for `hook_example` should simply be `example`.
  */
-function hook_features_export_render($module_name, $data) {
+function hook_features_export_render($module_name, $data, $export = NULL) {
   $code = array();
   $code[] = '$mycomponents = array();';
   foreach ($data as $name) {
