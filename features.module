@@ -277,13 +277,10 @@ function features_include($reset = FALSE) {
       }
     }
 
-    // Always load the menu module include to be able to deal with menu items.
-    module_load_include('inc', 'features', "includes/features.menu");
-
     // Features provides integration on behalf of these modules.
     // The features include provides handling for the feature dependencies.
     // Note that ctools is placed last because it implements hooks "dynamically" for other modules.
-    $modules = array('features', 'block', 'content', 'context', 'fieldgroup', 'filter', 'imagecache', 'node', 'taxonomy', 'user', 'views', 'ctools');
+    $modules = array('features', 'block', 'content', 'context', 'fieldgroup', 'filter', 'imagecache', 'menu', 'node', 'taxonomy', 'user', 'views', 'ctools');
 
     foreach (array_filter($modules, 'module_exists') as $module) {
       if (!module_hook($module, 'features_api')) {
