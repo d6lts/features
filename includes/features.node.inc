@@ -71,7 +71,7 @@ function node_features_export($data, &$export, $module_name = '') {
 /**
  * Implementation of hook_features_export_render().
  */
-function node_features_export_render($module = 'foo', $data) {
+function node_features_export_render($module, $data, $export = NULL) {
   $elements = array(
     'name' => TRUE,
     'module' => FALSE,
@@ -102,6 +102,20 @@ function node_features_export_render($module = 'foo', $data) {
           $output[] = "      '{$key}' => '{$info->$key}',";
         }
       }
+      // Detect whether there are extra fields on this content type than have
+      // been described in defaults. If so, add an additional key to the node
+      // type info allowing it to be detected by Features as a component that can
+      // be reverted (delete those extra fields) or updated (export those extra
+      // fields to code).
+      // Note that this key is only added if $export is not set - ie. we never
+      // *actually* write this key to code.
+      if (!isset($export) && module_exists('content') && module_exists($module)) {
+        // If there are deleted fields, mark the content type as such
+        $deleted_fields = array_diff(content_features_fields_normal($type), content_features_fields_default($type));
+        if (!empty($deleted_fields)) {
+          $output[] = "      'content_has_extra_fields' => TRUE,";
+        }
+      }
       $output[] = "    ),";
     }
   }
@@ -119,12 +133,25 @@ function node_features_export_render($module = 'foo', $data) {
  */
 function node_features_revert($module = NULL) {
   if ($default_types = features_get_default('node', $module)) {
-    // Delete node types
-    // We don't use node_type_delete() because we do not actually
-    // want to delete the node type (and invoke hook_node_type()).
-    // This can lead to bad consequences like CCK deleting field
-    // storage in the DB.
     foreach ($default_types as $type_name => $type_info) {
+      // We need to de-activate any missing fields. De-activating allows us to
+      // preserve data. We de-activate by setting the widget_active flag to 0;
+      // widget_active is incorrectly named, and really should be
+      // instance_active
+      if (module_exists('content')) {
+        // Our existing fields ($fields) needs to be the first argument here,
+        // so only fields that don't exist in code can be de-activated.
+        if ($deleted_fields = array_diff(content_features_fields_normal($type_name), content_features_fields_default($type_name))) {
+          foreach($deleted_fields as $field_name) {
+            db_query("UPDATE {". content_instance_tablename() ."} SET widget_active = 0 WHERE field_name = '%s' AND type_name = '%s'", $field_name, $type_name);
+          }
+        }
+      }
+      // Delete node types
+      // We don't use node_type_delete() because we do not actually
+      // want to delete the node type (and invoke hook_node_type()).
+      // This can lead to bad consequences like CCK deleting field
+      // storage in the DB.
       db_query("DELETE FROM {node_type} WHERE type = '%s'", $type_name);
     }
     node_types_rebuild();

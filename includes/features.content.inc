@@ -131,9 +131,21 @@ function content_features_rebuild($module) {
     content_clear_type_cache(TRUE);
 
     foreach ($fields as $field) {
-      $existing_field = content_fields($field['field_name']);
-      $existing_instance = content_fields($field['field_name'], $field['type_name']);
-      if ($existing_field && $existing_instance) {
+      // We use content_field_instance_read() here so that we can get inactive 
+      // fields too. We can't just pass $field to it as the fnc will add every
+      // item of the array to the WHERE clause.
+      $param = array('field_name' => $field['field_name'], 'type_name' => $field['type_name']);
+      $existing_instance = content_field_instance_read($param, TRUE);
+
+      if ($existing_instance) {
+        // If this existing instance is inactive, we need to activate it before
+        // running content_field_instance_update().
+        if (!$existing_instance['widget_active']) {
+          db_query("UPDATE {". content_instance_tablename() ."} SET widget_active = 1 WHERE field_name = '%s' AND type_name = '%s'", $field['field_name'], $field['type_name']);
+          // We need to clear the type cache again, unfortunately.
+          content_clear_type_cache(TRUE);
+        }
+
         content_field_instance_update($field, FALSE);
       }
       else {
@@ -155,4 +167,29 @@ function content_features_rebuild($module) {
  */
 function content_features_identifier($field) {
   return isset($field['type_name'], $field['field_name']) ? "{$field['type_name']}-{$field['field_name']}" : FALSE;
+}
+
+/**
+ * Helper function: retrieve default fields by node type.
+ */
+function content_features_fields_default($node_type, $reset = FALSE) {
+  static $content_default_fields;
+  if (!isset($content_default_fields) || $reset) {
+    foreach (features_get_default('content') as $field) {
+      $content_default_fields[$field['type_name']][] = $field['field_name'];
+    }
+  }
+  return isset($content_default_fields[$node_type]) ? $content_default_fields[$node_type] : array();
+}
+
+/**
+ * Helper function: retrieve normal fields by node type.
+ */
+function content_features_fields_normal($node_type) {
+  $normal_fields = array();
+  $content_info = content_types($node_type);
+  if (!empty($content_info['fields'])) {
+    $normal_fields = array_keys($content_info['fields']);
+  }
+  return $normal_fields;
 }
