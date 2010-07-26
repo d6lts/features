@@ -89,10 +89,11 @@ function features_export_form($form_state, $feature = NULL) {
     if ($options) {
       // Find all default components that are not provided by this feature and
       // strip them out of the possible options.
-      $map = features_get_default_map($component);
-      foreach ($map as $k => $v) {
-        if (isset($options[$k]) && (!isset($feature->name) || $v !== $feature->name)) {
-          unset($options[$k]);
+      if ($map = features_get_default_map($component)) {
+        foreach ($map as $k => $v) {
+          if (isset($options[$k]) && (!isset($feature->name) || $v !== $feature->name)) {
+            unset($options[$k]);
+          }
         }
       }
       // Ensure all options are stripped of potentially bad values.
