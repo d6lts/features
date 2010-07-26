@@ -1,5 +1,11 @@
 // $Id$
 
+features DRUPAL-6--1-0-BETA10
+-----------------------------
+- #864742: Ensure CTools plugins.inc is included before calling API functions.
+- #864482 by hadsie: Fix for PHP notice.
+- Fix Views dependency detection.
+
 features DRUPAL-6--1-0-BETA9
 ----------------------------
 This release introduces several important API and component changes.
