@@ -330,6 +330,7 @@ function features_include_defaults($components = NULL, $reset = FALSE) {
       }
       // Inclusion of defaults for CTools.
       else if (isset($info['api'], $info['module'], $info['current_version'])) {
+        ctools_include('plugins');
         ctools_plugin_api_include($info['module'], $info['api'], $info['current_version'], $info['current_version']);
       }
       // Inclusion of defaults for components using FEATURES_DEFAULTS_INCLUDED.
