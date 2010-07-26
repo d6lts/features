@@ -111,8 +111,6 @@ function views_features_export($data, &$export, $module_name = '') {
   $conflicts = array();
   foreach ($data as $view_name) {
     if ($view = views_get_view($view_name, TRUE)) {
-      $views[$view_name] = $view;
-
       // This view is provided by another module. Add it as a dependency or
       // display a conflict message if the View is overridden.
       if (isset($map[$view_name]) && $map[$view_name] !== $module_name) {
@@ -128,6 +126,7 @@ function views_features_export($data, &$export, $module_name = '') {
       // Otherwise just add to exports
       else {
         $export['features']['views'][$view_name] = $view_name;
+        $views[$view_name] = $view;
       }
     }
   }
