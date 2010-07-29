@@ -5,9 +5,8 @@
  * Determine context major branch version.
  */
 function context_features_get_version() {
-  if (function_exists('context_ctools_plugin_api')) {
-    $api = context_ctools_plugin_api('context', 'plugins');
-    return $api['version'];
+  if (function_exists('context_context_plugins')) {
+    return 3;
   }
   return 2;
 }
