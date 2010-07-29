@@ -238,6 +238,9 @@ function features_export_render($export, $module_name, $reset = FALSE) {
       if (in_array($file->name, $deprecated, TRUE)) {
         features_log(t('The file @filename has been deprecated and can be removed.', array('@filename' => $file->basename)), 'status');
       }
+      elseif ($file->name === "{$module_name}.features" && empty($code['features'])) {
+        $code['features'] = "<?php\n\n// This file is deprecated and can be removed.\n// Please remove include_once('{$module_name}.features.inc') in {$module_name}.module as well.\n";
+      }
     }
   }
   // Add a stub module to include the defaults
