@@ -574,7 +574,7 @@ function features_get_orphans($reset = FALSE) {
 function features_get_conflicts($reset = FALSE) {
   $conflicts = array();
   $component_info = features_get_components();
-  $map = features_get_component_map($reset);
+  $map = features_get_component_map(NULL, $reset);
 
   foreach ($map as $type => $components) {
     foreach ($components as $component => $modules) {
@@ -602,9 +602,8 @@ function features_get_conflicts($reset = FALSE) {
 /**
  * Provide a component to feature map.
  */
-function features_get_component_map($reset = FALSE) {
+function features_get_component_map($key = NULL, $reset = FALSE) {
   static $map;
-
   if (!isset($map) || $reset) {
     $map = array();
     $features = features_get_features(NULL, $reset);
@@ -619,7 +618,9 @@ function features_get_component_map($reset = FALSE) {
       }
     }
   }
-
+  if (isset($key)) {
+    return isset($map[$key]) ? $map[$key] : array();
+  }
   return $map;
 }
 
