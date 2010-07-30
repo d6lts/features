@@ -1,5 +1,14 @@
 // $Id$
 
+features DRUPAL-6--1-0-BETA11
+-----------------------------
+- #865454: Fix for complex menu links component handling.
+- Context: simpler check for API version
+- Blank out .features.inc when appropriate when updating existing features.
+- Fix for haphazard drush features-revert.
+- Adjust features_get_component_map() to allow for easy retrieval of a specific
+  component key.
+
 features DRUPAL-6--1-0-BETA10
 -----------------------------
 - #864742: Ensure CTools plugins.inc is included before calling API functions.
