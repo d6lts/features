@@ -10,8 +10,26 @@ function content_features_api() {
       'name' => t('CCK'),
       'default_hook' => 'content_default_fields',
       'default_file' => FEATURES_DEFAULTS_INCLUDED,
+      'feature_source' => TRUE,
     ),
   );
+}
+
+/**
+ * Implementation of hook_features_export_options().
+ */
+function content_features_export_options() {
+  $options = array();
+  foreach (node_get_types('names') as $type => $type_name) {
+    $content_info = content_types($type);
+    if (!empty($content_info['fields'])) {
+      foreach ($content_info['fields'] as $field) {
+        $field_name = isset($field['widget']['label']) ? $field['widget']['label'] : $field['field_name'];
+        $options[content_features_identifier($field)] = "{$type_name}: {$field_name}";
+      }
+    }
+  }
+  return $options;
 }
 
 /**
