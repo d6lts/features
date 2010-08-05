@@ -515,7 +515,7 @@ function features_get_info($type = 'module', $name = NULL, $reset = FALSE) {
     $cache->data = $data;
   }
   if (!empty($name)) {
-    return !empty($cache->data[$type][$name]) ? $cache->data[$type][$name] : array();
+    return !empty($cache->data[$type][$name]) ? $cache->data[$type][$name] : FALSE;
   }
   return !empty($cache->data[$type]) ? $cache->data[$type] : array();
 }
