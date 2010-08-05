@@ -6,16 +6,16 @@
  */
 function user_features_api() {
   return array(
-    'user_permission' => array(
-      'name' => t('Permissions'),
-      'feature_source' => TRUE,
-      'default_hook' => 'user_default_permissions',
-      'default_file' => FEATURES_DEFAULTS_INCLUDED,
-    ),
     'user_role' => array(
       'name' => t('Roles'),
       'feature_source' => TRUE,
       'default_hook' => 'user_default_roles',
+      'default_file' => FEATURES_DEFAULTS_INCLUDED,
+    ),
+    'user_permission' => array(
+      'name' => t('Permissions'),
+      'feature_source' => TRUE,
+      'default_hook' => 'user_default_permissions',
       'default_file' => FEATURES_DEFAULTS_INCLUDED,
     ),
     // DEPRECATED
