@@ -459,16 +459,17 @@ function features_var_export($var, $prefix = '', $init = TRUE) {
  * Useful for providing a separate array of translatables with your
  * export so that string extractors like potx can detect them.
  */
-function features_translatables_export($translatables, $prefix = '') {
-  sort($translatables);
-  $translatables = array_unique($translatables);
-
-  $output = $prefix . "// Translatables\n";
-  $output .= $prefix . "array(\n";
-  foreach ($translatables as $string) {
-    $output .= $prefix . "  t('" . strtr($string, array("'" => "\'")) . "'),\n";
+function features_translatables_export($translatables, $indent = '') {
+  $output = '';
+  $translatables = array_filter(array_unique($translatables));
+  if (!empty($translatables)) {
+    $output .= "{$indent}// Translatables\n";
+    $output .= "{$indent}// Included for use with string extractors like potx.\n";
+    sort($translatables);
+    foreach ($translatables as $string) {
+      $output .= "{$indent}t(" . features_var_export($string) . ");\n";
+    }
   }
-  $output .= $prefix . ");\n";
   return $output;
 }
 
