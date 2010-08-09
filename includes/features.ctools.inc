@@ -201,10 +201,17 @@ function ctools_component_features_export_render($component, $module, $data) {
  */
 function ctools_component_features_revert($component, $module) {
   if ($objects = features_get_default($component, $module)) {
-    $schema = ctools_export_get_schema($component);
-    $export = $schema['export'];
-    $names = db_placeholders(array_keys($objects), $schema['fields'][$export['key']]['type']);
-    db_query("DELETE FROM {{$component}} WHERE {$export['key']} IN ({$names})", array_keys($objects));
+    if (ctools_api_version('1.7')) {
+      foreach ($objects as $object) {
+        ctools_export_crud_delete($component, $object);
+      }
+    }
+    else {
+      $schema = ctools_export_get_schema($component);
+      $export = $schema['export'];
+      $names = db_placeholders(array_keys($objects), $schema['fields'][$export['key']]['type']);
+      db_query("DELETE FROM {{$component}} WHERE {$export['key']} IN ({$names})", array_keys($objects));
+    }
   }
 }
 

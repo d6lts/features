@@ -124,7 +124,7 @@ function features_export_prepare($export, $module_name, $reset = FALSE) {
   $existing = features_get_modules($module_name, $reset);
 
   // Prepare info string -- if module exists, merge into its existing info file
-  $defaults = $existing ? $existing->info : array('core' => '6.x', 'package' => 'Features', 'project' => $module_name);
+  $defaults = $existing ? $existing->info : array('core' => '6.x', 'package' => 'Features');
   $export = array_merge($defaults, $export);
 
   // Cleanup info array

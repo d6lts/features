@@ -24,20 +24,20 @@ function features_export_form($form_state, $feature = NULL) {
     '#default_value' => !empty($feature->info['name']) ? $feature->info['name'] : '',
     '#attributes' => array('class' => 'feature-name'),
   );
-  $form['info']['project'] = array(
+  $form['info']['module_name'] = array(
     '#type' => 'textfield',
     '#title' => t('Machine-readable name'),
     '#description' => t('Example: image_gallery'). '<br/>' .t('May only contain lowercase letters, numbers and underscores. <strong>Try to avoid conflicts with the names of existing Drupal projects.</strong>'),
     '#required' => TRUE,
     '#default_value' => !empty($feature->name) ? $feature->name : '',
-    '#attributes' => array('class' => 'feature-project'),
+    '#attributes' => array('class' => 'feature-module-name'),
     '#element_validate' => array('features_export_form_validate_field'),
   );
   // If recreating this feature, disable machine name field and blank out
   // js-attachment classes to ensure the machine name cannot be changed.
   if (isset($feature)) {
-    $form['info']['project']['#value'] = $feature->name;
-    $form['info']['project']['#disabled'] = TRUE;
+    $form['info']['module_name']['#value'] = $feature->name;
+    $form['info']['module_name']['#disabled'] = TRUE;
     $form['info']['name']['#attributes'] = array();
   }
   $form['info']['description'] = array(
@@ -152,7 +152,7 @@ function features_export_form($form_state, $feature = NULL) {
  */
 function features_export_form_validate_field($element, &$form_state) {
   switch ($element['#name']) {
-    case 'project':
+    case 'module_name':
       if (!preg_match('!^[a-z0-9_]+$!', $element['#value'])) {
         form_error($element, t('The machine-readable name must contain only lowercase letters, numbers, and underscores.'));
       }
@@ -198,20 +198,28 @@ function features_export_build_form_submit($form, &$form_state) {
   }
 
   // Generate populated feature
-  $export = features_populate($stub, $form_state['values']['sources']['dependencies'], $form_state['values']['project']);
+  $module_name = $form_state['values']['module_name'];
+  $export = features_populate($stub, $form_state['values']['sources']['dependencies'], $module_name);
 
   // Directly copy the following attributes
-  $attr = array('name', 'description', 'project', 'version');
+  $attr = array('name', 'description');
   foreach ($attr as $key) {
     $export[$key] = isset($form_state['values'][$key]) ? $form_state['values'][$key] : NULL;
+  }
+  // If either update status-related keys are provided, add a project key
+  // corresponding to the module name.
+  if (!empty($form_state['values']['version']) || !empty($form_state['values']['project_status_url'])) {
+    $export['project'] = $form_state['values']['module_name'];
+  }
+  if (!empty($form_state['values']['version'])) {
+    $export['version'] = $form_state['values']['version'];
   }
   if (!empty($form_state['values']['project_status_url'])) {
     $export['project status url'] = $form_state['values']['project_status_url'];
   }
 
   // Generate download
-  if ($files = features_export_render($export, $export['project'], TRUE)) {
-    $module_name = $export['project'];
+  if ($files = features_export_render($export, $module_name, TRUE)) {
     $filename = (!empty($export['version']) ? "{$module_name}-{$export['version']}" : $module_name) . '.tar';
 
     // Clear out output buffer to remove any garbage from tar output.
@@ -287,7 +295,7 @@ function features_export_build_form_populate() {
     $dependencies = isset($submitted['sources']['dependencies']) ? $submitted['sources']['dependencies'] : array();
 
     // Generate populated feature
-    $export = features_populate($stub, $dependencies, $submitted['project']);
+    $export = features_populate($stub, $dependencies, $submitted['module_name']);
 
     // Render component display
     $components_rendered = theme('features_components', $export, $stub);
