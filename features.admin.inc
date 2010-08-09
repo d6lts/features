@@ -33,6 +33,13 @@ function features_export_form($form_state, $feature = NULL) {
     '#attributes' => array('class' => 'feature-project'),
     '#element_validate' => array('features_export_form_validate_field'),
   );
+  // If recreating this feature, disable machine name field and blank out
+  // js-attachment classes to ensure the machine name cannot be changed.
+  if (isset($feature)) {
+    $form['info']['project']['#value'] = $feature->name;
+    $form['info']['project']['#disabled'] = TRUE;
+    $form['info']['name']['#attributes'] = array();
+  }
   $form['info']['description'] = array(
     '#title' => t('Description'),
     '#description' => t('Provide a short description of what users should expect when they enable your feature.'),
