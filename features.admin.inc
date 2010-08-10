@@ -768,6 +768,8 @@ function features_dom_encode_options($options = array(), $keys_only = TRUE) {
     '/' => '__'. ord('/') .'__',
     ',' => '__'. ord(',') .'__',
     '.' => '__'. ord(',') .'__',
+    '<' => '__'. ord('<') .'__',
+    '>' => '__'. ord('>') .'__',
   );
   $encoded = array();
   foreach ($options as $key => $value) {
@@ -786,6 +788,8 @@ function features_dom_decode_options($options, $keys_only = FALSE) {
     '/' => '__'. ord('/') .'__',
     ',' => '__'. ord(',') .'__',
     '.' => '__'. ord(',') .'__',
+    '<' => '__'. ord('<') .'__',
+    '>' => '__'. ord('>') .'__',
   ));
   $encoded = array();
   foreach ($options as $key => $value) {
