@@ -628,8 +628,10 @@ function features_get_default($component, $module_name = NULL, $alter = TRUE, $r
   }
   // No module was specified. Retrieve all components.
   $all_defaults = array();
-  foreach (array_filter($cache[$component]) as $module_components) {
-    $all_defaults = array_merge($all_defaults, $module_components);
+  if (isset($cache[$component])) {
+    foreach (array_filter($cache[$component]) as $module_components) {
+      $all_defaults = array_merge($all_defaults, $module_components);
+    }
   }
   return $all_defaults;
 }
