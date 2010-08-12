@@ -120,7 +120,6 @@ function _features_form_taxonomy_form_vocabulary_alter(&$form, &$form_state) {
   if (!isset($form['module']) || $form['module']['#value'] == 'taxonomy') {
     // This vocabulary is new or wasn't assigned a machine name.
     $elem['#element_validate'] = array('features_taxonomy_machine_name_validate');
-    $elem['#required'] = true;
     unset($form['module']);
   }
   elseif (strpos($form['module']['#value'], 'features_') === 0) {
@@ -148,19 +147,23 @@ function _features_form_taxonomy_form_vocabulary_alter(&$form, &$form_state) {
 // Validation handler for the machine name field.
 function features_taxonomy_machine_name_validate($element, &$form_state) {
   // Validate format - lowecase + underscore only...
-  if (!preg_match('!^[a-z0-9_]+$!', $element['#value'])) {
+  if (!empty($element['#value']) && !preg_match('!^[a-z0-9_]+$!', $element['#value'])) {
     form_error($element, t('The machine name can only consist of lowercase letters, underscores, and numbers.'));
   }
 
-  $name = 'features_' . $element['#value'];
-
-  // Ensure this name isn't taken.
-  $vid = db_result(db_query("SELECT vid FROM {vocabulary} WHERE module = '%s'", $name));
-  if ($vid) {
-    form_error($element, t('This machine name is already taken. Please enter a unique machine name or this taxonomy.'));
+  // If provided check machine name for conflicts and prepend with 'features'.
+  if (!empty($element['#value'])) {
+    $name = 'features_' . $element['#value'];
+    $vid = db_result(db_query("SELECT vid FROM {vocabulary} WHERE module = '%s'", $name));
+    if ($vid) {
+      form_error($element, t('This machine name is already taken. Please enter a unique machine name or this taxonomy.'));
+    }
+    else {
+      $form_state['values']['module'] = $name;
+    }
   }
+  // Otherwise, default to the default module name 'taxonomy'.
   else {
-    // Push treated name back into form_state;
-    $form_state['values']['module'] = $name;
+    $form_state['values']['module'] = 'taxonomy';
   }
 }
