@@ -1,5 +1,20 @@
 // $Id$
 
+features DRUPAL-6--1-0-RC2
+--------------------------
+- #888066 by ptrl: Views message typo.
+- #884624: Better support for custom CTools export callbacks.
+
+features DRUPAL-6--1-0-RC1
+--------------------------
+- #878604 by Coornail: Fix for PHP notice.
+- Add < and > to the list of characters that must be DOM encoded for AHAH safe
+  handling.
+- #878068: escape component identifiers.
+- #880456: Fix for PHP notice.
+- #880186 by yhahn, loosening the iron grip on vocabulary machine names.
+- #881010: Properly refer to menu links when doing a ordered build.
+
 features DRUPAL-6--1-0-BETA12
 -----------------------------
 - #873570: DOM-safe encode #default_value and ecsape '.' character.
