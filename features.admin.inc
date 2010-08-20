@@ -295,7 +295,8 @@ function features_export_build_form_populate() {
     $dependencies = isset($submitted['sources']['dependencies']) ? $submitted['sources']['dependencies'] : array();
 
     // Generate populated feature
-    $export = features_populate($stub, $dependencies, $submitted['module_name']);
+    $module_name = isset($form['#feature'], $form['#feature']->name) ? $form['#feature']->name : '';
+    $export = features_populate($stub, $dependencies, $module_name);
 
     // Render component display
     $components_rendered = theme('features_components', $export, $stub);
