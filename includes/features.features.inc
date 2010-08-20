@@ -33,6 +33,12 @@ function dependencies_features_export_options() {
  * Implementation of hook_features_export().
  */
 function dependencies_features_export($data, &$export, $module_name = '') {
+  // Don't allow a module to depend upon itself.
+  if (!empty($data[$module_name])) {
+    unset($data[$module_name]);
+  }
+
+  // Clean up existing dependencies and merge.
   $export['dependencies'] = _features_export_minimize_dependencies($export['dependencies'], $module_name);
   $export['dependencies'] = array_merge($data, $export['dependencies']);
   $export['dependencies'] = array_unique($export['dependencies']);
