@@ -1,5 +1,14 @@
 // $Id$
 
+features DRUPAL-6--1-0
+----------------------
+- No changes from RC3.
+
+features DRUPAL-6--1-0-RC3
+--------------------------
+- Ensure feature module name is properly handled in AHAH callback.
+- #577852: Do not allow module to add itself as dependency.
+
 features DRUPAL-6--1-0-RC2
 --------------------------
 - #888066 by ptrl: Views message typo.
