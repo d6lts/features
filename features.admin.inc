@@ -244,11 +244,11 @@ function features_export_build_form_submit($form, &$form_state) {
       // file_scan_directory() can throw warnings when using PHP 5.3, messing
       // up the output of our file stream. Suppress errors in this one case in
       // order to produce valid output.
-      foreach (@file_scan_directory($module_path, '.*') as $file) {
-        $filename = substr($file->filename, strlen($module_path) + 1);
+      foreach (@file_scan_directory($module_path, '/.*/') as $file) {
+        $filename = substr($file->uri, strlen($module_path) + 1);
         if (!in_array($filename, $filenames)) {
           // Add this file.
-          $contents = file_get_contents($file->filename);
+          $contents = file_get_contents($file->uri);
           print features_tar_create("{$module_name}/{$filename}", $contents);
           unset($contents);
         }
