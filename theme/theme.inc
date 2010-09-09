@@ -7,9 +7,13 @@
 function template_preprocess_features_admin_components(&$vars) {
   drupal_add_css(drupal_get_path('module', 'features') . '/features.css');
   $form = $vars['form'];
+
   // Basic info
   $vars['name'] = $form['#info']['name'];
-  $vars['description'] = $form['#info']['description'];
+  $vars['description'] = isset($form['#info']['description']) ? $form['#info']['description'] : '';
+
+  // Legend/key
+  $vars['key'] = array();
 
   // Dependencies
   $rows = array();
@@ -28,6 +32,25 @@ function template_preprocess_features_admin_components(&$vars) {
   // Components
   $rows = array();
   $components = features_get_components();
+  $conflicts = features_get_conflicts();
+  if (!module_exists($form['module']['#value']) && isset($form['module']['#value']) && !empty($conflicts[$form['module']['#value']])) {
+    $module_conflicts = $conflicts[$form['module']['#value']];
+    $conflicts = array();
+    foreach ($module_conflicts as $conflict) {
+      $conflicts = array_merge_recursive($conflict, $conflicts);
+    }
+  }
+  else {
+    $conflicts = array();
+  }
+  // Display key for conflicting elements.
+  if (!empty($conflicts)) {
+    $vars['key'][] = array(
+      'title' => theme('features_storage_link', FEATURES_CONFLICT, t('Conflicts with another feature')),
+      'html' => TRUE,
+    );
+  }
+
   if (!empty($form['#info']['features'])) {
     foreach ($form['#info']['features'] as $component => $items) {
       if (!empty($items)) {
@@ -52,7 +75,7 @@ function template_preprocess_features_admin_components(&$vars) {
           $data[] = '';
         }
         $data[] = array(
-          'data' => theme('features_component_list', $items, $items),
+          'data' => theme('features_component_list', array('components' => $items, 'source' => $items)),
           'colspan' => 2,
           'class' => 'component'
         );
@@ -65,34 +88,6 @@ function template_preprocess_features_admin_components(&$vars) {
   // Other elements
   $vars['buttons'] = drupal_render($form['buttons']);
   $vars['form'] = $form;
-}
-
-/**
- * Preprocessor for theme('features_form').
- */
-function template_preprocess_features_form(&$vars) {
-  drupal_add_css(drupal_get_path('module', 'features') . '/features.css');
-  drupal_add_js(drupal_get_path('module', 'features') . '/features.js');
-
-  $first = TRUE;
-  $package_links = array();
-  foreach (element_children($vars['form']) as $package) {
-    if (!empty($vars['form'][$package]['status'])) {
-      $package_links[$package] = array(
-        'title' => $vars['form'][$package]['#title'],
-        'href' => $_GET['q'],
-        'fragment' => $package,
-      );
-      $class = $first ? "$package features-package-active" : $package;
-      $package_links[$package]['attributes'] = $first ? array('class' => 'features-package-active') : array();
-      $vars['packages'][$class] = $vars['form'][$package];
-
-      unset($vars['form'][$package]);
-      $first = FALSE;
-    }
-  }
-  ksort($package_links);
-  $vars['package_links'] = $package_links;
 }
 
 /**
@@ -122,20 +117,25 @@ function theme_features_storage_link($vars) {
     FEATURES_NEEDS_REVIEW => 'admin-needs-review',
     FEATURES_REBUILDING => 'admin-rebuilding',
     FEATURES_REBUILDABLE => 'admin-rebuilding',
+    FEATURES_CONFLICT => 'admin-conflict',
+    FEATURES_DISABLED => 'admin-disabled',
   );
-  $text = array(
+  $default_text = array(
     FEATURES_OVERRIDDEN => t('Overridden'),
     FEATURES_DEFAULT => t('Default'),
     FEATURES_NEEDS_REVIEW => t('Needs review'),
     FEATURES_REBUILDING => t('Rebuilding'),
     FEATURES_REBUILDABLE => t('Rebuilding'),
+    FEATURES_CONFLICT => t('Conflict'),
+    FEATURES_DISABLED => t('Disabled'),
   );
+  $text = isset($text) ? $text : $default_text[$vars['storage']];
   if ($vars['path']) {
     $vars['options']['attributes']['class'] = $classes[$vars['storage']] . ' features-storage';
-    return l($text[$vars['storage']], $vars['path'], $vars['options']);
+    return l($text, $vars['path'], $vars['options']);
   }
   else {
-    return "<span class='{$classes[$vars['storage']]} features-storage'>{$text[$vars['storage']]}</span>";
+    return "<span class='{$classes[$vars['storage']]} features-storage'>{$text}</span>";
   }
 }
 
@@ -165,6 +165,7 @@ function theme_features_form_package(&$vars) {
   if (isset($vars['form']['actions'])) {
     $header[] = t('Actions');
   }
+
   $rows = array();
   foreach (element_children($vars['form']['status']) as $element) {
     // Yank title & description fields off the form element for
@@ -173,7 +174,6 @@ function theme_features_form_package(&$vars) {
     $name .= "<strong>{$vars['form']['status'][$element]['#title']}</strong>";
     $name .= "<div class='description'>{$vars['form']['status'][$element]['#description']}</div>";
     $name .= "</div>";
-
     unset($vars['form']['status'][$element]['#title']);
     unset($vars['form']['status'][$element]['#description']);
 
@@ -201,7 +201,7 @@ function theme_features_form_package(&$vars) {
 
   $class = count($header) > 3 ? 'features features-admin' : 'features features-manage';
   $output .= theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('id' => 'features-form-table', 'class' => array($class))));
-  
+
   // Prevent section from being rendered by drupal_render().
 
   $output .= drupal_render($vars['form']['buttons']);
@@ -251,18 +251,31 @@ function theme_features_components($vars) {
 
   $output = '';
   $rows = array();
+  $components = features_get_components();
   if (!empty($info['features']) || !empty($info['dependencies']) || !empty($sources)) {
-    foreach ($info['features'] as $component => $items) {
-      if (!empty($items) || !empty($sources[$component])) {
-        $source_items = isset($sources[$component]) ? $sources[$component] : array();
-        $rows[] = array(array('data' => $component, 'header' => TRUE));
-        $rows[] = array(array('data' => theme('features_component_list', array('components' => $items, 'source' => $source_items)), 'class' => 'component'));
+    $export = array_unique(array_merge(
+      array_keys($info['features']),
+      array_keys($sources),
+      array('dependencies')
+    ));
+    foreach ($export as $component) {
+      if ($component === 'dependencies') {
+        $feature_items = isset($info[$component]) ? $info[$component] : array();
       }
-    }
-    if (!empty($info['dependencies'])) {
-      $source_items = isset($sources['dependencies']) ? $sources['dependencies'] : $info['dependencies'];
-      $rows[] = array(array('data' => t('dependencies'), 'header' => TRUE));
-      $rows[] = array(array('data' => theme('features_component_list', array('components' => $info['dependencies'], 'source' => $source_items)), 'class' => 'component'));
+      else {
+        $feature_items = isset($info['features'][$component]) ? $info['features'][$component] : array();
+      }
+      $source_items = isset($sources[$component]) ? $sources[$component] : array();
+      if (!empty($feature_items) || !empty($source_items)) {
+        $rows[] = array(array(
+          'data' => isset($components[$component]['name']) ? $components[$component]['name'] : $component,
+          'header' => TRUE
+        ));
+        $rows[] = array(array(
+          'data' => theme('features_component_list', array('components' => $feature_items, 'source' => $source_items)),
+          'class' => 'component'
+        ));
+      }
     }
     $output .= theme('table', array('header' => array(), 'rows' => $rows));
     $output .= theme('features_component_key', array());
@@ -276,25 +289,29 @@ function theme_features_components($vars) {
 function theme_features_component_list($vars) {
   $components = $vars['components'];
   $source = $vars['source'];
+  $conflicts = $vars['conflicts'];
 
   $list = array();
   foreach ($components as $component) {
     // If component is not in source list, it was autodetected
     if (!in_array($component, $source)) {
-      $list[] = "<span class='features-detected'>{$component}</span>";
+      $list[] = "<span class='features-detected'>". check_plain($component) ."</span>";
+    }
+    elseif (is_array($conflicts) && in_array($component, $conflicts)) {
+      $list[] = "<span class='features-conflict'>". check_plain($component) ."</span>";
     }
     else {
-      $list[] = "<span class='features-source'>{$component}</span>";
+      $list[] = "<span class='features-source'>". check_plain($component) ."</span>";
     }
   }
   foreach ($source as $component) {
     // If a source component is no longer in the items, it was removed because
     // it is provided by a dependency.
     if (!in_array($component, $components)) {
-      $list[] = "<span class='features-dependency'>{$component}</span>";
+      $list[] = "<span class='features-dependency'>". check_plain($component) ."</span>";
     }
   }
-  return "<span class='features-component-list'>" . implode(' ', $list) . "</span>";
+  return "<span class='features-component-list'>". implode(' ', $list) ."</span>";
 }
 
 /**

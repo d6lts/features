@@ -4,7 +4,6 @@
 /**
  * @file
  * Install, update and uninstall functions for the features module.
- *
  */
 
 /**
@@ -13,12 +12,10 @@
 function features_install() {
   _features_install_menu();
   db_update('system')
-  ->fields(array(
-    'weight' =>  20,
-  ))
+    ->fields(array('weight' =>  20))
     ->condition('name', 'features')
     ->condition('type', 'module')
-  ->execute();
+    ->execute();
 }
 
 /**
@@ -30,10 +27,10 @@ function features_uninstall() {
   variable_del('features_ignored_orphans');
   db_delete('menu_custom')
     ->condition('menu_name', 'features')
-  ->execute();
+    ->execute();
   db_delete('menu_links')
     ->condition('module', 'features')
-  ->execute();
+    ->execute();
 }
 
 /**
@@ -43,12 +40,12 @@ function _features_install_menu() {
   if (db_table_exists('menu_custom') && !db_query("SELECT menu_name FROM {menu_custom} WHERE menu_name = :menu_name", array(':menu_name' => 'features'))->fetchField()) {
     $t = get_t();
     $id = db_insert('menu_custom')
-  ->fields(array(
-    'menu_name' => 'features',
-    'title' => $t('Features'),
-    'description' => $t('Menu items for any enabled features.'),
-  ))
-  ->execute();
+      ->fields(array(
+        'menu_name' => 'features',
+        'title' => $t('Features'),
+        'description' => $t('Menu items for any enabled features.'),
+      ))
+      ->execute();
   }
 }
 
