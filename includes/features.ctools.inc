@@ -8,19 +8,19 @@
 foreach (_ctools_features_get_info() as $component => $info) {
   $code = '';
   if (!function_exists("{$info['module']}_features_api")) {
-    $code .= 'function ' . $info['module'] . '_features_api() { return ctools_component_features_api("' . $info['module'] . '"); }';
+    $code .= 'function '. $info['module'] .'_features_api() { return ctools_component_features_api("'. $info['module'] .'"); }';
   }
   if (!function_exists("{$component}_features_export")) {
-    $code .= 'function ' . $component . '_features_export($data, &$export, $module_name = "") { return ctools_component_features_export("' . $component . '", $data, $export, $module_name); }';
+    $code .= 'function '. $component .'_features_export($data, &$export, $module_name = "") { return ctools_component_features_export("'. $component .'", $data, $export, $module_name); }';
   }
   if (!function_exists("{$component}_features_export_options")) {
-    $code .= 'function ' . $component . '_features_export_options() { return ctools_component_features_export_options("' . $component . '"); }';
+    $code .= 'function '. $component .'_features_export_options() { return ctools_component_features_export_options("'. $component .'"); }';
   }
   if (!function_exists("{$component}_features_export_render")) {
-    $code .= 'function ' . $component . '_features_export_render($module = "foo", $data) { return ctools_component_features_export_render("' . $component . '", $module, $data); }';
+    $code .= 'function '. $component .'_features_export_render($module, $data) { return ctools_component_features_export_render("'. $component .'", $module, $data); }';
   }
   if (!function_exists("{$component}_features_revert")) {
-    $code .= 'function ' . $component . '_features_revert($module = "foo") { return ctools_component_features_revert("' . $component . '", $module); }';
+    $code .= 'function '. $component .'_features_revert($module) { return ctools_component_features_revert("'. $component .'", $module); }';
   }
   eval($code);
 }
