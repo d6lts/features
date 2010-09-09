@@ -46,9 +46,9 @@ function menu_features_export($data, &$export, $module_name = '') {
  */
 function menu_custom_features_export_options() {
   $options = array();
-  $result = db_query("SELECT * FROM {menu_custom}");
-  while ($row = db_fetch_array($result)) {
-    $options[$row['menu_name']] = $row['title'];
+  $result = db_query("SELECT * FROM {menu_custom} ORDER BY title", array(), array('fetch' => PDO::FETCH_ASSOC));
+  foreach ($result as $menu) {
+    $options[$menu['menu_name']] = $menu['title'];
   }
   return $options;
 }
@@ -87,8 +87,12 @@ function menu_custom_features_export_render($module, $data) {
 
   $translatables = array();
   foreach ($data as $menu_name) {
-    $result = db_query("SELECT menu_name, title, description FROM {menu_custom} WHERE menu_name = '%s'", $menu_name);
-    while ($row = db_fetch_array($result)) {
+    $row = db_select('menu_custom')
+      ->fields('menu_custom')
+      ->condition('menu_name', $menu_name)
+      ->execute()
+      ->fetchAssoc();
+    if ($row) {
       $export = features_var_export($row, '  ');
       $code[] = "  // Exported menu: {$menu_name}";
       $code[] = "  \$menus['{$menu_name}'] = {$export};";
@@ -119,8 +123,7 @@ function menu_custom_features_revert($module) {
 function menu_custom_features_rebuild($module) {
   if ($defaults = features_get_default('menu_custom', $module)) {
     foreach ($defaults as $menu) {
-      $existing = db_result(db_query("SELECT menu_name FROM {menu_custom} WHERE menu_name = '%s'", $menu['menu_name']));
-      drupal_write_record('menu_custom', $menu, $existing ? array('menu_name') : array());
+      menu_save($menu);
     }
   }
 }
@@ -289,8 +292,13 @@ function menu_links_features_rebuild_ordered($menu_links, $reset = FALSE) {
  */
 function features_menu_link_load($identifier) {
   list($menu_name, $link_path) = explode(':', $identifier, 2);
-  $result = db_query("SELECT menu_name, mlid, plid, link_path, router_path, link_title, options, module, hidden, external, has_children, expanded, weight FROM {menu_links} WHERE menu_name = '%s' AND link_path = '%s'", $menu_name, $link_path);
-  while ($link = db_fetch_array($result)) {
+  $link = db_select('menu_links')
+    ->fields('menu_links', array('menu_name', 'mlid', 'plid', 'link_path', 'router_path', 'link_title', 'options', 'module', 'hidden', 'external', 'has_children', 'expanded', 'weight'))
+    ->condition('menu_name', $menu_name)
+    ->condition('link_path', $link_path)
+    ->execute()
+    ->fetchAssoc();
+  if ($link) {
     $link['options'] = unserialize($link['options']);
     return $link;
   }
