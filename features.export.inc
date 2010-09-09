@@ -370,9 +370,10 @@ function features_export_info($info, $parents = array()) {
 /**
  * Tar creation function. Written by dmitrig01.
  *
- * @param $files
- *   A keyed array where the key is the filepath and the value is the
- *   string contents of the file.
+ * @param $name
+ *   Filename of the file to be tarred.
+ * @param $contents
+ *   String contents of the file.
  *
  * @return
  *   A string of the tar file contents.
