@@ -1,6 +1,6 @@
 $Id$
 
-Features 1.x for Drupal 6.x
+Features 1.x for Drupal 7.x
 ---------------------------
 The features module enables the capture and management of features in Drupal. A
 feature is a collection of Drupal entities which taken together satisfy a
