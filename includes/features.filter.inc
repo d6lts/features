@@ -116,9 +116,11 @@ function features_filter_format_load($name) {
       $loaded = clone $format;
       $loaded->filters = array();
       foreach (filter_list_format($format_id) as $filter) {
-        $loaded->filters[$filter->name]['weight'] = $filter->weight;
-        $loaded->filters[$filter->name]['status'] = $filter->status;
-        $loaded->filters[$filter->name]['settings'] = $filter->settings;
+        if (!empty($filter->status)) {
+          $loaded->filters[$filter->name]['weight'] = $filter->weight;
+          $loaded->filters[$filter->name]['status'] = $filter->status;
+          $loaded->filters[$filter->name]['settings'] = $filter->settings;
+        }
       }
       return $loaded;
     }
