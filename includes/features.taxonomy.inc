@@ -32,6 +32,8 @@ function taxonomy_features_export_options() {
  * @todo Test adding existing dependencies.
  */
 function taxonomy_features_export($data, &$export, $module_name = '') {
+  $pipe = array();
+
   // taxonomy_default_vocabularies integration is provided by Features.
   $export['dependencies']['features'] = 'features';
   $export['dependencies']['taxonomy'] = 'taxonomy';
@@ -44,9 +46,14 @@ function taxonomy_features_export($data, &$export, $module_name = '') {
     }
     else {
       $export['features']['taxonomy'][$machine_name] = $machine_name;
+
+      $fields = field_info_instances('taxonomy_term', $machine_name);
+      foreach ($fields as $name => $field) {
+        $pipe['field'][] = "taxonomy_term-{$field['bundle']}-{$field['field_name']}";
+      }
     }
   }
-  return array();
+  return $pipe;
 }
 
 /**
