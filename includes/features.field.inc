@@ -1,66 +1,52 @@
 <?php
 // $Id$
+
 /**
- * Field export
+ * Implements hook_features_api().
  */
 function field_features_api() {
   return array(
     'field' => array(
       'name' => t('Fields'),
       'default_hook' => 'field_default_fields',
+      'default_file' => FEATURES_DEFAULTS_INCLUDED,
     )
   );
 }
 
+/**
+ * Implements hook_features_export().
+ */
 function field_features_export($data, &$export, $module_name = '') {
   $pipe = array();
+  $map = features_get_default_map('field');
 
   // The field_default_fields() hook integration is provided by the
   // features module so we need to add it as a dependency.
   $export['dependencies']['features'] = 'features';
-  
- // Collect a module to style map
-  $map = array();
-  $modules = module_implements('field_default_fields');
-  foreach ($modules as $module) {
-    $fields = module_invoke($module, 'field_default_fields');
-    foreach ($fields as $name => $field) {
-      $map["{$field['bundle']}-{$field['field_name']}"] = $module;
-    }
-  }
 
-
-  foreach ($data as $instance) {
-    list($bundle, $field) = explode('-', $instance);
-    // If this field is already provided by another module, remove the field
-    // and add the other module as a dependency.
-    if (isset($map[$instance]) && $map[$instance] != $module_name) {
-      if (isset($export['features']['field'][$instance])) {
-        unset($export['features']['field'][$instance]);
+  foreach ($data as $identifier) {
+    if ($field = features_field_load($identifier)) {
+      // If this field is already provided by another module, remove the field
+      // and add the other module as a dependency.
+      if (isset($map[$identifier]) && $map[$identifier] != $module_name) {
+        if (isset($export['features']['field'][$identifier])) {
+          unset($export['features']['field'][$identifier]);
+        }
+        $module = $map[$identifier];
+        $export['dependencies'][$module] = $module;
       }
-      $module = $map[$instance];
-      $export['dependencies'][$module] = $module;
-    }
-    // If the field has not yet been exported, add it
-    else {
-
-      $export['features']['field'][$instance] = $instance;
-
-      $field_info = field_info_field($field); 
-      if ($field_info) {
-        $export['dependencies'][$field_info['module']] = $field_info['module'];
-
-        $storage_module = $field_info['storage']['module'];
-        $export['dependencies'][$storage_module] = $storage_module;
-      }
-
-      $instance_info = field_info_instance('node', $field, $bundle);
-      if ($instance_info) {
-        $export['dependencies'][$instance_info['widget']['module']] = $instance_info['widget']['module'];
-        foreach ($instance_info['display'] as $key => $display) {
-          $export['dependencies'][$display['module']] = $display['module'];
-
-          // todo : handle the pipe to image styles
+      // If the field has not yet been exported, add it
+      else {
+        $export['features']['field'][$identifier] = $identifier;
+        $export['dependencies'][$field['field_config']['module']] = $field['field_config']['module'];
+        $export['dependencies'][$field['field_config']['storage']['module']] = $field['field_config']['storage']['module'];
+        $export['dependencies'][$field['field_instance']['widget']['module']] = $field['field_instance']['widget']['module'];
+        foreach ($field['field_instance']['display'] as $key => $display) {
+          if (isset($display['module'])) {
+            $export['dependencies'][$display['module']] = $display['module'];
+            // @TODO: handle the pipe to image styles
+          }
         }
       }
     }
@@ -70,27 +56,26 @@ function field_features_export($data, &$export, $module_name = '') {
 /**
  * Implementation of hook_features_export_render().
  */
-function field_features_export_render($module = 'foo', $data) {
+function field_features_export_render($module, $data, $export = NULL) {
   $translatables = $code = array();
 
   $code[] = '  $fields = array();';
   $code[] = '';
-  foreach ($data as $instance) {
-    list($bundle, $field_name) = explode('-', $instance);
+  foreach ($data as $identifier) {
+    if ($field = features_field_load($identifier)) {
+      unset($field['field_config']['columns']);
+      unset($field['field_config']['locked']);
+      unset($field['field_config']['storage']);
+      $field_export = features_var_export($field, '  ');
+      $field_identifier = features_var_export($identifier);
+      $code[] = "  // Exported field: {$field_identifier}";
+      $code[] = "  \$fields[{$field_identifier}] = {$field_export};";
+      $code[] = "";
 
-    $field = field_info_field($field_name); 
-
-    unset($field['columns']);
-    unset($field['locked']);
-    unset($field['storage']);
-
-    $code[] = '  // Exported field: ' . $field_name;
-    $code[] = '  $fields[] = ' . features_var_export($field, '  ') . ';';
-    $code[] = '';
-
-    // Add any labels to translatables array.
-    if (!empty($field['widget']['label'])) {
-      $translatables[] = $field['widget']['label'];
+      // Add any labels to translatables array.
+      if (!empty($field_info['widget']['label'])) {
+        $translatables[] = $field_info['widget']['label'];
+      }
     }
   }
   if (!empty($translatables)) {
@@ -101,17 +86,16 @@ function field_features_export_render($module = 'foo', $data) {
   return array('field_default_fields' => $code);
 }
 
-
 /**
- * Implementation of hook_features_revert().
+ * Implements hook_features_revert().
  */
 function field_features_revert($module) {
   field_features_rebuild($module);
 }
 
 /**
- * Implementation of hook_features_rebuild().
- * Rebuilds CCK field definitions from code defaults.
+ * Implements of hook_features_rebuild().
+ * Rebuilds fields from code defaults.
  */
 function field_features_rebuild($module) {
   $fields = module_invoke($module, 'field_default_fields');
@@ -119,23 +103,45 @@ function field_features_rebuild($module) {
     field_info_cache_clear();
 
     foreach ($fields as $field) {
-      $existing_field = field_info_field($field['field_name']);
-      if ($existing_field) {
-        field_update_field($field);
+      // Create or update field.
+      $field_config = $field['field_config'];
+      if ($existing_field = field_info_field($field_config['field_name'])) {
+        field_update_field($field_config);
       }
       else {
-        field_create_field($field);
+        field_create_field($field_config);
       }
 
-      $existing_instance = field_info_instance($field['entity_type'], $field['type_name'], $field['bundle']);
+      // Create or update field instance.
+      $field_instance = $field['field_instance'];
+      $existing_instance = field_info_instance($field_instance['entity_type'], $field_instance['field_name'], $field_instance['bundle']);
       if ($existing_instance) {
-        field_update_instance($field);
+        field_update_instance($field_instance);
       }
       else {
-        field_create_instance($field);
+        field_create_instance($field_instance);
       }
       variable_set('menu_rebuild_needed', TRUE);
     }
   }
 }
 
+/**
+ * Load a field's configuration and instance configuration by an
+ * entity_type-bundle-field_name identifier.
+ */
+function features_field_load($identifier) {
+  list($entity_type, $bundle, $field_name) = explode('-', $identifier);
+  $field_info = field_info_field($field_name);
+  $instance_info = field_info_instance($entity_type, $field_name, $bundle);
+  if ($field_info && $instance_info) {
+    unset($field_info['id']);
+    unset($instance_info['id']);
+    unset($instance_info['field_id']);
+    return array(
+      'field_config' => $field_info,
+      'field_instance' => $instance_info,
+    );
+  }
+  return FALSE;
+}
