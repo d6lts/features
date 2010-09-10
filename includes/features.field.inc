@@ -10,8 +10,27 @@ function field_features_api() {
       'name' => t('Fields'),
       'default_hook' => 'field_default_fields',
       'default_file' => FEATURES_DEFAULTS_INCLUDED,
+      'feature_source' => TRUE,
     )
   );
+}
+
+
+/**
+ * Implements hook_features_export_options().
+ */
+function field_features_export_options() {
+  $options = array();
+  $instances = field_info_instances();
+  foreach ($instances as $entity_type => $bundles) {
+    foreach ($bundles as $bundle => $fields) {
+      foreach ($fields as $field) {
+        $identifier = "{$entity_type}-{$bundle}-{$field['field_name']}";
+        $options[$identifier] = $identifier;
+      }
+    }
+  }
+  return $options;
 }
 
 /**
