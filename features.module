@@ -237,32 +237,16 @@ function features_node_access($node, $op, $account) {
  * Implements hook_permission().
  */
 function features_permission() {
-  $perms = array(
+  return array(
     'administer features' => array(
       'title' => t('Administer features'),
-      'description' => t('Perform administration tasks on features'),
-     ), 
-     'manage features' => array(
-       'title' => t('Manage features'),
-     )
+      'description' => t('Perform administration tasks on features.'),
+    ),
+    'manage features' => array(
+      'title' => t('Manage features'),
+      'description' => t('View, enable and disable features.'),
+    ),
   );
-
-  /**
-   *  @TODO - properly port this to the new permission hook format.
-
-  // Generate permissions for any default node types provided by features.
-  foreach (node_type_get_types() as $type) {
-    if ($type->base == 'features') {
-      $name = check_plain($type->type);
-      $perms[] = 'create ' . $name . ' content';
-      $perms[] = 'delete own ' . $name . ' content';
-      $perms[] = 'delete any ' . $name . ' content';
-      $perms[] = 'edit own ' . $name . ' content';
-      $perms[] = 'edit any ' . $name . ' content';
-    }
-  }
-   */
-  return $perms;
 }
 
 /**
