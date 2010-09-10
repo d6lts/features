@@ -245,7 +245,7 @@ function features_permission() {
      'manage features' => array(
        'title' => t('Manage features'),
      )
-   );
+  );
 
   /**
    *  @TODO - properly port this to the new permission hook format.
@@ -766,22 +766,6 @@ function features_rebuild($rebuild = array()) {
 /**
  * Utility functions ==================================================
  */
-
-/**
- * Represent the current state of permissions as a role name to role/perm array.
- */
-function _features_get_roles() {
-  $roles = array();
-
-  $result = db_query("SELECT p.permission, r.name, r.rid FROM {role} r INNER JOIN {role_permission} p ON p.rid = r.rid");
-  while ($row = $result->fetchObject()) {
-    if (!isset($roles[$row->name])) {
-      $roles[$row->name] = array( 'rid' => $row->rid , 'perms' => array());
-    }
-    $roles[$row->name]['perms'][] = $row->permission;
-  }
-  return $roles;
-}
 
 /**
  * Log a message, environment agnostic.
