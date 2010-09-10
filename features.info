@@ -20,5 +20,6 @@ files[] = includes/features.menu.inc
 files[] = includes/features.node.inc
 files[] = includes/features.user.inc
 files[] = includes/features.views.inc
+files[] = tests/features.test
 files[] = theme/features-admin-components.tpl.php
 files[] = theme/theme.inc

@@ -5,6 +5,8 @@
  * User permission component tests for Features
  */
 class FeaturesUserTestCase extends DrupalWebTestCase {
+  protected $profile = 'testing';
+
   /**
    * Test info.
    */
@@ -20,21 +22,15 @@ class FeaturesUserTestCase extends DrupalWebTestCase {
    * Set up test.
    */
   public function setUp() {
-    parent::setUp(
-      // Note that the test will only run for the components that are
-      // properly enabled here.
-      'fieldgroup',
-      'text',
-      'content',
-      'context',
-      'ctools',
+    parent::setUp(array(
+      'field',
+      'filter',
+      'image',
+      'taxonomy',
       'views',
-      'imageapi',
-      'imagecache',
-
       'features',
       'features_test'
-    );
+    ));
 
     // Run a features rebuild to ensure our feature is fully installed.
     features_rebuild();
@@ -50,17 +46,15 @@ class FeaturesUserTestCase extends DrupalWebTestCase {
     module_load_include('inc', 'features', 'features.export');
 
     $components = array_filter(array(
-      'content',
-      // 'context', // @TODO write tests for context.
-      'fieldgroup',
-      'filter',
-      'imagecache',
-      'node',
-      'user',
-      'views',
+      'field' => 'field',
+      'filter' => 'filter',
+      'image' => 'image',
+      'node' => 'node',
+      'user_permission' => 'user_permission',
+      'views' => 'views',
     ), 'module_exists');
 
-    foreach ($components as $component) {
+    foreach (array_keys($components) as $component) {
       $callback = "_test_{$component}";
 
       // Ensure that the component/default is properly available.
@@ -90,39 +84,14 @@ class FeaturesUserTestCase extends DrupalWebTestCase {
     }
   }
 
-  protected function _test_content($op = 'load') {
+  protected function _test_field($op = 'load') {
     switch ($op) {
       case 'load':
-        return content_fields('field_features_test', 'features_test');
+        return field_info_instance('node', 'field_features_test', 'features_test');
       case 'override':
-        module_load_include('inc', 'content', 'includes/content.crud');
-        $field = content_fields('field_features_test', 'features_test');
-        $field['widget']['label'] = 'Foo bar';
-        content_field_instance_update($field, TRUE);
-        break;
-    }
-  }
-
-  protected function _test_fieldgroup($op = 'load') {
-    $groups = fieldgroup_groups('features_test', FALSE, TRUE);
-    $group = $groups['group_features_test'];
-    switch ($op) {
-      case 'load':
-        return $group;
-      case 'override':
-        $group['settings']['display']['teaser'] = 'fieldset_collapsible';
-        $group['fields'] = array('0' => 'field_features_test_child_a');
-
-        // Update each field from this group.
-        foreach ($group['fields'] as $field_name) {
-          if ($field = content_fields($field_name, 'features_test')) {
-            $field['group'] = $group['group_features_test'];
-            fieldgroup_update_fields($field);
-          }
-        }
-
-        // Save the group itself.
-        fieldgroup_save_group('features_test', $group);
+        $field_instance = field_info_instance('node', 'field_features_test', 'features_test');
+        $field_instance['label'] = 'Foo bar';
+        field_update_instance($field_instance);
         break;
     }
   }
@@ -132,36 +101,27 @@ class FeaturesUserTestCase extends DrupalWebTestCase {
     // But these modules don't have APIs either. So might as well use
     // the ones we've written for them...
     features_include();
-    $formats = _filter_get_formats();
-    foreach ($formats as $k => $v) {
-      if ($v['name'] === 'features_test') {
-        $format = $v;
-        $format_id = $k;
-      }
-    }
-
     switch ($op) {
       case 'load':
-        return isset($format) ? $format : FALSE;
+        return features_filter_format_load('features_test');
       case 'override':
-        if (isset($format_id)) {
-          db_query("DELETE FROM {filters} WHERE module = 'filter' AND format = %d AND delta = %d", $format_id, 0);
-        }
+        $format = features_filter_format_load('features_test');
+        unset($format->filters['filter_url']);
+        filter_format_save($format);
         break;
     }
   }
 
-  protected function _test_imagecache($op = 'load', &$test) {
+  protected function _test_image($op = 'load', &$test) {
     switch ($op) {
       case 'load':
-        return imagecache_preset_by_name('features_test');
+        return image_style_load('features_test');
       case 'override':
-        $preset = imagecache_preset_by_name('features_test');
-        $preset = imagecache_preset_save($preset);
-        foreach ($preset['actions'] as $action) {
-          $action['data']['width'] = '50%';
-          $action['presetid'] = $preset['presetid'];
-          imagecache_action_save($action);
+        $style = image_style_load('features_test');
+        $style = image_style_save($style);
+        foreach ($style['effects'] as $effect) {
+          $effect['data']['width'] = '120';
+          image_effect_save($effect);
         }
         break;
     }
@@ -170,9 +130,9 @@ class FeaturesUserTestCase extends DrupalWebTestCase {
   protected function _test_node($op = 'load') {
     switch ($op) {
       case 'load':
-        return node_get_types('type', 'features_test');
+        return node_type_get_type('features_test');
       case 'override':
-        $type = node_get_types('type', 'features_test');
+        $type = node_type_get_type('features_test');
         $type->description = 'Foo bar baz.';
         $type->modified = TRUE;
         node_type_save($type);
@@ -193,22 +153,13 @@ class FeaturesUserTestCase extends DrupalWebTestCase {
     }
   }
 
-  protected function _test_user($op = 'load') {
+  protected function _test_user_permission($op = 'load') {
     switch ($op) {
       case 'load':
-        // So... relying on our own API functions to test is pretty lame.
-        // But these modules don't have APIs either. So might as well use
-        // the ones we've written for them...
-        features_include();
-        $permissions = _user_features_get_permissions();
-        return isset($permissions['create features_test content']) ? $permissions['create features_test content'] : FALSE;
+        $permissions = user_role_permissions(array(DRUPAL_AUTHENTICATED_RID));
+        return !empty($permissions[DRUPAL_AUTHENTICATED_RID]['create features_test content']);
       case 'override':
-        $roles = _features_get_roles();
-        if (in_array('create features_test content', $roles['authenticated user']['perm'])) {
-          $position = array_search('create features_test content', $roles['authenticated user']['perm']);
-          unset($roles['authenticated user']['perm'][$position]);
-        }
-        _user_features_save_roles($roles);
+        user_role_change_permissions(DRUPAL_AUTHENTICATED_RID, array('create features_test content' => 0));
         break;
     }
   }
