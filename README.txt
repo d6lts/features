@@ -1,5 +1,41 @@
 $Id$
 
+Current state of Features for Drupal 7
+--------------------------------------
+Work on Features for D7 is currently aimed at getting to a point where Features
+can be used on a new install of Drupal 7 with features that were created on D7.
+Once this has been achieved, we will begin working on supporting D6 features as
+well as possibly supporting upgrades & migrations between legacy components and
+new equivalents (e.g. CCK to fields, imagecache to core image styles).
+
+### Working components
+
+- ctools
+- dependencies
+- field
+- filter
+- image
+- menu_custom
+- menu_links
+- node
+- taxonomy
+- user_permission
+- user_role
+- views
+
+### Has changes to export format between D6 and D7
+
+(@TODO legacy export compatibility)
+
+- filter
+- taxonomy
+
+### Requires upgrade/migration path
+
+- imagecache > image
+- content > field
+
+
 Features 1.x for Drupal 7.x
 ---------------------------
 The features module enables the capture and management of features in Drupal. A
