@@ -29,15 +29,8 @@ function image_features_export_options() {
  * Implementation of hook_features_export().
  */
 function image_features_export($data, &$export, $module_name = '') {
-  // Collect a module to style map
-  $map = array();
-  $modules = module_implements('image_default_styles');
-  foreach ($modules as $module) {
-    $styles = module_invoke($module, 'image_default_styles');
-    foreach ($styles as $name => $style) {
-      $map[$style['name']] = $module;
-    }
-  }
+  $pipe = array();
+  $map = features_get_default_map('image');
   foreach ($data as $style) {
     $export['dependencies']['image'] = 'image';
     // If another module provides this style, add it as a dependency
@@ -46,24 +39,32 @@ function image_features_export($data, &$export, $module_name = '') {
       $export['dependencies'][$module] = $module;
     }
     // Otherwise, export the style
-    else {
+    elseif (image_style_load($style)) {
       $export['features']['image'][$style] = $style;
     }
   }
+  return $pipe;
 }
 
 /**
  * Implementation of hook_features_export_render().
  */
-function image_features_export_render($module_name, $data) {
-  $items = array();
-  foreach ($data as $key) {
-    $style = image_style_load($key);
-    _image_features_style_sanitize($style);
-    $items[$key] = $style;
+function image_features_export_render($module_name, $data, $export = NULL) {
+  $code = array();
+  $code[] = '  $styles = array();';
+  $code[] = '';
+  foreach ($data as $name) {
+    if ($style = image_style_load($name)) {
+      _image_features_style_sanitize($style);
+      $style_export = features_var_export($style, '  ');
+      $style_identifier = features_var_export($name);
+      $code[] = "  // Exported image style: {$name}";
+      $code[] = "  \$styles[{$style_identifier}] = {$style_export};";
+      $code[] = "";
+    }
   }
-  $code = "  \$items = " . features_var_export($items, '  ') . ";\n";
-  $code .= '  return $items;';
+  $code[] = '  return $styles;';
+  $code = implode("\n", $code);
   return array('image_default_styles' => $code);
 }
 
@@ -71,11 +72,9 @@ function image_features_export_render($module_name, $data) {
  * Implementation of hook_features_revert().
  */
 function image_features_revert($module) {
-  $default_styles = module_invoke($module, 'image_default_styles');
-  if (!empty($default_styles)) {
+  if ($default_styles = features_get_default('image')) {
     foreach (array_keys($default_styles) as $default_style) {
-      $style = image_style_by_name($default_style);
-      if ($style) {
+      if ($style = image_style_load($default_style)) {
         image_style_delete($style);
       }
     }
@@ -86,7 +85,7 @@ function image_features_revert($module) {
  * Remove unnecessary keys for export.
  */
 function _image_features_style_sanitize(&$style) {
-  $omit = array('styleid', 'storage', 'actionid');
+  $omit = array('isid', 'ieid', 'storage');
   if (is_array($style)) {
     foreach ($style as $k => $v) {
       if (in_array($k, $omit, TRUE)) {
