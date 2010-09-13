@@ -122,7 +122,7 @@ function _features_export_maximize_dependencies($dependencies, $module_name = ''
 /**
  * Prepare a feature export array into a finalized info array.
  */
-function features_export_prepare($export, $module_name, $reset = FALSE) {
+function features_export_prepare($export, $module_name, $code, $reset = FALSE) {
   $existing = features_get_modules($module_name, $reset);
 
   // Prepare info string -- if module exists, merge into its existing info file
@@ -139,6 +139,14 @@ function features_export_prepare($export, $module_name, $reset = FALSE) {
   if (isset($export['conflicts'])) {
     unset($export['conflicts']);
   }
+
+  // Generate files array (D7)
+  $export['files'] = isset($export['files']) ? $export['files'] : array();
+  foreach (array_keys($code) as $file) {
+    $export['files'][] = $file === 'module' ? "{$module_name}.{$file}" : "{$module_name}.{$file}.inc";
+  }
+  sort($export['files']);
+
   ksort($export);
   return $export;
 }
@@ -214,10 +222,6 @@ function features_export_render($export, $module_name, $reset = FALSE) {
     $code[$filename] = "<?php\n\n". implode("\n\n", $contents) ."\n";
   }
 
-  // Generate info file output
-  $export = features_export_prepare($export, $module_name, $reset);
-  $code['info'] = features_export_info($export);
-
   // Prepare the module
   // If module exists, let it be and include it in the files
   if ($existing = features_get_modules($module_name, TRUE)) {
@@ -252,6 +256,11 @@ function features_export_render($export, $module_name, $reset = FALSE) {
   else {
     $code['module'] = "<?php\n\n// Drupal needs this blank file.\n";
   }
+
+  // Generate info file output
+  $export = features_export_prepare($export, $module_name, $code, $reset);
+  $code['info'] = features_export_info($export);
+
   return $code;
 }
 
