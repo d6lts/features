@@ -2,27 +2,6 @@
 // $Id$
 
 /**
- * Implementation of hook_features_api().
- */
-function context_features_api() {
-  $api = array(
-    'api' => 'context',
-    'current_version' => 3,
-    'module' => 'context',
-    'default_file' => FEATURES_DEFAULTS_CUSTOM,
-    'default_filename' => 'context',
-  );
-  return $api;
-}
-
-/**
- * Implementation of hook_features_export_options();
- */
-function context_features_export_options() {
-  return ctools_component_features_export_options('context');
-}
-
-/**
  * Implementation of hook_features_export().
  */
 function context_features_export($data, &$export, $module_name = '') {
