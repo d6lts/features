@@ -19,7 +19,6 @@ function features_test_image_default_styles() {
   // Exported image style: features_test
   $styles['features_test'] = array(
     'name' => 'features_test',
-    'module' => 'features_test',
     'effects' => array(
       '2' => array(
         'label' => 'Scale',

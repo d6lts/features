@@ -84,15 +84,15 @@ function image_features_revert($module) {
 /**
  * Remove unnecessary keys for export.
  */
-function _image_features_style_sanitize(&$style) {
-  $omit = array('isid', 'ieid', 'storage');
+function _image_features_style_sanitize(&$style, $child = FALSE) {
+  $omit = $child ? array('isid', 'ieid', 'storage') : array('isid', 'ieid', 'storage', 'module');
   if (is_array($style)) {
     foreach ($style as $k => $v) {
       if (in_array($k, $omit, TRUE)) {
         unset($style[$k]);
       }
       else if (is_array($v)) {
-        _image_features_style_sanitize($style[$k]);
+        _image_features_style_sanitize($style[$k], TRUE);
       }
     }
   }
