@@ -9,76 +9,77 @@ function features_test_field_default_fields() {
   // Exported field: 'node-features_test-field_features_test'
   $fields['node-features_test-field_features_test'] = array(
     'field_config' => array(
-      'translatable' => '1',
+      'active' => '1',
+      'cardinality' => '1',
+      'deleted' => '0',
       'entity_types' => array(),
-      'settings' => array(
-        'max_length' => '255',
-      ),
+      'field_name' => 'field_features_test',
       'indexes' => array(
         'format' => array(
           '0' => 'format',
         ),
       ),
-      'field_name' => 'field_features_test',
-      'type' => 'text',
       'module' => 'text',
-      'active' => '1',
-      'cardinality' => '1',
-      'deleted' => '0',
-      'bundles' => array(
-        'node' => array(
-          '0' => 'features_test',
-        ),
+      'settings' => array(
+        'max_length' => '255',
       ),
+      'translatable' => '1',
+      'type' => 'text',
     ),
     'field_instance' => array(
-      'label' => 'Test',
-      'widget' => array(
-        'weight' => '-4',
-        'type' => 'text_textfield',
-        'module' => 'text',
-        'active' => 1,
-        'settings' => array(
-          'size' => '60',
-        ),
-      ),
-      'settings' => array(
-        'text_processing' => '0',
-      ),
+      'bundle' => 'features_test',
+      'default_value' => NULL,
+      'deleted' => '0',
+      'description' => '',
       'display' => array(
         'default' => array(
           'label' => 'above',
-          'type' => 'text_default',
-          'settings' => array(),
           'module' => 'text',
+          'settings' => array(),
+          'type' => 'text_default',
           'weight' => 0,
         ),
         'full' => array(
-          'type' => 'hidden',
           'label' => 'above',
           'settings' => array(),
+          'type' => 'hidden',
           'weight' => 0,
         ),
-        'teaser' => array(
-          'type' => 'hidden',
+        'print' => array(
           'label' => 'above',
           'settings' => array(),
+          'type' => 'hidden',
           'weight' => 0,
         ),
         'rss' => array(
-          'type' => 'hidden',
           'label' => 'above',
           'settings' => array(),
+          'type' => 'hidden',
+          'weight' => 0,
+        ),
+        'teaser' => array(
+          'label' => 'above',
+          'settings' => array(),
+          'type' => 'hidden',
           'weight' => 0,
         ),
       ),
-      'required' => 0,
-      'description' => '',
-      'default_value' => NULL,
-      'field_name' => 'field_features_test',
       'entity_type' => 'node',
-      'bundle' => 'features_test',
-      'deleted' => '0',
+      'field_name' => 'field_features_test',
+      'label' => 'Test',
+      'required' => 0,
+      'settings' => array(
+        'text_processing' => '0',
+      ),
+      'widget' => array(
+        'active' => 1,
+        'module' => 'text',
+        'settings' => array(
+          'size' => '60',
+        ),
+        'type' => 'text_textfield',
+        'weight' => '-4',
+      ),
     ),
   );
 
