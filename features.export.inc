@@ -122,7 +122,7 @@ function _features_export_maximize_dependencies($dependencies, $module_name = ''
 /**
  * Prepare a feature export array into a finalized info array.
  */
-function features_export_prepare($export, $module_name, $code, $reset = FALSE) {
+function features_export_prepare($export, $module_name, $reset = FALSE) {
   $existing = features_get_modules($module_name, $reset);
 
   // Prepare info string -- if module exists, merge into its existing info file
