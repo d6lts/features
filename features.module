@@ -496,23 +496,18 @@ function features_get_info($type = 'module', $name = NULL, $reset = FALSE) {
   if (empty($cache) || $reset) {
     $data = array();
     $ignored = variable_get('features_ignored_orphans', array());
-    $result = db_query("SELECT filename, name, type, status, schema_version FROM {system} WHERE type = :type ORDER BY name ASC", array(':type' => 'module'));
-    while ($row = $result->fetchObject()) {
+    $result = system_rebuild_module_data();
+    foreach ($result as $row) {
       // If module is no longer enabled, remove it from the ignored orphans list.
       if (in_array($row->name, $ignored, TRUE) && !$row->status) {
         $key = array_search($row->name, $ignored, TRUE);
         unset($ignored[$key]);
       }
 
-      // Parse and allow modules to alter the info file if necessary.
-      $row->info = drupal_parse_info_file(dirname($row->filename) . '/' . $row->name . '.info');
-      if (!empty($row->info)) {
-        drupal_alter('system_info', $row->info, $row);
-        if (!empty($row->info['features'])) {
-          $data['feature'][$row->name] = $row;
-        }
-        $data['module'][$row->name] = $row;
+      if (!empty($row->info['features'])) {
+        $data['feature'][$row->name] = $row;
       }
+      $data['module'][$row->name] = $row;
     }
     variable_set('features_ignored_orphans', $ignored);
     cache_set("features_module_info", $data);
