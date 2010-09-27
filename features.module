@@ -772,3 +772,13 @@ function features_log($message, $severity = 'status') {
   }
   drupal_set_message($message, $severity, FALSE);
 }
+
+/**
+ * Implements hook_hook_info().
+ */
+function features_hook_info() {
+  $hooks['features_api'] = array(
+    'group' => 'features',
+  );
+  return $hooks;
+}
