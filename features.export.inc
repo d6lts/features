@@ -44,11 +44,10 @@ function features_populate($items, $dependencies, $module_name) {
 function _features_populate($pipe, &$export, $module_name = '') {
   features_include();
   foreach ($pipe as $component => $data) {
-    if (features_hook($component, 'features_export')) {
+    if ($function = features_hook($component, 'features_export')) {
       // Pass module-specific data and export array.
       // We don't use features_invoke() here since we need to pass $export by reference.
-      $function = "{$component}_features_export";
-      $more = $function($data, $export, $module_name);
+      $more = $function($data, $export, $module_name, $component);
       // Allow other modules to manipulate the pipe to add in additional modules.
       drupal_alter('features_pipe_' . $component, $more, $data, $export);
       // Allow for export functions to request additional exports.
@@ -389,7 +388,7 @@ function features_tar_create($name, $contents) {
     sprintf("%11s", decoct(REQUEST_TIME)) // Creation time
   );
   $binary_data_last = pack("a1a100a6a2a32a32a8a8a155a12", '', '', '', '', '', '', '', '', '', '');
-  
+
   $checksum = 0;
   for ($i = 0; $i < 148; $i++) {
     $checksum += ord(substr($binary_data_first, $i, 1));
@@ -400,11 +399,11 @@ function features_tar_create($name, $contents) {
   for ($i = 156, $j = 0; $i < 512; $i++, $j++) {
     $checksum += ord(substr($binary_data_last, $j, 1));
   }
-  
+
   $tar .= $binary_data_first;
   $tar .= pack("a8", sprintf("%6s ", decoct($checksum)));
   $tar .= $binary_data_last;
-  
+
   $buffer = str_split($contents, 512);
   foreach ($buffer as $item) {
     $tar .= pack("a512", $item);
@@ -570,7 +569,7 @@ function features_get_normal($component, $module_name, $reset = FALSE) {
     else {
       $default_hook = features_get_default_hooks($component);
       if ($module && $default_hook && isset($module->info['features'][$component]) && features_hook($component, 'features_export_render')) {
-        $code = features_invoke($component, 'features_export_render', $module_name, $module->info['features'][$component]);
+        $code = features_invoke($component, 'features_export_render', $module_name, $module->info['features'][$component], NULL);
         $cache[$module_name][$component] = isset($code[$default_hook]) ? eval($code[$default_hook]) : FALSE;
       }
     }

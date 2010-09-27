@@ -400,44 +400,33 @@ function features_get_components($feature_source = FALSE, $reset = FALSE) {
 }
 
 /**
- * Like module_invoke() but for arbitrary callback base names.
+ * Invoke a component callback.
  */
-function features_invoke() {
+function features_invoke($component, $callback) {
   $args = func_get_args();
-  $base = $args[0];
-  $hook = $args[1];
   unset($args[0], $args[1]);
-  $function = $base . '_' . $hook;
-  if (features_hook($base, $hook)) {
+  // Append the component name to the arguments.
+  $args[] = $component;
+  if ($function = features_hook($component, $callback)) {
     return call_user_func_array($function, $args);
   }
 }
 
 /**
- * Like module_invoke_all() but for arbitrary callback base names.
+ * Checks whether a component implements the given hook.
+ *
+ * @return
+ *   The function implementing the hook, or FALSE.
  */
-function features_invoke_all() {
-  $args = func_get_args();
-  $hook = $args[0];
-  unset($args[0]);
-  $return = array();
-  foreach (features_get_components() as $component => $info) {
-    $result = features_invoke($component, $hook);
-    if (isset($result) && is_array($result)) {
-      $return = array_merge_recursive($return, $result);
-    }
-    else if (isset($result)) {
-      $return[] = $result;
-    }
-  }
-  return $return;
-}
+function features_hook($component, $hook, $reset = FALSE) {
+  $info = &drupal_static(__FUNCTION__);
 
-/**
- * Like module_hook() but for arbitrary callback base names.
- */
-function features_hook($base, $hook) {
-  return function_exists($base . '_' . $hook);
+  if (!isset($info) || $reset) {
+    $info = module_invoke_all('features_api');
+  }
+  // Determine the function callback base.
+  $base = isset($info[$component]['base']) ? $info[$component]['base'] : $component;
+  return function_exists($base . '_' . $hook) ? $base . '_' . $hook : FALSE;
 }
 
 /**
