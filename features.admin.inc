@@ -49,7 +49,7 @@ function features_export_form($form, $form_state, $feature = NULL) {
   );
   $form['info']['version'] = array(
     '#title' => t('Version'),
-    '#description' => t('Examples: 6.x-1.0, 6.x-1.0-beta1'),
+    '#description' => t('Examples: 7.x-1.0, 7.x-1.0-beta1'),
     '#type' => 'textfield',
     '#required' => FALSE,
     '#default_value' => !empty($feature->info['version']) ? $feature->info['version'] : '',
