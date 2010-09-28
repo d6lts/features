@@ -168,13 +168,12 @@ function ctools_component_features_export_render($component, $module, $data) {
     $code = implode('}', $code);
   }
   else {
-    $code = '  $export = array();'."\n";
+    $code = '  $export = array();'."\n\n";
     foreach ($data as $object_name) {
       if ($object = _ctools_features_export_crud_load($component, $object_name)) {
         $identifier = $schema['export']['identifier'];
         $code .= _ctools_features_export_crud_export($component, $object, '  ');
-        $code .= "\n";
-        $code .= "  \$export[" . ctools_var_export($object_name) . "] = \${$identifier};\n";
+        $code .= "  \$export[" . ctools_var_export($object_name) . "] = \${$identifier};\n\n";
       }
     }
     $code .= '  return $export;';
