@@ -668,14 +668,6 @@ function features_form_system_modules_alter(&$form) {
  * Restore the specified modules to the default state.
  */
 function _features_restore($op, $items = array()) {
-  // Since we can't ensure that users will run update.php immediately after
-  // updating the features codebase, we must check the schema version explicitly
-  // to ensure that we will not blow away any overrides.
-  module_load_install('features');
-  if (drupal_get_installed_schema_version('features', TRUE) < 6101) {
-    return;
-  }
-
   module_load_include('inc', 'features', 'features.export');
   features_include();
 
