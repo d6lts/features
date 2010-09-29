@@ -14,6 +14,14 @@ function features_test_field_default_fields() {
       'deleted' => '0',
       'entity_types' => array(),
       'field_name' => 'field_features_test',
+      'foreign keys' => array(
+        'format' => array(
+          'columns' => array(
+            'format' => 'format',
+          ),
+          'table' => 'filter_format',
+        ),
+      ),
       'indexes' => array(
         'format' => array(
           '0' => 'format',
