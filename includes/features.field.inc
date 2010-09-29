@@ -129,8 +129,7 @@ function field_features_revert($module) {
  * Rebuilds fields from code defaults.
  */
 function field_features_rebuild($module) {
-  $fields = module_invoke($module, 'field_default_fields');
-  if (!empty($fields)) {
+  if ($fields = features_get_default('field', $module)) {
     field_info_cache_clear();
 
     foreach ($fields as $field) {
