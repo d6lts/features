@@ -21,7 +21,7 @@ function filter_features_api() {
 function filter_features_export_options() {
   $options = array();
   foreach (filter_formats() as $name => $info) {
-    $options[$info->name] = $info->name;
+    $options[features_filter_format_identifier($info)] = $info->name;
   }
   return $options;
 }
@@ -38,7 +38,8 @@ function filter_features_export($data, &$export, $module_name = '') {
   foreach ($data as $name) {
     if ($format = features_filter_format_load($name)) {
       // Add format to exports
-      $export['features']['filter'][$format->name] = $format->name;
+      $identifier = features_filter_format_identifier($format);
+      $export['features']['filter'][$identifier] = $identifier;
 
       // Iterate through filters and ensure each filter's module is included as a dependency
       foreach (array_keys($format->filters) as $name) {
@@ -66,7 +67,7 @@ function filter_features_export_render($module, $data, $export = NULL) {
     if ($format = features_filter_format_load($name)) {
       unset($format->format);
       $format_export = features_var_export($format, '  ');
-      $format_identifier = features_var_export($format->name);
+      $format_identifier = features_var_export(features_filter_format_identifier($format));
       $code[] = "  // Exported format: {$format->name}";
       $code[] = "  \$formats[{$format_identifier}] = {$format_export};";
       $code[] = "";
@@ -92,7 +93,8 @@ function filter_features_rebuild($module) {
   if ($defaults = features_get_default('filter', $module)) {
     foreach ($defaults as $format) {
       $format = (object) $format;
-      if ($existing = features_filter_format_load($format->name)) {
+      $identifier = features_filter_format_identifier($format);
+      if ($existing = features_filter_format_load($identifier)) {
         $format->format = $existing->format;
       }
       filter_format_save($format);
@@ -104,26 +106,35 @@ function filter_features_rebuild($module) {
  * Load a filter format by its name.
  */
 function features_filter_format_load($name) {
-  $format_id = db_select('filter_format')
-    ->fields('filter_format', array('format'))
-    ->condition('name', $name)
-    ->execute()
-    ->fetchField();
-  $formats = filter_formats();
-  foreach ($formats as $format) {
-    if ($format->format == $format_id) {
-      // Don't alter the format directly. It is by reference and static cached.
-      $loaded = clone $format;
-      $loaded->filters = array();
-      foreach (filter_list_format($format_id) as $filter) {
-        if (!empty($filter->status)) {
-          $loaded->filters[$filter->name]['weight'] = $filter->weight;
-          $loaded->filters[$filter->name]['status'] = $filter->status;
-          $loaded->filters[$filter->name]['settings'] = $filter->settings;
-        }
+  // Use machine name for retrieving the format if available.
+  $query = db_select('filter_format');
+  $query->fields('filter_format');
+  $schema = drupal_get_schema('filter_format');
+  if (isset($schema['fields']['machine_name'])) {
+    $query->condition('machine_name', $name);
+  }
+  else {
+    $query->condition('name', $name);
+  }
+
+  // Retrieve filters for the format and attach.
+  if ($format = $query->execute()->fetchObject()) {
+    $format->filters = array();
+    foreach (filter_list_format($format->format) as $filter) {
+      if (!empty($filter->status)) {
+        $format->filters[$filter->name]['weight'] = $filter->weight;
+        $format->filters[$filter->name]['status'] = $filter->status;
+        $format->filters[$filter->name]['settings'] = $filter->settings;
       }
-      return $loaded;
     }
+    return $format;
   }
   return FALSE;
+}
+
+/**
+ * Retrieve the filter format identifier.
+ */
+function features_filter_format_identifier($format) {
+  return isset($format->machine_name) ? $format->machine_name : $format->name;
 }

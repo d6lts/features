@@ -8,8 +8,10 @@ function features_test_filter_default_formats() {
 
   // Exported format: features_test
   $formats['features_test'] = array(
+    'machine_name' => 'features_test',
     'name' => 'features_test',
     'cache' => '1',
+    'status' => '1',
     'weight' => '0',
     'filters' => array(
       'filter_autop' => array(
