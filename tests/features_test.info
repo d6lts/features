@@ -15,3 +15,4 @@ features[views_api][] = "api:3.0-alpha1"
 hidden = TRUE
 name = "Features Tests"
 package = "Testing"
+php = "5.2.0"
