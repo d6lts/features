@@ -50,7 +50,7 @@ class FeaturesUserTestCase extends DrupalWebTestCase {
       'filter' => 'filter',
       'image' => 'image',
       'node' => 'node',
-      'user_permission' => 'user_permission',
+      'user_permission' => 'user',
       'views' => 'views',
     ), 'module_exists');
 
@@ -58,7 +58,7 @@ class FeaturesUserTestCase extends DrupalWebTestCase {
       $callback = "_test_{$component}";
 
       // Ensure that the component/default is properly available.
-      $object = $this->$callback('load', $id);
+      $object = $this->$callback('load');
       $this->assertTrue(!empty($object), t('@component present.', array('@component' => $component)));
 
       // Ensure that the component is defaulted.
@@ -74,11 +74,11 @@ class FeaturesUserTestCase extends DrupalWebTestCase {
     // Revert component and ensure that component has reverted.
     // Do this in separate loops so we only have to run
     // drupal_flush_all_caches() once.
-    foreach ($components as $component) {
+    foreach (array_keys($components) as $component) {
       features_revert(array('features_test' => array($component)));
     }
     drupal_flush_all_caches();
-    foreach ($components as $component) {
+    foreach (array_keys($components) as $component) {
       $states = features_get_component_states(array('features_test'), FALSE, TRUE);
       $this->assertTrue($states['features_test'][$component] === FEATURES_DEFAULT, t('@component reverted.', array('@component' => $component)));
     }
@@ -112,7 +112,7 @@ class FeaturesUserTestCase extends DrupalWebTestCase {
     }
   }
 
-  protected function _test_image($op = 'load', &$test) {
+  protected function _test_image($op = 'load') {
     switch ($op) {
       case 'load':
         return image_style_load('features_test');
@@ -156,7 +156,7 @@ class FeaturesUserTestCase extends DrupalWebTestCase {
   protected function _test_user_permission($op = 'load') {
     switch ($op) {
       case 'load':
-        $permissions = user_role_permissions(array(DRUPAL_AUTHENTICATED_RID));
+        $permissions = user_role_permissions(array(DRUPAL_AUTHENTICATED_RID => 'authenticated user'));
         return !empty($permissions[DRUPAL_AUTHENTICATED_RID]['create features_test content']);
       case 'override':
         user_role_change_permissions(DRUPAL_AUTHENTICATED_RID, array('create features_test content' => 0));
