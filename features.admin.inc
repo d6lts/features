@@ -339,7 +339,6 @@ function features_admin_form($form, $form_state) {
   }
 
   $form = array('#features' => $features);
-  $form['packages'] = array('#type' => 'vertical_tabs');
 
   // Generate features form.
   foreach ($features as $name => $module) {
@@ -449,6 +448,11 @@ function features_admin_form($form, $form_state) {
     }
   }
   ksort($form);
+
+  // As of 7.0 beta 2 it matters where the "vertical_tabs" element lives on the
+  // the array. We add it late, but at the beginning of the array because that
+  // keeps us away from trouble.
+  $form = $form + array('packages' => array('#type' => 'vertical_tabs'));
 
   $form['buttons'] = array(
     '#theme' => 'features_form_buttons',
