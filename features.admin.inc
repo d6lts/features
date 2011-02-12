@@ -396,7 +396,7 @@ function features_admin_form($form, $form_state) {
     // Detect potential conflicts
     if (!empty($conflicts[$name])) {
       $module_conflicts = array();
-      foreach ($conflicts[$name] as $conflict) {
+      foreach (array_keys($conflicts[$name]) as $conflict) {
         $module_conflicts[] = theme('features_module_status', array('status' => FEATURES_MODULE_MISSING, 'module' => $conflict));
         // Only disable modules with conflicts if they are not already enabled.
         // If they are already enabled, somehow the user got themselves into a
