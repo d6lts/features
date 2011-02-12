@@ -722,38 +722,6 @@ function features_feature_diff($feature, $component = NULL) {
   module_load_include('inc', 'features', 'features.export');
 
   $overrides = features_detect_overrides($feature);
-  $output = "";
-  
-  if (!empty($overrides)) {
-    // Filter overrides down to specified component.
-    if (isset($component) && isset($overrides[$component])) {
-      $overrides = array($component => $overrides[$component]);
-    }
-
-    module_load_include('inc', 'diff', 'diff.engine');
-    //$formatter = new DrupalDiffFormatter();
-    $formatter = new DiffFormatter();
-    $formatter->leading_context_lines = 2;
-    $formatter->trailing_context_lines = 2;
-    //$formatter->show_header = $show_header;
-    
-    $rows = array();
-    foreach ($overrides as $component => $items) {
-      $diff = new Diff(explode("\n", $items['default']), explode("\n", $items['normal']));
-      $rows[] = array(array('data' => $component, 'colspan' => 4, 'header' => TRUE));
-      dpm($formatter->format($diff));
-      //$rows = array_merge($rows, $formatter->format($diff));
-      $rows[] = array(array('data' => $formatter->format($diff), 'colspan' => 4, 'header' => TRUE));
-    }
-    $header = array(
-      array('data' => t('Default'), 'colspan' => 2),
-      array('data' => t('Overrides'), 'colspan' => 2),
-    );
-    $output .= ''; //theme('diff_table', $header, $rows, array('class' => 'diff features-diff'));
-  }  
-  
-  return $output;
-  
 
   $output = '';
   if (!empty($overrides)) {
@@ -762,16 +730,24 @@ function features_feature_diff($feature, $component = NULL) {
       $overrides = array($component => $overrides[$component]);
     }
 
+    module_load_include('inc', 'diff', 'diff.engine');
+    $formatter = new DrupalDiffFormatter(); //- temporarily broken
+    //$formatter = new DiffFormatter();
+    $formatter->leading_context_lines = 2;
+    $formatter->trailing_context_lines = 2;
+    //$formatter->show_header = $show_header
+    
     $rows = array();
     foreach ($overrides as $component => $items) {
-      $rows[] = array(array('data' => $component, 'colspan' => 4, 'header' => TRUE));
-      $rows = array_merge($rows, diff_get_rows($items['default'], $items['normal']));
+      $rows[] = array(array(array('data' => $component, 'colspan' => 4, 'header' => TRUE)));
+      $diff = new Diff(explode("\n", $items['default']), explode("\n", $items['normal']));
+      //dpm($formatter->format($diff));
+      $rows = array_merge($rows, $formatter->format($diff));
     }
     $header = array(
       array('data' => t('Default'), 'colspan' => 2),
       array('data' => t('Overrides'), 'colspan' => 2),
     );
-        dpm($rows);
     $output .= theme('table', array('header' => $header, 'rows' => $rows, 'attributes' => array('class' => array('diff', 'features-diff'))));
   }
   else {
@@ -780,26 +756,6 @@ function features_feature_diff($feature, $component = NULL) {
   $output = array('page' => array('#markup' => "<div class='features-comparison'>{$output}</div>"));
   return $output;
 }
-
-function diff_get_rows($a, $b, $show_header = FALSE) {
-  module_load_include('inc', 'diff', 'diff.engine');
-  
-  //$formatter = new DrupalDiffFormatter();
-  //$formatter->show_header = $show_header;
-  $formatter = new DiffFormatter();
-  $formatter->leading_context_lines = 2;
-  $formatter->trailing_context_lines = 2;
-  $formatter->show_header = $show_header;
-    //$diff = new Diff($a, $b);
-
-    $diff = new Diff(explode("\n", $a), explode("\n", $b));
-    
-    $rows = explode("\n", $formatter->format($diff));  
-  return $rows;
-  
-  
-}
-
 
 /**
  * Javascript call back that returns the status of a feature.
