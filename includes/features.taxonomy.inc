@@ -65,6 +65,9 @@ function taxonomy_features_export_render($module, $data) {
   foreach ($data as $machine_name) {
     foreach ($vocabularies as $vocabulary) {
       if ($vocabulary->machine_name == $machine_name) {
+        // We don't want to break the entity cache, so we need to clone the
+        // vocabulary before unsetting the id.
+        $vocabulary = clone $vocabulary;
         unset($vocabulary->vid);
         $code[$machine_name] = $vocabulary;
       }
