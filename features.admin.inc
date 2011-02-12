@@ -358,7 +358,7 @@ function features_admin_form($form, $form_state) {
     if (!isset($form[$package])) {
       $form[$package] = array(
         '#tree' => FALSE,
-        '#title' => t($package_title),
+        '#title' => $package_title,
         '#theme' => 'features_form_package',
         '#type' => 'fieldset',
         '#group' => 'packages',
