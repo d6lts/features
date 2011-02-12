@@ -338,6 +338,15 @@ function features_admin_form($form, $form_state) {
     }
   }
 
+  if ( empty($features) ) {
+    $form['no_features'] = array(
+      '#markup' => t('No Features were found. Please use the !create_link link to create 
+      a new Feature module, or upload an existing Feature to your modules directory.', 
+      array('!create_link' => l(t('Create Feature'), 'admin/structure/features/create'))),
+    );
+    return $form ;
+  }
+
   $form = array('#features' => $features);
 
   // Generate features form.
