@@ -131,7 +131,8 @@ function theme_features_storage_link($vars) {
   );
   $text = isset($text) ? $text : $default_text[$vars['storage']];
   if ($vars['path']) {
-    $vars['options']['attributes']['class'] = $classes[$vars['storage']] . ' features-storage';
+    $vars['options']['attributes']['class'][] = $classes[$vars['storage']];
+    $vars['options']['attributes']['class'][] = 'features-storage';
     return l($text, $vars['path'], $vars['options']);
   }
   else {
