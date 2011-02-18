@@ -282,7 +282,7 @@ function features_export_build_form_populate($form, $form_state) {
       $stub[$component] = features_dom_decode_options(array_filter($submitted['sources'][$component]));
     }
     // Only fallback to an existing feature's values if there are no export options for the component.
-    else if (!$form['export']['sources'][$component] && !empty($form['#feature']->info['features'][$component])) {
+    else if (!empty($form['export']['sources'][$component]) && !empty($form['#feature']->info['features'][$component])) {
       $stub[$component] = $form['#feature']->info['features'][$component];
     }
   }
