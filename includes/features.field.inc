@@ -93,9 +93,12 @@ function field_features_export_render($module, $data, $export = NULL) {
       $code[] = "  \$fields[{$field_identifier}] = {$field_export};";
       $code[] = "";
 
-      // Add any labels to translatables array.
-      if (!empty($field_info['widget']['label'])) {
-        $translatables[] = $field_info['widget']['label'];
+      // Add label and description to translatables array.
+      if (!empty($field['field_instance']['label'])) {
+        $translatables[] = $field['field_instance']['label'];
+      }
+      if (!empty($field['field_instance']['description'])) {
+        $translatables[] = $field['field_instance']['description'];
       }
     }
   }
