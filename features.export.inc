@@ -224,6 +224,7 @@ function features_export_render($export, $module_name, $reset = FALSE) {
 
     // If the current module file does not reference the features.inc include,
     // set a warning message.
+    // @TODO this way of checking does not account for the possibility of inclusion instruction being commented out.
     if (isset($code['features']) && strpos($code['module'], "{$module_name}.features.inc") === FALSE) {
       features_log(t('@module does not appear to include the @include file.', array('@module' => "{$module_name}.module", '@include' => "{$module_name}.features.inc")), 'warning');
     }
