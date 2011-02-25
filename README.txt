@@ -1,4 +1,3 @@
-$Id$
 
 Current state of Features for Drupal 7
 --------------------------------------

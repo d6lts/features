@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 /**
  * This is a wild hack, but effective.

@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 /**
  * Form callback for features export form. Acts as a router based on the form_state.
