@@ -1,5 +1,4 @@
 <?php
-// $Id$
 
 /**
  * Determine context major branch version.

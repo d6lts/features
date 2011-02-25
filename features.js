@@ -1,4 +1,3 @@
-// $Id$
 
 Drupal.behaviors.features = function() {
   // Features management form package tabs

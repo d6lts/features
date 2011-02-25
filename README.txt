@@ -1,4 +1,3 @@
-$Id$
 
 Features 1.x for Drupal 6.x
 ---------------------------

@@ -1,5 +1,4 @@
 <?php
-// $Id$
 ?>
 <div class='features-form clear-block'>
   <?php if (count($packages) > 1): ?>
