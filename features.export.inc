@@ -804,8 +804,7 @@ function _features_linetrim($code) {
  */
 function _features_sanitize(&$array) {
   if (is_array($array)) {
-    $is_assoc = (array_keys($array) != range(0, count($array) - 1));
-    if ($is_assoc) {
+    if (_features_is_assoc($array)) {
       ksort($array);
       $array = array_filter($array);
     }
@@ -818,4 +817,19 @@ function _features_sanitize(&$array) {
       }
     }
   }
+}
+
+/**
+ * Is the given array an associative array. This basically extracts the keys twice to get the
+ * numerically ordered keys. It then does a diff with the original array and if there is no
+ * key diff then the original array is not associative.
+ *
+ * NOTE: If you have non-sequential numerical keys, this will identify the array as assoc.
+ *
+ * Borrowed from: http://www.php.net/manual/en/function.is-array.php#96724
+ *
+ * @return True is the array is an associative array, false otherwise
+ */
+function _features_is_assoc($array) {
+  return (is_array($array) && (0 !== count(array_diff_key($array, array_keys(array_keys($array)))) || count($array)==0));
 }
