@@ -9,7 +9,7 @@ class FeaturesUserTestCase extends DrupalWebTestCase {
   /**
    * Test info.
    */
-  public function getInfo() {
+  public static function getInfo() {
     return array(
       'name' => t('Component tests'),
       'description' => t('Run tests for components of Features.') ,
