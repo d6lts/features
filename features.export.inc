@@ -425,7 +425,8 @@ function features_var_export($var, $prefix = '', $init = TRUE) {
     else {
       $output = "array(\n";
       foreach ($var as $key => $value) {
-        $output .= "  '$key' => " . features_var_export($value, '  ', FALSE) . ",\n";
+        // Using normal var_export on the key to ensure correct quoting.
+        $output .= "  " . var_export($key, TRUE) . " => " . features_var_export($value, '  ', FALSE) . ",\n";
       }
       $output .= ')';
     }
