@@ -209,7 +209,7 @@ function features_export_render($export, $module_name, $reset = FALSE) {
 
   // Finalize strings to be written to files
   foreach ($code as $filename => $contents) {
-    $code[$filename] = "<?php\n\n". implode("\n\n", $contents) ."\n";
+    $code[$filename] = "<?php\n/**\n * @file\n * {$module_name}.{$filename}.inc\n */\n\n". implode("\n\n", $contents) ."\n";
   }
 
   // Generate info file output
@@ -246,10 +246,10 @@ function features_export_render($export, $module_name, $reset = FALSE) {
   }
   // Add a stub module to include the defaults
   else if (!empty($code['features'])) {
-    $code['module'] = "<?php\n\ninclude_once('{$module_name}.features.inc');\n";
+    $code['module'] = "<?php\n/**\n * @file\n * Code for the {$export['name']} feature.\n */\n\ninclude_once('{$module_name}.features.inc');\n";
   }
   else {
-    $code['module'] = "<?php\n\n// Drupal needs this blank file.\n";
+    $code['module'] = "<?php\n/**\n * @file\n */\n\n// Drupal needs this blank file.\n";
   }
   return $code;
 }
