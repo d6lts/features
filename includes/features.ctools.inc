@@ -95,30 +95,6 @@ function ctools_features_export_render($module, $data) {
 
 }
 
-// @TODO Temporary, please remove with the next release of CTools!!!
-
-if (!function_exists('ctools_plugin_api_get_hook') ) {
-
-    function ctools_plugin_api_get_hook($owner, $api) {
-      // Allow modules to use their own hook for this. The only easy way to do
-      // this right now is with a magically named function.
-      if (function_exists($function = $owner . '_' . $api . '_hook_name')) {
-        $hook = $function();
-      }
-      else if (function_exists($function = $owner . '_ctools_plugin_api_hook_name')) {
-        $hook = $function();
-      }
-
-      // Do this last so that if the $function above failed to return, we have a
-      // sane default.
-      if (empty($hook)) {
-        $hook = 'ctools_plugin_api';
-      }
-
-      return $hook;
-    }
-}
-
 /**
  * Master implementation of hook_features_api() for all ctools components.
  *
