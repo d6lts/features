@@ -69,18 +69,54 @@ function ctools_features_export_render($module, $data) {
   $code = array();
   $code[] = '  list($module, $api) = func_get_args();';
 
-  $first = TRUE;
+  $component_exports =  array();
   foreach ($data as $component) {
+    $code = array();
+    $code[] = '  list($module, $api) = func_get_args();';
+
     if ($info = _ctools_features_get_info($component)) {
-      $if = $first ? 'if' : 'elseif';
-      $code[] = '  '. $if .' ($module == "'. $info['module'] .'" && $api == "'. $info['api'] .'") {';
+
+      $code[] = '  if ($module == "'. $info['module'] .'" && $api == "'. $info['api'] .'") {';
       $code[] = '    return array("version" => '. $info['current_version'] .');';
       $code[] = '  }';
+    }
 
-      $first = FALSE;
+    $plugin_api_hook_name = ctools_plugin_api_get_hook($info['module'], $info['api']);
+    if (empty($plugin_api_hook_name)) { $api_hook = 'ctools_plugin_api'; }
+    if (key_exists($plugin_api_hook_name, $component_exports)) {
+        $component_exports[$plugin_api_hook_name] .= "\n" . implode("\n", $code);
+    }
+    else {
+        $component_exports[$plugin_api_hook_name] = implode("\n", $code);
     }
   }
-  return array('ctools_plugin_api' => implode("\n", $code));
+
+  return $component_exports;
+
+}
+
+// @TODO Temporary, please remove with the next release of CTools!!!
+
+if (!function_exists('ctools_plugin_api_get_hook') ) {
+
+    function ctools_plugin_api_get_hook($owner, $api) {
+      // Allow modules to use their own hook for this. The only easy way to do
+      // this right now is with a magically named function.
+      if (function_exists($function = $owner . '_' . $api . '_hook_name')) {
+        $hook = $function();
+      }
+      else if (function_exists($function = $owner . '_ctools_plugin_api_hook_name')) {
+        $hook = $function();
+      }
+
+      // Do this last so that if the $function above failed to return, we have a
+      // sane default.
+      if (empty($hook)) {
+        $hook = 'ctools_plugin_api';
+      }
+
+      return $hook;
+    }
 }
 
 /**
