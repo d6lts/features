@@ -82,7 +82,7 @@ function ctools_features_export_render($module, $data) {
     }
 
     $plugin_api_hook_name = ctools_plugin_api_get_hook($info['module'], $info['api']);
-    if (empty($plugin_api_hook_name)) { $api_hook = 'ctools_plugin_api'; }
+
     if (key_exists($plugin_api_hook_name, $component_exports)) {
         $component_exports[$plugin_api_hook_name] .= "\n" . implode("\n", $code);
     }
