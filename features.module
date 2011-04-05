@@ -684,7 +684,7 @@ function _features_restore($op, $items = array()) {
   }
 
   if (empty($items)) {
-    $states = features_get_component_states();
+    $states = features_get_component_states(array(), ($op == 'rebuild'));
     foreach ($states as $module_name => $components) {
       foreach ($components as $component => $state) {
         if (in_array($state, $restore_states)) {
