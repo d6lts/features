@@ -140,6 +140,9 @@ Features provides several useful drush commands:
 - `drush features-export [feature name] [component list]`
 
   Write a new feature in code containing the components listed.
+  If called with no arguments, display a list of available components.
+  If called with one argument, take the argument as a component name and 
+  attempt to create a feature with the same name.
 
 - `drush features-update [feature name]`
 
