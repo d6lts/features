@@ -146,7 +146,7 @@ function drush_features_export() {
     $stub = array($source => array($component));
     $sources = features_get_components();
     if (empty($component) || empty($sources[$source])) {
-      _features_drush_set_error($args[0], FEATURES_COMPONENT_NOT_FOUND);
+      _features_drush_set_error($args[0], 'FEATURES_COMPONENT_NOT_FOUND');
       exit;
     }
     else {
