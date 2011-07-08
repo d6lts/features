@@ -742,7 +742,7 @@ function features_rebuild($rebuild = array()) {
  */
 function _features_get_roles() {
   $roles = array();
-  $result = db_query("SELECT r.rid, r.name, p.perm FROM {role} r LEFT JOIN {permission} p ON r.rid = p.rid");
+  $result = db_query("SELECT r.rid, r.name, p.perm FROM {role} r LEFT JOIN {permission} p ON r.rid = p.rid ORDER BY r.name");
   while ($row = db_fetch_object($result)) {
     $roles[$row->name] = array(
       'rid' => $row->rid,
