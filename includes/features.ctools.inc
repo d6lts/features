@@ -104,9 +104,7 @@ function ctools_features_export_render($module, $data) {
 function ctools_component_features_api($module_name) {
   $api = array();
   foreach (_ctools_features_get_info() as $component => $info) {
-    if ($info['module'] === $module_name) {
-      $api[$component] = $info;
-    }
+    $api[$component] = $info;
   }
   return $api;
 }
