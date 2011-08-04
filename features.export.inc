@@ -802,7 +802,7 @@ function _features_linetrim($code) {
  */
 function _features_sanitize(&$array) {
   if (is_array($array)) {
-    $is_assoc = (array_keys($array) != range(0, count($array) - 1));
+    $is_assoc = (array_keys($array) !== range(0, count($array) - 1));
     if ($is_assoc) {
       ksort($array);
       $array = array_filter($array);
