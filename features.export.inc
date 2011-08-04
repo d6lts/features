@@ -327,7 +327,7 @@ function features_get_default_hooks($component = NULL, $reset = FALSE) {
 function features_export_render_defaults($module, $hook, $code) {
   $output = array();
   $output[] = "/**";
-  $output[] = " * Implementation of hook_{$hook}().";
+  $output[] = " * Implements hook_{$hook}().";
   $output[] = " */";
   $output[] = "function {$module}_{$hook}() {";
   $output[] = $code;

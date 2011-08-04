@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Implementation of hook_features_api().
+ * Implements hook_features_api().
  */
 function features_features_api() {
   return array(
@@ -14,7 +14,7 @@ function features_features_api() {
 }
 
 /**
- * Implementation of hook_features_export_options().
+ * Implements hook_features_export_options().
  */
 function dependencies_features_export_options() {
   // Excluded modules.
@@ -29,7 +29,7 @@ function dependencies_features_export_options() {
 }
 
 /**
- * Implementation of hook_features_export().
+ * Implements hook_features_export().
  */
 function dependencies_features_export($data, &$export, $module_name = '') {
   // Don't allow a module to depend upon itself.
@@ -44,14 +44,14 @@ function dependencies_features_export($data, &$export, $module_name = '') {
 }
 
 /**
- * Implementation of hook_features_revert().
+ * Implements hook_features_revert().
  */
 function dependencies_features_revert($module) {
   dependencies_features_rebuild($module);
 }
 
 /**
- * Implementation of hook_features_rebuild().
+ * Implements hook_features_rebuild().
  * Ensure that all of a feature's dependencies are enabled.
  */
 function dependencies_features_rebuild($module) {

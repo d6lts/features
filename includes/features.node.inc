@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Implementation of hook_features_api().
+ * Implements hook_features_api().
  */
 function node_features_api() {
   return array(
@@ -14,14 +14,14 @@ function node_features_api() {
 }
 
 /**
- * Implementation of hook_features_export_options().
+ * Implements hook_features_export_options().
  */
 function node_features_export_options() {
   return node_type_get_names();
 }
 
 /**
- * Implementation of hook_features_export.
+ * Implements hook_features_export.
  */
 function node_features_export($data, &$export, $module_name = '') {
   $pipe = array();
@@ -52,7 +52,7 @@ function node_features_export($data, &$export, $module_name = '') {
 }
 
 /**
- * Implementation of hook_features_export_render().
+ * Implements hook_features_export_render().
  */
 function node_features_export_render($module, $data, $export = NULL) {
   $elements = array(
@@ -92,7 +92,7 @@ function node_features_export_render($module, $data, $export = NULL) {
 }
 
 /**
- * Implementation of hook_features_revert().
+ * Implements hook_features_revert().
  *
  * @param $module
  * name of module to revert content for

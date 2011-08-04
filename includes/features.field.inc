@@ -72,7 +72,7 @@ function field_features_export($data, &$export, $module_name = '') {
 }
 
 /**
- * Implementation of hook_features_export_render().
+ * Implements hook_features_export_render().
  */
 function field_features_export_render($module, $data, $export = NULL) {
   $translatables = $code = array();

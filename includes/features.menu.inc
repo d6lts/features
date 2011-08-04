@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Implementation of hook_features_api().
+ * Implements hook_features_api().
  */
 function menu_features_api() {
   return array(
@@ -28,7 +28,7 @@ function menu_features_api() {
 }
 
 /**
- * Implementation of hook_features_export().
+ * Implements hook_features_export().
  * DEPRECATED: This implementation simply migrates deprecated `menu` items
  * to the `menu_links` type.
  */
@@ -41,7 +41,7 @@ function menu_features_export($data, &$export, $module_name = '') {
 }
 
 /**
- * Implementation of hook_features_export_options().
+ * Implements hook_features_export_options().
  */
 function menu_custom_features_export_options() {
   $options = array();
@@ -53,7 +53,7 @@ function menu_custom_features_export_options() {
 }
 
 /**
- * Implementation of hook_features_export().
+ * Implements hook_features_export().
  */
 function menu_custom_features_export($data, &$export, $module_name = '') {
   // Default hooks are provided by the feature module so we need to add
@@ -77,7 +77,7 @@ function menu_custom_features_export($data, &$export, $module_name = '') {
 }
 
 /**
- * Implementation of hook_features_export_render()
+ * Implements hook_features_export_render()
  */
 function menu_custom_features_export_render($module, $data) {
   $code = array();
@@ -110,14 +110,14 @@ function menu_custom_features_export_render($module, $data) {
 }
 
 /**
- * Implementation of hook_features_export_revert().
+ * Implements hook_features_export_revert().
  */
 function menu_custom_features_revert($module) {
   menu_custom_features_rebuild($module);
 }
 
 /**
- * Implementation of hook_features_export_rebuild().
+ * Implements hook_features_export_rebuild().
  */
 function menu_custom_features_rebuild($module) {
   if ($defaults = features_get_default('menu_custom', $module)) {
@@ -128,7 +128,7 @@ function menu_custom_features_rebuild($module) {
 }
 
 /**
- * Implementation of hook_features_export_options().
+ * Implements hook_features_export_options().
  */
 function menu_links_features_export_options() {
   $menu_links = menu_parent_options(menu_get_menus(), array('mlid' => 0));
@@ -152,7 +152,7 @@ function menu_links_features_identifier($link) {
 }
 
 /**
- * Implementation of hook_features_export().
+ * Implements hook_features_export().
  */
 function menu_links_features_export($data, &$export, $module_name = '') {
   // Default hooks are provided by the feature module so we need to add
@@ -184,7 +184,7 @@ function menu_links_features_export($data, &$export, $module_name = '') {
 }
 
 /**
- * Implementation of hook_features_export_render()
+ * Implements hook_features_export_render()
  */
 function menu_links_features_export_render($module, $data) {
   $code = array();
@@ -217,14 +217,14 @@ function menu_links_features_export_render($module, $data) {
 }
 
 /**
- * Implementation of hook_features_export_revert().
+ * Implements hook_features_export_revert().
  */
 function menu_links_features_revert($module) {
   menu_links_features_rebuild($module);
 }
 
 /**
- * Implementation of hook_features_export_rebuild().
+ * Implements hook_features_export_rebuild().
  */
 function menu_links_features_rebuild($module) {
   if ($menu_links = features_get_default('menu_links', $module)) {

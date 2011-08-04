@@ -249,7 +249,7 @@ function features_permission() {
 }
 
 /**
- * Implementation of hook_help().
+ * Implements hook_help().
  */
 function features_help($path, $arg) {
   switch ($path) {

@@ -6,7 +6,7 @@
  */
 
 /**
- * Implementation of hook_drush_command().
+ * Implements hook_drush_command().
  * 
  * @See drush_parse_command() for a list of recognized keys.
  *
@@ -81,7 +81,7 @@ function features_drush_command() {
 }
 
 /**
- * Implementation of hook_drush_help().
+ * Implements hook_drush_help().
  */
 function features_drush_help($section) {
   switch ($section) {
