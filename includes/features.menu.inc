@@ -246,7 +246,7 @@ function menu_links_features_rebuild_ordered($menu_links, $reset = FALSE) {
         foreach ($unordered as $key => $link) {
           $identifier = menu_links_features_identifier($link);
           $parent = isset($link['parent_path']) ? "{$link['menu_name']}:{$link['parent_path']}" : '';
-          if (empty($parent)) {
+          if (empty($parent) || (!empty($parent) && !isset($unordered[$parent]) && !isset($ordered[$parent]))) {
             $ordered[$identifier] = 0;
             $all_links[$identifier] = $link;
             unset($unordered[$key]);
