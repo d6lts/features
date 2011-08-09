@@ -106,7 +106,8 @@ function features_export_form($form_state, $feature = NULL) {
       foreach ($options as $k => $v) {
         $options[$k] = check_plain($v);
       }
-      $form['export']['components']['#options'][$component] = (isset($component_info['name']) ? $component_info['name'] : $component);
+      $label = (isset($component_info['name']) ? $component_info['name'] . ": " . $component : $component);
+      $form['export']['components']['#options'][$component] = $label;
       if (!empty($options)) {
         $form['export']['sources'][$component] = array(
           '#type' => 'checkboxes',
