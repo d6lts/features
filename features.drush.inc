@@ -333,6 +333,7 @@ function drush_features_revert() {
 function drush_features_revert_all() {
   $features_to_revert = array();
   $features_to_exclude = func_get_args();
+  $force = drush_get_option('force');
   foreach (features_get_features() as $module) {
     if ($module->status && !in_array($module->name, $features_to_exclude)) {
       $features_to_revert[] = $module->name;
@@ -341,7 +342,7 @@ function drush_features_revert_all() {
   drush_print(dt('The following modules will be reverted: !modules', array('!modules' => implode(', ', $features_to_revert))));
   if (drush_confirm(dt('Do you really want to continue?'))) {
     foreach ($features_to_revert as $module_name) {
-      drush_backend_invoke('features-revert '. $module_name);
+      drush_backend_invoke('features-revert '. $module_name, array('force' => $force));
     }
   }
   else {
