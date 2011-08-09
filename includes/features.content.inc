@@ -152,7 +152,7 @@ function content_features_rebuild($module) {
       // fields too. We can't just pass $field to it as the fnc will add every
       // item of the array to the WHERE clause.
       $param = array('field_name' => $field['field_name'], 'type_name' => $field['type_name']);
-      $existing_instance = content_field_instance_read($param, TRUE);
+      $existing_instance = array_shift(content_field_instance_read($param, TRUE));
 
       if (!empty($existing_instance)) {
         // If this existing instance is inactive, we need to activate it before
