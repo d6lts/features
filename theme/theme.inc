@@ -45,7 +45,7 @@ function template_preprocess_features_admin_components(&$vars) {
   // Display key for conflicting elements.
   if (!empty($conflicts)) {
     $vars['key'][] = array(
-      'title' => theme('features_storage_link', FEATURES_CONFLICT, t('Conflicts with another feature')),
+      'title' => theme('features_storage_link', array('storage' => FEATURES_CONFLICT, 'text' => t('Conflicts with another feature'))),
       'html' => TRUE,
     );
   }
@@ -128,7 +128,7 @@ function theme_features_storage_link($vars) {
     FEATURES_CONFLICT => t('Conflict'),
     FEATURES_DISABLED => t('Disabled'),
   );
-  $text = isset($text) ? $text : $default_text[$vars['storage']];
+  $text = isset($vars['text']) ? $vars['text'] : $default_text[$vars['storage']];
   if ($vars['path']) {
     $vars['options']['attributes']['class'][] = $classes[$vars['storage']];
     $vars['options']['attributes']['class'][] = 'features-storage';

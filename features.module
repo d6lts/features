@@ -187,7 +187,7 @@ function features_theme() {
   ) + $base;
 
   $items['features_storage_link'] = array(
-    'variables' => array('storage' => null, 'path' => null, 'options' => array()),
+    'variables' => array('storage' => null, 'text' => null, 'path' => null, 'options' => array()),
   ) + $base;
 
   $items['features_form_components'] =
