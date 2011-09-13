@@ -262,6 +262,30 @@ function features_help($path, $arg) {
 }
 
 /**
+ * Implements hook_modules_disabled().
+ */
+function features_modules_disabled($modules) {
+  // Find any features modules that were disabled.
+  if ($modules = array_intersect(array_keys(features_get_features()), $modules)) {
+    foreach ($modules as $module) {
+      features_disable($module);
+    }
+  }
+}
+
+/**
+ * Implements hook_modules_enabled().
+ */
+function features_modules_enabled($modules) {
+  // Find any features modules that were enabled.
+  if ($modules = array_intersect(array_keys(features_get_features()), $modules)) {
+    foreach ($modules as $module) {
+      features_enable($module);
+    }
+  }
+}
+
+/**
  * Load includes for any modules that implement the features API and
  * load includes for those provided by features.
  */
@@ -691,6 +715,14 @@ function _features_restore($op, $items = array()) {
       $restore_hook = 'features_rebuild';
       $log_action = 'Rebuild';
       break;
+    case 'disable':
+      $restore_hook = 'features_disable';
+      $log_action = 'Disable';
+      break;
+    case 'enable':
+      $restore_hook = 'features_enable';
+      $log_action = 'Enable';
+      break;
   }
 
   if (empty($items)) {
@@ -733,6 +765,24 @@ function features_revert($revert = array()) {
  */
 function features_rebuild($rebuild = array()) {
   return _features_restore('rebuild', $rebuild);
+}
+
+/**
+ * Wrapper around _features_restore().
+ */
+function features_disable($module) {
+  $feature = feature_load($module);
+  $items[$module] = array_keys($feature->info['features']);
+  return _features_restore('disable', $items);
+}
+
+/**
+ * Wrapper around _features_restore().
+ */
+function features_enable($module) {
+  $feature = feature_load($module);
+  $items[$module] = array_keys($feature->info['features']);
+  return _features_restore('enable', $items);
 }
 
 /**

@@ -113,3 +113,49 @@ function node_features_revert($module = NULL) {
     menu_rebuild();
   }
 }
+
+/**
+ * Implements hook_features_disable().
+ *
+ * When a features module is disabled, modify any node types it provides so
+ * they can be deleted manually through the content types UI.
+ *
+ * @param $module
+ *   Name of module that has been disabled.
+ */
+function node_features_disable($module) {
+  if ($default_types = features_get_default('node', $module)) {
+    foreach ($default_types as $type_name => $type_info) {
+      $type_info = node_type_load($type_name);
+      $type_info->module = 'node';
+      $type_info->custom = 1;
+      $type_info->modified = 1;
+      $type_info->locked = 0;
+      node_type_save($type_info);
+    }
+  }
+}
+
+/**
+ * Implements hook_features_enable().
+ *
+ * When a features module is enabled, modify any node types it provides so
+ * they can no longer be deleted manually through the content types UI.
+ *
+ * @param $module
+ *   Name of module that has been enabled.
+ */
+function node_features_enable($module) {
+  if ($default_types = features_get_default('node', $module)) {
+    foreach ($default_types as $type_name => $type_info) {
+      // Ensure the type exists.
+      if ($type_info = node_type_load($type_name)) {
+        $type_info->module = $module;
+        $type_info->custom = 0;
+        $type_info->modified = 0;
+        $type_info->locked = 1;
+        node_type_save($type_info);
+      }
+    }
+  }
+}
