@@ -494,6 +494,15 @@ function features_get_info($type = 'module', $name = NULL, $reset = FALSE) {
       }
 
       if (!empty($row->info['features'])) {
+        // Fix css/js paths
+        if (!empty($row->info['stylesheets'])) {
+          foreach($row->info['stylesheets'] as $media => $css) {
+            $row->info['stylesheets'][$media] = array_keys($css);
+          }
+        }
+        if (!empty($row->info['scripts'])) {
+          $row->info['scripts'] = array_keys($row->info['scripts']);
+        }
         $data['feature'][$row->name] = $row;
       }
       $data['module'][$row->name] = $row;
