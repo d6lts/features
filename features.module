@@ -470,6 +470,9 @@ function features_install_modules($modules) {
   // Build maximal list of dependencies.
   $install = array();
   foreach ($modules as $name) {
+    // Parse the dependency string into the module name and version information.
+    $parsed_name = drupal_parse_dependency($name);
+    $name = $parsed_name['name'];
     if ($file = $files[$name]) {
       $install[] = $name;
       if (!empty($file->info['dependencies'])) {

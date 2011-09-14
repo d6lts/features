@@ -106,9 +106,11 @@ function _features_export_minimize_dependencies($dependencies, $module_name = ''
  */
 function _features_export_maximize_dependencies($dependencies, $module_name = '', $maximized = array(), $first = TRUE) {
   foreach ($dependencies as $k => $v) {
-    if (!in_array($v, $maximized)) {
-      $maximized[] = $v;
-      $module = features_get_modules($v);
+    $parsed_dependency = drupal_parse_dependency($v);
+    $name = $parsed_dependency['name'];
+    if (!in_array($name, $maximized)) {
+      $maximized[] = $name;
+      $module = features_get_modules($name);
       if ($module && !empty($module->info['dependencies'])) {
         $maximized = array_merge($maximized, _features_export_maximize_dependencies($module->info['dependencies'], $module_name, $maximized, FALSE));
       }
