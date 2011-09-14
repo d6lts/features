@@ -119,11 +119,17 @@ function field_features_export_render($module, $data, $export = NULL) {
 }
 
 // Helper to enforce consistency in field export arrays.
-function _field_features_export_sort(&$field) {
-  ksort($field);
+function _field_features_export_sort(&$field, $sort = TRUE) {
+
+  // Some arrays are not sorted to preserve order (for example allowed_values).
+  static $sort_blacklist = array('allowed_values');
+
+  if ($sort) {
+    ksort($field);
+  }
   foreach ($field as $k => $v) {
     if (is_array($v)) {
-      _field_features_export_sort($field[$k]);
+      _field_features_export_sort($field[$k], !in_array($k, $sort_blacklist));
     }
   }
 }
