@@ -66,9 +66,18 @@ function field_features_export($data, &$export, $module_name = '') {
             // @TODO: handle the pipe to image styles
           }
         }
+        // If taxonomy field, add in the vocabulary
+        if ($field['field_config']['type'] == 'taxonomy_term_reference' && !empty($field['field_config']['settings']['allowed_values'])) {
+          foreach ($field['field_config']['settings']['allowed_values'] as $allowed_values) {
+            if (!empty($allowed_values['vocabulary'])) {
+              $pipe['taxonomy'][] = $allowed_values['vocabulary'];
+            }
+          }
+        }
       }
     }
   }
+  return $pipe;
 }
 
 /**
