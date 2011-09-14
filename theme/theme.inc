@@ -31,19 +31,9 @@ function template_preprocess_features_admin_components(&$vars) {
   // Components
   $rows = array();
   $components = features_get_components();
-  $conflicts = features_get_conflicts();
-  if (!module_exists($form['module']['#value']) && isset($form['module']['#value']) && !empty($conflicts[$form['module']['#value']])) {
-    $module_conflicts = $conflicts[$form['module']['#value']];
-    $conflicts = array();
-    foreach ($module_conflicts as $conflict) {
-      $conflicts = array_merge_recursive($conflict, $conflicts);
-    }
-  }
-  else {
-    $conflicts = array();
-  }
+
   // Display key for conflicting elements.
-  if (!empty($conflicts)) {
+  if (!empty($form['#conflicts'])) {
     $vars['key'][] = array(
       'title' => theme('features_storage_link', array('storage' => FEATURES_CONFLICT, 'text' => t('Conflicts with another feature'))),
       'html' => TRUE,
@@ -53,6 +43,10 @@ function template_preprocess_features_admin_components(&$vars) {
   if (!empty($form['#info']['features'])) {
     foreach ($form['#info']['features'] as $component => $items) {
       if (!empty($items)) {
+        $conflicts = array_key_exists($component, $form['#conflicts'])
+                ? $form['#conflicts'][$component]
+                : NULL;
+
         $header = $data = array();
         if (element_children($form['revert'])) {
           $header[] = array(
@@ -74,7 +68,7 @@ function template_preprocess_features_admin_components(&$vars) {
           $data[] = '';
         }
         $data[] = array(
-          'data' => theme('features_component_list', array('components' => $items, 'source' => $items)),
+          'data' => theme('features_component_list', array('components' => $items, 'source' => $items, 'conflicts' => $conflicts)),
           'colspan' => 2,
           'class' => 'component'
         );
