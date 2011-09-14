@@ -478,6 +478,11 @@ function features_admin_form($form, $form_state) {
  * Display the components of a feature.
  */
 function features_admin_components($form, $form_state, $feature) {
+  // Breadcrumb navigation
+  $breadcrumb[] = l(t('Home'), NULL);
+  $breadcrumb[] = l(t('Features'), 'admin/structure/features');
+  drupal_set_breadcrumb($breadcrumb);
+
   module_load_include('inc', 'features', 'features.export');
   $form = array();
 
