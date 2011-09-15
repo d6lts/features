@@ -349,7 +349,8 @@ function features_admin_form($form, $form_state) {
 
   $form = array('#features' => $features);
 
-  // Generate features form.
+  // Generate features form. Features are sorted by dependencies, resort alpha
+  ksort($features);
   foreach ($features as $name => $module) {
     $package_title = !empty($module->info['package']) ? $module->info['package'] : t('Other');
     $package = strtolower(preg_replace('/[^a-zA-Z0-9-]+/', '-', $package_title));
