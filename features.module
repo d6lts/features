@@ -512,8 +512,8 @@ function features_get_info($type = 'module', $name = NULL, $reset = FALSE) {
   if (empty($cache) || $reset) {
     $data = array();
     $ignored = variable_get('features_ignored_orphans', array());
-    $result = system_rebuild_module_data();
-    foreach ($result as $row) {
+    $files = system_rebuild_module_data();
+    foreach ($files as $row) {
       // If module is no longer enabled, remove it from the ignored orphans list.
       if (in_array($row->name, $ignored, TRUE) && !$row->status) {
         $key = array_search($row->name, $ignored, TRUE);
@@ -534,6 +534,38 @@ function features_get_info($type = 'module', $name = NULL, $reset = FALSE) {
       }
       $data['module'][$row->name] = $row;
     }
+
+    // Sort features according to dependencies.
+    // @see install_profile_modules()
+    $required = array();
+    $non_required = array();
+
+    $modules = array_keys($data['feature']);
+    foreach ($modules as $module) {
+      if ($files[$module]->requires) {
+        $modules = array_merge($modules, array_keys($files[$module]->requires));
+      }
+    }
+    $modules = array_unique($modules);
+    foreach ($modules as $module) {
+      if (!empty($files[$module]->info['features'])) {
+        if (!empty($files[$module]->info['required'])) {
+          $required[$module] = $files[$module]->sort;
+        }
+        else {
+          $non_required[$module] = $files[$module]->sort;
+        }
+      }
+    }
+    arsort($required);
+    arsort($non_required);
+
+    $sorted = array();
+    foreach ($required + $non_required as $module => $weight) {
+      $sorted[$module] = $data['feature'][$module];
+    }
+    $data['feature'] = $sorted;
+
     variable_set('features_ignored_orphans', $ignored);
     cache_set("features_module_info", $data);
     $cache = new stdClass();
