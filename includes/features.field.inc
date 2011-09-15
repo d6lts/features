@@ -92,7 +92,17 @@ function field_features_export_render($module, $data, $export = NULL) {
     if ($field = features_field_load($identifier)) {
       unset($field['field_config']['columns']);
       unset($field['field_config']['locked']);
-      unset($field['field_config']['storage']);
+      // Only remove the 'storage' declaration if the field is using the default
+      // storage type.
+      if ($field['field_config']['storage']['type'] == variable_get('field_storage_default', 'field_sql_storage')) {
+        unset($field['field_config']['storage']);
+      }
+      // If we still have a storage declaration here it means that a non-default
+      // storage type was altered into to the field definition. And noone would
+      // never need to change the 'details' key, so don't render it.
+      if (isset($field['field_config']['storage']['details'])) {
+        unset($field['field_config']['storage']['details']);
+      }
 
       _field_features_export_sort($field);
       $field_export = features_var_export($field, '  ');
