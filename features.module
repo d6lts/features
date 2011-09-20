@@ -761,7 +761,13 @@ function _features_restore($op, $items = array()) {
   }
 
   if (empty($items)) {
-    $states = features_get_component_states(array(), ($op == 'rebuild'));
+    // Drush may execute a whole chain of commands that may trigger feature
+    // rebuilding multiple times during a single request. Make sure we do not
+    // rebuild the same cached list of modules over and over again by setting
+    // $reset to TRUE.
+    // Note: this may happen whenever more than one feature will be enabled
+    // in chain, for example also using features_install_modules().
+    $states = features_get_component_states(array(), ($op == 'rebuild'), defined('DRUSH_BASE_PATH'));
     foreach ($states as $module_name => $components) {
       foreach ($components as $component => $state) {
         if (in_array($state, $restore_states)) {
