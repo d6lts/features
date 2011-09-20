@@ -115,6 +115,11 @@ function user_permission_features_revert($module) {
  */
 function user_permission_features_rebuild($module) {
   if ($defaults = features_get_default('user_permission', $module)) {
+    // Make sure the list of available node types is up to date, especially when
+    // installing multiple features at once, for example from an install profile
+    // or via drush.
+    node_types_rebuild();
+
     $roles = _user_features_get_roles();
     $permissions_by_role = _user_features_get_permissions(FALSE);
     foreach ($defaults as $permission) {
