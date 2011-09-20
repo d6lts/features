@@ -27,6 +27,9 @@ function features_drush_command() {
       'feature' => 'Feature name to export or a single component.',
       'components' => '(optional) List of components to include, like source:component [source2:component2]...'
     ),
+    'options' => array(
+      '--destination' => "Destination path (from Drupal root) of the exported feature. Defaults to 'sites/all/modules'",
+    ),
     'drupal dependencies' => array('features'),
     'aliases' => array('fe'),
   );
@@ -88,7 +91,7 @@ function features_drush_help($section) {
     case 'drush:features':
       return dt("List all the available features for your site.");
     case 'drush:features-export':
-      return dt("Export a feature from your site into a module. If called with no arguments, display a list of available components. If called with a single argument, attempt to create a feature including the given component with the same name.");
+      return dt("Export a feature from your site into a module. If called with no arguments, display a list of available components. If called with a single argument, attempt to create a feature including the given component with the same name. The option '--destination=foo' may be used to specify the path (from Drupal root) where the feature should be created. The default destination is 'sites/all/modules'.");
     case 'drush:features-update':
       return dt("Update a feature module on your site.");
     case 'drush:features-update-all':
@@ -238,7 +241,8 @@ function drush_features_update_all() {
 function _drush_features_export($stub, $dependencies, $module_name = NULL, $directory = NULL) {
   $root = drush_get_option(array('r', 'root'), drush_locate_root());
   if ($root) {
-    $directory = isset($directory) ? $directory : 'sites/all/modules/' . $module_name;
+    $destination = drush_get_option(array('destination'), 'sites/all/modules');
+    $directory = isset($directory) ? $directory : $destination . '/' . $module_name;
     if (is_dir($directory)) {
       drush_print(dt('Module appears to already exist in !dir', array('!dir' => $directory)));
       if (!drush_confirm(dt('Do you really want to continue?'))) {
