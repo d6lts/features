@@ -268,7 +268,7 @@ function features_modules_disabled($modules) {
   // Find any features modules that were disabled.
   if ($modules = array_intersect(array_keys(features_get_features()), $modules)) {
     foreach ($modules as $module) {
-      features_disable($module);
+      features_disable_feature($module);
     }
   }
 }
@@ -280,7 +280,7 @@ function features_modules_enabled($modules) {
   // Find any features modules that were enabled.
   if ($modules = array_intersect(array_keys(features_get_features()), $modules)) {
     foreach ($modules as $module) {
-      features_enable($module);
+      features_enable_feature($module);
     }
   }
 }
@@ -751,11 +751,11 @@ function _features_restore($op, $items = array()) {
       $log_action = 'Rebuild';
       break;
     case 'disable':
-      $restore_hook = 'features_disable';
+      $restore_hook = 'features_disable_feature';
       $log_action = 'Disable';
       break;
     case 'enable':
-      $restore_hook = 'features_enable';
+      $restore_hook = 'features_enable_feature';
       $log_action = 'Enable';
       break;
   }
@@ -811,7 +811,7 @@ function features_rebuild($rebuild = array()) {
 /**
  * Wrapper around _features_restore().
  */
-function features_disable($module) {
+function features_disable_feature($module) {
   $feature = feature_load($module);
   $items[$module] = array_keys($feature->info['features']);
   return _features_restore('disable', $items);
@@ -820,7 +820,7 @@ function features_disable($module) {
 /**
  * Wrapper around _features_restore().
  */
-function features_enable($module) {
+function features_enable_feature($module) {
   $feature = feature_load($module);
   $items[$module] = array_keys($feature->info['features']);
   return _features_restore('enable', $items);
