@@ -139,8 +139,18 @@ function features_export_prepare($export, $module_name, $reset = FALSE) {
   if (isset($export['conflicts'])) {
     unset($export['conflicts']);
   }
+
+  // Order info array.
+  $standard_info = array();
+  foreach (array('name', 'description', 'core', 'package', 'php', 'version', 'project', 'dependencies') as $item) {
+    if (isset($export[$item])) {
+      $standard_info[$item] = $export[$item];
+    }
+  }
+
+  $export = array_diff_assoc($export, $standard_info);
   ksort($export);
-  return $export;
+  return array_merge($standard_info, $export);
 }
 
 /**
