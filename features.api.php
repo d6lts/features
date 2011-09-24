@@ -255,12 +255,12 @@ function hook_features_pipe_component_alter(&$pipe, $data, $export) {
  */
 
 /**
- * Alter the default cck fields right before they are cached into the database.
+ * Alter the default fields right before they are cached into the database.
  *
  * @param &$fields
  *   By reference. The fields that have been declared by another feature.
  */
-function hook_content_default_fields_alter(&$fields) {
+function hook_field_default_fields_alter(&$fields) {
 }
 
 /**
