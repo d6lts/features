@@ -39,7 +39,7 @@ function node_features_export($data, &$export, $module_name = '') {
         $export['dependencies'][$map[$type]] = $map[$type];
       }
       // Otherwise export the node type.
-      elseif (in_array($info, array('node', 'features'))) {
+      elseif (in_array($info, array('node', 'features')) || isset($map[$type])) {
         $export['features']['node'][$type] = $type;
       }
 
