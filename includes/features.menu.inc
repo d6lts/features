@@ -113,7 +113,7 @@ function menu_custom_features_revert($module) {
 }
 
 /**
- * Implementation of hook_features_export_rebuild().
+ * Implementation of hook_features_rebuild().
  */
 function menu_custom_features_rebuild($module) {
   if ($defaults = features_get_default('menu_custom', $module)) {
@@ -271,7 +271,7 @@ function menu_links_features_revert($module) {
 }
 
 /**
- * Implementation of hook_features_export_rebuild().
+ * Implementation of hook_features_rebuild().
  */
 function menu_links_features_rebuild($module) {
   if ($menu_links = features_get_default('menu_links', $module)) {
