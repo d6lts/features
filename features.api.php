@@ -171,7 +171,7 @@ function hook_features_export_render($module_name, $data, $export = NULL) {
  * @return boolean
  *   TRUE or FALSE for whether the components were successfully reverted.
  */
-function hook_features_export_revert($module_name) {
+function hook_features_revert($module_name) {
   $mycomponents = module_invoke_all($module_name, 'mycomponent_defaults');
   if (!empty($$mycomponents)) {
     foreach ($mycomponents as $mycomponent) {

@@ -106,7 +106,7 @@ function menu_custom_features_export_render($module, $data) {
 }
 
 /**
- * Implementation of hook_features_export_revert().
+ * Implementation of hook_features_revert().
  */
 function menu_custom_features_revert($module) {
   menu_custom_features_rebuild($module);
@@ -264,7 +264,7 @@ function menu_links_features_export_render($module, $data) {
 }
 
 /**
- * Implementation of hook_features_export_revert().
+ * Implementation of hook_features_revert().
  */
 function menu_links_features_revert($module) {
   menu_links_features_rebuild($module);
