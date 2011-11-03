@@ -43,7 +43,9 @@ function features_populate($items, $dependencies, $module_name) {
 function _features_populate($pipe, &$export, $module_name = '') {
   features_include();
   foreach ($pipe as $component => $data) {
-    if ($function = features_hook($component, 'features_export')) {
+    // Convert already defined items to dependencies.
+    _features_resolve_dependencies($data, $export, $module_name, $component);
+    if (!empty($data) && $function = features_hook($component, 'features_export')) {
       // Pass module-specific data and export array.
       // We don't use features_invoke() here since we need to pass $export by reference.
       $more = $function($data, $export, $module_name, $component);
@@ -60,6 +62,21 @@ function _features_populate($pipe, &$export, $module_name = '') {
     }
   }
   return $export;
+}
+
+/**
+ * Iterates over data and convert to dependencies if already defined elsewhere.
+ */
+function _features_resolve_dependencies(&$data, &$export, $module_name, $component) {
+  if ($map = features_get_default_map($component)) {
+    foreach ($data as $key => $item) {
+      // If this node type is provided by a different module, add it as a dependency
+      if (isset($map[$item]) && $map[$item] != $module_name) {
+        $export['dependencies'][$map[$item]] = $map[$item];
+        unset($data[$key]);
+      }
+    }
+  }
 }
 
 /**
