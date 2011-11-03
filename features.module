@@ -513,11 +513,11 @@ function features_get_info($type = 'module', $name = NULL, $reset = FALSE) {
     $data = array();
     $ignored = variable_get('features_ignored_orphans', array());
     $files = system_rebuild_module_data();
-    
+
     // Filter out intentionally hidden features.
     module_load_include('inc', 'features', 'features.admin');
     $files = array_filter($files, 'features_filter_hidden');
-    
+
     foreach ($files as $row) {
       // If module is no longer enabled, remove it from the ignored orphans list.
       if (in_array($row->name, $ignored, TRUE) && !$row->status) {
@@ -863,8 +863,10 @@ function features_log($message, $severity = 'status') {
  * Implements hook_hook_info().
  */
 function features_hook_info() {
-  $hooks['features_api'] = array(
-    'group' => 'features',
+  $hooks = array(
+    'features_api',
+    'features_pipe_alter',
+    'features_export_alter',
   );
-  return $hooks;
+  return array_fill_keys($hooks, array('group' => 'features'));
 }

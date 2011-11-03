@@ -237,7 +237,29 @@ function hook_features_export_alter(&$export, $module_name) {
  *   By reference. An array of all components to be exported with a given
  *   feature.
  */
-function hook_features_pipe_component_alter(&$pipe, $data, $export) {
+function hook_features_pipe_COMPONENT_alter(&$pipe, $data, $export) {
+  if (in_array($data, 'my-node-type')) {
+    $pipe['dependencies'][] = 'mymodule';
+  }
+}
+
+/**
+ * Alter the pipe array for a given component.
+ *
+ * @param array &$pipe
+ *   By reference. The pipe array of further processors that should be called.
+ * @param array $data
+ *   An array of machine names for the component in question to be exported.
+ * @param array &$export
+ *   By reference. An array of all components to be exported with a given
+ *   feature.
+ *
+ * The component being exported is contained in $export['component'].
+ */
+function hook_features_pipe_alter(&$pipe, $data, $export) {
+  if ($export['component'] == 'node' && in_array($data, 'my-node-type')) {
+    $pipe['dependencies'][] = 'mymodule';
+  }
 }
 
 /**
@@ -249,7 +271,7 @@ function hook_features_pipe_component_alter(&$pipe, $data, $export) {
  *
  * CTools also has a variety of hook_FOO_alters.
  *
- * Note: While views is a component of features, it declares it's own alter 
+ * Note: While views is a component of features, it declares it's own alter
  * function which takes a similar form:
  * hook_views_default_views_alter(&$views)
  */
@@ -264,18 +286,18 @@ function hook_field_default_fields_alter(&$fields) {
 }
 
 /**
- * Alter the default fieldgroup groups right before they are cached into the 
+ * Alter the default fieldgroup groups right before they are cached into the
  * database.
  *
  * @param &$groups
- *   By reference. The fieldgroup groups that have been declared by another 
+ *   By reference. The fieldgroup groups that have been declared by another
  *   feature.
  */
 function hook_fieldgroup_default_groups_alter(&$groups) {
 }
 
 /**
- * Alter the default filter formats right before they are cached into the 
+ * Alter the default filter formats right before they are cached into the
  * database.
  *
  * @param &$formats

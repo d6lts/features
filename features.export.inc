@@ -47,8 +47,12 @@ function _features_populate($pipe, &$export, $module_name = '') {
       // Pass module-specific data and export array.
       // We don't use features_invoke() here since we need to pass $export by reference.
       $more = $function($data, $export, $module_name, $component);
+      // Add the context information.
+      $export['component'] = $component;
       // Allow other modules to manipulate the pipe to add in additional modules.
-      drupal_alter('features_pipe_' . $component, $more, $data, $export);
+      drupal_alter(array('features_pipe', 'features_pipe_' . $component), $more, $data, $export);
+      // Remove the component information.
+      unset($export['component']);
       // Allow for export functions to request additional exports.
       if (!empty($more)) {
         _features_populate($more, $export, $module_name);
