@@ -12,7 +12,6 @@ features[image][] = "features_test"
 features[node][] = "features_test"
 features[user_permission][] = "create features_test content"
 features[views_view][] = "features_test"
-hidden = TRUE
 name = "Features Tests"
 package = "Testing"
 php = "5.2.0"
