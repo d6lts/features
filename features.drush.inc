@@ -28,7 +28,7 @@ function features_drush_command() {
       'components' => '(optional) List of components to include, like source:component [source2:component2]...'
     ),
     'options' => array(
-      '--destination' => "Destination path (from Drupal root) of the exported feature. Defaults to 'sites/all/modules'",
+      'destination' => "Destination path (from Drupal root) of the exported feature. Defaults to 'sites/all/modules'",
     ),
     'drupal dependencies' => array('features'),
     'aliases' => array('fe'),
@@ -64,7 +64,7 @@ function features_drush_command() {
       'feature' => 'A space delimited list of features.',
     ),
     'options' => array(
-      '--force' => "Force revert even if Features assumes components' state are default.",
+      'force' => "Force revert even if Features assumes components' state are default.",
     ),
     'drupal dependencies' => array('features'),
     'aliases' => array('fr'),
@@ -75,7 +75,7 @@ function features_drush_command() {
       'feature_exclude' => 'A space-delimited list of features to exclude from being reverted.',
     ),
     'options' => array(
-      '--force' => "Force revert even if Features assumes components' state are default.",
+      'force' => "Force revert even if Features assumes components' state are default.",
     ),
     'drupal dependencies' => array('features'),
     'aliases' => array('fr-all', 'fra'),
