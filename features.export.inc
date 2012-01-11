@@ -335,23 +335,7 @@ function features_detect_overrides($module) {
  * Gets the available default hooks keyed by components.
  */
 function features_get_default_hooks($component = NULL, $reset = FALSE) {
-  static $hooks;
-  if (!isset($hooks) || $reset) {
-    $hooks = array();
-    features_include();
-    foreach (module_implements('features_api') as $module) {
-      $info = module_invoke($module, 'features_api');
-      foreach ($info as $k => $v) {
-        if (isset($v['default_hook'])) {
-          $hooks[$k] = $v['default_hook'];
-        }
-      }
-    }
-  }
-  if (isset($component)) {
-    return isset($hooks[$component]) ? $hooks[$component] : FALSE;
-  }
-  return $hooks;
+  return features_get_components($component, 'default_hook', $reset);
 }
 
 /**
