@@ -440,10 +440,10 @@ function features_get_components($component = NULL, $key = NULL, $reset = FALSE)
 }
 
 /**
- * Returns component information for feature source components.
+ * Returns components that are offered as an option on feature creation.
  */
 function features_get_feature_components() {
-  return array_intersect_key(features_get_components(), features_get_components(NULL, 'feature_source'));
+  return array_intersect_key(features_get_components(), array_filter(features_get_components(NULL, 'feature_source')));
 }
 
 /**
