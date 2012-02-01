@@ -43,6 +43,7 @@ function features_populate($items, $dependencies, $module_name) {
 function _features_populate($pipe, &$export, $module_name = '') {
   features_include();
   foreach ($pipe as $component => $data) {
+    static $processed = array();
     // Convert already defined items to dependencies.
     _features_resolve_dependencies($data, $export, $module_name, $component);
     if (!empty($data) && $function = features_hook($component, 'features_export')) {
@@ -55,9 +56,20 @@ function _features_populate($pipe, &$export, $module_name = '') {
       drupal_alter(array('features_pipe', 'features_pipe_' . $component), $more, $data, $export);
       // Remove the component information.
       unset($export['component']);
-      // Allow for export functions to request additional exports.
+      // Allow for export functions to request additional exports, but avoid
+      // circular references on already processed components.
+      $processed[$component] = isset($processed[$component]) ? array_merge($processed[$component], $data) : $data;
+
       if (!empty($more)) {
-        _features_populate($more, $export, $module_name);
+        // Remove already processed components.
+        foreach ($more as $component_name => $component_data) {
+          if (isset($processed[$component_name])) {
+            $more[$component_name] = array_diff($component_data, $processed[$component_name]);
+          }
+        }
+        if ($more = array_filter($more)) {
+          _features_populate($more, $export, $module_name);
+        }
       }
     }
   }
