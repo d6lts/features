@@ -179,16 +179,14 @@ Features provides integration for the following exportables:
 Features also provides faux-exportable functionality for the following Drupal
 core and contrib components:
 
-- CCK fields
-- CCK fieldgroups
+- Fields
 - Content types
 - Input filters
 - User roles/permissions
 - Custom menus and menu links *
-- Taxonomy vocabularies *
+- Taxonomy vocabularies
 
 * Currently in development.
-
 
 For developers
 --------------
@@ -198,8 +196,10 @@ points in the Features module.
 
 Maintainers
 -----------
-- yhahn (Young Hahn)
-- jmiccolis (Jeff Miccolis)
+- febbraro (Frank Febbraro)
+- hefox (Fox)
+- mpotter (Mike Potter)
+- timplunkett (Tim Plunkett)
 
 
 [1]: http://drupal.org/project/drush
