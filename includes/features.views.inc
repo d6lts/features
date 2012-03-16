@@ -68,7 +68,7 @@ function views_features_export_options() {
   $enabled_views = array();
   $views = views_get_all_views();
   foreach ($views as $view) {
-    if (!isset($views[$view->name]->disabled) || !$views[$view->name]->disabled) {
+    if (!isset($view->disabled) || !$view->disabled) {
       $enabled_views[$view->name] = $view->name;
     }
   }
