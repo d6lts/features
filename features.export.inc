@@ -250,13 +250,17 @@ function features_export_render($export, $module_name, $reset = FALSE) {
     foreach ($hooks as $hook_name => $hook_info) {
       $hook_code = is_array($hook_info) ? $hook_info['code'] : $hook_info;
       $hook_args = is_array($hook_info) && !empty($hook_info['args']) ? $hook_info['args'] : '';
-      $code[$file['name']][$hook_name] = features_export_render_defaults($module_name, $hook_name, $hook_code, $hook_args);
+      $hook_file = is_array($hook_info) && !empty($hook_info['file']) ? $hook_info['file'] : $file['name'];
+      $code[$hook_file][$hook_name] = features_export_render_defaults($module_name, $hook_name, $hook_code, $hook_args);
     }
   }
 
   // Finalize strings to be written to files
+  $code = array_filter($code);
   foreach ($code as $filename => $contents) {
-    $code[$filename] = "<?php\n/**\n * @file\n * {$module_name}.{$filename}.inc\n */\n\n". implode("\n\n", $contents) ."\n";
+    if (count($contents) > 0) {
+      $code[$filename] = "<?php\n/**\n * @file\n * {$module_name}.{$filename}.inc\n */\n\n". implode("\n\n", $contents) ."\n";
+    }
   }
 
   // Generate info file output
