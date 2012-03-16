@@ -769,17 +769,12 @@ function features_feature_diff($feature, $component = NULL) {
     }
 
     module_load_include('inc', 'diff', 'diff.engine');
-    $formatter = new DrupalDiffFormatter(); //- temporarily broken
-    //$formatter = new DiffFormatter();
-    $formatter->leading_context_lines = 2;
-    $formatter->trailing_context_lines = 2;
-    //$formatter->show_header = $show_header
+    $formatter = new DrupalDiffFormatter();
     
     $rows = array();
     foreach ($overrides as $component => $items) {
-      $rows[] = array(array(array('data' => $component, 'colspan' => 4, 'header' => TRUE)));
+      $rows[] = array(array('data' => $component, 'colspan' => 4, 'header' => TRUE));
       $diff = new Diff(explode("\n", $items['default']), explode("\n", $items['normal']));
-      //dpm($formatter->format($diff));
       $rows = array_merge($rows, $formatter->format($diff));
     }
     $header = array(
