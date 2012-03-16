@@ -355,6 +355,16 @@ function features_get_default_hooks($component = NULL, $reset = FALSE) {
 }
 
 /**
+ * Gets the available default hooks keyed by components.
+ */
+function features_get_default_alter_hook($component) {
+  $default_hook = features_get_components($component, 'default_hook');
+  $alter_hook = features_get_components($component, 'alter_hook');
+  $alter_type = features_get_components($component, 'alter_type');
+  return empty($alter_type) || $alter_type != 'none' ? ($alter_hook ? $alter_hook : $default_hook) : FALSE;
+}
+
+/**
  * Return a code string representing an implementation of a defaults module hook.
  */
 function features_export_render_defaults($module, $hook, $code, $args = '') {
@@ -655,8 +665,11 @@ function features_get_default($component, $module_name = NULL, $alter = TRUE, $r
       else {
         if ($default_hook && module_hook($m, $default_hook)) {
           $cache[$component][$m] = call_user_func("{$m}_{$default_hook}");
-          if ($alter) {
-            drupal_alter($default_hook, $cache[$component][$m]);
+          $alter_type = features_get_components('alter_type', $component);
+          if ($alter && (!isset($alter_type) || $alter_type == FEATURES_ALTER_TYPE_NORMAL)) {
+            if ($alter_hook = features_get_default_alter_hook($component)) {
+              drupal_alter($alter_hook, $cache[$component][$m]);
+            }
           }
         }
         else {

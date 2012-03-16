@@ -18,6 +18,9 @@ define('FEATURES_NEEDS_REVIEW', 2);
 define('FEATURES_REBUILDING', 3);
 define('FEATURES_CONFLICT', 4);
 define('FEATURES_DISABLED', 5);
+define('FEATURES_ALTER_TYPE_NORMAL', 'normal');
+define('FEATURES_ALTER_TYPE_INLINE', 'inline');
+define('FEATURES_ALTER_TYPE_NONE', 'none');
 
 // Duration of rebuild semaphore: 10 minutes.
 define('FEATURES_SEMAPHORE_TIMEOUT', 10 * 60);
