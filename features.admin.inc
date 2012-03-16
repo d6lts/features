@@ -42,7 +42,6 @@ function features_export_form($form, $form_state, $feature = NULL) {
     '#title' => t('Description'),
     '#description' => t('Provide a short description of what users should expect when they enable your feature.'),
     '#type' => 'textfield',
-    '#required' => TRUE,
     '#default_value' => !empty($feature->info['description']) ? $feature->info['description'] : '',
   );
   $form['info']['package'] = array(
