@@ -258,9 +258,7 @@ function features_export_render($export, $module_name, $reset = FALSE) {
   // Finalize strings to be written to files
   $code = array_filter($code);
   foreach ($code as $filename => $contents) {
-    if (count($contents) > 0) {
-      $code[$filename] = "<?php\n/**\n * @file\n * {$module_name}.{$filename}.inc\n */\n\n". implode("\n\n", $contents) ."\n";
-    }
+    $code[$filename] = "<?php\n/**\n * @file\n * {$module_name}.{$filename}.inc\n */\n\n". implode("\n\n", $contents) ."\n";
   }
 
   // Generate info file output
