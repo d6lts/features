@@ -795,7 +795,7 @@ function features_get_component_states($features = array(), $rebuild_only = TRUE
                   $cache[$feature][$component] = FEATURES_OVERRIDDEN;
                 }
                 // DB has no modifications to prior code state (or this is initial install).
-                else if ($codecache == $normal || empty($codecache)) {
+                else if (empty($codecache) || $codecache == $normal) {
                   $cache[$feature][$component] = FEATURES_REBUILDABLE;
                 }
                 // None of the states match. Requires user intervention.
