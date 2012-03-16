@@ -46,6 +46,13 @@ function features_export_form($form, $form_state, $feature = NULL) {
     '#required' => TRUE,
     '#default_value' => !empty($feature->info['description']) ? $feature->info['description'] : '',
   );
+  $form['info']['package'] = array(
+    '#title' => t('Package'),
+    '#description' => t('Organize your features in groups.'),
+    '#type' => 'textfield',
+    '#autocomplete_path' => 'features/autocomplete/packages',
+    '#default_value' => !empty($feature->info['package']) ? $feature->info['package'] : 'Features',
+  );
   $form['info']['version'] = array(
     '#title' => t('Version'),
     '#description' => t('Examples: 7.x-1.0, 7.x-1.0-beta1'),
@@ -201,7 +208,7 @@ function features_export_build_form_submit($form, &$form_state) {
   $export = features_populate($stub, $form_state['values']['sources']['dependencies'], $module_name);
 
   // Directly copy the following attributes
-  $attr = array('name', 'description');
+  $attr = array('name', 'description', 'package');
   foreach ($attr as $key) {
     $export[$key] = isset($form_state['values'][$key]) ? $form_state['values'][$key] : NULL;
   }
@@ -340,7 +347,7 @@ function features_admin_form($form, $form_state) {
 
   if ( empty($features) ) {
     $form['no_features'] = array(
-      '#markup' => t('No Features were found. Please use the !create_link link to create 
+      '#markup' => t('No Features were found. Please use the !create_link link to create
       a new Feature module, or upload an existing Feature to your modules directory.', 
       array('!create_link' => l(t('Create Feature'), 'admin/structure/features/create'))),
     );
@@ -844,4 +851,26 @@ function features_dom_encode_map() {
     '<' => '__' . ord('<') . '__',
     '>' => '__' . ord('>') . '__',
   );
+}
+
+/**
+ * Page callback: Autocomplete field for features package.
+ *
+ * @param $search_string
+ *   The char or string that user have written in autocomplete field,
+ *   this is the string this function uses for filter.
+ *
+ * @see features_menu()
+ */
+function features_autocomplete_packages($search_string) {
+  $matched_packages = array();
+  //fetch all modules that are features and copy the package name into a new array.
+  foreach (features_get_features(NULL, TRUE) as $value) {
+    if(preg_match('/' . $search_string . '/', $value->info['package'])) {
+      $matched_packages[$value->info['package']] = $value->info['package'];
+    }
+  }
+  //removes duplicated package, we wont a list of all unique packages.
+  $matched_packages = array_unique($matched_packages);
+  drupal_json_output($matched_packages);
 }
