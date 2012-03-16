@@ -19,7 +19,6 @@ function features_export_form($form, $form_state, $feature = NULL) {
     '#title' => t('Name'),
     '#description' => t('Example: Image gallery'),
     '#type' => 'textfield',
-    '#required' => TRUE,
     '#default_value' => !empty($feature->info['name']) ? $feature->info['name'] : '',
     '#attributes' => array('class' => array('feature-name')),
   );
