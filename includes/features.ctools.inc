@@ -189,7 +189,9 @@ function ctools_component_features_revert($component, $module) {
       // Some things (like views) do not use the machine name as key
       // and need to be loaded explicitly in order to be deleted.
       $object = ctools_export_crud_load($component, $name);
-      _ctools_features_export_crud_delete($component, $object);
+      if ($object && ($object->export_type & EXPORT_IN_DATABASE)) {
+        _ctools_features_export_crud_delete($component, $object);
+      }
     }
   }
 }
