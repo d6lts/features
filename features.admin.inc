@@ -17,7 +17,7 @@ function features_export_form($form, $form_state, $feature = NULL) {
   );
   $form['info']['name'] = array(
     '#title' => t('Name'),
-    '#description' => t('Example: Image gallery'),
+    '#description' => t('Example: Image gallery') . ' (' . t('Do not begin name with numbers.') . ')',
     '#type' => 'textfield',
     '#default_value' => !empty($feature->info['name']) ? $feature->info['name'] : '',
     '#attributes' => array('class' => array('feature-name')),
