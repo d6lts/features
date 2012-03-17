@@ -356,13 +356,7 @@ function features_include_defaults($components = NULL, $reset = FALSE) {
     if (isset($include_components[$component]) && (!isset($included[$component]) || $reset)) {
       $info = $include_components[$component];
       // Inclusion of defaults for Views.
-      if ($component === 'views_view') {
-        views_include('view');
-        views_include_handlers();
-        views_module_include('views_default', $reset);
-      }
-      // Inclusion of defaults for CTools.
-      else if (isset($info['api'], $info['module'], $info['current_version'])) {
+      if (isset($info['api'], $info['module'], $info['current_version'])) {
         ctools_include('plugins');
         ctools_plugin_api_include($info['module'], $info['api'], $info['current_version'], $info['current_version']);
       }
