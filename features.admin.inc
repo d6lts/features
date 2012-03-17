@@ -416,9 +416,11 @@ function features_admin_form($form, $form_state) {
       $description .= "<div class='conflicts'>". t('Conflicts with: !conflicts', array('!conflicts' => implode(', ', $module_conflicts))) ."</div>";
     }
 
+    $href = "admin/structure/features/{$name}";
+    $module_name = (user_access('administer features')) ? l($module->info['name'], $href) : $module->info['name'];
     $form[$package]['status'][$name] = array(
       '#type' => 'checkbox',
-      '#title' => $module->info['name'],
+      '#title' => $module_name,
       '#description' => $description,
       '#default_value' => $module->status,
       '#disabled' => $disabled,
@@ -439,9 +441,8 @@ function features_admin_form($form, $form_state) {
 
     if (user_access('administer features')) {
       // Add status link
-      $href = "admin/structure/features/{$name}";
       if ($module->status) {
-        $state = '<span class="admin-loading features-storage">' . t('Checking...') . '</span>';
+        $state = theme('features_storage_link', array('storage' => FEATURES_CHECKING, 'path' => $href));
         $state .= l(t('Check'), "admin/structure/features/{$name}/status", array('attributes' => array('class' => array('admin-check'))));
         $state .= theme('features_storage_link', array('storage' => FEATURES_REBUILDING, 'path' => $href));
         $state .= theme('features_storage_link', array('storage' => FEATURES_NEEDS_REVIEW, 'path' =>  $href));

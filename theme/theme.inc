@@ -121,6 +121,7 @@ function theme_features_storage_link($vars) {
     FEATURES_REBUILDABLE => 'admin-rebuilding',
     FEATURES_CONFLICT => 'admin-conflict',
     FEATURES_DISABLED => 'admin-disabled',
+    FEATURES_CHECKING => 'admin-loading',
   );
   $default_text = array(
     FEATURES_OVERRIDDEN => t('Overridden'),
@@ -130,6 +131,7 @@ function theme_features_storage_link($vars) {
     FEATURES_REBUILDABLE => t('Rebuilding'),
     FEATURES_CONFLICT => t('Conflict'),
     FEATURES_DISABLED => t('Disabled'),
+    FEATURES_CHECKING => t('Checking...'),
   );
   $text = isset($vars['text']) ? $vars['text'] : $default_text[$vars['storage']];
   if ($vars['path']) {
