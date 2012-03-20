@@ -67,19 +67,36 @@ function ctools_features_export($data, &$export, $module_name = '') {
 
 /**
  * Implements hook_features_export_render().
- *
  * Adds the ctools mothership hook, ctools_plugin_api().
  */
 function ctools_features_export_render($module, $data) {
-  $component_exports = array();
-  ctools_include('plugins');
+  $code = array();
+  $code[] = '  list($module, $api) = func_get_args();';
+
+  $component_exports =  array();
   foreach ($data as $component) {
+    $code = array();
+    $code[] = '  list($module, $api) = func_get_args();';
+
     if ($info = _ctools_features_get_info($component)) {
-      $plugin_api_hook_name = ctools_plugin_api_get_hook($info['module'], $info['api']);
-      $component_exports[$plugin_api_hook_name] = '  return array("version" => "'. $info['current_version'] .'");';
+
+      $code[] = '  if ($module == "'. $info['module'] .'" && $api == "'. $info['api'] .'") {';
+      $code[] = '    return array("version" => "'. $info['current_version'] .'");';
+      $code[] = '  }';
+    }
+    ctools_include('plugins');
+    $plugin_api_hook_name = ctools_plugin_api_get_hook($info['module'], $info['api']);
+
+    if (key_exists($plugin_api_hook_name, $component_exports)) {
+        $component_exports[$plugin_api_hook_name] .= "\n" . implode("\n", $code);
+    }
+    else {
+        $component_exports[$plugin_api_hook_name] = implode("\n", $code);
     }
   }
+
   return $component_exports;
+
 }
 
 /**
