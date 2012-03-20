@@ -70,19 +70,21 @@ function ctools_features_export($data, &$export, $module_name = '') {
  * Adds the ctools mothership hook, ctools_plugin_api().
  */
 function ctools_features_export_render($module, $data) {
-  $code = array();
-  $code[] = '  list($module, $api) = func_get_args();';
-
   $component_exports =  array();
   foreach ($data as $component) {
     $code = array();
-    $code[] = '  list($module, $api) = func_get_args();';
-
     if ($info = _ctools_features_get_info($component)) {
-
-      $code[] = '  if ($module == "'. $info['module'] .'" && $api == "'. $info['api'] .'") {';
-      $code[] = '    return array("version" => "'. $info['current_version'] .'");';
-      $code[] = '  }';
+      // For background on why we change the output for hook_views_api()
+      // see http://drupal.org/node/1459120.
+      if ($info['module'] == 'views') {
+        $code[] = '  return array("version" => "3.0");';
+      }
+      else {
+        $code[] = '  list($module, $api) = func_get_args();';
+        $code[] = '  if ($module == "'. $info['module'] .'" && $api == "'. $info['api'] .'") {';
+        $code[] = '    return array("version" => "'. $info['current_version'] .'");';
+        $code[] = '  }';
+      }
     }
     ctools_include('plugins');
     $plugin_api_hook_name = ctools_plugin_api_get_hook($info['module'], $info['api']);
