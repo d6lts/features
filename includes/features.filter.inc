@@ -9,6 +9,7 @@ function filter_features_api() {
       'name' => t('Filter formats'),
       'default_hook' => 'filter_default_formats',
       'default_file' => FEATURES_DEFAULTS_INCLUDED,
+      'feature_source' => TRUE,
     ),
   );
 }
@@ -36,6 +37,17 @@ function filter_features_export($data, &$export, $module_name = '') {
 
   $pipe = array();
   return $pipe;
+}
+
+/**
+ * Implementation of hook_features_export_options().
+ */
+function filter_features_export_options() {
+  $options = array();
+  foreach (_filter_get_formats() as $format) {
+    $options[$format['name']] = $format['name'];
+  }
+  return $options;
 }
 
 /**
