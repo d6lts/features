@@ -82,11 +82,11 @@ function user_permission_features_export_render($module, $data) {
     if (isset($permissions[$perm_name])) {
       sort($permissions[$perm_name]);
       $permission['roles'] = $permissions[$perm_name];
-      $permission['module'] = $perm_modules[$perm_name];
     }
     else {
       $permission['roles'] = array();
     }
+    $permission['module'] = $perm_modules[$perm_name];
     $perm_identifier = features_var_export($perm_name);
     $perm_export = features_var_export($permission, '  ');
     $code[] = "  // Exported permission: {$perm_name}";
