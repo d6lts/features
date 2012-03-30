@@ -321,7 +321,9 @@ function features_include($reset = FALSE) {
 
     // Clear static cache, since we've now included new implementers.
     foreach (features_get_components(NULL, 'file') as $file) {
-      require_once DRUPAL_ROOT . '/' . $file;
+      if (is_file(DRUPAL_ROOT . '/' . $file)) {
+        require_once DRUPAL_ROOT . '/' . $file;
+      }
     }
   }
 }
