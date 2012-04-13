@@ -294,6 +294,8 @@ function features_modules_enabled($modules) {
       features_enable_feature($module);
     }
   }
+  // Make sure any new files are included now that a new module is enabled.
+  features_include(TRUE);
 }
 
 /**
@@ -316,7 +318,7 @@ function features_include($reset = FALSE) {
 
     if (module_exists('ctools')) {
       // Finally, add ctools eval'd implementations.
-      ctools_features_declare_functions();
+      ctools_features_declare_functions($reset);
     }
 
     // Clear static cache, since we've now included new implementers.

@@ -1,12 +1,12 @@
 <?php
 
-function ctools_features_declare_functions() {
+function ctools_features_declare_functions($reset = FALSE) {
 /**
  * This is called by Features to ensure ctools component functions are defined
  * Dynamically declare functions under a ctools component's namespace if they are not already declared.
  */
   if (function_exists('_ctools_features_get_info')) {
-   foreach (_ctools_features_get_info() as $component => $info) {
+   foreach (_ctools_features_get_info(NULL, $reset) as $component => $info) {
       $code = '';
       if (!function_exists("{$info['module']}_features_api")) {
         $code .= 'function '. $info['module'] .'_features_api() { return ctools_component_features_api("'. $info['module'] .'"); }';
@@ -224,6 +224,7 @@ function _ctools_features_get_info($identifier = NULL, $reset = FALSE) {
     $components = array();
     $modules = features_get_info();
     ctools_include('export');
+    drupal_static('ctools_export_get_schemas', NULL, $reset);
     foreach (ctools_export_get_schemas_by_module() as $module => $schemas) {
       foreach ($schemas as $table => $schema) {
         if ($schema['export']['bulk export']) {
