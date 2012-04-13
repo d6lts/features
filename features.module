@@ -7,6 +7,8 @@
  * entities which taken together statisfy a certain use-case.
  */
 
+define('FEATURES_API', '1');
+
 define('FEATURES_MODULE_ENABLED', 1);
 define('FEATURES_MODULE_DISABLED', 0);
 define('FEATURES_MODULE_MISSING', -1);

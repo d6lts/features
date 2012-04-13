@@ -14,6 +14,10 @@ function features_populate($items, $dependencies, $module_name) {
   $stub = array('features' => array(), 'dependencies' => array(), 'conflicts' => array());
   $export = _features_populate($items, $stub, $module_name);
 
+  // Add Features API version. Any module with this entry in the .info file
+  // will be treated as a Feature and included in the admin/build/features UI.
+  $export['features']['features_api']['api:' . FEATURES_API] = TRUE;
+
   // Allow other modules to alter the export.
   drupal_alter('features_export', $export, $module_name);
 
