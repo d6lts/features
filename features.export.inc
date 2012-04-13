@@ -465,7 +465,7 @@ function features_tar_create($name, $contents) {
  */
 function features_var_export($var, $prefix = '', $init = TRUE) {
   if (is_object($var)) {
-    $output = method_exists($var, 'export') ? $var->export() : features_var_export((array) $var);
+    $output = method_exists($var, 'export') ? $var->export() : features_var_export((array) $var, '', FALSE);
   }
   else if (is_array($var)) {
     if (empty($var)) {
