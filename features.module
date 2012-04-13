@@ -357,7 +357,7 @@ function features_include_defaults($components = NULL, $reset = FALSE) {
   }
   // Use all include components if none are explicitly specified.
   else {
-    $components = $include_components;
+    $components = array_keys($include_components);
   }
   foreach ($components as $component) {
     if (isset($include_components[$component]) && (!isset($included[$component]) || $reset)) {
