@@ -403,7 +403,7 @@ function features_export_info($info, $parents = array()) {
     foreach ($parents as $key) {
       $line .= is_numeric($key) ? "[]" : "[{$key}]";
     }
-    $line .=  " = \"{$info}\"\n";
+    $line .=  " = {$info}\n";
     return $line;
   }
   return $output;
