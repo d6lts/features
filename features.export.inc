@@ -56,10 +56,12 @@ function _features_populate($pipe, &$export, $module_name = '') {
       $more = $function($data, $export, $module_name, $component);
       // Add the context information.
       $export['component'] = $component;
+      $export['module_name'] = $module_name;
       // Allow other modules to manipulate the pipe to add in additional modules.
       drupal_alter(array('features_pipe', 'features_pipe_' . $component), $more, $data, $export);
       // Remove the component information.
       unset($export['component']);
+      unset($export['module_name']);
       // Allow for export functions to request additional exports, but avoid
       // circular references on already processed components.
       $processed[$component] = isset($processed[$component]) ? array_merge($processed[$component], $data) : $data;

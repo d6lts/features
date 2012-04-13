@@ -266,6 +266,7 @@ function hook_features_pipe_COMPONENT_alter(&$pipe, $data, $export) {
  *   feature.
  *
  * The component being exported is contained in $export['component'].
+ * The module being exported contained in $export['module_name'].
  */
 function hook_features_pipe_alter(&$pipe, $data, $export) {
   if ($export['component'] == 'node' && in_array($data, 'my-node-type')) {
