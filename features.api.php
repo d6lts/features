@@ -166,7 +166,7 @@ function hook_features_export_render($module_name, $data, $export = NULL) {
     $code[] = "  \$mycomponents['{$name}'] = " . features_var_export(mycomponent_load($name)) .";";
   }
   $code[] = "return \$mycomponents;";
-  $code = implode("\n", $mycomponents);
+  $code = implode("\n", $code);
   return array('mycomponent_defaults' => $code);
 }
 
