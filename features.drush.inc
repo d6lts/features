@@ -264,7 +264,7 @@ function _drush_features_component_filter($all_components, $patterns = array(), 
     // Rewrite * to %. Let users use both as wildcard.
     $pattern = strtr($pattern, array('*' => '%'));
     $sources = array();
-    list($source_pattern, $component_pattern) = explode(':', $pattern);
+    list($source_pattern, $component_pattern) = explode(':', $pattern, 2);
     // If source is empty, use a pattern.
     if ($source_pattern == '') {
       $source_pattern = '%';
@@ -273,8 +273,8 @@ function _drush_features_component_filter($all_components, $patterns = array(), 
       $component_pattern = '%';
     }
 
-    $preg_source_pattern = strtr(preg_quote($source_pattern), array('%' => '.*'));
-    $preg_component_pattern = strtr(preg_quote($component_pattern), array('%' => '.*'));
+    $preg_source_pattern = strtr(preg_quote($source_pattern, '/'), array('%' => '.*'));
+    $preg_component_pattern = strtr(preg_quote($component_pattern, '/'), array('%' => '.*'));
     /*
      * If it isn't a pattern, but a simple string, we don't anchor the
      * pattern, this allows for abbreviating. Else, we do, as this seems more
