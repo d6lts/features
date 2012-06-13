@@ -93,7 +93,7 @@ function menu_custom_features_export_render($module, $data) {
       ->fetchAssoc();
     if ($row) {
       $export = features_var_export($row, '  ');
-      $code[] = "  // Exported menu: {$menu_name}";
+      $code[] = "  // Exported menu: {$menu_name}.";
       $code[] = "  \$menus['{$menu_name}'] = {$export};";
       $translatables[] = $row['title'];
       $translatables[] = $row['description'];

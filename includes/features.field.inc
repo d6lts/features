@@ -107,7 +107,7 @@ function field_features_export_render($module, $data, $export = NULL) {
       _field_features_export_sort($field);
       $field_export = features_var_export($field, '  ');
       $field_identifier = features_var_export($identifier);
-      $code[] = "  // Exported field: {$field_identifier}";
+      $code[] = "  // Exported field: {$field_identifier}.";
       $code[] = "  \$fields[{$field_identifier}] = {$field_export};";
       $code[] = "";
 
