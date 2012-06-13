@@ -91,7 +91,6 @@ function field_features_export_render($module, $data, $export = NULL) {
   foreach ($data as $identifier) {
     if ($field = features_field_load($identifier)) {
       unset($field['field_config']['columns']);
-      unset($field['field_config']['locked']);
       // Only remove the 'storage' declaration if the field is using the default
       // storage type.
       if ($field['field_config']['storage']['type'] == variable_get('field_storage_default', 'field_sql_storage')) {
