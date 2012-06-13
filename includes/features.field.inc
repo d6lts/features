@@ -131,7 +131,10 @@ function field_features_export_render($module, $data, $export = NULL) {
 function _field_features_export_sort(&$field, $sort = TRUE) {
 
   // Some arrays are not sorted to preserve order (for example allowed_values).
-  static $sort_blacklist = array('allowed_values');
+  static $sort_blacklist = array(
+    'allowed_values',
+    'format_handlers',
+  );
 
   if ($sort) {
     ksort($field);
