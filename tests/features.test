@@ -167,3 +167,51 @@ class FeaturesUserTestCase extends DrupalWebTestCase {
     }
   }
 }
+
+/**
+ * Tests enabling of feature modules.
+ */
+class FeaturesEnableTestCase extends DrupalWebTestCase {
+  protected $profile = 'testing';
+
+  /**
+   * Test info.
+   */
+  public static function getInfo() {
+    return array(
+      'name' => t('Features enable tests'),
+      'description' => t('Run tests for enabling of features.') ,
+      'group' => t('Features'),
+    );
+  }
+
+
+  /**
+   * Run test for features_get_components on enable.
+   */
+  public function testFeaturesGetComponents() {
+
+    // Testing that features_get_components returns correct after enable.
+    $modules = array(
+      'features',
+      'taxonomy',
+      'features_test',
+    );
+
+    // Make sure features_get_components is cached if features already enabled.
+    if (!module_exists('features')) {
+      drupal_load('module', 'features');
+    }
+    features_get_components();
+
+    module_enable($modules);
+
+    // Make sure correct information for enabled modules is now cached.
+    $components = features_get_components();
+    $taxonomy_component_info = taxonomy_features_api();
+    $this->assertTrue(!empty($components['taxonomy']) && $components['taxonomy'] == $taxonomy_component_info['taxonomy'], 'features_get_components returns correct taxonomy information on enable');
+
+    features_rebuild();
+    $this->assertNotNull(taxonomy_vocabulary_machine_name_load('taxonomy_features_test'), 'Taxonomy vocabulary correctly enabled on enable.');
+  }
+}
