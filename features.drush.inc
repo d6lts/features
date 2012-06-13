@@ -29,6 +29,8 @@ function features_drush_command() {
     ),
     'options' => array(
       'destination' => "Destination path (from Drupal root) of the exported feature. Defaults to 'sites/all/modules'",
+      'version-set' => "Specify a version number for the feature.",
+      'version-increment' => "Increment the feature's version number.",
     ),
     'drupal dependencies' => array('features'),
     'aliases' => array('fe'),
@@ -38,6 +40,10 @@ function features_drush_command() {
     'arguments' => array(
       'feature' => 'Feature name to add to.',
       'components' => 'List of components to add.',
+    ),
+    'options' => array(
+      'version-set' => "Specify a version number for the feature.",
+      'version-increment' => "Increment the feature's version number.",
     ),
     'drupal dependencies' => array('features'),
     'aliases' => array('fa'),
@@ -61,6 +67,10 @@ function features_drush_command() {
     'description' => "Update a feature module on your site.",
     'arguments' => array(
       'feature' => 'A space delimited list of features.',
+    ),
+    'options' => array(
+      'version-set' => "Specify a version number for the feature.",
+      'version-increment' => "Increment the feature's version number.",
     ),
     'drupal dependencies' => array('features'),
     'aliases' => array('fu'),
@@ -115,7 +125,7 @@ function features_drush_help($section) {
     case 'drush:features':
       return dt("List all the available features for your site.");
     case 'drush:features-export':
-      return dt("Export a feature from your site into a module. The option '--destination=foo' may be used to specify the path (from Drupal root) where the feature should be created. The default destination is 'sites/all/modules'.");
+      return dt("Export a feature from your site into a module. If called with no arguments, display a list of available components. If called with a single argument, attempt to create a feature including the given component with the same name. The option '--destination=foo' may be used to specify the path (from Drupal root) where the feature should be created. The default destination is 'sites/all/modules'. The option '--version-set=foo' may be used to specify a version number for the feature or the option '--version-increment' may also to increment the feature's version number.");
     case 'drush:features-components':
       return dt("List feature components matching patterns. The listing may be limited to exported/not-exported components.
 
@@ -128,7 +138,7 @@ Patterns uses * or % for matching multiple sources/components. Unlike shorthands
 Lastly, a pattern without a colon is interpreted as having \":%\" appended, for easy listing of all components of a source.
 ");
     case 'drush:features-update':
-      return dt("Update a feature module on your site.");
+      return dt("Update a feature module on your site. The option '--version-set=foo' may be used to specify a version number for the feature or the option '--version-increment' may also to increment the feature's version number.");
     case 'drush:features-update-all':
       return dt("Update all feature modules on your site.");
     case 'drush:features-revert':
@@ -140,7 +150,7 @@ Lastly, a pattern without a colon is interpreted as having \":%\" appended, for 
     case 'drush:features-diff':
       return dt("Show a diff of a feature module.");
     case 'drush:features-add':
-      return dt("Add a component to a feature module.");
+      return dt("Add a component to a feature module. The option '--version-set=foo' may be used to specify a version number for the feature or the option '--version-increment' may also to increment the feature's version number.");
   }
 }
 
@@ -521,6 +531,29 @@ function _drush_features_export($stub, $dependencies, $module_name = NULL, $dire
       $export = features_populate($stub, $dependencies, $module_name);
       if (!feature_load($module_name)) {
         $export['name'] = $module_name;
+      }
+      // Set the feature version if the --version-set or --version-increment option is passed.
+      if ($version = drush_get_option(array('version-set'))) {
+        preg_match('/^(?P<core>\d+\.x)-(?P<major>\d+)\.(?P<patch>\d+)-?(?P<extra>\w+)?$/', $version, $matches);
+        if (!isset($matches['core'], $matches['major'])) {
+          drush_die(dt('Please enter a valid version with core and major version number. Example: !example', array('!example' => '7.x-1.0')));
+        }
+        $export['version'] = $version;
+      }
+      else if ($version = drush_get_option(array('version-increment'))) {
+        // Determine current version and increment it.
+        $export_load = features_export_prepare($export, $module_name);
+        $version = $export_load['version'];
+        $version_explode = explode('.', $version);
+        $version_minor = array_pop($version_explode);
+        // Increment minor version number if numeric or not a dev release.
+        if (is_numeric($version_minor) || strpos($version_minor, 'dev') !== (strlen($version_minor) - 3)) {
+          ++$version_minor;
+        }
+        array_push($version_explode, $version_minor);
+        // Rebuild version string.
+        $version = implode('.', $version_explode);
+        $export['version'] = $version;
       }
       $files = features_export_render($export, $module_name, TRUE);
       foreach ($files as $extension => $file_contents) {
