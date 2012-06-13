@@ -110,14 +110,14 @@ function menu_custom_features_export_render($module, $data) {
 }
 
 /**
- * Implements hook_features_export_revert().
+ * Implements hook_features_revert().
  */
 function menu_custom_features_revert($module) {
   menu_custom_features_rebuild($module);
 }
 
 /**
- * Implements hook_features_export_rebuild().
+ * Implements hook_features_rebuild().
  */
 function menu_custom_features_rebuild($module) {
   if ($defaults = features_get_default('menu_custom', $module)) {
@@ -222,14 +222,14 @@ function menu_links_features_export_render($module, $data) {
 }
 
 /**
- * Implements hook_features_export_revert().
+ * Implements hook_features_revert().
  */
 function menu_links_features_revert($module) {
   menu_links_features_rebuild($module);
 }
 
 /**
- * Implements hook_features_export_rebuild().
+ * Implements hook_features_rebuild().
  */
 function menu_links_features_rebuild($module) {
   if ($menu_links = features_get_default('menu_links', $module)) {
