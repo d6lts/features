@@ -86,10 +86,14 @@ function features_drush_command() {
   $items['features-revert'] = array(
     'description' => "Revert a feature module on your site.",
     'arguments' => array(
-      'feature' => 'A space delimited list of features.',
+      'feature' => 'A space delimited list of features or feature.component pairs.',
     ),
     'options' => array(
       'force' => "Force revert even if Features assumes components' state are default.",
+    ),
+    'examples' => array(
+      'drush fr foo.node foo.taxonomy bar' => 'Revert node and taxonomy components of feature "foo", but only if they are overriden. Revert all overriden components of feature "bar".',
+      'drush fr foo.node foo.taxonomy bar --force' => 'Revert node and taxonomy components of feature "foo". Revert all components of feature "bar".',
     ),
     'drupal dependencies' => array('features'),
     'aliases' => array('fr'),
@@ -392,7 +396,7 @@ function _drush_features_component_print($filtered_components) {
   drush_print_table($rows, TRUE);
 }
 
- /**
+/**
  * Add a component to a features module, or create a new module with
  * the selected components.
  */
@@ -575,6 +579,7 @@ function _drush_features_export($stub, $dependencies, $module_name = NULL, $dire
 
 /**
  * Revert a feature to it's code definition.
+ * Optionally accept a list of components to revert.
  */
 function drush_features_revert() {
   if ($args = func_get_args()) {
@@ -583,7 +588,28 @@ function drush_features_revert() {
 
     // Determine if revert should be forced.
     $force = drush_get_option('force');
-    foreach ($args as $module) {
+
+    // Parse list of arguments.
+    $modules = array();
+    foreach ($args as $arg) {
+      list($module, $component) = explode('.', $arg);
+
+      if (isset($module)) {
+        if (empty($component)) {
+          // If we received just a feature name, this means that we need all of it's components.
+          $modules[$module] = TRUE;
+        }
+        elseif ($modules[$module] !== TRUE) {
+          if (!isset($modules[$module])) {
+            $modules[$module] = array();
+          }
+          $modules[$module][] = $component;
+        }
+      }
+    }
+
+    // Process modules.
+    foreach ($modules as $module => $components_needed) {
       if (($feature = feature_load($module, TRUE)) && module_exists($module)) {
 
         $components = array();
@@ -605,6 +631,9 @@ function drush_features_revert() {
           }
         }
 
+        if (!empty($components_needed) && is_array($components_needed)) {
+          $components = array_intersect($components, $components_needed);
+        }
         if (empty($components)) {
           drush_log(dt('Current state already matches defaults, aborting.'), 'ok');
         }
