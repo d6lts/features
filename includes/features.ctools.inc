@@ -348,3 +348,22 @@ function page_manager_pages_features_revert($module) {
     }
   }
 }
+
+/**
+ * Implements hook_features_pipe_COMPONENT_alter() for views_view.
+ */
+function views_features_pipe_views_view_alter(&$pipe, $data, $export) {
+  // @todo Remove this check before next stable release.
+  if (!function_exists('views_plugin_list')) {
+    return;
+  }
+
+  $map = array_flip($data);
+  foreach (views_plugin_list() as $plugin) {
+    foreach ($plugin['views'] as $view_name) {
+      if (isset($map[$view_name])) {
+        $pipe['dependencies'][$plugin['module']] = $plugin['module'];
+      }
+    }
+  }
+}
