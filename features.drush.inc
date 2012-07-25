@@ -700,7 +700,7 @@ function drush_features_revert_all() {
       }
     }
     else {
-      drush_die('Aborting.');
+      return drush_user_abort('Aborting.');
     }
   }
   else {
