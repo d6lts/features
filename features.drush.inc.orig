@@ -327,47 +327,26 @@ function drush_features_revert() {
 }
 
 /**
- * Revert all enabled features to their definitions in code.
- *
- * @param ...
- *   (Optional) A list of features to exclude from being reverted.
+ * Revert all enabled features to their definitions in code. Optionally pass in
+ * a list of features to exclude from being reverted.
  */
 function drush_features_revert_all() {
-  module_load_include('inc', 'features', 'features.export');
-  $force = drush_get_option('force');
-  $features_to_exclude = func_get_args();
-
   $features_to_revert = array();
-  foreach (features_get_features(NULL, TRUE) as $module) {
+  $features_to_exclude = func_get_args();
+  $force = drush_get_option('force');
+  foreach (features_get_features() as $module) {
     if ($module->status && !in_array($module->name, $features_to_exclude)) {
-      // If forced, add module regardless of status.
-      if ($force) {
-        $features_to_revert[] = $module->name;
-      }
-      else {
-        switch (features_get_storage($module->name)) {
-          case FEATURES_OVERRIDDEN:
-          case FEATURES_NEEDS_REVIEW:
-            $features_to_revert[] = $module->name;
-            break;
-        }
-      }
+      $features_to_revert[] = $module->name;
     }
   }
-
-  if ($features_to_revert) {
-    drush_print(dt('The following modules will be reverted: !modules', array('!modules' => implode(', ', $features_to_revert))));
-    if (drush_confirm(dt('Do you really want to continue?'))) {
-      foreach ($features_to_revert as $module) {
-        drush_invoke_process(drush_sitealias_get_record('@self'), 'features-revert', array($module), array('force' => $force, '#integrate' => TRUE));
-      }
-    }
-    else {
-      drush_die('Aborting.');
+  drush_print(dt('The following modules will be reverted: !modules', array('!modules' => implode(', ', $features_to_revert))));
+  if (drush_confirm(dt('Do you really want to continue?'))) {
+    foreach ($features_to_revert as $module_name) {
+      drush_invoke_process(drush_sitealias_get_record('@self'), 'features-revert', array($module_name), array('force' => $force, '#integrate' => TRUE));
     }
   }
   else {
-    drush_log(dt('Current state already matches defaults, aborting.'), 'ok');
+    drush_die('Aborting.');
   }
 }
 
