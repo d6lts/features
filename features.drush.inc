@@ -621,11 +621,11 @@ function drush_features_revert() {
             }
           }
         }
-        // Only revert components that are detected to be Overridden/Needs review.
+        // Only revert components that are detected to be Overridden/Needs review/rebuildable.
         else {
           $states = features_get_component_states(array($feature->name), FALSE);
           foreach ($states[$feature->name] as $component => $state) {
-            if (in_array($state, array(FEATURES_OVERRIDDEN, FEATURES_NEEDS_REVIEW)) && features_hook($component, 'features_revert')) {
+            if (in_array($state, array(FEATURES_OVERRIDDEN, FEATURES_NEEDS_REVIEW, FEATURES_REBUILDABLE)) && features_hook($component, 'features_revert')) {
               $components[] = $component;
             }
           }
@@ -685,6 +685,7 @@ function drush_features_revert_all() {
         switch (features_get_storage($module->name)) {
           case FEATURES_OVERRIDDEN:
           case FEATURES_NEEDS_REVIEW:
+          case FEATURES_REBUILDABLE:
             $features_to_revert[] = $module->name;
             break;
         }
