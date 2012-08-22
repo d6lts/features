@@ -11,6 +11,12 @@ function ctools_features_declare_functions($reset = FALSE) {
       if (!function_exists("{$info['module']}_features_api")) {
         $code .= 'function '. $info['module'] .'_features_api() { return ctools_component_features_api("'. $info['module'] .'"); }';
       }
+
+      // ctools component with owner defined as "ctools"
+      if (!function_exists("{$component}_features_api") && $info['module'] === 'ctools') {
+        $code .= 'function '. $component .'_features_api() { return ctools_component_features_api("'. $component .'"); }';
+      }
+
       if (!function_exists("{$component}_features_export")) {
         $code .= 'function '. $component .'_features_export($data, &$export, $module_name = "") { return ctools_component_features_export("'. $component .'", $data, $export, $module_name); }';
       }
@@ -110,7 +116,8 @@ function ctools_features_export_render($module, $data) {
 function ctools_component_features_api($module_name) {
   $api = array();
   foreach (_ctools_features_get_info() as $component => $info) {
-    if ($info['module'] == $module_name) {
+    // if module owner is set to "ctools" we need to compare the component
+    if ($info['module'] == $module_name || ($info['module'] === 'ctools' && $component == $module_name) ) {
       $api[$component] = $info;
     }
   }
@@ -259,7 +266,7 @@ function _ctools_features_get_info($identifier = NULL, $reset = FALSE) {
       return $components[$identifier];
     }
     // New API identifier. Allows non-exportables related CTools APIs to be
-    // supported by an explicit `module:api:current_version` key. 
+    // supported by an explicit `module:api:current_version` key.
     else if (substr_count($identifier, ':') === 2) {
       list($module, $api, $current_version) = explode(':', $identifier);
       // If a schema component matches the provided identifier, provide that

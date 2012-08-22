@@ -332,7 +332,7 @@ function features_admin_form($form, $form_state) {
   $modules = array_filter(features_get_modules(), 'features_filter_hidden');
   $features = array_filter(features_get_features(), 'features_filter_hidden');
   $conflicts = features_get_conflicts();
-    
+
   foreach ($modules as $key => $module) {
     if ($module->status && !empty($module->info['dependencies'])) {
       foreach ($module->info['dependencies'] as $dependent) {
@@ -346,7 +346,7 @@ function features_admin_form($form, $form_state) {
   if ( empty($features) ) {
     $form['no_features'] = array(
       '#markup' => t('No Features were found. Please use the !create_link link to create
-      a new Feature module, or upload an existing Feature to your modules directory.', 
+      a new Feature module, or upload an existing Feature to your modules directory.',
       array('!create_link' => l(t('Create Feature'), 'admin/structure/features/create'))),
     );
     return $form ;
@@ -523,7 +523,7 @@ function features_admin_components($form, $form_state, $feature) {
   $form['#conflicts'] = $conflicts;
 
   $review = $revert = FALSE;
-    
+
   // Iterate over components and retrieve status for display
   $states = features_get_component_states(array($feature->name), FALSE);
   $form['revert']['#tree'] = TRUE;
@@ -549,7 +549,7 @@ function features_admin_components($form, $form_state, $feature) {
     else {
       $path = NULL;
     }
-      
+
     $storage = FEATURES_DEFAULT;
     if (array_key_exists($component, $states[$feature->name])) {
       $storage = $states[$feature->name][$component];
@@ -778,7 +778,7 @@ function features_feature_diff($feature, $component = NULL) {
 
     module_load_include('inc', 'diff', 'diff.engine');
     $formatter = new DrupalDiffFormatter();
-    
+
     $rows = array();
     foreach ($overrides as $component => $items) {
       $rows[] = array(array('data' => $component, 'colspan' => 4, 'header' => TRUE));
