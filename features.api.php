@@ -55,7 +55,7 @@ function hook_features_api() {
       'default_hook' => 'mycomponent_defaults',
       'default_file' => FEATURES_DEFAULTS_INCLUDED,
       'feature_source' => TRUE,
-      'file' => drupal_get_path('module', 'mycomponent') .'/mycomponent.features.inc',
+      'file' => drupal_get_path('module', 'mycomponent') . '/mycomponent.features.inc',
     ),
   );
 }
@@ -112,7 +112,7 @@ function hook_features_export($data, &$export, $module_name) {
   // The following is the simplest implementation of a straight object export
   // with no further export processors called.
   foreach ($data as $component) {
-    $export['mycomponent'][$component] = $component;
+    $export['features']['mycomponent'][$component] = $component;
   }
   return array();
 }
@@ -183,8 +183,8 @@ function hook_features_export_render($module_name, $data, $export = NULL) {
  *   TRUE or FALSE for whether the components were successfully reverted.
  */
 function hook_features_revert($module_name) {
-  $mycomponents = module_invoke_all($module_name, 'mycomponent_defaults');
-  if (!empty($$mycomponents)) {
+  $mycomponents = module_invoke($module_name, 'mycomponent_defaults');
+  if (!empty($mycomponents)) {
     foreach ($mycomponents as $mycomponent) {
       mycomponent_delete($mycomponent);
     }
@@ -209,8 +209,8 @@ function hook_features_revert($module_name) {
  *   The name of the feature module whose components should be rebuilt.
  */
 function hook_features_rebuild($module_name) {
-  $mycomponents = module_invoke_all($module_name, 'mycomponent_defaults');
-  if (!empty($$mycomponents)) {
+  $mycomponents = module_invoke($module_name, 'mycomponent_defaults');
+  if (!empty($mycomponents)) {
     foreach ($mycomponents as $mycomponent) {
       mycomponent_save($mycomponent);
     }
