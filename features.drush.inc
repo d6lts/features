@@ -2,16 +2,16 @@
 
 /**
  * @file
- *   Features module drush integration.
+ * Features module drush integration.
  */
 
 /**
  * Implements hook_drush_command().
  *
- * @See drush_parse_command() for a list of recognized keys.
- *
  * @return
  *   An associative array describing your command(s).
+ *
+ * @see drush_parse_command()
  */
 function features_drush_command() {
   $items = array();
@@ -421,7 +421,7 @@ function drush_features_export() {
 
     $items = array_map('array_keys', $items);
 
-    if (($feature = feature_load($module, TRUE)) && module_exists($module)) {
+    if (($feature = features_load_feature($module, TRUE)) && module_exists($module)) {
       module_load_include('inc', 'features', 'features.export');
       _features_populate($items, $feature->info, $feature->name);
       _drush_features_export($feature->info['features'], $feature->info['dependencies'], $feature->name, dirname($feature->filename));
@@ -464,7 +464,7 @@ function drush_features_add() {
 function drush_features_update() {
   if ($args = func_get_args()) {
     foreach ($args as $module) {
-      if (($feature = feature_load($module, TRUE)) && module_exists($module)) {
+      if (($feature = features_load_feature($module, TRUE)) && module_exists($module)) {
         _drush_features_export($feature->info['features'], $feature->info['dependencies'], $feature->name, dirname($feature->filename));
       }
       else if ($feature) {
@@ -534,7 +534,7 @@ function _drush_features_export($stub, $dependencies, $module_name = NULL, $dire
       drupal_flush_all_caches();
       module_load_include('inc', 'features', 'features.export');
       $export = features_populate($stub, $dependencies, $module_name);
-      if (!feature_load($module_name)) {
+      if (!features_load_feature($module_name)) {
         $export['name'] = $module_name;
       }
       // Set the feature version if the --version-set or --version-increment option is passed.
@@ -611,7 +611,7 @@ function drush_features_revert() {
 
     // Process modules.
     foreach ($modules as $module => $components_needed) {
-      if (($feature = feature_load($module, TRUE)) && module_exists($module)) {
+      if (($feature = features_load_feature($module, TRUE)) && module_exists($module)) {
 
         $components = array();
         // Forcefully revert all components of a feature.
@@ -719,7 +719,7 @@ function drush_features_diff() {
     return;
   }
   $module = $args[0];
-  $feature = feature_load($module);
+  $feature = features_load_feature($module);
   if (!module_exists($module)) {
     drush_log(dt('No such feature is enabled: ' . $module), 'error');
     return;

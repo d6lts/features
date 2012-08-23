@@ -284,7 +284,7 @@ function features_modules_disabled($modules) {
   // Go through all modules and gather features that can be disabled.
   $items = array();
   foreach ($modules as $module) {
-    if ($feature = feature_load($module)) {
+    if ($feature = features_load_feature($module)) {
       $items[$module] = array_keys($feature->info['features']);
     }
   }
@@ -303,7 +303,7 @@ function features_modules_enabled($modules) {
   // Go through all modules and gather features that can be enabled.
   $items = array();
   foreach ($modules as $module) {
-    if ($feature = feature_load($module)) {
+    if ($feature = features_load_feature($module)) {
       $items[$module] = array_keys($feature->info['features']);
     }
   }
@@ -396,9 +396,16 @@ function features_include_defaults($components = NULL, $reset = FALSE) {
 }
 
 /**
- * Feature object loader.
+ * Feature object loader.  DEPRECATED but included for backwards compatibility
  */
 function feature_load($name, $reset = FALSE) {
+  return features_load_feature($name, $reset);
+}
+
+/**
+ * Feature object loader.
+ */
+function features_load_feature($name, $reset = FALSE) {
   // Use an alternative code path during installation, for better performance.
   if (variable_get('install_task') != 'done') {
     static $features;
