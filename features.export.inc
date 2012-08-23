@@ -671,11 +671,15 @@ function features_get_default($component, $module_name = NULL, $alter = TRUE, $r
       else {
         if ($default_hook && module_hook($m, $default_hook)) {
           $cache[$component][$m] = call_user_func("{$m}_{$default_hook}");
-          $alter_type = features_get_components('alter_type', $component);
-          if ($alter && (!isset($alter_type) || $alter_type == FEATURES_ALTER_TYPE_NORMAL)) {
-            if ($alter_hook = features_get_default_alter_hook($component)) {
-              drupal_alter($alter_hook, $cache[$component][$m]);
+          if (is_array($cache[$component][$m])) {
+            $alter_type = features_get_components('alter_type', $component);
+            if ($alter && (!isset($alter_type) || $alter_type == FEATURES_ALTER_TYPE_NORMAL)) {
+              if ($alter_hook = features_get_default_alter_hook($component)) {
+                drupal_alter($alter_hook, $cache[$component][$m]);
+              }
             }
+          else {
+            $cache[$component][$m] = FALSE;
           }
         }
         else {
