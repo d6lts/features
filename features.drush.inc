@@ -640,12 +640,12 @@ function drush_features_revert() {
         }
         else {
           foreach ($components as $component) {
-            if (drush_confirm(dt('Do you really want to revert !component?', array('!component' => $component)))) {
+            if (drush_confirm(dt('Do you really want to revert @component?', array('@component' => $component)))) {
               features_revert(array($module => array($component)));
-              drush_log(dt('Reverted !component.', array('!component' => $component)), 'ok');
+              drush_log(dt('Reverted @component.', array('@component' => $component)), 'ok');
             }
             else {
-              drush_log(dt('Skipping !component.', array('!component' => $component)), 'ok');
+              drush_log(dt('Skipping @component.', array('@component' => $component)), 'ok');
             }
           }
         }
