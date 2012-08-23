@@ -218,11 +218,13 @@ function hook_features_rebuild($module_name) {
 }
 
 /**
- * Alter the final export array just prior to the rendering of defaults. Allows
- * modules a final say in altering what component objects are exported.
+ * Alter the final array of Component names to be exported, just prior to
+ * the rendering of defaults. Allows modules a final say in whether or not
+ * certain Components are exported (the Components' actual data, however,
+ * cannot be altered by this hook).
  *
  * @param array &$export
- *   By reference. An array of all components to be exported with a given
+ *   By reference. An array of all component names to be exported with a given
  *   feature.
  * @param array $module_name
  *   The name of the feature module to be generated.
