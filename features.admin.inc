@@ -543,8 +543,9 @@ function features_admin_components($form, $form_state, $feature) {
       );
     }
     if (module_exists('diff')) {
-      $item = menu_get_item("admin/structure/features/{$feature->name}/diff/{$component}");
-      $path = ($item && $item['access']) ? $item['href'] : NULL;
+      $diffpath = "admin/structure/features/{$feature->name}/diff/{$component}";
+      $item = menu_get_item($diffpath);
+      $path = ($item && $item['access']) ? $diffpath : NULL;
     }
     else {
       $path = NULL;
