@@ -636,6 +636,7 @@ function features_get_normal($component, $module_name, $reset = FALSE) {
  */
 function features_get_default($component, $module_name = NULL, $alter = TRUE, $reset = FALSE) {
   static $cache = array();
+  $alter = !empty($alter); // ensure $alter is a true/false boolean
   features_include();
   features_include_defaults($component);
   $default_hook = features_get_default_hooks($component);
@@ -660,30 +661,30 @@ function features_get_default($component, $module_name = NULL, $alter = TRUE, $r
 
   // Collect and cache information for each specified module.
   foreach ($modules as $m) {
-    if (!isset($cache[$component][$m]) || $reset) {
+    if (!isset($cache[$component][$alter][$m]) || $reset) {
       // Special handling for dependencies component.
       if ($component === 'dependencies') {
         $module = features_get_features($m);
-        $cache[$component][$m] = isset($module->info['dependencies']) ? $module->info['dependencies'] : array();
+        $cache[$component][$alter][$m] = isset($module->info['dependencies']) ? $module->info['dependencies'] : array();
         unset($module);
       }
       // All other components
       else {
         if ($default_hook && module_hook($m, $default_hook)) {
-          $cache[$component][$m] = call_user_func("{$m}_{$default_hook}");
-          if (is_array($cache[$component][$m])) {
+          $cache[$component][$alter][$m] = call_user_func("{$m}_{$default_hook}");
+          if (is_array($cache[$component][$alter][$m])) {
             $alter_type = features_get_components('alter_type', $component);
             if ($alter && (!isset($alter_type) || $alter_type == FEATURES_ALTER_TYPE_NORMAL)) {
               if ($alter_hook = features_get_default_alter_hook($component)) {
-                drupal_alter($alter_hook, $cache[$component][$m]);
+                drupal_alter($alter_hook, $cache[$component][$alter][$m]);
               }
             }
           else {
-            $cache[$component][$m] = FALSE;
+            $cache[$component][$alter][$m] = FALSE;
           }
         }
         else {
-          $cache[$component][$m] = FALSE;
+          $cache[$component][$alter][$m] = FALSE;
         }
       }
     }
@@ -691,12 +692,12 @@ function features_get_default($component, $module_name = NULL, $alter = TRUE, $r
 
   // A specific module was specified. Retrieve only its components.
   if (isset($module_name)) {
-    return isset($cache[$component][$module_name]) ? $cache[$component][$module_name] : FALSE;
+    return isset($cache[$component][$alter][$module_name]) ? $cache[$component][$alter][$module_name] : FALSE;
   }
   // No module was specified. Retrieve all components.
   $all_defaults = array();
-  if (isset($cache[$component])) {
-    foreach (array_filter($cache[$component]) as $module_components) {
+  if (isset($cache[$component][$alter])) {
+    foreach (array_filter($cache[$component][$alter]) as $module_components) {
       $all_defaults = array_merge($all_defaults, $module_components);
     }
   }
