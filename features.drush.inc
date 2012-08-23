@@ -163,7 +163,7 @@ Lastly, a pattern without a colon is interpreted as having \":%\" appended, for 
  */
 function drush_features_list() {
   module_load_include('inc', 'features', 'features.export');
-  $rows = array(array(dt('Name'), dt('Feature'), dt('Status'), dt('State')));
+  $rows = array(array(dt('Name'), dt('Feature'), dt('Status'), dt('Version'), dt('State')));
   foreach (features_get_features(NULL, TRUE) as $k => $m) {
     switch (features_get_storage($m->name)) {
       case FEATURES_DEFAULT:
@@ -181,7 +181,8 @@ function drush_features_list() {
       $m->info['name'],
       $m->name,
       $m->status ? dt('Enabled') : dt('Disabled'),
-      $storage
+      $m->info['version'],
+    $storage
     );
   }
   drush_print_table($rows, TRUE);
