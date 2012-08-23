@@ -592,7 +592,7 @@ function features_admin_components_revert(&$form, &$form_state) {
   $revert = array();
   foreach (array_filter($form_state['values']['revert']) as $component => $status) {
     $revert[$module][] = $component;
-    drupal_set_message(t('Reverted all <strong>!component</strong> components for <strong>!module</strong>.', array('!component' => $component, '!module' => $module)));
+    drupal_set_message(t('Reverted all <strong>@component</strong> components for <strong>@module</strong>.', array('@component' => $component, '@module' => $module)));
   }
   features_revert($revert);
   $form_state['redirect'] = 'admin/structure/features/' . $module;
@@ -608,7 +608,7 @@ function features_admin_components_review(&$form, &$form_state) {
   $revert = array();
   foreach (array_filter($form_state['values']['revert']) as $component => $status) {
     features_set_signature($module, $component);
-    drupal_set_message(t('All <strong>!component</strong> components for <strong>!module</strong> reviewed.', array('!component' => $component, '!module' => $module)));
+    drupal_set_message(t('All <strong>@component</strong> components for <strong>@module</strong> reviewed.', array('@component' => $component, '@module' => $module)));
   }
   $form_state['redirect'] = 'admin/structure/features/' . $module;
 }
@@ -624,12 +624,12 @@ function features_form_validate(&$form, &$form_state) {
       if (!empty($conflicts[$module])) {
         foreach (array_keys($conflicts[$module]) as $conflict) {
           if (!empty($form_state['values']['status'][$conflict])) {
-            form_set_error('status', t('The feature !module cannot be enabled because it conflicts with !conflict.', array('!module' => $module, '!conflict' => $conflict)));
+            form_set_error('status', t('The feature @module cannot be enabled because it conflicts with @conflict.', array('@module' => $module, '@conflict' => $conflict)));
           }
         }
       }
       if (!drupal_check_module($module)) {
-        form_set_error('status', t('The feature !module cannot be enabled because it has unmet requirements.', array('!module' => $module, '!conflict' => $conflict)));
+        form_set_error('status', t('The feature @module cannot be enabled because it has unmet requirements.', array('@module' => $module)));
       }
     }
   }
