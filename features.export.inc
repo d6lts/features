@@ -679,6 +679,7 @@ function features_get_default($component, $module_name = NULL, $alter = TRUE, $r
                 drupal_alter($alter_hook, $cache[$component][$alter][$m]);
               }
             }
+          }
           else {
             $cache[$component][$alter][$m] = FALSE;
           }
