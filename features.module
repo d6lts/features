@@ -360,7 +360,7 @@ function features_include_defaults($components = NULL, $reset = FALSE) {
   if (!isset($include_components) || $reset) {
     $include_components = features_get_components();
     foreach ($include_components as $component => $info) {
-      if (!isset($info['default_file']) || $info['default_file'] !== FEATURES_DEFAULTS_INCLUDED) {
+      if (!isset($info['api']) && (!isset($info['default_file']) || $info['default_file'] !== FEATURES_DEFAULTS_INCLUDED)) {
         unset($include_components[$component]);
       }
     }
