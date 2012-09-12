@@ -153,7 +153,7 @@ function _features_export_form_components(&$form, &$form_state) {
 
   // generate the export array for the current feature and user selections
   $export = _features_export_build($feature, $form_state);
-dsm($export);
+
   foreach ($export['components'] as $component => $component_info) {
     $label = (isset($component_info['name']) ?
       $component_info['name'] . " <span>(" . check_plain($component) . ")</span>" : check_plain($component));
