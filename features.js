@@ -2,7 +2,7 @@
   Drupal.behaviors.features = {
     attach: function(context, settings) {
       // Features management form
-      $('table.features:not(.processed)').each(function() {
+      $('table.features:not(.processed)', context).each(function() {
         $(this).addClass('processed');
 
         // Check the overridden status of each feature
@@ -20,7 +20,7 @@
       });
 
       // Export form component selector
-      $('form.features-export-form select.features-select-components:not(.processed)').each(function() {
+      $('form.features-export-form select.features-select-components:not(.processed)', context).each(function() {
         $(this)
           .addClass('processed')
           .change(function() {
@@ -28,11 +28,11 @@
             $('div.features-select').hide();
             $('div.features-select-' + target).show();
             return false;
-        });
+        }).trigger('change');
       });
 
       // Export form machine-readable JS
-      $('.feature-name:not(.processed)').each(function() {
+      $('.feature-name:not(.processed)', context).each(function() {
         $('.feature-name')
           .addClass('processed')
           .after(' <small class="feature-module-name-suffix">&nbsp;</small>');
@@ -55,6 +55,29 @@
             }
           });
           $('.feature-name').keyup();
+        }
+      });
+
+      // Handle component selection UI
+      $('.component-select input[type=checkbox]', context).click(function() {
+        var curItem = $(this).parents('.form-type-checkbox');
+        var newItem = $(curItem).clone();
+        var newParent = $(this).parents('.features-export-parent').find('.component-list .form-checkboxes.component-added');
+        $(newItem).appendTo(newParent);
+        $(newItem).removeClass('component-select');
+        $(newItem).addClass('component-added');
+        $(newParent).parent().removeClass('features-export-empty');
+        $(curItem).remove();
+      });
+      $('.component-included input[type=checkbox]', context).click(function() {
+        var curItem = $(this).parents('.form-type-checkbox').children('label');
+        if ($(this).is(':checked')) {
+          $(curItem).removeClass('component-added');
+          $(curItem).addClass('component-included');
+        }
+        else {
+          $(curItem).removeClass('component-included');
+          $(curItem).addClass('component-added');
         }
       });
     }

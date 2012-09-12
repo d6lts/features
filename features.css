@@ -157,11 +157,13 @@ form.features-export-form div.features-select {
   display:none;
 }
 
+/*
 form.features-export-form div.form-checkboxes {
   overflow-x:hidden;
   overflow-y:auto;
   height:20em;
   }
+   */
 
 form.features-export-form div#edit-components-wrapper,
 form.features-export-form div.features-select {
@@ -297,4 +299,102 @@ table.features-diff td.diff-addedline,
 table.features-diff td.diff-context {
   width:50%;
   font-family:'Andale Mono',monospace;
+}
+
+/**
+ * New UI component export list
+ */
+#features-export-wrapper div.features-export-parent {
+  clear: both;
+}
+fieldset.features-export-component  {
+  text-transform: uppercase;
+  background: #E1E2DC;
+  font-weight: normal;
+  font-size: 12px;
+  padding: 1.9em 0 0 0;
+  margin: 0.5em 0;
+}
+fieldset.features-export-component.collapsed  {
+  background: #E1E2DC;
+}
+fieldset.features-export-component .fieldset-wrapper {
+  padding: 0 13px 6px 15px;
+}
+fieldset.features-export-component .fieldset-legend {
+  margin-top: 0.1em;
+}
+fieldset.features-export-component .fieldset-title span {
+  font-size: 11px;
+  text-transform: none;
+  font-weight: normal;
+}
+
+div.features-export-list  {
+  font-weight: normal;
+  font-size: 12px;
+  padding: 0.25em 6px 0 6px;
+  margin: 0 0;
+  margin-top: -0.5em;
+  border: 1px solid #CCC;
+  border-top: 0;
+  overflow: hidden;
+}
+div.features-export-empty {
+  display: none;
+}
+
+#features-export-wrapper .component-select .form-type-checkbox {
+  overflow: hidden;
+  padding: 0 0 0 2px;
+}
+
+#features-export-wrapper .component-added .form-type-checkbox,
+#features-export-wrapper .component-detected .form-type-checkbox,
+#features-export-wrapper .component-included .form-type-checkbox {
+  float: left;
+  white-space: nowrap;
+  margin: 2px 5px;
+  padding: 0 5px;
+  background: transparent;
+}
+
+#features-export-wrapper .component-added .form-type-checkbox {
+  font-weight: bold;
+  background: #EEE;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+}
+#features-export-wrapper div.component-added label.option {
+  font-weight: bold;
+}
+#features-export-wrapper .component-detected .form-type-checkbox {
+  font-style: italic;
+  color:#68a;
+  background:#def;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+}
+
+#feature-export-info {
+  width: 49%;
+  float: left;
+}
+#features-export-wrapper {
+  width: 49%;
+  float: right;
+}
+#features-export-advanced {
+  width: 49%;
+  float: left;
+}
+
+#features-export-wrapper .component-added label a,
+#features-export-wrapper .component-detected label a,
+#features-export-wrapper .component-included label a {
+  display: inline;
+  float: none;
+}
+#features-export-wrapper label.component-added {
+  font-weight: bold;
 }

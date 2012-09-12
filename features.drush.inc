@@ -424,7 +424,7 @@ function drush_features_export() {
     if (($feature = features_load_feature($module, TRUE)) && module_exists($module)) {
       module_load_include('inc', 'features', 'features.export');
       _features_populate($items, $feature->info, $feature->name);
-      _drush_features_export($feature->info['features'], $feature->info['dependencies'], $feature->name, dirname($feature->filename));
+      _drush_features_export($feature->info, $feature->name, dirname($feature->filename));
     }
     elseif ($feature) {
       _features_drush_set_error($module, 'FEATURES_FEATURE_NOT_ENABLED');
@@ -437,7 +437,6 @@ function drush_features_export() {
       if (!drush_confirm(dt('Do you really want to continue?'))) {
         drush_die('Aborting.');
       }
-      _drush_features_export($items, array(), $module);
     }
   }
   else {
@@ -465,7 +464,7 @@ function drush_features_update() {
   if ($args = func_get_args()) {
     foreach ($args as $module) {
       if (($feature = features_load_feature($module, TRUE)) && module_exists($module)) {
-        _drush_features_export($feature->info['features'], $feature->info['dependencies'], $feature->name, dirname($feature->filename));
+        _drush_features_export($feature->info, $feature->name, dirname($feature->filename));
       }
       else if ($feature) {
         _features_drush_set_error($module, 'FEATURES_FEATURE_NOT_ENABLED');
@@ -511,12 +510,12 @@ function drush_features_update_all() {
 /**
  * Write a module to the site dir.
  *
- * @param $requests
- *   An array of the context requested in this export.
+ * @param $info
+ *   The feature info associative array.
  * @param $module_name
  *  Optional. The name for the exported module.
  */
-function _drush_features_export($stub, $dependencies, $module_name = NULL, $directory = NULL) {
+function _drush_features_export($info, $module_name = NULL, $directory = NULL) {
   $root = drush_get_option(array('r', 'root'), drush_locate_root());
   if ($root) {
     $destination = drush_get_option(array('destination'), 'sites/all/modules');
@@ -533,7 +532,7 @@ function _drush_features_export($stub, $dependencies, $module_name = NULL, $dire
     if (is_dir($directory)) {
       drupal_flush_all_caches();
       module_load_include('inc', 'features', 'features.export');
-      $export = features_populate($stub, $dependencies, $module_name);
+      $export = features_populate($info, $module_name);
       if (!features_load_feature($module_name)) {
         $export['name'] = $module_name;
       }

@@ -1,18 +1,18 @@
 <?php
 
 /**
- * @param $items
+ * @param $info - feature info array
  * @param $module_name
- * @return
+ * @return fully populated export array
  */
-function features_populate($items, $dependencies, $module_name) {
+function features_populate($info, $module_name) {
   // Sanitize items.
-  $items = array_filter($items);
-  $items['dependencies'] = drupal_map_assoc(array_filter($dependencies));
+  $items = !empty($info['features']) ? array_filter($info['features']) : array();
+  $items['dependencies'] = !empty($info['dependencies']) ? drupal_map_assoc(array_filter($info['dependencies'])) : array();
 
   // Populate stub
-  $stub = array('features' => array(), 'dependencies' => array(), 'conflicts' => array());
-  $export = _features_populate($items, $stub, $module_name);
+  $stub = array('features' => array(), 'dependencies' => array(), 'conflicts' => array()) + $info + array('features_exclude' => array());
+  $export = _features_populate($items, $stub, $module_name, TRUE);
 
   // Add Features API version. Any module with this entry in the .info file
   // will be treated as a Feature and included in the admin/build/features UI.
@@ -27,6 +27,7 @@ function features_populate($items, $dependencies, $module_name) {
   }
   ksort($export['features']);
   ksort($export['dependencies']);
+  ksort($export['features_exclude']);
 
   return $export;
 }
@@ -44,12 +45,22 @@ function features_populate($items, $dependencies, $module_name) {
  *
  * @return fully populated $export array.
  */
-function _features_populate($pipe, &$export, $module_name = '') {
+function _features_populate($pipe, &$export, $module_name = '', $reset = FALSE) {
+  static $processed = array();
   features_include();
+  if ($reset) {
+    $processed = array();
+  }
   foreach ($pipe as $component => $data) {
-    static $processed = array();
     // Convert already defined items to dependencies.
     _features_resolve_dependencies($data, $export, $module_name, $component);
+    // Remove any excluded items.
+    if (!empty($export['features_exclude'][$component])) {
+      $data = array_diff($data, $export['features_exclude'][$component]);
+      if ($component == 'dependencies' && !empty($export['dependencies'])) {
+        $export['dependencies'] = array_diff($export['dependencies'], $export['features_exclude'][$component]);
+      }
+    }
     if (!empty($data) && $function = features_hook($component, 'features_export')) {
       // Pass module-specific data and export array.
       // We don't use features_invoke() here since we need to pass $export by reference.
@@ -319,7 +330,7 @@ function features_detect_overrides($module) {
   }
   if (!isset($cache[$module->name])) {
     // Rebuild feature from .info file description and prepare an export from current DB state.
-    $export = features_populate($module->info['features'], $module->info['dependencies'], $module->name);
+    $export = features_populate($module->info, $module->name);
     $export = features_export_prepare($export, $module->name);
 
     $overridden = array();
@@ -863,7 +874,7 @@ function _features_linetrim($code) {
 function _features_sanitize(&$array) {
   if (is_array($array)) {
     if (_features_is_assoc($array)) {
-      ksort($array);
+      ksort($array, SORT_STRING);
       $array = array_filter($array);
     }
     else {
