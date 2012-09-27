@@ -30,7 +30,8 @@ function features_export_form($form, $form_state, $feature = NULL) {
     '#tree' => FALSE,
     '#collapsible' => FALSE,
     '#collapsed' => FALSE,
-    '#attributes' => array('id' => array('feature-export-info')),
+    '#prefix' => "<div id='feature-export-info'>",
+    '#suffix' => '</div>',
   );
   $form['info']['name'] = array(
     '#title' => t('Name'),
@@ -84,7 +85,8 @@ function features_export_form($form, $form_state, $feature = NULL) {
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
     '#weight' => 20,
-    '#attributes' => array('id' => array('features-export-advanced')),
+    '#prefix' => "<div id='features-export-advanced'>",
+    '#suffix' => '</div>',
   );
   $form['advanced']['project_status_url'] = array(
     '#title' => t('URL of update XML'),
@@ -103,6 +105,8 @@ function features_export_form($form, $form_state, $feature = NULL) {
     '#theme' => 'features_form_buttons',
     '#tree' => FALSE,
     '#weight' => 99,
+    '#prefix' => "<div id='features-export-buttons'>",
+    '#suffix' => '</div>',
   );
   $form['buttons']['submit'] = array(
     '#type' => 'submit',

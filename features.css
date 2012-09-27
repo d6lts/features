@@ -304,44 +304,52 @@ table.features-diff td.diff-context {
 /**
  * New UI component export list
  */
+#features-export-form input.form-text {
+  max-width: 100%;
+}
 #features-export-wrapper div.features-export-parent {
   clear: both;
 }
+html.js #features-export-form fieldset.collapsed {
+  min-height: 2em;
+  margin-bottom: 0;
+  top: 0;
+  padding: 0 0 0 0;
+}
 fieldset.features-export-component  {
-  text-transform: uppercase;
-  background: #E1E2DC;
+  margin: 0.5em 0;
   font-weight: normal;
   font-size: 12px;
-  padding: 1.9em 0 0 0;
-  margin: 0.5em 0;
+  top: 0;
 }
-fieldset.features-export-component.collapsed  {
-  background: #E1E2DC;
+fieldset.features-export-component legend {
+  top: 0;
 }
-fieldset.features-export-component .fieldset-wrapper {
+fieldset.features-export-component.collapsed .fieldset-wrapper {
+  margin: 0;
   padding: 0 13px 6px 15px;
 }
 fieldset.features-export-component .fieldset-legend {
-  margin-top: 0.1em;
+  white-space: nowrap;
 }
 fieldset.features-export-component .fieldset-title span {
   font-size: 11px;
   text-transform: none;
   font-weight: normal;
 }
-
 div.features-export-list  {
   font-weight: normal;
   font-size: 12px;
-  padding: 0.25em 6px 0 6px;
-  margin: 0 0;
-  margin-top: -0.5em;
   border: 1px solid #CCC;
-  border-top: 0;
+  border-top-width: 0;
   overflow: hidden;
 }
 div.features-export-empty {
   display: none;
+}
+fieldset.features-export-component .fieldset-wrapper .form-checkboxes {
+  max-height: 20em;
+  overflow: auto;
 }
 
 #features-export-wrapper .component-select .form-type-checkbox {
@@ -379,14 +387,24 @@ div.features-export-empty {
 #feature-export-info {
   width: 49%;
   float: left;
+  position: relative;
 }
 #features-export-wrapper {
   width: 49%;
   float: right;
+  position: relative;
 }
 #features-export-advanced {
   width: 49%;
   float: left;
+  margin-top: 0.5em;
+  position: relative;
+}
+#features-export-buttons {
+  width: 49%;
+  float: left;
+  margin-top: 0.5em;
+  position: relative;
 }
 
 #features-export-wrapper .component-added label a,
