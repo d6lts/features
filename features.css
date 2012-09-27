@@ -348,6 +348,12 @@ div.features-export-list  {
   border-top-width: 0;
   overflow: hidden;
 }
+#features-export-form .fieldset-description {
+  margin: 5px 0;
+  line-height: 1.231em;
+  font-size: 0.923em;
+  color: #666;
+}
 div.features-export-empty {
   display: none;
 }

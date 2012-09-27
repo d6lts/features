@@ -147,6 +147,7 @@ function _features_export_form_components(&$form, &$form_state) {
   $form['export'] = array(
     '#type' => 'fieldset',
     '#title' => t('Components'),
+    '#description' => t('Expand each component section and select which items should be included in this feature export.'),
     '#tree' => FALSE,
     '#prefix' => "<div id='features-export-wrapper'>",
     '#suffix' => '</div>',
