@@ -304,9 +304,6 @@ table.features-diff td.diff-context {
 /**
  * New UI component export list
  */
-#features-export-form input.form-text {
-  max-width: 100%;
-}
 #features-export-wrapper div.features-export-parent {
   clear: both;
 }
@@ -371,7 +368,7 @@ fieldset.features-export-component .fieldset-wrapper .form-checkboxes {
 #features-export-wrapper .component-detected .form-type-checkbox,
 #features-export-wrapper .component-included .form-type-checkbox {
   float: left;
-  white-space: nowrap;
+  white-space: normal;
   margin: 2px 5px;
   padding: 0 5px;
   background: transparent;
@@ -394,7 +391,7 @@ fieldset.features-export-component .fieldset-wrapper .form-checkboxes {
   -webkit-border-radius: 5px;
 }
 
-#feature-export-info {
+#features-export-info {
   width: 49%;
   float: left;
   position: relative;
@@ -402,11 +399,13 @@ fieldset.features-export-component .fieldset-wrapper .form-checkboxes {
 #features-export-wrapper {
   width: 49%;
   float: right;
+  clear: both;
   position: relative;
 }
 #features-export-advanced {
   width: 49%;
   float: left;
+  clear: left;
   margin-top: 0.5em;
   position: relative;
 }
@@ -425,4 +424,7 @@ fieldset.features-export-component .fieldset-wrapper .form-checkboxes {
 }
 #features-export-wrapper label.component-added {
   font-weight: bold;
+}
+#features-export-form input[size="60"].form-text {
+  width: 100%;
 }

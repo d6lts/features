@@ -28,9 +28,10 @@ function features_export_form($form, $form_state, $feature = NULL) {
     '#type' => 'fieldset',
     '#title' => t('General Information'),
     '#tree' => FALSE,
+    '#weight' => 2,
     '#collapsible' => FALSE,
     '#collapsed' => FALSE,
-    '#prefix' => "<div id='feature-export-info'>",
+    '#prefix' => "<div id='features-export-info'>",
     '#suffix' => '</div>',
   );
   $form['info']['name'] = array(
@@ -84,7 +85,7 @@ function features_export_form($form, $form_state, $feature = NULL) {
     '#tree' => FALSE,
     '#collapsible' => TRUE,
     '#collapsed' => TRUE,
-    '#weight' => 20,
+    '#weight' => 10,
     '#prefix' => "<div id='features-export-advanced'>",
     '#suffix' => '</div>',
   );
@@ -94,7 +95,6 @@ function features_export_form($form, $form_state, $feature = NULL) {
     '#type' => 'textfield',
     '#required' => FALSE,
     '#default_value' => !empty($feature->info['project status url']) ? $feature->info['project status url'] : '',
-    '#size' => 30,
     '#element_validate' => array('features_export_form_validate_field'),
   );
 
@@ -153,7 +153,7 @@ function _features_export_form_components(&$form, &$form_state) {
     '#suffix' => '</div>',
     '#collapsible' => FALSE,
     '#collapsed' => FALSE,
-    '#weight' => 10,
+    '#weight' => 1,
   );
 
   // generate the export array for the current feature and user selections
@@ -275,7 +275,8 @@ function _features_export_build($feature, &$form_state) {
     }
   }
   // Generate new populated feature
-  $export = features_populate(array('features' => $stub, 'dependencies' => $stub['dependencies']), $feature->name);
+  $feature_name = isset($feature->name) ? $feature->name : NULL;
+  $export = features_populate(array('features' => $stub, 'dependencies' => $stub['dependencies']), $feature_name);
 
   // Components that are already exported to feature
   $exported_features_info = !empty($feature->info['features']) ? $feature->info['features'] : array();
