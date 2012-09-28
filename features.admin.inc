@@ -159,24 +159,11 @@ function _features_export_form_components(&$form, &$form_state) {
   // generate the export array for the current feature and user selections
   $export = _features_export_build($feature, $form_state);
 
+  $sections = array('included', 'detected', 'added');
   foreach ($export['components'] as $component => $component_info) {
     $label = (isset($component_info['name']) ?
       $component_info['name'] . " <span>(" . check_plain($component) . ")</span>" : check_plain($component));
-    $form['export'][$component] = array(
-      '#markup' => '',
-      '#tree' => TRUE,
-      );
-    $form['export'][$component]['sources'] = array(
-      '#type' => 'fieldset',
-      '#title' => $label,
-      '#tree' => TRUE,
-      '#collapsible' => TRUE,
-      '#collapsed' => TRUE,
-      '#attributes' => array('class' => array('features-export-component')),
-      '#prefix' => "<div class='features-export-parent'>",
-    );
 
-    $sections = array('included', 'detected', 'added');
     $count = 0;
     foreach ($sections as $section) {
       $count += count($component_info['options'][$section]);
@@ -184,29 +171,46 @@ function _features_export_form_components(&$form, &$form_state) {
     $extra_class = ($count == 0) ? 'features-export-empty' : '';
     $component_name = str_replace('_', '-', check_plain($component));
 
-    $form['export'][$component]['sources']['selected'] = array(
-      '#type' => 'checkboxes',
-      '#id' => "edit-sources-$component_name",
-      '#options' => features_dom_encode_options($component_info['options']['sources']),
-      '#default_value' => features_dom_encode_options($component_info['selected']['sources'], FALSE),
-      '#attributes' => array(
-        'class' => array('component-select'),
-      ),
-    );
+    if ($count + count($component_info['options']['sources']) > 0) {
 
-    foreach ($sections as $section) {
-      $form['export'][$component][$section] = array(
-        '#type' => 'checkboxes',
-        '#options' => !empty($component_info['options'][$section]) ?
-          features_dom_encode_options($component_info['options'][$section]) : array(),
-        '#default_value' => !empty($component_info['selected'][$section]) ?
-          features_dom_encode_options($component_info['selected'][$section], FALSE) : array(),
-        '#attributes' => array('class' => array('component-' . $section)),
+      $form['export'][$component] = array(
+        '#markup' => '',
+        '#tree' => TRUE,
+        );
+      $form['export'][$component]['sources'] = array(
+        '#type' => 'fieldset',
+        '#title' => $label,
+        '#tree' => TRUE,
+        '#collapsible' => TRUE,
+        '#collapsed' => TRUE,
+        '#attributes' => array('class' => array('features-export-component')),
+        '#prefix' => "<div class='features-export-parent'>",
       );
+
+      $form['export'][$component]['sources']['selected'] = array(
+        '#type' => 'checkboxes',
+        '#id' => "edit-sources-$component_name",
+        '#options' => features_dom_encode_options($component_info['options']['sources']),
+        '#default_value' => features_dom_encode_options($component_info['selected']['sources'], FALSE),
+        '#attributes' => array(
+          'class' => array('component-select'),
+        ),
+      );
+
+      foreach ($sections as $section) {
+        $form['export'][$component][$section] = array(
+          '#type' => 'checkboxes',
+          '#options' => !empty($component_info['options'][$section]) ?
+            features_dom_encode_options($component_info['options'][$section]) : array(),
+          '#default_value' => !empty($component_info['selected'][$section]) ?
+            features_dom_encode_options($component_info['selected'][$section], FALSE) : array(),
+          '#attributes' => array('class' => array('component-' . $section)),
+        );
+      }
+      $form['export'][$component][$sections[0]]['#prefix'] =
+        "<div class='component-list features-export-list $extra_class'>";
+      $form['export'][$component][$sections[count($sections)-1]]['#suffix'] = '</div></div>';
     }
-    $form['export'][$component][$sections[0]]['#prefix'] =
-      "<div class='component-list features-export-list $extra_class'>";
-    $form['export'][$component][$sections[count($sections)-1]]['#suffix'] = '</div></div>';
   }
 }
 
