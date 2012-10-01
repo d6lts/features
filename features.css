@@ -428,18 +428,19 @@ fieldset.features-export-component .fieldset-wrapper .form-checkboxes {
 #features-export-form input[size="60"].form-text {
   width: 100%;
 }
+.features-refresh-wrapper {
+}
 input.form-submit.features-refresh-button {
-  position: absolute;
-  top: 6px;
-  right: 0;
   font-size: 0.7em;
   -moz-border-radius: 5px;
   -webkit-border-radius: 5px;
   border-radius: 5px;
+  background-color: transparent;
 }
 #features-export-wrapper .ajax-progress {
-  position: absolute;
-  top: 6px;
-  left: 120px;
-  width: 400px;
+  width: 200px;
+}
+#features-export-wrapper div.fieldset-description,
+#features-export-wrapper div.description {
+  clear: both;
 }

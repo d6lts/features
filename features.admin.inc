@@ -157,6 +157,8 @@ function _features_export_form_components(&$form, &$form_state) {
     '#weight' => -1,
     //'#limit_validation_errors' => array(array('sources')),
     '#submit' => array('features_export_form_rebuild'),
+    '#prefix' => "<div class='features-refresh-wrapper'>",
+    '#suffix' => "</div>",
     '#ajax' => array(
       'callback' => 'features_export_form_ajax',
       'wrapper' => 'features-export-wrapper',

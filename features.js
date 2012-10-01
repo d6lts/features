@@ -113,6 +113,13 @@
       $('#edit-auto-refresh', context).click(function() {
         _resetTimeout();
       });
+      if ($('#features-export-wrapper div.description').length > 0) {
+        // annoying Rubik theme changes the class name from fieldset-description to description
+        $('input.features-refresh-button').parent().insertBefore('#features-export-wrapper div.description');
+      }
+      else {
+        $('input.features-refresh-button').parent().insertBefore('#features-export-wrapper div.fieldset-description');
+      }
     }
   }
 
