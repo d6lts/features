@@ -58,6 +58,7 @@
         }
       });
 
+      // provide timer for auto-refresh trigger
       var timeoutID = 0;
       function _triggerTimeout() {
         if ($('#edit-auto-refresh').is(':checked')) {
@@ -70,6 +71,7 @@
         }
         timeoutID = window.setTimeout(_triggerTimeout, 2000);
       }
+
       // Handle component selection UI
       $('.component-select input[type=checkbox]', context).click(function() {
         _resetTimeout();
