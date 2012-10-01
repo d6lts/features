@@ -97,6 +97,11 @@ function features_export_form($form, $form_state, $feature = NULL) {
     '#default_value' => !empty($feature->info['project status url']) ? $feature->info['project status url'] : '',
     '#element_validate' => array('features_export_form_validate_field'),
   );
+  $form['advanced']['auto-refresh'] = array(
+    '#title' => t('Enable auto-refresh of component list'),
+    '#type' => 'checkbox',
+    '#default_value' => variable_get('features-auto-refresh', TRUE),
+  );
 
   // build the Component Listing panel on the right
   _features_export_form_components($form, $form_state);
@@ -113,21 +118,6 @@ function features_export_form($form, $form_state, $feature = NULL) {
     '#value' => t('Download feature'),
     '#weight' => 10,
     '#submit' => array('features_export_build_form_submit'),
-  );
-  $form['buttons']['refresh'] = array(
-    '#type' => 'submit',
-    '#value' => t('Refresh'),
-    '#name' => 'features-refresh',
-    '#attributes' => array(
-      'title' => t("Refresh the list of auto-detected items."),
-    ),
-    '#weight' => -1,
-    //'#limit_validation_errors' => array(array('sources')),
-    '#submit' => array('features_export_form_rebuild'),
-    '#ajax' => array(
-      'callback' => 'features_export_form_ajax',
-      'wrapper' => 'features-export-wrapper',
-    ),
   );
 
   return $form;
@@ -154,6 +144,24 @@ function _features_export_form_components(&$form, &$form_state) {
     '#collapsible' => FALSE,
     '#collapsed' => FALSE,
     '#weight' => 1,
+  );
+
+  $form['export']['refresh'] = array(
+    '#type' => 'submit',
+    '#value' => t('Refresh'),
+    '#name' => 'features-refresh',
+    '#attributes' => array(
+      'title' => t("Refresh the list of auto-detected items."),
+      'class' => array('features-refresh-button'),
+    ),
+    '#weight' => -1,
+    //'#limit_validation_errors' => array(array('sources')),
+    '#submit' => array('features_export_form_rebuild'),
+    '#ajax' => array(
+      'callback' => 'features_export_form_ajax',
+      'wrapper' => 'features-export-wrapper',
+      'event' => 'refresh_components',
+    ),
   );
 
   // generate the export array for the current feature and user selections
@@ -250,6 +258,10 @@ function _features_export_build($feature, &$form_state) {
 
   $components = features_get_components();
   uasort($components, 'features_compare_component_name');
+
+  if (isset($form_state['values']['auto-refresh'])) {
+    variable_set('features-auto-refresh', $form_state['values']['auto-refresh']);
+  }
 
   // Assemble the combined component list
   $stub = array();

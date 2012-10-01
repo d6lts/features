@@ -58,18 +58,40 @@
         }
       });
 
+      var timeoutID = 0;
+      function _triggerTimeout() {
+        if ($('#edit-auto-refresh').is(':checked')) {
+          $('input.features-refresh-button').trigger('refresh_components');
+        }
+      }
+      function _resetTimeout() {
+        if (timeoutID != 0) {
+          window.clearTimeout(timeoutID);
+        }
+        timeoutID = window.setTimeout(_triggerTimeout, 2000);
+      }
       // Handle component selection UI
       $('.component-select input[type=checkbox]', context).click(function() {
+        _resetTimeout();
         var curItem = $(this).parents('.form-type-checkbox');
-        var newItem = $(curItem).clone();
-        var newParent = $(this).parents('.features-export-parent').find('.component-list .form-checkboxes.component-added');
-        $(newItem).appendTo(newParent);
-        $(newItem).removeClass('component-select');
-        $(newItem).addClass('component-added');
-        $(newParent).parent().removeClass('features-export-empty');
-        $(curItem).remove();
+        if ($(this).is(':checked')) {
+          var newParent = $(this).parents('.features-export-parent').find('.component-list .form-checkboxes.component-added');
+          $(curItem).detach();
+          $(curItem).appendTo(newParent);
+          $(curItem).removeClass('component-select');
+          $(curItem).addClass('component-added');
+          $(newParent).parent().removeClass('features-export-empty');
+        }
+        else {
+          var newParent = $(this).parents('.features-export-parent').find('.features-export-component .form-checkboxes.component-select');
+          $(curItem).detach();
+          $(curItem).appendTo(newParent);
+          $(curItem).removeClass('component-added');
+          $(curItem).addClass('component-select');
+        }
       });
       $('.component-included input[type=checkbox]', context).click(function() {
+        _resetTimeout();
         var curItem = $(this).parents('.form-type-checkbox').children('label');
         if ($(this).is(':checked')) {
           $(curItem).removeClass('component-added');
@@ -79,6 +101,15 @@
           $(curItem).removeClass('component-included');
           $(curItem).addClass('component-added');
         }
+      });
+      $('.component-added input[type=checkbox]', context).click(function() {
+        _resetTimeout();
+      });
+      $('.component-detected input[type=checkbox]', context).click(function() {
+        _resetTimeout();
+      });
+      $('#edit-auto-refresh', context).click(function() {
+        _resetTimeout();
       });
     }
   }
