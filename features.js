@@ -1,3 +1,72 @@
+/**
+ * jQuery.fn.sortElements
+ * --------------
+ * @param Function comparator:
+ *   Exactly the same behaviour as [1,2,3].sort(comparator)
+ *
+ * @param Function getSortable
+ *   A function that should return the element that is
+ *   to be sorted. The comparator will run on the
+ *   current collection, but you may want the actual
+ *   resulting sort to occur on a parent or another
+ *   associated element.
+ *
+ *   E.g. $('td').sortElements(comparator, function(){
+ *      return this.parentNode;
+ *   })
+ *
+ *   The <td>'s parent (<tr>) will be sorted instead
+ *   of the <td> itself.
+ *
+ * Credit: http://james.padolsey.com/javascript/sorting-elements-with-jquery/
+ *
+ */
+jQuery.fn.sortElements = (function(){
+
+    var sort = [].sort;
+
+    return function(comparator, getSortable) {
+
+        getSortable = getSortable || function(){return this;};
+
+        var placements = this.map(function(){
+
+            var sortElement = getSortable.call(this),
+                parentNode = sortElement.parentNode,
+
+                // Since the element itself will change position, we have
+                // to have some way of storing its original position in
+                // the DOM. The easiest way is to have a 'flag' node:
+                nextSibling = parentNode.insertBefore(
+                    document.createTextNode(''),
+                    sortElement.nextSibling
+                );
+
+            return function() {
+
+                if (parentNode === this) {
+                    throw new Error(
+                        "You can't sort elements if any one is a descendant of another."
+                    );
+                }
+
+                // Insert before flag:
+                parentNode.insertBefore(this, nextSibling);
+                // Remove flag:
+                parentNode.removeChild(nextSibling);
+
+            };
+
+        });
+
+        return sort.call(this, comparator).each(function(i){
+            placements[i].call(getSortable.call(this));
+        });
+
+    };
+
+})();
+
 (function ($) {
   Drupal.behaviors.features = {
     attach: function(context, settings) {
@@ -58,68 +127,122 @@
         }
       });
 
+      function moveCheckbox(item, section, value) {
+        var curParent = item;
+        if ($(item).hasClass('form-type-checkbox')) {
+          item = $(item).children('input[type=checkbox]');
+        }
+        else {
+          curParent = $(item).parents('.form-type-checkbox');
+        }
+        var newParent = $(curParent).parents('.features-export-parent').find('.form-checkboxes.component-'+section);
+        $(curParent).detach();
+        $(curParent).appendTo(newParent);
+        var list = ['select', 'added', 'detected', 'included'];
+        for (i in list) {
+          $(curParent).removeClass('component-' + list[i]);
+          $(item).removeClass('component-' + list[i]);
+        }
+        $(curParent).addClass('component-'+section);
+        $(item).addClass('component-'+section);
+        if (value) {
+          $(item).attr('checked', 'checked');
+        }
+        else {
+          $(item).removeAttr('checked')
+        }
+        $(newParent).parent().removeClass('features-export-empty');
+
+        // re-sort new list of checkboxes based on labels
+        $(newParent).find('label').sortElements(
+          function(a, b){
+            return $(a).text() > $(b).text() ? 1 : -1;
+          },
+          function(){
+            return this.parentNode;
+          }
+        );
+      }
+
+      function _updateDetected() {
+        // query the server for a list of components/items in the feature and update
+        // the auto-detected items
+        var items = [];  // will contain a list of selected items exported to feature
+        var components = {};  // contains object of component names that have checked items
+        $('#features-export-wrapper input[type=checkbox]:checked', context).each(function() {
+          var key = $(this).attr('name');
+          var matches = key.match(/^([^\[]+)(\[.+\])?\[(.+)\]\[(.+)\]$/);
+          components[matches[1]] = matches[1];
+          if (!$(this).hasClass('component-detected')) {
+            items.push(key);
+          }
+        });
+        var featureName = $('#edit-module-name').val();
+        var url = Drupal.settings.basePath + 'features/ajaxcallback/' + featureName;
+        var postData = {'items': items};
+        jQuery.post(url, postData, function(data) {
+          // data is an object keyed by component listing the exports of the feature
+          for (var component in data) {
+            var itemList = data[component];
+            $('#features-export-wrapper .component-' + component + ' input[type=checkbox]', context).each(function() {
+              var key = $(this).attr('value');
+              // first remove any auto-detected items that are no longer in component
+              if ($(this).hasClass('component-detected')) {
+                if (!(key in itemList)) {
+                  moveCheckbox(this, 'select', false)
+                }
+              }
+              // next, add any new auto-detected items
+              else if ($(this).hasClass('component-select')) {
+                if (key in itemList) {
+                  moveCheckbox(this, 'detected', true);
+                }
+              }
+            });
+          }
+          // loop over all selected components and check for any that have been completely removed
+          for (var component in components) {
+            if (!(component in data)) {
+              $('#features-export-wrapper .component-' + component + ' input[type=checkbox].component-detected', context).each(function() {
+                moveCheckbox(this, 'select', false)
+              });
+            }
+          }
+        }, "json");
+      }
+
       // provide timer for auto-refresh trigger
       var timeoutID = 0;
       function _triggerTimeout() {
-        if ($('#edit-auto-refresh').is(':checked')) {
-          $('input.features-refresh-button').trigger('refresh_components');
-        }
+        _updateDetected();
       }
       function _resetTimeout() {
         if (timeoutID != 0) {
           window.clearTimeout(timeoutID);
         }
-        timeoutID = window.setTimeout(_triggerTimeout, 2000);
+        timeoutID = window.setTimeout(_triggerTimeout, 1000);
       }
 
       // Handle component selection UI
-      $('.component-select input[type=checkbox]', context).click(function() {
+      $('#features-export-wrapper input[type=checkbox]', context).click(function() {
         _resetTimeout();
-        var curItem = $(this).parents('.form-type-checkbox');
-        if ($(this).is(':checked')) {
-          var newParent = $(this).parents('.features-export-parent').find('.component-list .form-checkboxes.component-added');
-          $(curItem).detach();
-          $(curItem).appendTo(newParent);
-          $(curItem).removeClass('component-select');
-          $(curItem).addClass('component-added');
-          $(newParent).parent().removeClass('features-export-empty');
+        if ($(this).hasClass('component-select')) {
+          moveCheckbox(this, 'added', true);
         }
-        else {
-          var newParent = $(this).parents('.features-export-parent').find('.features-export-component .form-checkboxes.component-select');
-          $(curItem).detach();
-          $(curItem).appendTo(newParent);
-          $(curItem).removeClass('component-added');
-          $(curItem).addClass('component-select');
+        else if ($(this).hasClass('component-included')) {
+          moveCheckbox(this, 'added', false);
+        }
+        else if ($(this).hasClass('component-added')) {
+          if ($(this).is(':checked')) {
+            moveCheckbox(this, 'included', true);
+          }
+          else {
+            moveCheckbox(this, 'select', false);
+          }
         }
       });
-      $('.component-included input[type=checkbox]', context).click(function() {
-        _resetTimeout();
-        var curItem = $(this).parents('.form-type-checkbox').children('label');
-        if ($(this).is(':checked')) {
-          $(curItem).removeClass('component-added');
-          $(curItem).addClass('component-included');
-        }
-        else {
-          $(curItem).removeClass('component-included');
-          $(curItem).addClass('component-added');
-        }
-      });
-      $('.component-added input[type=checkbox]', context).click(function() {
-        _resetTimeout();
-      });
-      $('.component-detected input[type=checkbox]', context).click(function() {
-        _resetTimeout();
-      });
-      $('#edit-auto-refresh', context).click(function() {
-        _resetTimeout();
-      });
-      if ($('#features-export-wrapper div.description').length > 0) {
-        // annoying Rubik theme changes the class name from fieldset-description to description
-        $('input.features-refresh-button').parent().insertBefore('#features-export-wrapper div.description');
-      }
-      else {
-        $('input.features-refresh-button').parent().insertBefore('#features-export-wrapper div.fieldset-description');
-      }
+      // if javascript is enabled, then hide the manual Refresh button
+      $('.features-refresh-wrapper').hide();
     }
   }
 

@@ -97,11 +97,6 @@ function features_export_form($form, $form_state, $feature = NULL) {
     '#default_value' => !empty($feature->info['project status url']) ? $feature->info['project status url'] : '',
     '#element_validate' => array('features_export_form_validate_field'),
   );
-  $form['advanced']['auto-refresh'] = array(
-    '#title' => t('Enable auto-refresh of component list'),
-    '#type' => 'checkbox',
-    '#default_value' => variable_get('features-auto-refresh', TRUE),
-  );
 
   // build the Component Listing panel on the right
   _features_export_form_components($form, $form_state);
@@ -165,7 +160,6 @@ function _features_export_form_components(&$form, &$form_state) {
       'event' => 'refresh_components',
     ),
   );
-
   // generate the export array for the current feature and user selections
   $export = _features_export_build($feature, $form_state);
 
@@ -194,7 +188,7 @@ function _features_export_form_components(&$form, &$form_state) {
         '#collapsible' => TRUE,
         '#collapsed' => TRUE,
         '#attributes' => array('class' => array('features-export-component')),
-        '#prefix' => "<div class='features-export-parent'>",
+        '#prefix' => "<div class='features-export-parent component-$component'>",
       );
 
       $form['export'][$component]['sources']['selected'] = array(
@@ -260,10 +254,6 @@ function _features_export_build($feature, &$form_state) {
 
   $components = features_get_components();
   uasort($components, 'features_compare_component_name');
-
-  if (isset($form_state['values']['auto-refresh'])) {
-    variable_set('features-auto-refresh', $form_state['values']['auto-refresh']);
-  }
 
   // Assemble the combined component list
   $stub = array();
@@ -433,6 +423,29 @@ function features_export_form_rebuild($form, &$form_state) {
   $form_state['rebuild'] = TRUE;
 }
 
+function features_export_components_json($feature_name) {
+  module_load_include('inc', 'features', 'features.export');
+  $export = array();
+  if (!empty($_POST['items'])) {
+    $stub = array();
+    foreach ($_POST['items'] as $key) {
+      preg_match('/^([^\[]+)(\[.+\])?\[(.+)\]\[(.+)\]$/', $key, $matches);
+      if (!empty($matches[1]) && !empty($matches[4])) {
+        $component = $matches[1];
+        $item = $matches[4];
+        if (empty($stub[$component])) {
+          $stub[$component] = array($item);
+        }
+        else {
+          $stub[$component] = array_merge($stub[$component], array($item));
+        }
+      }
+    }
+    $export = features_populate(array('features' => $stub, 'dependencies' => $stub['dependencies']), $feature_name);
+    $export['features']['dependencies'] = $export['dependencies'];
+  }
+  print drupal_json_encode($export['features']);
+}
 /**
  * Render API callback: Validates a project field.
  *

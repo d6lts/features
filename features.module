@@ -167,6 +167,16 @@ function features_menu() {
     'type' => MENU_CALLBACK,
     'file' => 'features.admin.inc',
   );
+  $items['features/ajaxcallback/%'] = array(
+    'title callback' => 'features_get_feature_components',
+    'description' => 'Return components of a feature.',
+    'page callback' => 'features_export_components_json',
+    'page arguments' => array(2),
+    'access callback' => 'user_access',
+    'access arguments' => array('administer features'),
+    'type' => MENU_CALLBACK,
+    'file' => 'features.admin.inc',
+  );
   foreach ($items as $path => $item) {
     if (!isset($item['access callback'])) {
       $items[$path]['access callback'] = 'user_access';
