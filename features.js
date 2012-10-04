@@ -128,6 +128,9 @@ jQuery.fn.sortElements = (function(){
       });
 
       function moveCheckbox(item, section, value) {
+        console.log('Move');
+        console.log(item);
+        console.log('-> '+section+ ' value: '+value+' timeout: '+inTimeout);
         var curParent = item;
         if ($(item).hasClass('form-type-checkbox')) {
           item = $(item).children('input[type=checkbox]');
@@ -164,6 +167,22 @@ jQuery.fn.sortElements = (function(){
         );
       }
 
+      // provide timer for auto-refresh trigger
+      var timeoutID = 0;
+      var inTimeout = 0;
+      function _triggerTimeout() {
+        timeoutID = 0;
+        _updateDetected();
+      }
+      function _resetTimeout() {
+        inTimeout++;
+        if (timeoutID != 0) {
+          window.clearTimeout(timeoutID);
+          if (inTimeout > 0) inTimeout--;
+        }
+        timeoutID = window.setTimeout(_triggerTimeout, 500);
+      }
+
       function _updateDetected() {
         // query the server for a list of components/items in the feature and update
         // the auto-detected items
@@ -181,46 +200,41 @@ jQuery.fn.sortElements = (function(){
         var url = Drupal.settings.basePath + 'features/ajaxcallback/' + featureName;
         var postData = {'items': items};
         jQuery.post(url, postData, function(data) {
-          // data is an object keyed by component listing the exports of the feature
-          for (var component in data) {
-            var itemList = data[component];
-            $('#features-export-wrapper .component-' + component + ' input[type=checkbox]', context).each(function() {
-              var key = $(this).attr('value');
-              // first remove any auto-detected items that are no longer in component
-              if ($(this).hasClass('component-detected')) {
-                if (!(key in itemList)) {
-                  moveCheckbox(this, 'select', false)
+          if (inTimeout > 0) inTimeout--;
+          console.log('Returned');
+          console.log(components);
+          console.log(data);
+          // if we have triggered another timeout then don't update with old results
+          if (inTimeout == 0) {
+            // data is an object keyed by component listing the exports of the feature
+            for (var component in data) {
+              var itemList = data[component];
+              $('#features-export-wrapper .component-' + component + ' input[type=checkbox]', context).each(function() {
+                var key = $(this).attr('value');
+                // first remove any auto-detected items that are no longer in component
+                if ($(this).hasClass('component-detected')) {
+                  if (!(key in itemList)) {
+                    moveCheckbox(this, 'select', false)
+                  }
                 }
-              }
-              // next, add any new auto-detected items
-              else if ($(this).hasClass('component-select')) {
-                if (key in itemList) {
-                  moveCheckbox(this, 'detected', true);
+                // next, add any new auto-detected items
+                else if ($(this).hasClass('component-select')) {
+                  if (key in itemList) {
+                    moveCheckbox(this, 'detected', true);
+                  }
                 }
-              }
-            });
-          }
-          // loop over all selected components and check for any that have been completely removed
-          for (var component in components) {
-            if (!(component in data)) {
-              $('#features-export-wrapper .component-' + component + ' input[type=checkbox].component-detected', context).each(function() {
-                moveCheckbox(this, 'select', false)
               });
+            }
+            // loop over all selected components and check for any that have been completely removed
+            for (var component in components) {
+              if (!(component in data)) {
+                $('#features-export-wrapper .component-' + component + ' input[type=checkbox].component-detected', context).each(function() {
+                  moveCheckbox(this, 'select', false);
+                });
+              }
             }
           }
         }, "json");
-      }
-
-      // provide timer for auto-refresh trigger
-      var timeoutID = 0;
-      function _triggerTimeout() {
-        _updateDetected();
-      }
-      function _resetTimeout() {
-        if (timeoutID != 0) {
-          window.clearTimeout(timeoutID);
-        }
-        timeoutID = window.setTimeout(_triggerTimeout, 1000);
       }
 
       // Handle component selection UI
