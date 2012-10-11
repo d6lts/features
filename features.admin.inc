@@ -141,7 +141,21 @@ function _features_export_form_components(&$form, &$form_state) {
     '#weight' => 1,
   );
 
-  $form['export']['refresh'] = array(
+  // filter field used in javascript, so javascript will unhide it
+  $form['export']['features_filter'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Filter'),
+    '#default_value' => '',
+    '#hidden' => TRUE,
+    '#prefix' => "<div id='features-filter' class='element-invisible'>",
+    '#suffix' => "<span class='features-filter-clear'>" . t('Clear') .
+      " </span></div>",
+  );
+
+  // this refresh button will rebuild the form.
+  // this button is hidden by javascript since it is only needed when
+  // javascript is not available
+  $form['export']['features_refresh'] = array(
     '#type' => 'submit',
     '#value' => t('Refresh'),
     '#name' => 'features-refresh',
@@ -150,7 +164,6 @@ function _features_export_form_components(&$form, &$form_state) {
       'class' => array('features-refresh-button'),
     ),
     '#weight' => -1,
-    //'#limit_validation_errors' => array(array('sources')),
     '#submit' => array('features_export_form_rebuild'),
     '#prefix' => "<div class='features-refresh-wrapper'>",
     '#suffix' => "</div>",

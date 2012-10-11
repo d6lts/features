@@ -444,3 +444,27 @@ input.form-submit.features-refresh-button {
 #features-export-wrapper div.description {
   clear: both;
 }
+#features-filter input[size="60"].form-text {
+  width: 200px;
+}
+#features-filter label,
+#features-filter input {
+  display: inline;
+}
+#features-filter .form-item {
+  float: left;
+}
+#features-filter span {
+  float: left;
+  white-space: normal;
+  margin: 2px 5px;
+  padding: 0 5px;
+  background: transparent;
+  background: #EEE;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  cursor: pointer;
+}
+#features-filter span:hover {
+  background:#def;
+}

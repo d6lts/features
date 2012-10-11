@@ -127,6 +127,17 @@ jQuery.fn.sortElements = (function(){
         }
       });
 
+      function _checkAll(value) {
+        $('#features-export-wrapper .component-select input[type=checkbox]:visible', context).each(function() {
+          if (value) {
+            $(this).attr('checked', 'checked');
+          }
+          else {
+            $(this).removeAttr('checked')
+          }
+        });
+      }
+
       function moveCheckbox(item, section, value) {
         console.log('Move');
         console.log(item);
@@ -176,6 +187,7 @@ jQuery.fn.sortElements = (function(){
       }
       function _resetTimeout() {
         inTimeout++;
+        // if timeout is already active, reset it
         if (timeoutID != 0) {
           window.clearTimeout(timeoutID);
           if (inTimeout > 0) inTimeout--;
@@ -255,8 +267,82 @@ jQuery.fn.sortElements = (function(){
           }
         }
       });
+
+      // Handle select/unselect all
+      $('#features-filter .features-checkall', context).click(function() {
+        _checkAll( true);
+      });
+      $('#features-filter .features-uncheckall', context).click(function() {
+        _checkAll( false);
+      });
+
+      // Handle filtering
+
+      // provide timer for auto-refresh trigger
+      var filterTimeoutID = 0;
+      var inFilterTimeout = 0;
+      function _triggerFilterTimeout() {
+        filterTimeoutID = 0;
+        _updateFilter();
+      }
+      function _resetFilterTimeout() {
+        inFilterTimeout++;
+        // if timeout is already active, reset it
+        if (filterTimeoutID != 0) {
+          window.clearTimeout(filterTimeoutID);
+          if (inFilterTimeout > 0) inFilterTimeout--;
+        }
+        filterTimeoutID = window.setTimeout(_triggerFilterTimeout, 200);
+      }
+      function _updateFilter() {
+        var filter = $('#features-filter input').val();
+        var regex = new RegExp(filter, 'i');
+        // collapse fieldsets
+        var newState = {};
+        var currentState = {};
+        $('#features-export-wrapper .component-select label', context).each(function() {
+          // expand parent fieldset
+          var section = '';
+          $(this).parents('fieldset.features-export-component').each(function() {
+            section = $(this).attr('id');
+            currentState[section] = !($(this).hasClass('collapsed'));
+            if (!(section in newState)) {
+              newState[section] = false;
+            }
+          });
+          if (filter == '') {
+            if (currentState[section]) {
+              Drupal.toggleFieldset($('#'+section));
+              currentState[section] = false;
+            }
+            $(this).parent().show();
+          }
+          else if ($(this).text().match(regex)) {
+            $(this).parent().show();
+            newState[section] = true;
+          }
+          else {
+            $(this).parent().hide();
+          }
+        });
+        for (section in newState) {
+          if (currentState[section] != newState[section]) {
+            Drupal.toggleFieldset($('#'+section));
+          }
+        }
+      }
+      $('#features-filter input', context).bind("input", function() {
+        _resetFilterTimeout();
+      });
+      $('#features-filter .features-filter-clear', context).click(function() {
+        $('#features-filter input').val('');
+        _updateFilter();
+      });
+
       // if javascript is enabled, then hide the manual Refresh button
-      $('.features-refresh-wrapper').hide();
+      $('.features-refresh-wrapper', context).hide();
+      // show the filter bar
+      $('#features-filter', context).removeClass('element-invisible');
     }
   }
 
