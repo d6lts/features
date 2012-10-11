@@ -298,10 +298,10 @@ function _features_export_build($feature, &$form_state) {
   // Components that are already exported to feature
   $exported_features_info = !empty($feature->info['features']) ? $feature->info['features'] : array();
   $exported_features_info['dependencies'] = !empty($feature->info['dependencies']) ? $feature->info['dependencies'] : array();
-
   // Components that should be exported
   $new_features_info = !empty($export['features']) ? $export['features'] : array();
   $new_features_info['dependencies'] = !empty($export['dependencies']) ? $export['dependencies'] : array();
+  $excluded = !empty($feature->info['features_exclude']) ? $feature->info['features_exclude'] : array();
 
   // now fill the $export with categorized sections of component options
   // based upon user selections and de-selections
@@ -367,7 +367,12 @@ function _features_export_build($feature, &$form_state) {
             // option was in New exported array, but NOT in already exported
             // so it's an auto-detect item
             $section = 'detected';
-            $default_value = $key;
+            if (isset($excluded[$component][$key]) && !isset($form_state['values'][$component]['detected'][$key])) {
+              $default_value = FALSE;
+            }
+            else {
+              $default_value = $key;
+            }
             // if it's already checked in Added or Sources, leave it in Added as checked
             if (!empty($form_state['values']) &&
               (!empty($form_state['values'][$component]['added'][$key]) ||
@@ -386,6 +391,13 @@ function _features_export_build($feature, &$form_state) {
           }
           $component_export['options'][$section][$key] = check_plain($value);
           $component_export['selected'][$section][$key] = $default_value;
+          // save which items are specifically excluded from auto-detection
+          if (($section == 'detected') && ($default_value === FALSE)) {
+            $excluded[$component][$key] = $key;
+          }
+          else {
+            unset($excluded[$component][$key]);
+          }
           // remove the 'input' and set the 'values' so Drupal stops looking at 'input'
           if (isset($form_state['values'])) {
             if (!$default_value) {
@@ -418,6 +430,7 @@ function _features_export_build($feature, &$form_state) {
       }
     }
     $export['components'][$component] = $component_export;
+    $export['features_exclude'] = $excluded;
   }
   return $export;
 }
