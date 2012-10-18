@@ -394,6 +394,13 @@ function _features_export_build($feature, &$form_state) {
           // save which items are specifically excluded from auto-detection
           if (($section == 'detected') && ($default_value === FALSE)) {
             $excluded[$component][$key] = $key;
+            // remove excluded item from export
+            if ($component == 'dependencies') {
+              unset($export['dependencies'][$key]);
+            }
+            else {
+              unset($export['features'][$component][$key]);
+            }
           }
           else {
             unset($excluded[$component][$key]);

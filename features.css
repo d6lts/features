@@ -453,11 +453,12 @@ input.form-submit.features-refresh-button {
 }
 #features-filter .form-item {
   float: left;
+  margin: 5px 0;
 }
 #features-filter span {
   float: left;
   white-space: normal;
-  margin: 2px 5px;
+  margin: 5px 5px;
   padding: 0 5px;
   background: transparent;
   background: #EEE;
