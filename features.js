@@ -146,9 +146,6 @@ jQuery.fn.sortElements = (function(){
       }
 
       function moveCheckbox(item, section, value) {
-        console.log('Move');
-        console.log(item);
-        console.log('-> '+section+ ' value: '+value+' timeout: '+inTimeout);
         var curParent = item;
         if ($(item).hasClass('form-type-checkbox')) {
           item = $(item).children('input[type=checkbox]');
@@ -207,12 +204,14 @@ jQuery.fn.sortElements = (function(){
         // the auto-detected items
         var items = [];  // will contain a list of selected items exported to feature
         var components = {};  // contains object of component names that have checked items
-        /*$('#features-export-wrapper  .component-select input[type=checkbox]:checked', context).each(function() {
-          var key = $(this).attr('name');
-          var matches = key.match(/^([^\[]+)(\[.+\])?\[(.+)\]\[(.+)\]$/);
-          components[matches[1]] = matches[1];
-          if (!$(this).hasClass('component-detected')) {
-            items.push(key);
+        $('#features-export-wrapper input[type=checkbox]:checked', context).each(function() {
+          if (!$(this).hasClass('features-checkall')) {
+            var key = $(this).attr('name');
+            var matches = key.match(/^([^\[]+)(\[.+\])?\[(.+)\]\[(.+)\]$/);
+            components[matches[1]] = matches[1];
+            if (!$(this).hasClass('component-detected')) {
+              items.push(key);
+            }
           }
         });
         var featureName = $('#edit-module-name').val();
@@ -220,9 +219,6 @@ jQuery.fn.sortElements = (function(){
         var postData = {'items': items};
         jQuery.post(url, postData, function(data) {
           if (inTimeout > 0) inTimeout--;
-          console.log('Returned');
-          console.log(components);
-          console.log(data);
           // if we have triggered another timeout then don't update with old results
           if (inTimeout == 0) {
             // data is an object keyed by component listing the exports of the feature
@@ -253,7 +249,7 @@ jQuery.fn.sortElements = (function(){
               }
             }
           }
-        }, "json");*/
+        }, "json");
       }
 
       // Handle component selection UI
@@ -285,6 +281,7 @@ jQuery.fn.sortElements = (function(){
           _checkAll(false);
           $(this).next().html(Drupal.t('Select all'));
         }
+        _resetTimeout();
       });
 
       // Handle filtering
