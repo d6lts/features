@@ -128,14 +128,21 @@ jQuery.fn.sortElements = (function(){
       });
 
       function _checkAll(value) {
-        $('#features-export-wrapper .component-select input[type=checkbox]:visible', context).each(function() {
-          if (value) {
-            $(this).attr('checked', 'checked');
-          }
-          else {
-            $(this).removeAttr('checked')
-          }
+        if (value) {
+          $('#features-export-wrapper .component-select input[type=checkbox]:visible', context).each(function() {
+            var move_id = $(this).attr('id');
+            $(this).click();
+            $('#'+ move_id).attr('checked', 'checked');
         });
+        }
+        else {
+          $('#features-export-wrapper .component-added input[type=checkbox]:visible', context).each(function() {
+            var move_id = $(this).attr('id');
+            $('#'+ move_id).removeAttr('checked');
+            $(this).click();
+            $('#'+ move_id).removeAttr('checked');
+          });
+        }
       }
 
       function moveCheckbox(item, section, value) {
@@ -200,7 +207,7 @@ jQuery.fn.sortElements = (function(){
         // the auto-detected items
         var items = [];  // will contain a list of selected items exported to feature
         var components = {};  // contains object of component names that have checked items
-        $('#features-export-wrapper input[type=checkbox]:checked', context).each(function() {
+        /*$('#features-export-wrapper  .component-select input[type=checkbox]:checked', context).each(function() {
           var key = $(this).attr('name');
           var matches = key.match(/^([^\[]+)(\[.+\])?\[(.+)\]\[(.+)\]$/);
           components[matches[1]] = matches[1];
@@ -246,7 +253,7 @@ jQuery.fn.sortElements = (function(){
               }
             }
           }
-        }, "json");
+        }, "json");*/
       }
 
       // Handle component selection UI
@@ -270,10 +277,14 @@ jQuery.fn.sortElements = (function(){
 
       // Handle select/unselect all
       $('#features-filter .features-checkall', context).click(function() {
-        _checkAll( true);
-      });
-      $('#features-filter .features-uncheckall', context).click(function() {
-        _checkAll( false);
+        if ($(this).attr('checked')) {
+          _checkAll(true);
+          $(this).next().html(Drupal.t('Deselect all'));
+        }
+        else {
+          _checkAll(false);
+          $(this).next().html(Drupal.t('Select all'));
+        }
       });
 
       // Handle filtering

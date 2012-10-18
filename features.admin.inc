@@ -142,7 +142,7 @@ function _features_export_form_components(&$form, &$form_state) {
   );
 
   // filter field used in javascript, so javascript will unhide it
-  $form['export']['features_filter'] = array(
+  $form['export']['filter'] = array(
     '#type' => 'textfield',
     '#title' => t('Filter'),
     '#default_value' => '',
@@ -150,6 +150,32 @@ function _features_export_form_components(&$form, &$form_state) {
     '#prefix' => "<div id='features-filter' class='element-invisible'>",
     '#suffix' => "<span class='features-filter-clear'>" . t('Clear') .
       " </span></div>",
+  );
+  $form['export']['features_filter_wrapper'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Filters'),
+    '#tree' => FALSE,
+    '#prefix' => "<div id='features-filter' class='element-invisible'>",
+    '#suffix' => '</div>',
+    '#collapsible' => FALSE,
+    '#collapsed' => FALSE,
+    '#weight' => -10,
+  );
+  $form['export']['features_filter_wrapper']['features_filter'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Filter'),
+    '#hidden' => TRUE,
+    '#default_value' => '',
+    '#suffix' => "<span class='features-filter-clear'>". t('Clear') ."</span>",
+  );
+  $form['export']['features_filter_wrapper']['checkall'] = array(
+    '#type' => 'checkbox',
+    '#default_value' => FALSE,
+    '#hidden' => TRUE,
+    '#title' => t('Select all'),
+    '#attributes' => array(
+      'class' => array('features-checkall'),
+    )
   );
 
   // this refresh button will rebuild the form.
@@ -203,7 +229,6 @@ function _features_export_form_components(&$form, &$form_state) {
         '#attributes' => array('class' => array('features-export-component')),
         '#prefix' => "<div class='features-export-parent component-$component'>",
       );
-
       $form['export'][$component]['sources']['selected'] = array(
         '#type' => 'checkboxes',
         '#id' => "edit-sources-$component_name",
