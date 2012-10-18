@@ -236,6 +236,7 @@ jQuery.fn.sortElements = (function(){
                 else if ($(this).hasClass('component-select')) {
                   if (key in itemList) {
                     moveCheckbox(this, 'detected', true);
+                    $(this).parent().show(); // make sure it's not hidden from filter
                   }
                 }
               });
