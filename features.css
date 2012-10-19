@@ -307,6 +307,9 @@ table.features-diff td.diff-context {
 #features-export-wrapper div.features-export-parent {
   clear: both;
 }
+#features-export-form .fieldset-content.fieldset-wrapper {
+  padding-top: 5px;
+}
 html.js #features-export-form fieldset.collapsed {
   min-height: 2em;
   margin-bottom: 0;
@@ -412,7 +415,6 @@ fieldset.features-export-component .fieldset-wrapper .form-checkboxes {
 #features-export-buttons {
   width: 49%;
   float: left;
-  clear: left;
   margin-top: 0.5em;
   position: relative;
   text-align: center;
@@ -449,9 +451,12 @@ input.form-submit.features-refresh-button {
 #features-filter input[size="60"].form-text {
   width: 200px;
 }
+#features-filter .fieldset-content,
+#features-filter .fieldset-wrapper,
 #features-filter fieldset {
   border: 0;
   padding: 0;
+  margin: 0;
 }
 #features-filter fieldset legend {
   display: none;
@@ -459,9 +464,14 @@ input.form-submit.features-refresh-button {
 #features-filter label,
 #features-filter input {
   display: inline;
+  width: auto;
 }
 #features-filter .form-item {
   float: left;
+  margin: 5px 0;
+  padding: 0;
+}
+#features-filter .form-item.form-type-checkbox {
   margin: 5px 0;
 }
 #features-filter span {
@@ -480,11 +490,15 @@ input.form-submit.features-refresh-button {
 }
 #features-autodetect .form-item {
   float: left;
-  margin: 5px 0;
+  margin: 0 0;
+  padding: 0;
 }
+#features-autodetect .fieldset-content,
+#features-autodetect .fieldset-wrapper,
 #features-autodetect fieldset {
   border: 0;
   padding: 0;
+  margin: 0;
 }
 #features-autodetect fieldset legend {
   display: none;
