@@ -97,6 +97,20 @@ function features_export_form($form, $form_state, $feature = NULL) {
     '#default_value' => !empty($feature->info['project status url']) ? $feature->info['project status url'] : '',
     '#element_validate' => array('features_export_form_validate_field'),
   );
+  $directory = (!empty($feature->filename)) ? dirname($feature->filename) : 'sites/all/modules';
+  $form['advanced']['generate_path'] = array(
+    '#title' => t('Path to Generate feature module'),
+    '#description' => t('File path for feature module.  For Example: sites/all/modules or /tmp.  ' .
+      t('Leave blank for @path', array('@path' => $directory))),
+    '#type' => 'textfield',
+    '#required' => FALSE,
+    '#default_value' => !empty($feature->info['project path']) ? $feature->info['project path'] : '',
+  );
+  $form['advanced']['generate'] = array(
+    '#type' => 'submit',
+    '#value' => t('Generate feature'),
+    '#submit' => array('features_export_build_form_submit'),
+  );
   // build the Component Listing panel on the right
   _features_export_form_components($form, $form_state);
 
@@ -544,12 +558,15 @@ function features_export_form_validate_field($element, &$form_state) {
  */
 function features_export_build_form_submit($form, &$form_state) {
   // generate the selected export
-  $export = _features_export_build($form['#feature'], $form_state);
+  $generate = ($form_state['values']['op'] == $form_state['values']['generate']);
+
+  $feature = $form['#feature'];
+  $export = _features_export_build($feature, $form_state);
   unset($export['components']); // remove the UI data that we are not saving to disk
 
   $module_name = $form_state['values']['module_name'];
   // Directly copy the following attributes
-  $attr = array('name', 'description', 'package');
+  $attr = array('name', 'description', 'package', 'project path');
   foreach ($attr as $key) {
     $export[$key] = isset($form_state['values'][$key]) ? $form_state['values'][$key] : NULL;
   }
@@ -565,18 +582,30 @@ function features_export_build_form_submit($form, &$form_state) {
     $export['project status url'] = $form_state['values']['project_status_url'];
   }
   $export['no autodetect'] = empty($form_state['values']['autodetect']) ? 1 : NULL;
+  $export['project path'] = !empty($form_state['values']['generate_path']) ? $form_state['values']['generate_path'] : NULL;
   // Generate download
   if ($files = features_export_render($export, $module_name, TRUE)) {
     $filename = (!empty($export['version']) ? "{$module_name}-{$export['version']}" : $module_name) . '.tar';
 
-    // Clear out output buffer to remove any garbage from tar output.
-    if (ob_get_level()) {
-      ob_end_clean();
+    if ($generate) {
+      $success = TRUE;
+      $destination = 'sites/all/modules';
+      $directory = (!empty($export['project path'])) ? $export['project path'] . '/' . $module_name :
+        (isset($feature->filename) ? dirname($feature->filename) : $destination . '/' . $module_name);
+      if (!is_dir($directory)) {
+        mkdir($directory);
+      }
     }
+    else {
+      // Clear out output buffer to remove any garbage from tar output.
+      if (ob_get_level()) {
+        ob_end_clean();
+      }
 
-    drupal_add_http_header('Content-type', 'application/x-tar');
-    drupal_add_http_header('Content-Disposition', 'attachment; filename="'. $filename .'"');
-    drupal_send_headers();
+      drupal_add_http_header('Content-type', 'application/x-tar');
+      drupal_add_http_header('Content-Disposition', 'attachment; filename="'. $filename .'"');
+      drupal_send_headers();
+    }
 
     $tar = array();
     $filenames = array();
@@ -585,7 +614,14 @@ function features_export_build_form_submit($form, &$form_state) {
         $extension .= '.inc';
       }
       $filenames[] = "{$module_name}.$extension";
-      print features_tar_create("{$module_name}/{$module_name}.$extension", $file_contents);
+      if ($generate) {
+        if (file_put_contents("{$directory}/{$module_name}.$extension", $file_contents) === FALSE) {
+          $success = FALSE;
+        }
+      }
+      else {
+        print features_tar_create("{$module_name}/{$module_name}.$extension", $file_contents);
+      }
     }
     if (features_get_modules($module_name, TRUE)) {
       $module_path = drupal_get_path('module', $module_name);
@@ -597,13 +633,33 @@ function features_export_build_form_submit($form, &$form_state) {
         if (!in_array($filename, $filenames)) {
           // Add this file.
           $contents = file_get_contents($file->uri);
-          print features_tar_create("{$module_name}/{$filename}", $contents);
+          if ($generate) {
+            if (file_put_contents("{$directory}/{$filename}", $contents) === FALSE) {
+              $success = FALSE;
+            }
+          }
+          else {
+            print features_tar_create("{$module_name}/{$filename}", $contents);
+          }
           unset($contents);
         }
       }
     }
-    print pack("a1024","");
-    exit;
+    if ($generate) {
+      if ($success) {
+        drupal_set_message(t("Module @name written to @directory",
+          array('@name' => $export['name'], '@directory' => $directory)));
+        }
+      else {
+        drupal_set_message(
+          t("Could not write module to @path. ", array('@path' => $directory)) .
+          t("Ensure your file permissions allow the web server to write to that directory."), "error");
+      }
+    }
+    else {
+      print pack("a1024","");
+      exit;
+    }
   }
 }
 

@@ -498,8 +498,11 @@ input.form-submit.features-refresh-button {
 #features-autodetect fieldset {
   border: 0;
   padding: 0;
-  margin: 0;
+  margin: 1em 0 0 0;
 }
 #features-autodetect fieldset legend {
   display: none;
+}
+#features-export-advanced .form-item.form-item-generate-path {
+  margin-bottom: 0;
 }
