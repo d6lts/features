@@ -200,6 +200,8 @@ jQuery.fn.sortElements = (function(){
       }
 
       function _updateDetected() {
+        var autodetect = $('#features-autodetect input[type=checkbox]');
+        if ((autodetect.length > 0) && (!autodetect.is(':checked'))) return;
         // query the server for a list of components/items in the feature and update
         // the auto-detected items
         var items = [];  // will contain a list of selected items exported to feature
@@ -349,7 +351,7 @@ jQuery.fn.sortElements = (function(){
       });
 
       // if javascript is enabled, then hide the manual Refresh button
-      $('.features-refresh-wrapper', context).hide();
+//      $('.features-refresh-wrapper', context).hide();
       // show the filter bar
       $('#features-filter', context).removeClass('element-invisible');
     }

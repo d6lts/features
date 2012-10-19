@@ -97,7 +97,6 @@ function features_export_form($form, $form_state, $feature = NULL) {
     '#default_value' => !empty($feature->info['project status url']) ? $feature->info['project status url'] : '',
     '#element_validate' => array('features_export_form_validate_field'),
   );
-
   // build the Component Listing panel on the right
   _features_export_form_components($form, $form_state);
 
@@ -142,15 +141,6 @@ function _features_export_form_components(&$form, &$form_state) {
   );
 
   // filter field used in javascript, so javascript will unhide it
-  $form['export']['filter'] = array(
-    '#type' => 'textfield',
-    '#title' => t('Filter'),
-    '#default_value' => '',
-    '#hidden' => TRUE,
-    '#prefix' => "<div id='features-filter' class='element-invisible'>",
-    '#suffix' => "<span class='features-filter-clear'>" . t('Clear') .
-      " </span></div>",
-  );
   $form['export']['features_filter_wrapper'] = array(
     '#type' => 'fieldset',
     '#title' => t('Filters'),
@@ -178,25 +168,38 @@ function _features_export_form_components(&$form, &$form_state) {
     )
   );
 
+  $form['advanced']['features_autodetect_wrapper'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Dependencies'),
+    '#tree' => FALSE,
+    '#prefix' => "<div id='features-autodetect'>",
+    '#suffix' => '</div>',
+    '#collapsible' => FALSE,
+    '#collapsed' => FALSE,
+  );
+  $form['advanced']['features_autodetect_wrapper']['autodetect'] = array(
+    '#title' => t('Add auto-detected dependencies'),
+    '#type' => 'checkbox',
+    '#default_value' => !empty($feature->info['no autodetect']) ? FALSE : TRUE,
+  );
+
   // this refresh button will rebuild the form.
   // this button is hidden by javascript since it is only needed when
   // javascript is not available
-  $form['export']['features_refresh'] = array(
+  $form['advanced']['features_autodetect_wrapper']['features_refresh'] = array(
     '#type' => 'submit',
-    '#value' => t('Refresh'),
+    '#value' => t('Refresh dependencies'),
     '#name' => 'features-refresh',
     '#attributes' => array(
       'title' => t("Refresh the list of auto-detected items."),
       'class' => array('features-refresh-button'),
     ),
-    '#weight' => -1,
     '#submit' => array('features_export_form_rebuild'),
     '#prefix' => "<div class='features-refresh-wrapper'>",
-    '#suffix' => "</div>",
+    '#suffix' => "</div></div>",
     '#ajax' => array(
       'callback' => 'features_export_form_ajax',
       'wrapper' => 'features-export-wrapper',
-      'event' => 'refresh_components',
     ),
   );
   // generate the export array for the current feature and user selections
@@ -561,7 +564,7 @@ function features_export_build_form_submit($form, &$form_state) {
   if (!empty($form_state['values']['project_status_url'])) {
     $export['project status url'] = $form_state['values']['project_status_url'];
   }
-
+  $export['no autodetect'] = empty($form_state['values']['autodetect']) ? 1 : NULL;
   // Generate download
   if ($files = features_export_render($export, $module_name, TRUE)) {
     $filename = (!empty($export['version']) ? "{$module_name}-{$export['version']}" : $module_name) . '.tar';

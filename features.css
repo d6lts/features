@@ -412,8 +412,10 @@ fieldset.features-export-component .fieldset-wrapper .form-checkboxes {
 #features-export-buttons {
   width: 49%;
   float: left;
+  clear: left;
   margin-top: 0.5em;
   position: relative;
+  text-align: center;
 }
 
 #features-export-wrapper .component-added label a,
@@ -428,17 +430,17 @@ fieldset.features-export-component .fieldset-wrapper .form-checkboxes {
 #features-export-form input[size="60"].form-text {
   width: 100%;
 }
-.features-refresh-wrapper {
-}
 input.form-submit.features-refresh-button {
   font-size: 0.7em;
   -moz-border-radius: 5px;
   -webkit-border-radius: 5px;
   border-radius: 5px;
   background-color: transparent;
+  margin-left: 1em;
 }
-#features-export-wrapper .ajax-progress {
-  width: 200px;
+.features-refresh-wrapper .ajax-progress {
+  font-size: 10px;
+  width: 10em;
 }
 #features-export-wrapper div.fieldset-description,
 #features-export-wrapper div.description {
@@ -446,6 +448,13 @@ input.form-submit.features-refresh-button {
 }
 #features-filter input[size="60"].form-text {
   width: 200px;
+}
+#features-filter fieldset {
+  border: 0;
+  padding: 0;
+}
+#features-filter fieldset legend {
+  display: none;
 }
 #features-filter label,
 #features-filter input {
@@ -468,4 +477,15 @@ input.form-submit.features-refresh-button {
 }
 #features-filter span:hover {
   background:#def;
+}
+#features-autodetect .form-item {
+  float: left;
+  margin: 5px 0;
+}
+#features-autodetect fieldset {
+  border: 0;
+  padding: 0;
+}
+#features-autodetect fieldset legend {
+  display: none;
 }
