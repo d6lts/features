@@ -221,6 +221,8 @@ jQuery.fn.sortElements = (function(){
         var postData = {'items': items};
         jQuery.post(url, postData, function(data) {
           if (inTimeout > 0) inTimeout--;
+          console.log('RETURNED');
+          console.log(data);
           // if we have triggered another timeout then don't update with old results
           if (inTimeout == 0) {
             // data is an object keyed by component listing the exports of the feature

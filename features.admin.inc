@@ -315,22 +315,31 @@ function _features_export_build($feature, &$form_state) {
   $sections = array('sources', 'included', 'detected', 'added');
 
   // create a new feature "stub" to populate
+
+  $stub_count = array();
   foreach ($components as $component => $component_info) {
     // User-selected components take precedence.
     $stub[$component] = array();
+    $stub_count[$component] = 0;
     // add selected items from Sources checkboxes
     if (!empty($form_state['values'][$component]['sources']['selected'])) {
       $stub[$component] = array_merge($stub[$component], features_dom_decode_options(array_filter($form_state['values'][$component]['sources']['selected'])));
+      $stub_count[$component]++;
     }
     // add selected items from already Included and newly Added checkboxes
     foreach (array('included', 'added') as $section) {
       if (!empty($form_state['values'][$component][$section])) {
         $stub[$component] = array_merge($stub[$component], features_dom_decode_options(array_filter($form_state['values'][$component][$section])));
+        $stub_count[$component]++;
       }
     }
+    // count any detected items
+    if (!empty($form_state['values'][$component]['detected'])) {
+      $stub_count[$component]++;
+      }
     // Only fallback to an existing feature's values if there are no export options for the component.
-    if (empty($stub[$component]) && !empty($feature->info['features'][$component])) {
-      $stub[$component] = $feature->info['features'][$component];
+    if (($stub_count[$component] == 0) && !empty($feature->info['features'][$component])) {
+      $stub[$component] = drupal_map_assoc($feature->info['features'][$component]);
     }
   }
   // Generate new populated feature
@@ -347,6 +356,7 @@ function _features_export_build($feature, &$form_state) {
 
   // now fill the $export with categorized sections of component options
   // based upon user selections and de-selections
+
   foreach ($components as $component => $component_info) {
     $component_export = $component_info;
     foreach ($sections as $section) {
@@ -384,7 +394,7 @@ function _features_export_build($feature, &$form_state) {
             // so it's part of the Included checkboxes
             $section = 'included';
             $default_value = $key;
-            // unless Included item was un-selected (removed from export $stub)
+            // if Included item was un-selected (removed from export $stub)
             // but was re-detected in the $new_components
             // means it was an auto-detect that was previously part of the export
             // and is now de-selected in UI
@@ -424,7 +434,7 @@ function _features_export_build($feature, &$form_state) {
             }
             // if it's already been unchecked, leave it unchecked
             elseif (!empty($form_state['values']) &&
-              !isset($form_state['values'][$component]['sources']['selected'][$key]) &&
+              empty($form_state['values'][$component]['sources']['selected'][$key]) &&
               empty($form_state['values'][$component]['detected'][$key]) &&
               !isset($form_state['values'][$component]['added'][$key])) {
               $section = 'detected';
@@ -433,7 +443,7 @@ function _features_export_build($feature, &$form_state) {
           }
           $component_export['options'][$section][$key] = check_plain($value);
           $component_export['selected'][$section][$key] = $default_value;
-          // save which items are specifically excluded from auto-detection
+          // save which dependencies are specifically excluded from auto-detection
           if (($section == 'detected') && ($default_value === FALSE)) {
             $excluded[$component][$key] = $key;
             // remove excluded item from export
