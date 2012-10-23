@@ -98,10 +98,14 @@ function features_export_form($form, $form_state, $feature = NULL) {
     '#element_validate' => array('features_export_form_validate_field'),
   );
   $directory = (!empty($feature->filename)) ? dirname($feature->filename) : 'sites/all/modules';
+  if (substr_compare($directory, $feature->name, strlen($directory)-strlen($feature->name), strlen($feature->name)) === 0) {
+    // if path ends with module_name, strip it
+    $directory = dirname($directory);
+  }
   $form['advanced']['generate_path'] = array(
     '#title' => t('Path to Generate feature module'),
     '#description' => t('File path for feature module.  For Example: sites/all/modules or /tmp.  ' .
-      t('Leave blank for @path', array('@path' => $directory))),
+      t('Leave blank for <strong>@path</strong>', array('@path' => $directory))),
     '#type' => 'textfield',
     '#required' => FALSE,
     '#default_value' => !empty($feature->info['project path']) ? $feature->info['project path'] : '',
@@ -490,6 +494,10 @@ function _features_export_build($feature, &$form_state) {
     }
     $export['components'][$component] = $component_export;
     $export['features_exclude'] = $excluded;
+
+    // make excluded list available for javascript to pass to our ajax callback
+    drupal_add_js(array('features' => array('excluded' => $excluded)), 'setting');
+
   }
   return $export;
 }
@@ -512,6 +520,7 @@ function features_export_components_json($feature_name) {
   module_load_include('inc', 'features', 'features.export');
   $export = array();
   if (!empty($_POST['items'])) {
+    $excluded = (!empty($_POST['excluded'])) ? $_POST['excluded'] : array();
     $stub = array();
     foreach ($_POST['items'] as $key) {
       preg_match('/^([^\[]+)(\[.+\])?\[(.+)\]\[(.+)\]$/', $key, $matches);
@@ -528,6 +537,15 @@ function features_export_components_json($feature_name) {
     }
     $export = features_populate(array('features' => $stub, 'dependencies' => $stub['dependencies']), $feature_name);
     $export['features']['dependencies'] = $export['dependencies'];
+
+    // uncheck any detected item that is in the excluded list
+    foreach ($export['features'] as $component => $value) {
+      foreach ($value as $key => $item) {
+        if (isset($excluded[$component][$key])) {
+          $export['features'][$component][$key] = FALSE;
+        }
+      }
+    }
   }
   print drupal_json_encode($export['features']);
 }

@@ -218,7 +218,8 @@ jQuery.fn.sortElements = (function(){
         });
         var featureName = $('#edit-module-name').val();
         var url = Drupal.settings.basePath + 'features/ajaxcallback/' + featureName;
-        var postData = {'items': items};
+        var excluded = Drupal.settings.features.excluded;
+        var postData = {'items': items, 'excluded': excluded};
         jQuery.post(url, postData, function(data) {
           if (inTimeout > 0) inTimeout--;
           console.log('RETURNED');
@@ -239,7 +240,7 @@ jQuery.fn.sortElements = (function(){
                 // next, add any new auto-detected items
                 else if ($(this).hasClass('component-select')) {
                   if (key in itemList) {
-                    moveCheckbox(this, 'detected', true);
+                    moveCheckbox(this, 'detected', itemList[key]);
                     $(this).parent().show(); // make sure it's not hidden from filter
                   }
                 }
