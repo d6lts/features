@@ -419,6 +419,9 @@ fieldset.features-export-component .fieldset-wrapper .form-checkboxes {
   position: relative;
   text-align: center;
 }
+#features-export-buttons input {
+  margin: 0 3px;
+}
 
 #features-export-wrapper .component-added label a,
 #features-export-wrapper .component-detected label a,
@@ -441,6 +444,10 @@ input.form-submit.features-refresh-button {
   margin-left: 1em;
 }
 .features-refresh-wrapper .ajax-progress {
+  font-size: 10px;
+  width: 10em;
+}
+#features-export-buttons .ajax-progress {
   font-size: 10px;
   width: 10em;
 }
@@ -505,4 +512,12 @@ input.form-submit.features-refresh-button {
 }
 #features-export-advanced .form-item.form-item-generate-path {
   margin-bottom: 0;
+}
+#features-info-file .form-textarea-wrapper,
+#features-info-file textarea {
+  height: 100%;
+}
+
+#features-info-file .form-type-textarea {
+  height: 90%;
 }

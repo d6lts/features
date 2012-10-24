@@ -127,6 +127,23 @@ jQuery.fn.sortElements = (function(){
         }
       });
 
+      //View info dialog
+      $('#features-info-file').dialog({
+        autoOpen: false,
+        modal: true,
+        draggable: false,
+        resizable: false,
+        width: 600,
+        height: 480
+      });
+
+      if ((Drupal.settings.features != undefined) && (Drupal.settings.features.info != undefined)) {
+        $('#features-info-file textarea').val(Drupal.settings.features.info);
+        $('#features-info-file').dialog('open');
+        //To be reset by the button click ajax
+        Drupal.settings.features.info = undefined;
+      }
+
       function _checkAll(value) {
         if (value) {
           $('#features-export-wrapper .component-select input[type=checkbox]:visible', context).each(function() {

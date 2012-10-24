@@ -133,6 +133,28 @@ function features_export_form($form, $form_state, $feature = NULL) {
     '#submit' => array('features_export_build_form_submit'),
   );
 
+  $form['buttons']['info-preview'] = array(
+    '#type' => 'button',
+    '#value' => t('Preview .info file'),
+    '#ajax' => array(
+      'callback' => 'features_info_file_preview',
+      'wrapper' => 'features-export-wrapper',
+    ),
+  );
+
+  //Info dialog
+  $form['info-file'] = array(
+    '#prefix' => '<div id="features-info-file" title="Export .info file preview">',
+    'text'    => array(
+      '#type' => 'textarea',
+      '#default_value' => '',
+      '#resizable' => FALSE,
+    ),
+    '#suffix' => '</div>',
+  );
+
+  $form['#attached']['library'][] = array('system', 'ui.dialog');
+
   return $form;
 }
 
@@ -223,6 +245,17 @@ function _features_export_form_components(&$form, &$form_state) {
   );
   // generate the export array for the current feature and user selections
   $export = _features_export_build($feature, $form_state);
+
+  if (isset($form_state['values']['op']) && ($form_state['values']['op'] == $form_state['values']['info-preview'])) {
+    // handle clicking Preview button
+    module_load_include('inc', 'features', 'features.export');
+
+    $feature_export = _features_export_generate($export, $form_state);
+    $feature_export = features_export_prepare($feature_export, $feature->name);
+    $info = features_export_info($feature_export);
+
+    drupal_add_js(array('features' => array('info' => $info)), 'setting');
+  }
 
   $sections = array('included', 'detected', 'added');
   foreach ($export['components'] as $component => $component_info) {
@@ -550,6 +583,14 @@ function features_export_components_json($feature_name) {
   }
   print drupal_json_encode($export['features']);
 }
+
+/**
+ * AJAX callback to get .info file preview.
+ */
+function features_info_file_preview($form, &$form_state){
+  return $form['export'];
+}
+
 /**
  * Render API callback: Validates a project field.
  *
@@ -583,14 +624,9 @@ function features_export_form_validate_field($element, &$form_state) {
 }
 
 /**
- * Form submission handler for features_export_form().
+ * Return the $export array to be rendered for the feature export
  */
-function features_export_build_form_submit($form, &$form_state) {
-  // generate the selected export
-  $generate = ($form_state['values']['op'] == $form_state['values']['generate']);
-
-  $feature = $form['#feature'];
-  $export = _features_export_build($feature, $form_state);
+function _features_export_generate($export, $form_state) {
   unset($export['components']); // remove the UI data that we are not saving to disk
 
   $module_name = $form_state['values']['module_name'];
@@ -612,6 +648,19 @@ function features_export_build_form_submit($form, &$form_state) {
   }
   $export['no autodetect'] = empty($form_state['values']['autodetect']) ? 1 : NULL;
   $export['project path'] = !empty($form_state['values']['generate_path']) ? $form_state['values']['generate_path'] : NULL;
+  return $export;
+}
+
+/**
+ * Form submission handler for features_export_form().
+ */
+function features_export_build_form_submit($form, &$form_state) {
+  $feature = $form['#feature'];
+  $export = _features_export_build($feature, $form_state);
+  $export = _features_export_generate($export, $form_state);
+  $generate = ($form_state['values']['op'] == $form_state['values']['generate']);
+  $module_name = $form_state['values']['module_name'];
+
   // Generate download
   if ($files = features_export_render($export, $module_name, TRUE)) {
     $filename = (!empty($export['version']) ? "{$module_name}-{$export['version']}" : $module_name) . '.tar';
