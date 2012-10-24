@@ -447,7 +447,7 @@ input.form-submit.features-refresh-button {
   font-size: 10px;
   width: 10em;
 }
-#features-export-buttons .ajax-progress {
+#features-export-advanced .ajax-progress {
   font-size: 10px;
   width: 10em;
 }
@@ -506,6 +506,7 @@ input.form-submit.features-refresh-button {
   border: 0;
   padding: 0;
   margin: 1em 0 0 0;
+  top: 0;
 }
 #features-autodetect fieldset legend {
   display: none;
@@ -519,5 +520,10 @@ input.form-submit.features-refresh-button {
 }
 
 #features-info-file .form-type-textarea {
-  height: 90%;
+  height: 100%;
+  margin: 0;
 }
+#edit-info-preview {
+  margin: 1em 0;
+}
+

@@ -119,6 +119,25 @@ function features_export_form($form, $form_state, $feature = NULL) {
   // build the Component Listing panel on the right
   _features_export_form_components($form, $form_state);
 
+  $form['advanced']['info-preview'] = array(
+    '#type' => 'button',
+    '#value' => t('Preview .info file'),
+    '#ajax' => array(
+      'callback' => 'features_info_file_preview',
+      'wrapper' => 'features-export-wrapper',
+    ),
+  );
+  //Info dialog
+  $form['advanced']['info-file'] = array(
+    '#prefix' => '<div id="features-info-file" title="Export .info file preview">',
+    'text'    => array(
+      '#type' => 'textarea',
+      '#default_value' => '',
+      '#resizable' => FALSE,
+    ),
+    '#suffix' => '</div>',
+  );
+
   $form['buttons'] = array(
     '#theme' => 'features_form_buttons',
     '#tree' => FALSE,
@@ -131,26 +150,6 @@ function features_export_form($form, $form_state, $feature = NULL) {
     '#value' => t('Download feature'),
     '#weight' => 10,
     '#submit' => array('features_export_build_form_submit'),
-  );
-
-  $form['buttons']['info-preview'] = array(
-    '#type' => 'button',
-    '#value' => t('Preview .info file'),
-    '#ajax' => array(
-      'callback' => 'features_info_file_preview',
-      'wrapper' => 'features-export-wrapper',
-    ),
-  );
-
-  //Info dialog
-  $form['info-file'] = array(
-    '#prefix' => '<div id="features-info-file" title="Export .info file preview">',
-    'text'    => array(
-      '#type' => 'textarea',
-      '#default_value' => '',
-      '#resizable' => FALSE,
-    ),
-    '#suffix' => '</div>',
   );
 
   $form['#attached']['library'][] = array('system', 'ui.dialog');
@@ -229,7 +228,7 @@ function _features_export_form_components(&$form, &$form_state) {
   // javascript is not available
   $form['advanced']['features_autodetect_wrapper']['features_refresh'] = array(
     '#type' => 'submit',
-    '#value' => t('Refresh dependencies'),
+    '#value' => t('Refresh'),
     '#name' => 'features-refresh',
     '#attributes' => array(
       'title' => t("Refresh the list of auto-detected items."),
@@ -237,7 +236,7 @@ function _features_export_form_components(&$form, &$form_state) {
     ),
     '#submit' => array('features_export_form_rebuild'),
     '#prefix' => "<div class='features-refresh-wrapper'>",
-    '#suffix' => "</div></div>",
+    '#suffix' => "</div>",
     '#ajax' => array(
       'callback' => 'features_export_form_ajax',
       'wrapper' => 'features-export-wrapper',
