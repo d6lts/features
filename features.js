@@ -217,13 +217,14 @@ jQuery.fn.sortElements = (function(){
           }
         });
         var featureName = $('#edit-module-name').val();
+        if (featureName == '') {
+          featureName = '*';
+        }
         var url = Drupal.settings.basePath + 'features/ajaxcallback/' + featureName;
         var excluded = Drupal.settings.features.excluded;
         var postData = {'items': items, 'excluded': excluded};
         jQuery.post(url, postData, function(data) {
           if (inTimeout > 0) inTimeout--;
-          console.log('RETURNED');
-          console.log(data);
           // if we have triggered another timeout then don't update with old results
           if (inTimeout == 0) {
             // data is an object keyed by component listing the exports of the feature
@@ -248,7 +249,7 @@ jQuery.fn.sortElements = (function(){
             }
             // loop over all selected components and check for any that have been completely removed
             for (var component in components) {
-              if (!(component in data)) {
+              if ((data == null) || !(component in data)) {
                 $('#features-export-wrapper .component-' + component + ' input[type=checkbox].component-detected', context).each(function() {
                   moveCheckbox(this, 'select', false);
                 });

@@ -20,6 +20,7 @@ function features_export_form($form, $form_state, $feature = NULL) {
   module_load_include('inc', 'features', 'features.export');
   features_include();
 
+  $feature_name = !empty($feature->name) ? $feature->name : '';
   $form = array(
     '#attributes' => array('class' => array('features-export-form')),
     '#feature' => isset($feature) ? $feature : NULL,
@@ -46,14 +47,14 @@ function features_export_form($form, $form_state, $feature = NULL) {
     '#title' => t('Machine-readable name'),
     '#description' => t('Example: image_gallery') . '<br/>' . t('May only contain lowercase letters, numbers and underscores. <strong>Try to avoid conflicts with the names of existing Drupal projects.</strong>'),
     '#required' => TRUE,
-    '#default_value' => !empty($feature->name) ? $feature->name : '',
+    '#default_value' => $feature_name,
     '#attributes' => array('class' => array('feature-module-name')),
     '#element_validate' => array('features_export_form_validate_field'),
   );
   // If recreating this feature, disable machine name field and blank out
   // js-attachment classes to ensure the machine name cannot be changed.
   if (isset($feature)) {
-    $form['info']['module_name']['#value'] = $feature->name;
+    $form['info']['module_name']['#value'] = $feature_name;
     $form['info']['module_name']['#disabled'] = TRUE;
     $form['info']['name']['#attributes'] = array();
   }
@@ -98,7 +99,7 @@ function features_export_form($form, $form_state, $feature = NULL) {
     '#element_validate' => array('features_export_form_validate_field'),
   );
   $directory = (!empty($feature->filename)) ? dirname($feature->filename) : 'sites/all/modules';
-  if (substr_compare($directory, $feature->name, strlen($directory)-strlen($feature->name), strlen($feature->name)) === 0) {
+  if (!empty($feature_name) && substr_compare($directory, $feature_name, strlen($directory)-strlen($feature_name), strlen($feature_name)) === 0) {
     // if path ends with module_name, strip it
     $directory = dirname($directory);
   }
