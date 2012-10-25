@@ -144,6 +144,22 @@ jQuery.fn.sortElements = (function(){
         Drupal.settings.features.info = undefined;
       }
 
+      // mark any conflicts with a class
+      for (var moduleName in Drupal.settings.features.conflicts) {
+        moduleConflicts = Drupal.settings.features.conflicts[moduleName];
+        $('#features-export-wrapper input[type=checkbox]', context).each(function() {
+          if (!$(this).hasClass('features-checkall')) {
+            var key = $(this).attr('name');
+            var matches = key.match(/^([^\[]+)(\[.+\])?\[(.+)\]\[(.+)\]$/);
+            var component = matches[1];
+            var item = matches[4];
+            if ((component in moduleConflicts) && (moduleConflicts[component].indexOf(item) != -1)) {
+              $(this).parent().addClass('features-conflict');
+            }
+          }
+        });
+      }
+
       function _checkAll(value) {
         if (value) {
           $('#features-export-wrapper .component-select input[type=checkbox]:visible', context).each(function() {
@@ -371,8 +387,6 @@ jQuery.fn.sortElements = (function(){
         _updateFilter();
       });
 
-      // if javascript is enabled, then hide the manual Refresh button
-//      $('.features-refresh-wrapper', context).hide();
       // show the filter bar
       $('#features-filter', context).removeClass('element-invisible');
     }

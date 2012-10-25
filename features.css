@@ -231,8 +231,13 @@ span.features-component-list span {
 
 div.features-key span.admin-conflict,
 span.features-component-list span.features-conflict {
-  background-color: #c30;
+  background-color: #c30 !important;
   color: #fff;
+}
+
+#features-export-wrapper .features-conflict {
+  color: #c30 !important;
+  font-weight: bold !important;
 }
 
 div.conflicts span.admin-disabled {

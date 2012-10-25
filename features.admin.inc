@@ -242,6 +242,17 @@ function _features_export_form_components(&$form, &$form_state) {
       'wrapper' => 'features-export-wrapper',
     ),
   );
+
+  $form['advanced']['features_allow_conflicts'] = array(
+    '#title' => t('Allow conflicts to be added'),
+    '#type' => 'checkbox',
+    '#default_value' => !empty($form_state['values']['features_allow_conflicts']) ? $form_state['values']['features_allow_conflicts'] : FALSE,
+    '#ajax' => array(
+      'callback' => 'features_export_form_ajax',
+      'wrapper' => 'features-export-wrapper',
+      'op' => 'features_allow_conflicts',
+    ),
+  );
   // generate the export array for the current feature and user selections
   $export = _features_export_build($feature, $form_state);
 
@@ -341,6 +352,16 @@ function _features_export_form_components(&$form, &$form_state) {
  *   7)  should never see an unchecked Included item
  */
 function _features_export_build($feature, &$form_state) {
+  global $features_ignore_conflicts;
+  $reset = FALSE;
+  if (isset($form_state['values']['features_allow_conflicts'])) {
+    $features_ignore_conflicts = $form_state['values']['features_allow_conflicts'];
+    if (isset($form_state['triggering_element']['#name']) && ($form_state['triggering_element']['#name'] == 'features_allow_conflicts')) {
+      // when clicking the Allow Conflicts button, reset the feature back to it's original state
+      $reset = TRUE;
+    }
+  }
+
   module_load_include('inc', 'features', 'features.export');
   features_include();
 
@@ -355,6 +376,9 @@ function _features_export_build($feature, &$form_state) {
 
   $stub_count = array();
   foreach ($components as $component => $component_info) {
+    if ($reset) {
+      unset($form_state['values'][$component]);
+    }
     // User-selected components take precedence.
     $stub[$component] = array();
     $stub_count[$component] = 0;
@@ -431,11 +455,14 @@ function _features_export_build($feature, &$form_state) {
             // so it's part of the Included checkboxes
             $section = 'included';
             $default_value = $key;
+            if ($reset) {
+              // leave it included
+            }
             // if Included item was un-selected (removed from export $stub)
             // but was re-detected in the $new_components
             // means it was an auto-detect that was previously part of the export
             // and is now de-selected in UI
-            if (!empty($form_state['values']) &&
+            elseif (!empty($form_state['values']) &&
                 (isset($form_state['values'][$component]['included'][$key]) ||
                  empty($form_state['values'][$component]['detected'][$key])) &&
                 empty($stub[$component][$key])) {
@@ -526,12 +553,18 @@ function _features_export_build($feature, &$form_state) {
       }
     }
     $export['components'][$component] = $component_export;
-    $export['features_exclude'] = $excluded;
-
-    // make excluded list available for javascript to pass to our ajax callback
-    drupal_add_js(array('features' => array('excluded' => $excluded)), 'setting');
-
   }
+  $export['features_exclude'] = $excluded;
+
+  $conflicts = features_get_conflicts();
+  $conflicts = !empty($feature_name) && isset($conflicts[$feature_name]) ? $conflicts[$feature_name] : array();
+
+  // make excluded list and conflicts available for javascript to pass to our ajax callback
+  drupal_add_js(array('features' => array(
+    'excluded' => $excluded,
+    'conflicts' => $conflicts,
+    )), 'setting');
+
   return $export;
 }
 

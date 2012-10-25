@@ -17,7 +17,6 @@ function features_populate($info, $module_name) {
   // Add Features API version. Any module with this entry in the .info file
   // will be treated as a Feature and included in the admin/build/features UI.
   $export['features']['features_api']['api:' . FEATURES_API] = TRUE;
-
   // Allow other modules to alter the export.
   drupal_alter('features_export', $export, $module_name);
 
@@ -53,7 +52,7 @@ function _features_populate($pipe, &$export, $module_name = '', $reset = FALSE) 
   }
   foreach ($pipe as $component => $data) {
     // Convert already defined items to dependencies.
-    _features_resolve_dependencies($data, $export, $module_name, $component);
+//    _features_resolve_dependencies($data, $export, $module_name, $component);
     // Remove any excluded items.
     if (!empty($export['features_exclude'][$component])) {
       $data = array_diff($data, $export['features_exclude'][$component]);
@@ -721,6 +720,12 @@ function features_get_default($component, $module_name = NULL, $alter = TRUE, $r
  */
 function features_get_default_map($component, $attribute = NULL, $callback = NULL, $reset = FALSE) {
   static $map = array();
+
+  global $features_ignore_conflicts;
+  if ($features_ignore_conflicts) {
+    return FALSE;
+  }
+
   features_include();
   features_include_defaults($component);
   if ((!isset($map[$component]) || $reset) && $default_hook = features_get_default_hooks($component)) {
