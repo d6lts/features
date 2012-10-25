@@ -1375,7 +1375,8 @@ function _features_get_used($module_name = NULL) {
     if (isset($component_info[$type])) {
       foreach ($components as $component => $modules) {
         foreach ($modules as $module) {
-          if (empty($module_name) || ($module_name != $module)) {
+          // only for enabled modules
+          if (module_exists($module) && (empty($module_name) || ($module_name != $module))) {
             if (!isset($conflicts[$module])) {
               $conflicts[$module] = array();
             }
