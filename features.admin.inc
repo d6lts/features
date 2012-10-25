@@ -2,7 +2,7 @@
 
 /**
  * @file
- * @todo.
+ * Forms for Features admin screens
  */
 
 /**
@@ -168,6 +168,17 @@ function _features_export_form_components(&$form, &$form_state) {
 
   $feature = $form['#feature'];
 
+  global $features_ignore_conflicts;
+  // keep the allow_conflict variable around in the session
+  if (isset($form_state['values']['features_allow_conflicts'])) {
+    $_SESSION['features_allow_conflicts'] = $form_state['values']['features_allow_conflicts'];
+  }
+  // set a global to effect features_get_component_map when building feature
+  // hate to use a global, but it's just for an admin screen so probably ok
+  if (isset($_SESSION['features_allow_conflicts'])) {
+    $features_ignore_conflicts = $_SESSION['features_allow_conflicts'];
+  }
+
   $form['export'] = array(
     '#type' => 'fieldset',
     '#title' => t('Components'),
@@ -246,11 +257,10 @@ function _features_export_form_components(&$form, &$form_state) {
   $form['advanced']['features_allow_conflicts'] = array(
     '#title' => t('Allow conflicts to be added'),
     '#type' => 'checkbox',
-    '#default_value' => !empty($form_state['values']['features_allow_conflicts']) ? $form_state['values']['features_allow_conflicts'] : FALSE,
+    '#default_value' => $features_ignore_conflicts,
     '#ajax' => array(
       'callback' => 'features_export_form_ajax',
       'wrapper' => 'features-export-wrapper',
-      'op' => 'features_allow_conflicts',
     ),
   );
   // generate the export array for the current feature and user selections
@@ -352,14 +362,13 @@ function _features_export_form_components(&$form, &$form_state) {
  *   7)  should never see an unchecked Included item
  */
 function _features_export_build($feature, &$form_state) {
-  global $features_ignore_conflicts;
+
+  $feature_name = isset($feature->name) ? $feature->name : NULL;
+  $conflicts = _features_get_used($feature_name);
   $reset = FALSE;
-  if (isset($form_state['values']['features_allow_conflicts'])) {
-    $features_ignore_conflicts = $form_state['values']['features_allow_conflicts'];
-    if (isset($form_state['triggering_element']['#name']) && ($form_state['triggering_element']['#name'] == 'features_allow_conflicts')) {
-      // when clicking the Allow Conflicts button, reset the feature back to it's original state
-      $reset = TRUE;
-    }
+  if (isset($form_state['triggering_element']['#name']) && ($form_state['triggering_element']['#name'] == 'features_allow_conflicts')) {
+    // when clicking the Allow Conflicts button, reset the feature back to it's original state
+    $reset = TRUE;
   }
 
   module_load_include('inc', 'features', 'features.export');
@@ -404,7 +413,6 @@ function _features_export_build($feature, &$form_state) {
     }
   }
   // Generate new populated feature
-  $feature_name = isset($feature->name) ? $feature->name : NULL;
   $export = features_populate(array('features' => $stub, 'dependencies' => $stub['dependencies']), $feature_name);
 
   // Components that are already exported to feature
@@ -555,9 +563,6 @@ function _features_export_build($feature, &$form_state) {
     $export['components'][$component] = $component_export;
   }
   $export['features_exclude'] = $excluded;
-
-  $conflicts = features_get_conflicts();
-  $conflicts = !empty($feature_name) && isset($conflicts[$feature_name]) ? $conflicts[$feature_name] : array();
 
   // make excluded list and conflicts available for javascript to pass to our ajax callback
   drupal_add_js(array('features' => array(
@@ -1347,4 +1352,41 @@ function features_autocomplete_packages($search_string) {
   //removes duplicated package, we wont a list of all unique packages.
   $matched_packages = array_unique($matched_packages);
   drupal_json_output($matched_packages);
+}
+
+/**
+ * Return a list of all used components/items not matching a given feature module
+ * similar to features_get_conflicts but returns all component items "in use"
+ */
+function _features_get_used($module_name = NULL) {
+
+  global $features_ignore_conflicts;
+  // make sure we turn off the ignore_conflicts global to get full list of used components
+  // hate to use global, but since this is just for an admin screen it's not a real problem
+  $old_value = $features_ignore_conflicts;
+  $features_ignore_conflicts = FALSE;
+
+  $conflicts = array();
+  $component_info = features_get_components();
+  $map = features_get_component_map();
+
+  foreach ($map as $type => $components) {
+    // Only check conflicts for components we know about.
+    if (isset($component_info[$type])) {
+      foreach ($components as $component => $modules) {
+        foreach ($modules as $module) {
+          if (empty($module_name) || ($module_name != $module)) {
+            if (!isset($conflicts[$module])) {
+              $conflicts[$module] = array();
+            }
+            $conflicts[$module][$type][] = $component;
+          }
+        }
+      }
+    }
+  }
+
+  // restore previous value of global
+  $features_ignore_conflicts = $old_value;
+  return $conflicts;
 }
