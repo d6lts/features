@@ -806,7 +806,7 @@ function features_admin_form($form, $form_state) {
     }
 
     $disabled = FALSE;
-    $description = isset($module->info['description']) ? $module->info['description'] : '';
+    $description = isset($module->info['description']) ? check_plain($module->info['description']) : '';
 
     // Detect unmet dependencies
     if (!empty($module->info['dependencies'])) {
@@ -842,7 +842,7 @@ function features_admin_form($form, $form_state) {
           $disabled = TRUE;
         }
       }
-      $description .= "<div class='conflicts'>". t('Conflicts with: @conflicts', array('@conflicts' => implode(', ', $module_conflicts))) ."</div>";
+      $description .= "<div class='conflicts'>". t('Conflicts with: !conflicts', array('!conflicts' => implode(', ', $module_conflicts))) ."</div>";
     }
 
     $href = "admin/structure/features/{$name}";
@@ -850,7 +850,7 @@ function features_admin_form($form, $form_state) {
     $form[$package]['status'][$name] = array(
       '#type' => 'checkbox',
       '#title' => $module_name,
-      '#description' => check_plain($description),
+      '#description' => $description,
       '#default_value' => $module->status,
       '#disabled' => $disabled,
     );
