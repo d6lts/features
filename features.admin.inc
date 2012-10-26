@@ -163,19 +163,15 @@ function features_export_form($form, $form_state, $feature = NULL) {
  * @param  array $components - array of components in feature
  */
 function _features_export_form_components(&$form, &$form_state) {
+  global $features_ignore_conflicts;
   drupal_add_css(drupal_get_path('module', 'features') . '/features.css');
   drupal_add_js(drupal_get_path('module', 'features') . '/features.js');
 
   $feature = $form['#feature'];
 
-  global $features_ignore_conflicts;
   // keep the allow_conflict variable around in the session
   if (isset($form_state['values']['features_allow_conflicts'])) {
     $_SESSION['features_allow_conflicts'] = $form_state['values']['features_allow_conflicts'];
-  }
-  // set a global to effect features_get_component_map when building feature
-  // hate to use a global, but it's just for an admin screen so probably ok
-  if (isset($_SESSION['features_allow_conflicts'])) {
     $features_ignore_conflicts = $_SESSION['features_allow_conflicts'];
   }
 
@@ -221,7 +217,6 @@ function _features_export_form_components(&$form, &$form_state) {
 
   $form['advanced']['features_autodetect_wrapper'] = array(
     '#type' => 'fieldset',
-    '#title' => t('Dependencies'),
     '#tree' => FALSE,
     '#prefix' => "<div id='features-autodetect'>",
     '#suffix' => '</div>',
@@ -254,6 +249,9 @@ function _features_export_form_components(&$form, &$form_state) {
     ),
   );
 
+  // generate the export array for the current feature and user selections
+  $export = _features_export_build($feature, $form_state);
+
   $form['advanced']['features_allow_conflicts'] = array(
     '#title' => t('Allow conflicts to be added'),
     '#type' => 'checkbox',
@@ -263,8 +261,6 @@ function _features_export_form_components(&$form, &$form_state) {
       'wrapper' => 'features-export-wrapper',
     ),
   );
-  // generate the export array for the current feature and user selections
-  $export = _features_export_build($feature, $form_state);
 
   if (isset($form_state['values']['op']) && ($form_state['values']['op'] == $form_state['values']['info-preview'])) {
     // handle clicking Preview button
@@ -329,6 +325,22 @@ function _features_export_form_components(&$form, &$form_state) {
       $form['export'][$component][$sections[count($sections)-1]]['#suffix'] = '</div></div>';
     }
   }
+  $form['export']['features_legend'] = array(
+    '#type' => 'fieldset',
+    '#title' => t('Legend'),
+    '#tree' => FALSE,
+    '#prefix' => "<div id='features-legend'>",
+    '#suffix' => '</div>',
+    '#collapsible' => FALSE,
+    '#collapsed' => FALSE,
+  );
+  $form['export']['features_legend']['legend'] = array(
+    '#markup' =>
+      "<span class='component-included'>Normal</span> " .
+      "<span class='component-added'>Changed</span> " .
+      "<span class='component-detected'>Auto detected</span> " .
+      "<span class='features-conflict'>Conflict</span> ",
+  );
 }
 
 /**
@@ -362,6 +374,12 @@ function _features_export_form_components(&$form, &$form_state) {
  *   7)  should never see an unchecked Included item
  */
 function _features_export_build($feature, &$form_state) {
+  global $features_ignore_conflicts;
+  // set a global to effect features_get_component_map when building feature
+  // hate to use a global, but it's just for an admin screen so probably ok
+  if (isset($_SESSION['features_allow_conflicts'])) {
+    $features_ignore_conflicts = $_SESSION['features_allow_conflicts'];
+  }
 
   $feature_name = isset($feature->name) ? $feature->name : NULL;
   $conflicts = _features_get_used($feature_name);

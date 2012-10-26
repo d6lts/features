@@ -235,7 +235,8 @@ span.features-component-list span.features-conflict {
   color: #fff;
 }
 
-#features-export-wrapper .features-conflict {
+#features-export-wrapper .features-conflict,
+#features-export-wrapper .features-conflict label.option{
   color: #c30 !important;
   font-weight: bold !important;
 }
@@ -345,6 +346,9 @@ fieldset.features-export-component .fieldset-title span {
   font-size: 11px;
   text-transform: none;
   font-weight: normal;
+}
+#features-export-wrapper .fieldset-wrapper  {
+  font-size: 12px;
 }
 div.features-export-list  {
   font-weight: normal;
@@ -531,4 +535,26 @@ input.form-submit.features-refresh-button {
 #edit-info-preview {
   margin: 1em 0;
 }
-
+#features-legend .fieldset-wrapper span {
+  font-style: normal;
+  color: black;
+  display: inline-block;
+  background: transparent;
+  border: 1px solid #DDD;
+  -moz-border-radius: 5px;
+  -webkit-border-radius: 5px;
+  white-space: nowrap;
+  padding: 0 8px;
+  margin: 0 10px 0 0;
+}
+#features-legend .fieldset-wrapper .component-detected {
+  font-style: italic;
+  color:#68a;
+  background:#def;
+  border-width: 0;
+}
+#features-legend .fieldset-wrapper .component-added {
+  font-weight: bold;
+  background: #EEE;
+  border-width: 0;
+}
