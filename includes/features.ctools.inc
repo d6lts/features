@@ -83,7 +83,7 @@ function ctools_features_export_render($module, $data) {
       // For background on why we change the output for hook_views_api()
       // see http://drupal.org/node/1459120.
       if ($info['module'] == 'views') {
-        $code[] = '  return array("version" => "3.0");';
+        $code[] = '  return array("api" => "3.0");';
       }
       else {
         $code[] = '  list($module, $api) = func_get_args();';
