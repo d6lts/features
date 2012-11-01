@@ -266,7 +266,7 @@ function _features_export_form_components(&$form, &$form_state) {
     // handle clicking Preview button
     module_load_include('inc', 'features', 'features.export');
 
-    $feature_export = _features_export_generate($export, $form_state);
+    $feature_export = _features_export_generate($export, $form_state, $feature);
     $feature_export = features_export_prepare($feature_export, $feature->name);
     $info = features_export_info($feature_export);
 
@@ -681,14 +681,19 @@ function features_export_form_validate_field($element, &$form_state) {
 /**
  * Return the $export array to be rendered for the feature export
  */
-function _features_export_generate($export, $form_state) {
+function _features_export_generate($export, $form_state, $feature = NULL) {
   unset($export['components']); // remove the UI data that we are not saving to disk
 
   $module_name = $form_state['values']['module_name'];
-  // Directly copy the following attributes
+  // Directly copy the following attributes from form_state
   $attr = array('name', 'description', 'package', 'project path');
   foreach ($attr as $key) {
     $export[$key] = isset($form_state['values'][$key]) ? $form_state['values'][$key] : NULL;
+  }
+  // Directly copy the following attributes from the original feature
+  $attr = array('scripts' , 'stylesheets');
+  foreach ($attr as $key) {
+    $export[$key] = isset($feature->info[$key]) ? $feature->info[$key] : NULL;
   }
   // If either update status-related keys are provided, add a project key
   // corresponding to the module name.
@@ -712,7 +717,7 @@ function _features_export_generate($export, $form_state) {
 function features_export_build_form_submit($form, &$form_state) {
   $feature = $form['#feature'];
   $export = _features_export_build($feature, $form_state);
-  $export = _features_export_generate($export, $form_state);
+  $export = _features_export_generate($export, $form_state, $feature);
   $generate = ($form_state['values']['op'] == $form_state['values']['generate']);
   $module_name = $form_state['values']['module_name'];
 

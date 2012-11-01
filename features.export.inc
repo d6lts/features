@@ -174,6 +174,14 @@ function _features_export_maximize_dependencies($dependencies, $module_name = ''
 function features_export_prepare($export, $module_name, $reset = FALSE) {
   $existing = features_get_modules($module_name, $reset);
 
+  // copy certain exports directly into info
+  $copy_list = array('scripts', 'stylesheets');
+  foreach ($copy_list as $item) {
+    if(isset($export[$item])) {
+      $existing->info[$item] = $export[$item];
+    }
+  }
+
   // Prepare info string -- if module exists, merge into its existing info file
   $defaults = $existing ? $existing->info : array('core' => '7.x', 'package' => 'Features');
   $export = array_merge($defaults, $export);
@@ -191,7 +199,7 @@ function features_export_prepare($export, $module_name, $reset = FALSE) {
 
   // Order info array.
   $standard_info = array();
-  foreach (array('name', 'description', 'core', 'package', 'php', 'version', 'project', 'dependencies') as $item) {
+  foreach (array_merge(array('name', 'description', 'core', 'package', 'php', 'version', 'project', 'dependencies'), $copy_list) as $item) {
     if (isset($export[$item])) {
       $standard_info[$item] = $export[$item];
     }
