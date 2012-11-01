@@ -878,6 +878,10 @@ function _features_restore($op, $items = array()) {
 
   foreach ($items as $module_name => $components) {
     foreach ($components as $component) {
+      // Invoke pre hook
+      $pre_hook = 'pre_' . $restore_hook;
+      module_invoke($module_name, $pre_hook, $component);
+
       if (features_hook($component, $restore_hook)) {
         // Set a semaphore to prevent other instances of the same script from running concurrently.
         watchdog('features', '@actioning @module_name / @component.', array('@action' => $log_action, '@component' => $component, '@module_name' => $module_name));
@@ -889,6 +893,10 @@ function _features_restore($op, $items = array()) {
         features_set_signature($module_name, $component);
         watchdog('features', '@action completed for @module_name / @component.', array('@action' => $log_action, '@component' => $component, '@module_name' => $module_name));
       }
+
+      // Invoke post hook
+      $post_hook = 'post_' . $restore_hook;
+      module_invoke($module_name, $post_hook, $component);
     }
   }
 }

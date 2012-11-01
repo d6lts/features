@@ -381,3 +381,96 @@ function hook_user_default_roles_alter(&$roles) {
 /**
  * @}
  */
+
+
+/**
+ * @defgroup features_module_hooks Feature module hooks
+ * @{
+ * Hooks invoked on Feature modules when that module is enabled, disabled,
+ * rebuilt, or reverted. These are ONLY invoked on the Features module on
+ * which these actions are taken.
+ */
+
+/**
+ * Feature module hook. Invoked on a Feature module before that module is
+ * reverted.
+ *
+ * @param $component
+ *   String name of the component that is about to be reverted.
+ */
+function hook_pre_features_revert($component) {
+}
+
+/**
+ * Feature module hook. Invoked on a Feature module after that module is
+ * reverted.
+ *
+ * @param $component
+ *   String name of the component that has just been reverted.
+ */
+function hook_post_features_revert($component) {
+}
+
+/**
+ * Feature module hook. Invoked on a Feature module before that module is
+ * rebuilt.
+ *
+ * @param $component
+ *   String name of the component that is about to be rebuilt.
+ */
+function hook_pre_features_rebuild($component) {
+}
+
+/**
+ * Feature module hook. Invoked on a Feature module after that module is
+ * rebuilt.
+ *
+ * @param $component
+ *   String name of the component that has just been rebuilt.
+ */
+function hook_post_features_rebuild($component) {
+}
+
+/**
+ * Feature module hook. Invoked on a Feature module before that module is
+ * disabled.
+ *
+ * @param $component
+ *   String name of the component that is about to be disabled.
+ */
+function hook_pre_features_disable_feature($component) {
+}
+
+/**
+ * Feature module hook. Invoked on a Feature module after that module is
+ * disabled.
+ *
+ * @param $component
+ *   String name of the component that has just been disabled.
+ */
+function hook_post_features_disable_feature($component) {
+}
+
+/**
+ * Feature module hook. Invoked on a Feature module before that module is
+ * enabled.
+ *
+ * @param $component
+ *   String name of the component that is about to be enabled.
+ */
+function hook_pre_features_enable_feature($component) {
+}
+
+/**
+ * Feature module hook. Invoked on a Feature module after that module is
+ * enabled.
+ *
+ * @param $component
+ *   String name of the component that has just been enabled.
+ */
+function hook_post_features_enable_feature($component) {
+}
+
+/**
+ * @}
+ */
