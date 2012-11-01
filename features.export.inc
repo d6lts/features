@@ -281,16 +281,27 @@ function features_export_render($export, $module_name, $reset = FALSE) {
   $export = features_export_prepare($export, $module_name, $reset);
   $code['info'] = features_export_info($export);
 
+  // Used to create or manipulate the generated .module for features.inc.
+  $modulefile_features_inc = "<?php\n/**\n * @file\n * Code for the {$export['name']} feature.\n */\n\ninclude_once '{$module_name}.features.inc';\n";
+  $modulefile_blank = "<?php\n/**\n * @file\n * Drupal needs this blank file.\n */\n";
+
   // Prepare the module
   // If module exists, let it be and include it in the files
   if ($existing = features_get_modules($module_name, TRUE)) {
     $code['module'] = file_get_contents($existing->filename);
 
     // If the current module file does not reference the features.inc include,
-    // set a warning message.
     // @TODO this way of checking does not account for the possibility of inclusion instruction being commented out.
     if (isset($code['features']) && strpos($code['module'], "{$module_name}.features.inc") === FALSE) {
-      features_log(t('@module does not appear to include the @include file.', array('@module' => "{$module_name}.module", '@include' => "{$module_name}.features.inc")), 'warning');
+      // If .module does not begin with <?php\n, just add a warning.
+      if (strpos($code['module'], "<?php\n") !== 0) {
+        features_log(t('@module does not appear to include the @include file.', array('@module' => "{$module_name}.module", '@include' => "{$module_name}.features.inc")), 'warning');
+      }
+      else {
+        // Remove the old message if it exists, else just remove the <?php
+        $length = strpos($code['module'], $modulefile_blank) === 0 ? strlen($modulefile_blank) : 6;
+        $code['module'] = $modulefile_features_inc . substr($code['module'], $length);
+      }
     }
 
     // Deprecated files. Display a message for any of these files letting the
@@ -305,16 +316,26 @@ function features_export_render($export, $module_name, $reset = FALSE) {
         features_log(t('The file @filename has been deprecated and can be removed.', array('@filename' => $file->filename)), 'status');
       }
       elseif ($file->name === "{$module_name}.features" && empty($code['features'])) {
-        $code['features'] = "<?php\n\n// This file is deprecated and can be removed.\n// Please remove include_once('{$module_name}.features.inc') in {$module_name}.module as well.\n";
+        // Try and remove features.inc include.
+        if (strpos($code['module'], "{$module_name}.features.inc")) {
+          $code['module'] = str_replace($modulefile_features_inc, $modulefile_blank, $code['module']);
+        }
+        // If unable to remove the include, add a message to remove.
+        if (strpos($code['module'], "{$module_name}.features.inc")) {
+          $code['features'] = "<?php\n\n// This file is deprecated and can be removed.\n// Please remove include_once('{$module_name}.features.inc') in {$module_name}.module as well.\n";
+        }
+        else {
+          $code['features'] = "<?php\n\n// This file is deprecated and can be removed.\n";
+        }
       }
     }
   }
   // Add a stub module to include the defaults
   else if (!empty($code['features'])) {
-    $code['module'] = "<?php\n/**\n * @file\n * Code for the {$export['name']} feature.\n */\n\ninclude_once '{$module_name}.features.inc';\n";
+    $code['module'] = $modulefile_features_inc;
   }
   else {
-    $code['module'] = "<?php\n/**\n * @file\n * Drupal needs this blank file.\n */\n";
+    $code['module'] = $modulefile_blank;
   }
   return $code;
 }
