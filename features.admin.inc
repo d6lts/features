@@ -465,12 +465,14 @@ function _features_export_build($feature, &$form_state) {
         }
       }
       foreach ($options as $key => $value) {
+        // use the $clean_key when accessing $form_state
+        $clean_key = features_dom_encode($key);
         // if checkbox in Sources is checked, move it to Added section
-        if (!empty($form_state['values'][$component]['sources']['selected'][$key])) {
-          unset($form_state['input'][$component]['sources']['selected'][$key]);
-          $form_state['values'][$component]['sources']['selected'][$key] = FALSE;
-          $form_state['values'][$component]['added'][$key] = 1;
-          $form_state['input'][$component]['added'][$key] = features_dom_encode($key);
+        if (!empty($form_state['values'][$component]['sources']['selected'][$clean_key])) {
+          unset($form_state['input'][$component]['sources']['selected'][$clean_key]);
+          $form_state['values'][$component]['sources']['selected'][$clean_key] = FALSE;
+          $form_state['values'][$component]['added'][$clean_key] = 1;
+          $form_state['input'][$component]['added'][$clean_key] = $clean_key;
           $component_export['options']['added'][$key] = check_plain($value);
           $component_export['selected']['added'][$key] = $key;
         }
@@ -489,27 +491,27 @@ function _features_export_build($feature, &$form_state) {
             // means it was an auto-detect that was previously part of the export
             // and is now de-selected in UI
             elseif (!empty($form_state['values']) &&
-                (isset($form_state['values'][$component]['included'][$key]) ||
-                 empty($form_state['values'][$component]['detected'][$key])) &&
+                (isset($form_state['values'][$component]['included'][$clean_key]) ||
+                 empty($form_state['values'][$component]['detected'][$clean_key])) &&
                 empty($stub[$component][$key])) {
               $section = 'detected';
               $default_value = FALSE;
-
             }
             // unless it's unchecked in the form, then move it to Newly disabled item
             elseif (!empty($form_state['values']) &&
-                empty($form_state['values'][$component]['added'][$key]) &&
-                empty($form_state['values'][$component]['detected'][$key]) &&
-                empty($form_state['values'][$component]['included'][$key])) {
+                empty($form_state['values'][$component]['added'][$clean_key]) &&
+                empty($form_state['values'][$component]['detected'][$clean_key]) &&
+                empty($form_state['values'][$component]['included'][$clean_key])) {
               $section = 'added';
               $default_value = FALSE;
             }
           }
           else {
             // option was in New exported array, but NOT in already exported
-            // so it's an auto-detect item
+            // so it's a user-selected or an auto-detect item
             $section = 'detected';
-            if (isset($excluded[$component][$key]) && !isset($form_state['values'][$component]['detected'][$key])) {
+            // check for item explicity excluded
+            if (isset($excluded[$component][$key]) && !isset($form_state['values'][$component]['detected'][$clean_key])) {
               $default_value = FALSE;
             }
             else {
@@ -517,16 +519,16 @@ function _features_export_build($feature, &$form_state) {
             }
             // if it's already checked in Added or Sources, leave it in Added as checked
             if (!empty($form_state['values']) &&
-              (!empty($form_state['values'][$component]['added'][$key]) ||
-               !empty($form_state['values'][$component]['sources']['selected'][$key]))) {
+              (!empty($form_state['values'][$component]['added'][$clean_key]) ||
+               !empty($form_state['values'][$component]['sources']['selected'][$clean_key]))) {
               $section = 'added';
               $default_value = $key;
             }
             // if it's already been unchecked, leave it unchecked
             elseif (!empty($form_state['values']) &&
-              empty($form_state['values'][$component]['sources']['selected'][$key]) &&
-              empty($form_state['values'][$component]['detected'][$key]) &&
-              !isset($form_state['values'][$component]['added'][$key])) {
+              empty($form_state['values'][$component]['sources']['selected'][$clean_key]) &&
+              empty($form_state['values'][$component]['detected'][$clean_key]) &&
+              !isset($form_state['values'][$component]['added'][$clean_key])) {
               $section = 'detected';
               $default_value = FALSE;
             }
@@ -550,12 +552,12 @@ function _features_export_build($feature, &$form_state) {
           // remove the 'input' and set the 'values' so Drupal stops looking at 'input'
           if (isset($form_state['values'])) {
             if (!$default_value) {
-              unset($form_state['input'][$component][$section][$key]);
-              $form_state['values'][$component][$section][$key] = FALSE;
+              unset($form_state['input'][$component][$section][$clean_key]);
+              $form_state['values'][$component][$section][$clean_key] = FALSE;
             }
             else {
-              $form_state['input'][$component][$section][$key] = features_dom_encode($key);
-              $form_state['values'][$component][$section][$key] = 1;
+              $form_state['input'][$component][$section][$clean_key] = $clean_key;
+              $form_state['values'][$component][$section][$clean_key] = 1;
             }
           }
         }
@@ -564,7 +566,7 @@ function _features_export_build($feature, &$form_state) {
           $added = FALSE;
           foreach (array('included', 'added') as $section) {
             // restore any user-selected checkboxes
-            if (!empty($form_state['values'][$component][$section][$key])) {
+            if (!empty($form_state['values'][$component][$section][$clean_key])) {
               $component_export['options'][$section][$key] = check_plain($value);
               $component_export['selected'][$section][$key] = $key;
               $added = TRUE;
@@ -615,7 +617,7 @@ function features_export_components_json($feature_name) {
       preg_match('/^([^\[]+)(\[.+\])?\[(.+)\]\[(.+)\]$/', $key, $matches);
       if (!empty($matches[1]) && !empty($matches[4])) {
         $component = $matches[1];
-        $item = $matches[4];
+        $item = features_dom_decode($matches[4]);
         if (empty($stub[$component])) {
           $stub[$component] = array($item);
         }
@@ -630,8 +632,14 @@ function features_export_components_json($feature_name) {
     // uncheck any detected item that is in the excluded list
     foreach ($export['features'] as $component => $value) {
       foreach ($value as $key => $item) {
+        $clean_key = features_dom_encode($key);
+        if ($key != $clean_key) {
+          // need to move key to a cleankey for javascript
+          $export['features'][$component][$clean_key] = $export['features'][$component][$key];
+          unset($export['features'][$component][$key]);
+        }
         if (isset($excluded[$component][$key])) {
-          $export['features'][$component][$key] = FALSE;
+          $export['features'][$component][$clean_key] = FALSE;
         }
       }
     }
@@ -1322,6 +1330,11 @@ function features_dom_encode_options($options = array(), $keys_only = TRUE) {
 
 function features_dom_encode($key) {
   $replacements = features_dom_encode_map();
+  return strtr($key, $replacements);
+}
+
+function features_dom_decode($key) {
+  $replacements = array_flip(features_dom_encode_map());
   return strtr($key, $replacements);
 }
 
