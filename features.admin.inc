@@ -200,7 +200,7 @@ function _features_export_form_components(&$form, &$form_state) {
   );
   $form['export']['features_filter_wrapper']['features_filter'] = array(
     '#type' => 'textfield',
-    '#title' => t('Filter'),
+    '#title' => t('Search'),
     '#hidden' => TRUE,
     '#default_value' => '',
     '#suffix' => "<span class='features-filter-clear'>". t('Clear') ."</span>",
