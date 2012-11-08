@@ -426,7 +426,12 @@ function _features_export_build($feature, &$form_state) {
       $stub_count[$component]++;
       }
     // Only fallback to an existing feature's values if there are no export options for the component.
-    if (($stub_count[$component] == 0) && !empty($feature->info['features'][$component])) {
+    if ($component == 'dependencies') {
+      if (($stub_count[$component] == 0) && !empty($feature->info['dependencies'])) {
+        $stub[$component] = drupal_map_assoc($feature->info['dependencies']);
+      }
+    }
+    elseif (($stub_count[$component] == 0) && !empty($feature->info['features'][$component])) {
       $stub[$component] = drupal_map_assoc($feature->info['features'][$component]);
     }
   }
