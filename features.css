@@ -369,6 +369,7 @@ div.features-export-empty {
 fieldset.features-export-component .fieldset-wrapper .form-checkboxes {
   max-height: 20em;
   overflow: auto;
+  min-width: 100px;
 }
 
 #features-export-wrapper .component-select .form-type-checkbox {
