@@ -149,8 +149,6 @@ Lastly, a pattern without a colon is interpreted as having \":%\" appended, for 
       return dt("Revert a feature module on your site.");
     case 'drush:features-revert-all':
       return dt("Revert all enabled feature module on your site.");
-    case 'drush:features-revert':
-      return dt("Revert a feature module on your site.");
     case 'drush:features-diff':
       return dt("Show a diff of a feature module.");
     case 'drush:features-add':
