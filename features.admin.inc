@@ -1128,10 +1128,13 @@ function features_admin_components_revert(&$form, &$form_state) {
   module_load_include('inc', 'features', 'features.export');
   features_include();
   $module = $form_state['values']['module'];
-  $revert = array();
+  $revert = array($module => array());
   foreach (array_filter($form_state['values']['revert']) as $component => $status) {
     $revert[$module][] = $component;
     drupal_set_message(t('Reverted all <strong>@component</strong> components for <strong>@module</strong>.', array('@component' => $component, '@module' => $module)));
+  }
+  if (empty($revert[$module])) {
+    drupal_set_message(t('Please select which components to revert.'), 'warning');
   }
   features_revert($revert);
   $form_state['redirect'] = 'admin/structure/features/' . $module;
