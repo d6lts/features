@@ -78,7 +78,7 @@ function features_menu() {
   );
   $items['admin/structure/features/cleanup'] = array(
     'title' => 'Cleanup',
-    'description' => 'Detect and disable any orphaned feature dependencies.',
+    'description' => 'Clear cache after enabling/disabling a feature.',
     'page callback' => 'drupal_get_form',
     'page arguments' => array('features_cleanup_form', 4),
     'type' => MENU_CALLBACK,
