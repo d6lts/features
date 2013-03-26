@@ -990,3 +990,23 @@ function features_array_diff_assoc_recursive(array $array1, array $array2) {
   }
   return $difference;
 }
+
+/**
+ * Returns an array of deprecated components
+ * Rather than deprecating the component directly, we look for other components
+ * that supersedes the component
+ * @param $components
+ *   The array of components (component_info) from features_get_components typically.
+ */
+function features_get_deprecated($components = array()) {
+  if (empty($components)) {
+    $components = features_get_components();
+  }
+  $deprecated = array();
+  foreach ($components as $component => $component_info) {
+    if (!empty($component_info['supersedes'])) {
+      $deprecated[$component_info['supersedes']] = $component_info['supersedes'];
+    }
+  }
+  return $deprecated;
+}

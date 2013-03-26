@@ -170,6 +170,13 @@ function _features_export_maximize_dependencies($dependencies, $module_name = ''
 
 /**
  * Prepare a feature export array into a finalized info array.
+ * @param $export
+ *  An exported feature definition.
+ * @param $module_name
+ *  The name of the module to be exported.
+ * @param $reset
+ *  Boolean flag for resetting the module cache. Only set to true when
+ *  doing a final export for delivery.
  */
 function features_export_prepare($export, $module_name, $reset = FALSE) {
   $existing = features_get_modules($module_name, $reset);
@@ -186,9 +193,16 @@ function features_export_prepare($export, $module_name, $reset = FALSE) {
   $defaults = $existing ? $existing->info : array('core' => '7.x', 'package' => 'Features');
   $export = array_merge($defaults, $export);
 
+  $deprecated = features_get_deprecated();
   // Cleanup info array
   foreach ($export['features'] as $component => $data) {
-    $export['features'][$component] = array_keys($data);
+    // if performing the final export, do not export deprecated components
+    if ($reset && !empty($deprecated[$component])) {
+      unset($export['features'][$component]);
+    }
+    else {
+      $export['features'][$component] = array_keys($data);
+    }
   }
   if (isset($export['dependencies'])) {
     $export['dependencies'] = array_values($export['dependencies']);
@@ -252,9 +266,14 @@ function features_export_render($export, $module_name, $reset = FALSE) {
   // Generate hook code
   $component_hooks = features_export_render_hooks($export, $module_name, $reset);
   $components = features_get_components();
+  $deprecated = features_get_deprecated($components);
 
   // Group component code into their respective files
   foreach ($component_hooks as $component => $hooks) {
+    if ($reset && !empty($deprecated[$component])) {
+      // skip deprecated components on final export
+      continue;
+    }
     $file = array('name' => 'features');
     if (isset($components[$component]['default_file'])) {
       switch ($components[$component]['default_file']) {

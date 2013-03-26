@@ -267,11 +267,14 @@ function _features_export_form_components(&$form, &$form_state) {
     module_load_include('inc', 'features', 'features.export');
 
     $feature_export = _features_export_generate($export, $form_state, $feature);
-    $feature_export = features_export_prepare($feature_export, $feature->name);
+    $feature_export = features_export_prepare($feature_export, $feature->name, TRUE);
     $info = features_export_info($feature_export);
 
     drupal_add_js(array('features' => array('info' => $info)), 'setting');
   }
+
+  // determine any components that are deprecated
+  $deprecated = features_get_deprecated($export['components']);
 
   $sections = array('included', 'detected', 'added');
   foreach ($export['components'] as $component => $component_info) {
@@ -287,42 +290,72 @@ function _features_export_form_components(&$form, &$form_state) {
 
     if ($count + count($component_info['options']['sources']) > 0) {
 
-      $form['export'][$component] = array(
-        '#markup' => '',
-        '#tree' => TRUE,
-        );
-      $form['export'][$component]['sources'] = array(
-        '#type' => 'fieldset',
-        '#title' => $label,
-        '#tree' => TRUE,
-        '#collapsible' => TRUE,
-        '#collapsed' => TRUE,
-        '#attributes' => array('class' => array('features-export-component')),
-        '#prefix' => "<div class='features-export-parent component-$component'>",
-      );
-      $form['export'][$component]['sources']['selected'] = array(
-        '#type' => 'checkboxes',
-        '#id' => "edit-sources-$component_name",
-        '#options' => features_dom_encode_options($component_info['options']['sources']),
-        '#default_value' => features_dom_encode_options($component_info['selected']['sources'], FALSE),
-        '#attributes' => array(
-          'class' => array('component-select'),
-        ),
-      );
+      if (!empty($deprecated[$component])) {
+        // only show deprecated component if it has some exports
+        if (!empty($component_info['options']['included'])) {
+          $form['export'][$component] = array(
+            '#markup' => '',
+            '#tree' => TRUE,
+            );
 
-      foreach ($sections as $section) {
-        $form['export'][$component][$section] = array(
-          '#type' => 'checkboxes',
-          '#options' => !empty($component_info['options'][$section]) ?
-            features_dom_encode_options($component_info['options'][$section]) : array(),
-          '#default_value' => !empty($component_info['selected'][$section]) ?
-            features_dom_encode_options($component_info['selected'][$section], FALSE) : array(),
-          '#attributes' => array('class' => array('component-' . $section)),
-        );
+          $form['export'][$component]['deprecated'] = array(
+            '#type' => 'fieldset',
+            '#title' => $label . "<span class='features-conflict'> (" . t('DEPRECATED') . ")</span>",
+            '#tree' => TRUE,
+            '#collapsible' => TRUE,
+            '#collapsed' => TRUE,
+            '#attributes' => array('class' => array('features-export-component')),
+          );
+          $list = ' ';
+          foreach ($component_info['options']['included'] as $key) {
+            $list .= "<span class='form-type-checkbox features-conflict'>$key</span>";
+          }
+          $form['export'][$component]['deprecated']['selected'] = array(
+            '#prefix' => "<div class='component-detected'>",
+            '#markup' => $list,
+            '#suffix' => "</div>",
+          );
+        }
       }
-      $form['export'][$component][$sections[0]]['#prefix'] =
-        "<div class='component-list features-export-list $extra_class'>";
-      $form['export'][$component][$sections[count($sections)-1]]['#suffix'] = '</div></div>';
+      else {
+        $form['export'][$component] = array(
+          '#markup' => '',
+          '#tree' => TRUE,
+          );
+
+        $form['export'][$component]['sources'] = array(
+          '#type' => 'fieldset',
+          '#title' => $label,
+          '#tree' => TRUE,
+          '#collapsible' => TRUE,
+          '#collapsed' => TRUE,
+          '#attributes' => array('class' => array('features-export-component')),
+          '#prefix' => "<div class='features-export-parent component-$component'>",
+        );
+        $form['export'][$component]['sources']['selected'] = array(
+          '#type' => 'checkboxes',
+          '#id' => "edit-sources-$component_name",
+          '#options' => features_dom_encode_options($component_info['options']['sources']),
+          '#default_value' => features_dom_encode_options($component_info['selected']['sources'], FALSE),
+          '#attributes' => array(
+            'class' => array('component-select'),
+          ),
+        );
+
+        foreach ($sections as $section) {
+          $form['export'][$component][$section] = array(
+            '#type' => 'checkboxes',
+            '#options' => !empty($component_info['options'][$section]) ?
+              features_dom_encode_options($component_info['options'][$section]) : array(),
+            '#default_value' => !empty($component_info['selected'][$section]) ?
+              features_dom_encode_options($component_info['selected'][$section], FALSE) : array(),
+            '#attributes' => array('class' => array('component-' . $section)),
+          );
+        }
+        $form['export'][$component][$sections[0]]['#prefix'] =
+          "<div class='component-list features-export-list $extra_class'>";
+        $form['export'][$component][$sections[count($sections)-1]]['#suffix'] = '</div></div>';
+      }
     }
   }
   $form['export']['features_legend'] = array(
