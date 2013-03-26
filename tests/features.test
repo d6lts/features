@@ -280,3 +280,53 @@ class FeaturesCtoolsIntegrationTest extends DrupalWebTestCase {
     }
   }
 }
+
+/**
+ * Tests Features' Drush integration.
+ */
+class FeaturesDrushExportTest extends DrupalWebTestCase {
+  protected $profile = 'testing';
+
+  /**
+   * Test info.
+   */
+  public static function getInfo() {
+    return array(
+      'name' => t('Drush integration'),
+      'description' => t('Run tests on Features\' `drush` commands.'),
+      'group' => t('Features'),
+    );
+  }
+
+  /**
+   * Set up test.
+   */
+  public function setUp() {
+    parent::setUp(array('features'));
+  }
+
+  /**
+   * Test features-export command when module is not present.
+   */
+  public function testModuleExportNew() {
+    $module = $this->randomName();
+
+    $stream_wrapper = file_stream_wrapper_get_instance_by_uri("public://$module");
+    $destination = $stream_wrapper->getDirectoryPath();
+    $directory = "$destination/$module";
+
+    // Verify the module files are not present.
+    $module_file_exists = is_dir($directory);
+    $this->assertFalse($module_file_exists, 'The test module files are not present.');
+
+    // Run drush command then check that the module was created.
+    exec("drush fe $module node:page -y --destination=\"$destination\"");
+    $module_file_exists = is_dir($directory);
+    $this->assertTrue($module_file_exists, 'The test module has been created');
+
+    // Verify the component was exported.
+    $component_exported = is_file("$directory/$module.features.field.inc");
+    $this->assertTrue($component_exported, 'The component was exported succesfully.');
+  }
+
+}
