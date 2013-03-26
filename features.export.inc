@@ -560,6 +560,12 @@ function features_var_export($var, $prefix = '', $init = TRUE) {
   else if (is_bool($var)) {
     $output = $var ? 'TRUE' : 'FALSE';
   }
+  else if (is_int($var)) {
+    $output = intval($var);
+  }
+  else if (is_numeric($var)) {
+    $output = floatval($var);
+  }
   else if (is_string($var) && strpos($var, "\n") !== FALSE) {
     // Replace line breaks in strings with a token for replacement
     // at the very end. This protects whitespace in strings from
