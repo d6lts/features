@@ -178,7 +178,7 @@ function _features_export_maximize_dependencies($dependencies, $module_name = ''
  *  Boolean flag for resetting the module cache. Only set to true when
  *  doing a final export for delivery.
  */
-function features_export_prepare($export, $module_name, $reset = FALSE) {
+function features_export_prepare($export, $module_name, $reset = FALSE, $add_deprecated = TRUE) {
   $existing = features_get_modules($module_name, $reset);
 
   // copy certain exports directly into info
@@ -197,7 +197,7 @@ function features_export_prepare($export, $module_name, $reset = FALSE) {
   // Cleanup info array
   foreach ($export['features'] as $component => $data) {
     // if performing the final export, do not export deprecated components
-    if ($reset && !empty($deprecated[$component])) {
+    if (($reset || !$add_deprecated) && !empty($deprecated[$component])) {
       unset($export['features'][$component]);
     }
     else {
@@ -378,7 +378,7 @@ function features_detect_overrides($module) {
   if (!isset($cache[$module->name])) {
     // Rebuild feature from .info file description and prepare an export from current DB state.
     $export = features_populate($module->info, $module->name);
-    $export = features_export_prepare($export, $module->name);
+    $export = features_export_prepare($export, $module->name, FALSE, FALSE);
 
     $overridden = array();
 
