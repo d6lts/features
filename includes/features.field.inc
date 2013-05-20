@@ -11,7 +11,7 @@ function field_features_api() {
       'name' => t('Fields'),
       'default_hook' => 'field_default_fields',
       'default_file' => FEATURES_DEFAULTS_INCLUDED,
-      'feature_source' => TRUE,
+      'feature_source' => FALSE,
     ),
     'field_base' => array(
       'name' => t('Field Bases'),
