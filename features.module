@@ -252,13 +252,6 @@ function features_form($node, $form_state) {
 }
 
 /**
- * Implemenation of hook_node_access()
- */
-function features_node_access($node, $op, $account) {
-  return node_node_access($node, $op, $account);
-}
-
-/**
  * Implements hook_permission().
  */
 function features_permission() {
