@@ -221,7 +221,7 @@ function _field_instance_features_export_sort(&$field, $sort = TRUE) {
   );
 
   if ($sort) {
-    ksort($field);
+    uksort($field, 'strnatcmp');
   }
   foreach ($field as $k => $v) {
     if (is_array($v)) {
