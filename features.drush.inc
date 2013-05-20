@@ -594,7 +594,20 @@ function _drush_features_generate_export(&$info, &$module_name) {
     $version_minor = array_pop($version_explode);
     // Increment minor version number if numeric or not a dev release.
     if (is_numeric($version_minor) || strpos($version_minor, 'dev') !== (strlen($version_minor) - 3)) {
-      ++$version_minor;
+      // Check for prefixed versions (alpha, beta, rc).
+      if (ctype_digit($version_minor)) {
+        ++$version_minor;
+      }
+      else {
+        // Split version number parts.
+        $pattern = '/([0-9]-[a-z]+([0-9])+)/';
+        $matches = array();
+        preg_match($pattern, $version_minor, $matches);
+        $number = array_pop($matches);
+        ++$number;
+        $pattern = '/[0-9]+$/';
+        $version_minor = preg_replace($pattern, $number, $version_minor);
+      }
     }
     array_push($version_explode, $version_minor);
     // Rebuild version string.
