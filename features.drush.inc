@@ -18,6 +18,9 @@ function features_drush_command() {
 
   $items['features-list'] = array(
     'description' => "List all the available features for your site.",
+    'options' => array(
+      'status' => "Feature status, can be 'enabled', 'disabled'  or 'all'",
+    ),
     'drupal dependencies' => array('features'),
     'aliases' => array('fl', 'features'),
   );
@@ -160,6 +163,11 @@ Lastly, a pattern without a colon is interpreted as having \":%\" appended, for 
  * Get a list of all feature modules.
  */
 function drush_features_list() {
+  $status = drush_get_option('status') ? drush_get_option('status') : 'all';
+  if (!in_array($status, array('enabled', 'disabled', 'all'))) {
+    return drush_set_error('', dt('!status is not valid', array('!status' => $status)));
+  }
+
   module_load_include('inc', 'features', 'features.export');
   $rows = array(array(dt('Name'), dt('Feature'), dt('Status'), dt('Version'), dt('State')));
   foreach (features_get_features(NULL, TRUE) as $k => $m) {
@@ -175,13 +183,18 @@ function drush_features_list() {
         $storage = dt('Needs review');
         break;
     }
-    $rows[] = array(
-      $m->info['name'],
-      $m->name,
-      $m->status ? dt('Enabled') : dt('Disabled'),
-      $m->info['version'],
-    $storage
-    );
+    if (
+      ($m->status == 0 && ($status == 'all' || $status == 'disabled')) ||
+      ($m->status == 1 && ($status == 'all' || $status == 'enabled'))
+    ) {
+      $rows[] = array(
+        $m->info['name'],
+        $m->name,
+        $m->status ? dt('Enabled') : dt('Disabled'),
+        $m->info['version'],
+        $storage
+      );
+    }
   }
   drush_print_table($rows, TRUE);
 }
