@@ -329,6 +329,12 @@ function features_admin_form($form_state) {
   $features = features_get_features();
   $conflicts = features_get_conflicts();
 
+  foreach ($features as $key => $feature) {
+    if (!empty($feature->info['hidden'])) {
+      unset($features[$key]);
+    }
+  }
+
   foreach ($modules as $key => $module) {
     if ($module->status && !empty($module->info['dependencies'])) {
       foreach ($module->info['dependencies'] as $dependent) {
