@@ -106,7 +106,7 @@ function _filter_get_formats() {
     // Prepare a roles array with roles that may access the filter.
     foreach ($roles as $name => $role) {
       if (strstr($row->roles, ','. $role['rid'] .',')) {
-        $format_roles[] = $name;
+        $format_roles[$name] = $name;
       }
     }
     $formats[$row->format] = array(
