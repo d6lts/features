@@ -649,9 +649,15 @@ function features_get_default($component, $module_name = NULL, $alter = TRUE, $r
       // All other components
       else {
         if ($default_hook && function_exists("{$m}_{$default_hook}")) {
-          $cache[$component][$m] = call_user_func("{$m}_{$default_hook}");
-          if ($alter) {
-            drupal_alter($default_hook, $cache[$component][$m]);
+          $results = call_user_func("{$m}_{$default_hook}");
+          if (!empty($results) && is_array($results)) {
+            $cache[$component][$m] = $results;
+            if ($alter) {
+              drupal_alter($default_hook, $cache[$component][$m]);
+            }
+          }
+          else {
+            $cache[$component][$m] = FALSE;
           }
         }
         else {
