@@ -632,7 +632,9 @@ function drush_features_revert() {
     // Parse list of arguments.
     $modules = array();
     foreach ($args as $arg) {
-      list($module, $component) = explode('.', $arg);
+      $arg = explode('.', $arg);
+      $module = array_shift($arg);
+      $component = array_shift($arg);
 
       if (isset($module)) {
         if (empty($component)) {
