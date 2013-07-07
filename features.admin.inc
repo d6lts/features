@@ -48,6 +48,14 @@ function features_settings_form($form, $form_state) {
       );
     }
   }
+  
+  $form['features_rebuild_on_flush'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Rebuild features on cache clear'),
+    '#default_value' => variable_get('features_rebuild_on_flush', TRUE),
+    '#description' => t('If you have a large site with many features, you may experience lag on full cache clear. If disabled, features will rebuild only when viewing the features list or saving the modules list.'),
+  );
+	
   return system_settings_form($form);
 }
 
