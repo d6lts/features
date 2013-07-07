@@ -121,6 +121,10 @@ function content_features_export_render($module, $data) {
       if (!empty($field['widget']['label'])) {
         $translatables[] = $field['widget']['label'];
       }
+      // Add any descriptions to translatables array.
+      if (!empty($field['widget']['description'])) {
+        $translatables[] = $field['widget']['description'];
+      }
     }
   }
   if (!empty($translatables)) {

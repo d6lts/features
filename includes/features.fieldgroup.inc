@@ -80,6 +80,10 @@ function fieldgroup_features_export_render($module, $data) {
       if (!empty($group['label'])) {
         $translatables[] = $group['label'];
       }
+      // Add any descriptions to translatables array.
+      if (!empty($group['settings']['form']['description'])) {
+        $translatables[] = $group['settings']['form']['description'];
+      }
     }
   }
   if (!empty($translatables)) {
