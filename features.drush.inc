@@ -29,6 +29,15 @@ function features_drush_command() {
     'drupal dependencies' => array('features'),
     'aliases' => array('fe'),
   );
+  $items['features-add'] = array(
+    'description' => "Add a component to a feature module.",
+    'drupal dependencies' => array('features'),
+    'arguments' => array(
+      'feature' => 'Feature name to add to.',
+      'components' => 'List of components to add.',
+    ),
+    'aliases' => array('fa'),
+  );
   $items['features-update'] = array(
     'description' => "Update a feature module on your site.",
     'arguments' => array(
@@ -100,6 +109,8 @@ function features_drush_help($section) {
       return dt("Revert a feature module on your site.");
     case 'drush:features-diff':
       return dt("Show a diff of a feature module.");
+    case 'drush:features-add':
+      return dt("Add a component to a feature module.");
   }
 }
 
@@ -167,6 +178,180 @@ function drush_features_export() {
     }
     drush_print_table($rows, TRUE);
   }
+}
+
+ /**
+ * Add a component to a features module.
+ */
+function drush_features_add() {
+  if ($args = func_get_args()) {
+    // Get a complete list of components.
+    $all_components = array();
+    foreach (features_get_components(TRUE) as $source => $info) {
+      if ($options = features_invoke($source, 'features_export_options')) {
+        foreach ($options as $key => $value) {
+          $all_components[$key][] = $source;
+        }
+      }
+    }
+    $module = array_shift($args);
+    while ($arg = trim(array_shift($args))) {
+      list($source, $component) = explode(':', $arg);
+      if ($component) {
+        if (isset($all_components[$component]) && in_array($source, $all_components[$component])) {
+          $items[$source][] = $component;
+        }
+        else {
+          $choice = _drush_features_component_find($component, $source);
+          if ($choice !== FALSE) {
+            drush_print(dt('Selected component "!component".', array('!component' => $choice->source . ':' . $choice->component)));
+            $items[$choice->source][] = $choice->component;
+            continue;
+          }
+          return drush_set_error('', dt('Unknown component !arg', array('!arg' => $arg)));
+        }
+      }
+      else {
+        if ($all_components[$source] && sizeof($all_components[$source]) == 1) {
+          $items[$all_components[$source][0]][] = $source;
+        }
+        elseif (isset($all_components[$source])) {
+          return drush_set_error('', dt('Ambiguous component !component, possible sources: !sources', array('!component' => $source, '!sources' => join(', ', $all_components[$source]))));
+        }
+        else {
+          $choice = _drush_features_component_find($component, $source);
+          if ($choice !== FALSE) {
+            drush_print(dt('Selected component "!component".', array('!component' => $choice->source . ':' . $choice->component)));
+            $items[$choice->source][] = $choice->component;
+            continue;
+          }
+          return drush_set_error('', dt('Unknown component !arg', array('!arg' => $arg)));
+        }
+      }
+    }
+
+    if (!$items) {
+      // Print out a list of available items.
+      _drush_features_component_list();
+      return;
+    }
+
+    if (($feature = feature_load($module, TRUE)) && module_exists($module)) {
+      module_load_include('inc', 'features', 'features.export');
+      _features_populate($items, $feature->info, $feature->name);
+      _drush_features_export($feature->info['features'], $feature->info['dependencies'], $feature->name, dirname($feature->filename));
+    }
+    elseif ($feature) {
+      _features_drush_set_error($module, 'FEATURES_FEATURE_NOT_ENABLED');
+    }
+    else {
+      _features_drush_set_error($module);
+    }
+  }
+  else {
+    // By default just show features that are available.
+    $rows = array(array(dt('Available features')));
+    foreach (features_get_features(NULL, TRUE) as $name => $info) {
+      $rows[] = array($name);
+    }
+    drush_print_table($rows, TRUE);
+  }
+}
+
+/**
+ * Help the user select a Features component if one can be recommended.
+ *
+ * @param $arg
+ *   A specific component to search for. Used as variable-get command.
+ * @param $source
+ *   Restrict component lookup to the specified source.
+ * @param $limit
+ *   Limit the number of options that will be offered. If "0", no limit. If the
+ *   limit is reached, send back all. Default: 10.
+ */
+function _drush_features_component_find($arg = NULL, $source = NULL, $limit = 10) {
+  $components = _drush_features_component_list($arg, $source, FALSE);
+  $count = count($components);
+
+  if (!empty($components)) {
+     if ($limit > 0 && $count > $limit) {
+       $proceed = drush_confirm(dt('There are !count components that may match "!component". Review all?', array(
+         '!count' => $count,
+         '!component' => $source . ':' . $arg,
+       )));
+     }
+     else {
+       $proceed = TRUE;
+     }
+
+     if ($proceed) {
+       $choice = drush_choice($components, 'Enter a number to choose which component to use.');
+       if ($choice !== FALSE) {
+         $retn = new stdClass;
+         list ($retn->source, $retn->component) = explode(':', $components[$choice]);
+         return $retn;
+       }
+     }
+  }
+  else {
+    $components = _drush_features_component_list($arg, $source, TRUE);
+  }
+  return FALSE;
+}
+
+/**
+ * List all possible features components.
+ *
+ * @param $arg
+ *   A specific component to search for. Used as variable-get command.
+ * @param $source
+ *   Restrict component lookup to the specified source.
+ * @param $render
+ *   Determine whether the results will be immediately printed to the screen or
+ *   returned for further processing.
+ */
+function _drush_features_component_list($arg = NULL, $source = NULL, $render = TRUE) {
+  static $items;
+
+  $index = empty($source) ? 'all' : $source;
+  $index .= ':';
+  $index .= empty($arg) ? 'all' : $arg;
+
+  if (empty($items[$index])) {
+    $components = features_get_components(TRUE);
+    if ($arg) {
+      $heading = dt('Components similar to "!arg"', array('!arg' => $arg));
+    }
+    else {
+      $heading = dt('Available components');
+    }
+    if ($source) {
+      $heading .= ' ' . dt('in category "!source"', array('!source' => $source));
+      if (array_key_exists($source, $components)) {
+        $components = array($source => $components[$source]);
+      }
+      else {
+        return FALSE;
+      }
+    }
+
+    $rows = array(array($heading));
+    foreach ($components as $component => $info) {
+      if ($options = features_invoke($component, 'features_export_options')) {
+        foreach ($options as $key => $value) {
+          if (empty($arg) || strpos($key, $arg) !== FALSE) {
+            $rows[$component .':'. $key] = array($component .':'. $key);
+          }
+        }
+      }
+    }
+    $items[$index] = $rows;
+  }
+  if ($render) {
+    drush_print_table(array_values($items[$index]), TRUE);
+    return array_keys($items[$index]);
+  }
+  return array_slice(array_keys($items[$index]), 1);
 }
 
 /**
