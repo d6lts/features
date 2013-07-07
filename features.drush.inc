@@ -60,7 +60,7 @@ function features_drush_command() {
       'feature' => 'A space delimited list of features.',
     ),
     'options' => array(
-      '--force' => "Force revert even if Features assumes components' state are default.",
+      'force' => "Force revert even if Features assumes components' state are default.",
     ),
     'drupal dependencies' => array('features'),
     'aliases' => array('fr'),
@@ -71,7 +71,7 @@ function features_drush_command() {
       'feature_exclude' => 'A space-delimited list of features to exclude from being reverted.',
     ),
     'options' => array(
-      '--force' => "Force revert even if Features assumes components' state are default.",
+      'force' => "Force revert even if Features assumes components' state are default.",
     ),
     'drupal dependencies' => array('features'),
     'aliases' => array('fr-all', 'fra'),
