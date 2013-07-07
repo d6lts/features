@@ -27,14 +27,13 @@ function fieldgroup_features_export($data, &$export, $module_name = '') {
   // Collect a group to module map
   $map = features_get_default_map('fieldgroup', NULL, 'fieldgroup_features_identifier');
   foreach ($data as $instance) {
-    // If this group is already provided by another module, remove the group
-    // and add the other module as a dependency.
+    // If this group is already provided by another module remove the group.
+    // We do not add the other module as a dependency as the group-providing
+    // module may be extending the content type in question.
     if (isset($map[$instance]) && $map[$instance] != $module_name) {
       if (isset($export['features']['fieldgroup'][$instance])) {
         unset($export['features']['fieldgroup'][$instance]);
       }
-      $module = $map[$instance];
-      $export['dependencies'][$module] = $module;
     }
     // If the group has not yet been exported, add it.
     else {
