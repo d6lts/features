@@ -857,6 +857,11 @@ function features_form_system_modules_alter(&$form) {
  * Restore the specified modules to the default state.
  */
 function _features_restore($op, $items = array()) {
+  // Set this variable in $conf if having timeout issues during install/rebuild.
+  if (variable_get('features_restore_time_limit_' . $op, FALSE) !== FALSE) {
+    drupal_set_time_limit(variable_get('features_restore_time_limit_' . $op, FALSE));
+  }
+
   module_load_include('inc', 'features', 'features.export');
   features_include();
 
