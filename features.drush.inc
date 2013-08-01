@@ -170,7 +170,12 @@ function drush_features_list() {
 
   module_load_include('inc', 'features', 'features.export');
   $rows = array(array(dt('Name'), dt('Feature'), dt('Status'), dt('Version'), dt('State')));
-  foreach (features_get_features(NULL, TRUE) as $k => $m) {
+
+  // Sort the Features list before compiling the output.
+  $features = features_get_features(NULL, TRUE);
+  ksort($features);
+
+  foreach ($features as $k => $m) {
     switch (features_get_storage($m->name)) {
       case FEATURES_DEFAULT:
       case FEATURES_REBUILDABLE:
