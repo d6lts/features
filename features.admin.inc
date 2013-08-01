@@ -1001,10 +1001,15 @@ function features_admin_form($form, $form_state) {
     // Detect potential conflicts
     if (!empty($conflicts[$name])) {
       $module_conflicts = array();
-      foreach (array_keys($conflicts[$name]) as $conflict) {
+      foreach ($conflicts[$name] as $conflict => $components) {
+        $component_strings = array();
+        foreach ($components as $component => $component_conflicts) {
+          $component_strings[] = t('@component [@items]', array('@component' => $component, '@items' => implode(', ', $component_conflicts)));
+        }
+        $component_strings = implode(', ', $component_strings);
         // If conflicting module is disabled, indicate so in feature listing
         $status = !module_exists($conflict) ? FEATURES_MODULE_DISABLED : FEATURES_MODULE_CONFLICT;
-        $module_conflicts[] = theme('features_module_status', array('status' => $status, 'module' => $conflict));
+        $module_conflicts[] = theme('features_module_status', array('status' => $status, 'module' => $conflict)) . t(' in ') . $component_strings;
         // Only disable modules with conflicts if they are not already enabled.
         // If they are already enabled, somehow the user got themselves into a
         // bad situation and they need to be able to disable a conflicted module.

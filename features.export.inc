@@ -951,7 +951,8 @@ function _features_linetrim($code) {
  */
 function _features_sanitize(&$array) {
   if (is_array($array)) {
-    if (_features_is_assoc($array)) {
+    $is_assoc = _features_is_assoc($array);
+    if ($is_assoc) {
       ksort($array, SORT_STRING);
       $array = array_filter($array);
     }
@@ -961,6 +962,9 @@ function _features_sanitize(&$array) {
     foreach ($array as $k => $v) {
       if (is_array($v)) {
         _features_sanitize($array[$k]);
+        if ($is_assoc && empty($array[$k])) {
+          unset($array[$k]);
+        }
       }
     }
   }
