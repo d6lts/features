@@ -133,10 +133,17 @@ function user_permission_features_rebuild($module) {
     // or via drush.
     node_types_rebuild();
 
+    $modules = user_permission_get_modules();
     $roles = _user_features_get_roles();
     $permissions_by_role = _user_features_get_permissions(FALSE);
     foreach ($defaults as $permission) {
       $perm = $permission['name'];
+      if (empty($modules[$perm])) {
+        $args = array('!name' => $perm, '!module' => $module,);
+        $msg = t('Warning in features rebuild of !module. No module defines permission "!name".', $args);
+        drupal_set_message($msg, 'warning');
+        continue;
+      }
       // Export vocabulary permissions using the machine name, instead of
       // vocabulary id.
       _user_features_change_term_permission($perm, 'machine_name');
