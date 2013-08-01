@@ -152,14 +152,14 @@ function features_export_form($form, $form_state, $feature = NULL) {
     '#default_value' => !empty($feature->info['project status url']) ? $feature->info['project status url'] : '',
     '#element_validate' => array('features_export_form_validate_field'),
   );
-  $directory = (!empty($feature->filename)) ? dirname($feature->filename) : 'sites/all/modules';
+  $directory = (!empty($feature->filename)) ? dirname($feature->filename) : 'sites/all/modules/features';
   if (!empty($feature_name) && substr_compare($directory, $feature_name, strlen($directory)-strlen($feature_name), strlen($feature_name)) === 0) {
     // if path ends with module_name, strip it
     $directory = dirname($directory);
   }
   $form['advanced']['generate_path'] = array(
     '#title' => t('Path to Generate feature module'),
-    '#description' => t('File path for feature module.  For Example: sites/all/modules or /tmp.  ' .
+    '#description' => t('File path for feature module.  For Example: sites/all/modules/features or /tmp.  ' .
       t('Leave blank for <strong>@path</strong>', array('@path' => $directory))),
     '#type' => 'textfield',
     '#required' => FALSE,
@@ -834,7 +834,7 @@ function features_export_build_form_submit($form, &$form_state) {
 
     if ($generate) {
       $success = TRUE;
-      $destination = 'sites/all/modules';
+      $destination = 'sites/all/modules/features';
       $directory = (!empty($export['project path'])) ? $export['project path'] . '/' . $module_name :
         (isset($feature->filename) ? dirname($feature->filename) : $destination . '/' . $module_name);
       if (!is_dir($directory)) {
