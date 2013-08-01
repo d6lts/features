@@ -47,15 +47,15 @@ function field_base_features_export_options() {
  */
 function field_instance_features_export_options() {
   $options = array();
-  $instances = field_info_instances();
-  foreach ($instances as $entity_type => $bundles) {
-    foreach ($bundles as $bundle => $fields) {
-      foreach ($fields as $field) {
-        $identifier = "{$entity_type}-{$bundle}-{$field['field_name']}";
+  foreach (field_info_fields() as $field_name => $field) {
+    foreach ($field['bundles'] as $entity_type => $bundles) {
+      foreach ($bundles as $bundle) {
+        $identifier = "{$entity_type}-{$bundle}-{$field_name}";
         $options[$identifier] = $identifier;
       }
     }
   }
+  ksort($options);
   return $options;
 }
 
