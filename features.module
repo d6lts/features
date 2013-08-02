@@ -943,6 +943,25 @@ function features_rebuild($rebuild = array()) {
 }
 
 /**
+ * Revert a single features module.
+ *
+ * @param string $module
+ *   A features module machine name. This module must be a
+ *   features module and enabled.
+ */
+function features_revert_module($module) {
+  if (($feature = feature_load($module, TRUE)) && module_exists($module)) {
+    $components = array();
+    foreach (array_keys($feature->info['features']) as $component) {
+      if (features_hook($component, 'features_revert')) {
+        $components[] = $component;
+      }
+    }
+    features_revert(array($module => $components));
+  }
+}
+
+/**
  * Utility functions ==================================================
  */
 
