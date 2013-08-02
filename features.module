@@ -620,6 +620,10 @@ function features_get_info($type = 'module', $name = NULL, $reset = FALSE) {
     $files = system_rebuild_module_data();
 
     foreach ($files as $row) {
+      // Avoid false-reported feature overrides for php = 5.2.4 line in .info file.
+      if (isset($row->info['php'])) {
+        unset($row->info['php']);
+      }
       // If module is no longer enabled, remove it from the ignored orphans list.
       if (in_array($row->name, $ignored, TRUE) && !$row->status) {
         $key = array_search($row->name, $ignored, TRUE);

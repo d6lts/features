@@ -213,11 +213,15 @@ function features_export_prepare($export, $module_name, $reset = FALSE, $add_dep
 
   // Order info array.
   $standard_info = array();
-  foreach (array_merge(array('name', 'description', 'core', 'package', 'php', 'version', 'project', 'dependencies'), $copy_list) as $item) {
+  foreach (array_merge(array('name', 'description', 'core', 'package', 'version', 'project', 'dependencies'), $copy_list) as $item) {
     if (isset($export[$item])) {
       $standard_info[$item] = $export[$item];
     }
   }
+  if (isset($export['php']) && ($export['php'] != DRUPAL_MINIMUM_PHP)) {
+    $standard_info['php'] = $export['php'];
+  }
+  unset($export['php']);
 
   $export = features_array_diff_assoc_recursive($export, $standard_info);
   ksort($export);
