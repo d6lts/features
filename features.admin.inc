@@ -48,14 +48,14 @@ function features_settings_form($form, $form_state) {
       );
     }
   }
-  
+
   $form['features_rebuild_on_flush'] = array(
     '#type' => 'checkbox',
     '#title' => t('Rebuild features on cache clear'),
     '#default_value' => variable_get('features_rebuild_on_flush', TRUE),
     '#description' => t('If you have a large site with many features, you may experience lag on full cache clear. If disabled, features will rebuild only when viewing the features list or saving the modules list.'),
   );
-	
+
   return system_settings_form($form);
 }
 
@@ -871,6 +871,14 @@ function features_export_build_form_submit($form, &$form_state) {
       }
     }
     if (features_get_modules($module_name, TRUE)) {
+      // prevent deprecated component files from being included in download
+      $deprecated = features_get_deprecated();
+      foreach ($deprecated as $component) {
+        $info = features_get_components($component);
+        $filename = isset($info['default_file']) && $info['default_file'] == FEATURES_DEFAULTS_CUSTOM ? $info['default_filename'] : "features.{$component}";
+        $filename .= '.inc';
+        $filenames[] = "{$module_name}.$filename";
+      }
       $module_path = drupal_get_path('module', $module_name);
       // file_scan_directory() can throw warnings when using PHP 5.3, messing
       // up the output of our file stream. Suppress errors in this one case in

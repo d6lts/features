@@ -404,7 +404,9 @@ function features_include_defaults($components = NULL, $reset = FALSE) {
         $features = isset($features) ? $features : features_get_features(NULL, $reset);
         foreach ($features as $feature) {
           $filename = isset($info['default_file']) && $info['default_file'] == FEATURES_DEFAULTS_CUSTOM ? $info['default_filename'] : "features.{$component}";
-          module_load_include('inc', $feature->name, "{$feature->name}.$filename");
+          if (module_exists($feature->name) && isset($feature->info['features'][$component])) {
+            module_load_include('inc', $feature->name, "{$feature->name}.$filename");
+          }
         }
       }
       $included[$component] = TRUE;
