@@ -1094,6 +1094,8 @@ function features_admin_form($form, $form_state) {
 function features_admin_components($form, $form_state, $feature) {
   // Breadcrumb navigation
   $breadcrumb[] = l(t('Home'), NULL);
+  $breadcrumb[] = l(t('Administration'), 'admin');
+  $breadcrumb[] = l(t('Structure'), 'admin/structure');
   $breadcrumb[] = l(t('Features'), 'admin/structure/features');
   drupal_set_breadcrumb($breadcrumb);
 
