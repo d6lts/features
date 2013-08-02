@@ -373,48 +373,8 @@ function field_features_export_options() {
  */
 function field_features_export($data, &$export, $module_name = '') {
   $pipe = array();
-  $map = features_get_default_map('field');
-
-  // The field_default_fields() hook integration is provided by the
-  // features module so we need to add it as a dependency.
-  $export['dependencies']['features'] = 'features';
-
-  foreach ($data as $identifier) {
-    if ($field = features_field_load($identifier)) {
-      // If this field is already provided by another module, remove the field
-      // and add the other module as a dependency.
-      if (isset($map[$identifier]) && $map[$identifier] != $module_name) {
-        if (isset($export['features']['field'][$identifier])) {
-          unset($export['features']['field'][$identifier]);
-        }
-        $module = $map[$identifier];
-        $export['dependencies'][$module] = $module;
-      }
-      // If the field has not yet been exported, add it
-      else {
-        $export['features']['field'][$identifier] = $identifier;
-        $export['dependencies'][$field['field_config']['module']] = $field['field_config']['module'];
-        if ($field['field_config']['storage']['type'] != variable_get('field_storage_default', 'field_sql_storage')) {
-          $export['dependencies'][$field['field_config']['storage']['module']] = $field['field_config']['storage']['module'];
-        }
-        $export['dependencies'][$field['field_instance']['widget']['module']] = $field['field_instance']['widget']['module'];
-        foreach ($field['field_instance']['display'] as $key => $display) {
-          if (isset($display['module'])) {
-            $export['dependencies'][$display['module']] = $display['module'];
-            // @TODO: handle the pipe to image styles
-          }
-        }
-        // If taxonomy field, add in the vocabulary
-        if ($field['field_config']['type'] == 'taxonomy_term_reference' && !empty($field['field_config']['settings']['allowed_values'])) {
-          foreach ($field['field_config']['settings']['allowed_values'] as $allowed_values) {
-            if (!empty($allowed_values['vocabulary'])) {
-              $pipe['taxonomy'][] = $allowed_values['vocabulary'];
-            }
-          }
-        }
-      }
-    }
-  }
+  // Convert 'field' to 'field_instance' on features-update.
+  $pipe['field_instance'] = $data;
   return $pipe;
 }
 
