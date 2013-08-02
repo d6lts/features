@@ -1303,6 +1303,7 @@ function features_cleanup_form($form, $form_state, $cache_clear = FALSE) {
 function features_feature_diff($feature, $component = NULL) {
   drupal_add_css(drupal_get_path('module', 'features') . '/features.css');
   module_load_include('inc', 'features', 'features.export');
+  drupal_set_title($feature->info['name']);
 
   $overrides = features_detect_overrides($feature);
 
