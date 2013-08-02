@@ -554,9 +554,14 @@ function features_tar_create($name, $contents) {
 /**
  * Export var function -- from Views.
  */
-function features_var_export($var, $prefix = '', $init = TRUE) {
+function features_var_export($var, $prefix = '', $init = TRUE, $count = 0) {
+  if ($count > 50) {
+    watchdog('features', 'Recursion depth reached in features_var_export', array());
+    return '';
+  }
+
   if (is_object($var)) {
-    $output = method_exists($var, 'export') ? $var->export() : features_var_export((array) $var, '', FALSE);
+    $output = method_exists($var, 'export') ? $var->export() : features_var_export((array) $var, '', FALSE, $count+1);
   }
   else if (is_array($var)) {
     if (empty($var)) {
@@ -566,7 +571,7 @@ function features_var_export($var, $prefix = '', $init = TRUE) {
       $output = "array(\n";
       foreach ($var as $key => $value) {
         // Using normal var_export on the key to ensure correct quoting.
-        $output .= "  " . var_export($key, TRUE) . " => " . features_var_export($value, '  ', FALSE) . ",\n";
+        $output .= "  " . var_export($key, TRUE) . " => " . features_var_export($value, '  ', FALSE, $count+1) . ",\n";
       }
       $output .= ')';
     }
