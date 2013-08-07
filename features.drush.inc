@@ -470,8 +470,8 @@ function drush_features_export() {
  * This is DEPRECATED, but keeping it around for a bit longer for user migration
  */
 function drush_features_add() {
-  drush_print(dt('features_add is DEPRECATED.'));
-  drush_print(dt('Calling features_export instead.'));
+  drush_print(dt('features-add is DEPRECATED.'));
+  drush_print(dt('Calling features-export instead.'));
   drush_features_export();
 }
 
