@@ -273,10 +273,17 @@ function features_permission() {
     'administer features' => array(
       'title' => t('Administer features'),
       'description' => t('Perform administration tasks on features.'),
+      'restrict access' => TRUE,
     ),
     'manage features' => array(
       'title' => t('Manage features'),
       'description' => t('View, enable and disable features.'),
+      'restrict access' => TRUE,
+    ),
+    'generate features' => array(
+      'title' => t('Generate features'),
+      'description' => t('Allow feature exports to be generated and written directly to site.'),
+      'restrict access' => TRUE,
     ),
   );
 }
