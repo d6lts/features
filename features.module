@@ -1025,8 +1025,9 @@ function _user_features_change_term_permission(&$perm, $type = 'vid') {
     $vid = $voc_id[0];
     if (is_numeric($vid) && $type == 'vid') {
       if (function_exists('taxonomy_vocabulary_load')) {
-        $voc = taxonomy_vocabulary_load($vid);
-        $perm = str_replace($vid, $voc->machine_name, $perm);
+        if ($voc = taxonomy_vocabulary_load($vid)) {
+          $perm = str_replace($vid, $voc->machine_name, $perm);
+        }
       }
     }
     elseif ($type == 'machine_name') {
