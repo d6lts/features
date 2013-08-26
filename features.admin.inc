@@ -727,6 +727,8 @@ function features_export_components_json($feature_name) {
         }
       }
     }
+
+    $stub['dependencies'] = isset($stub['dependencies']) ? $stub['dependencies'] : array();
     $export = features_populate(array('features' => $stub, 'dependencies' => $stub['dependencies']), $feature_name);
     $export['features']['dependencies'] = $export['dependencies'];
 
