@@ -347,17 +347,21 @@ function _features_export_form_components(&$form, &$form_state) {
     if (!variable_get('features_admin_show_component_' . $component, TRUE)) {
       continue;
     }
-    $label = (isset($component_info['name']) ?
-      $component_info['name'] . " <span>(" . check_plain($component) . ")</span>" : check_plain($component));
 
-    $count = 0;
+      $component_items_count = count($component_info['options']['sources']);
+      $count_label = ' (<span class = "component-count">' . $component_items_count . '</span>)';
+      $label = (isset($component_info['name']) ?
+          $component_info['name'] . $count_label . " <span>(" . check_plain($component) . ")</span>"
+          : check_plain($component) . $count_label);
+
+      $count = 0;
     foreach ($sections as $section) {
       $count += count($component_info['options'][$section]);
     }
     $extra_class = ($count == 0) ? 'features-export-empty' : '';
     $component_name = str_replace('_', '-', check_plain($component));
 
-    if ($count + count($component_info['options']['sources']) > 0) {
+    if ($count + $component_items_count > 0) {
 
       if (!empty($deprecated[$component])) {
         // only show deprecated component if it has some exports
