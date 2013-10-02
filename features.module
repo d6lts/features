@@ -376,7 +376,6 @@ function features_include($reset = FALSE) {
  * collecting defaults.
  */
 function features_include_defaults($components = NULL, $reset = FALSE) {
-  static $included = array();
   static $include_components;
 
   // Build an array of components that require inclusion:
@@ -399,7 +398,7 @@ function features_include_defaults($components = NULL, $reset = FALSE) {
     $components = array_keys($include_components);
   }
   foreach ($components as $component) {
-    if (isset($include_components[$component]) && (!isset($included[$component]) || $reset)) {
+    if (isset($include_components[$component])) {
       $info = $include_components[$component];
       // Inclusion of ctools components.
       if (isset($info['api'], $info['module'], $info['current_version'])) {
@@ -416,7 +415,6 @@ function features_include_defaults($components = NULL, $reset = FALSE) {
           }
         }
       }
-      $included[$component] = TRUE;
     }
   }
 }
