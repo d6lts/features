@@ -669,6 +669,10 @@ function features_get_info($type = 'module', $name = NULL, $reset = FALSE) {
           }
         }
         $data['feature'][$row->name] = $row;
+        $data['feature'][$row->name]->components = array_keys($row->info['features']);
+        if (!empty($row->info['dependencies'])) {
+          $data['feature'][$row->name]->components[] = 'dependencies';
+        }
       }
       $data['module'][$row->name] = $row;
     }
