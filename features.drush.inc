@@ -127,6 +127,7 @@ function features_drush_command() {
       'feature' => 'The feature in question.',
     ),
     'options' => array(
+      'ctypes' => 'Comma separated list of component types to limit the output to. Defaults to all types.',
       'lines' => 'Generate diffs with <n> lines of context instead of the usual two.',
     ),
     'drupal dependencies' => array('features', 'diff'),
@@ -800,6 +801,11 @@ function drush_features_diff() {
     return;
   }
   $module = $args[0];
+  $filter_ctypes = drush_get_option("ctypes");
+  if ($filter_ctypes) {
+    $filter_ctypes = explode(',', $filter_ctypes);
+  }
+
   $feature = features_load_feature($module);
   if (!module_exists($module)) {
     drush_log(dt('No such feature is enabled: ' . $module), 'error');
@@ -854,10 +860,13 @@ function drush_features_diff() {
   drush_print(sprintf($green, dt('Overrides:  drush features-update will update the exported feature with the displayed overrides')));
   drush_print();
 
+  if ($filter_ctypes) {
+    $overrides = array_intersect_key($overrides, array_flip($filter_ctypes));
+  }
   foreach ($overrides as $component => $items) {
     $diff = new Diff(explode("\n", $items['default']), explode("\n", $items['normal']));
     drush_print();
-    drush_print(dt("Component: !component", array('!component' => $component)));
+    drush_print(dt("Component type: !component", array('!component' => $component)));
     $rows = explode("\n", $formatter->format($diff));
     foreach ($rows as $row) {
       if (strpos($row, '>') === 0) {
