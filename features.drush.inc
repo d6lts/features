@@ -488,7 +488,7 @@ function drush_features_update() {
       if (($feature = features_load_feature($module, TRUE)) && module_exists($module)) {
         _drush_features_export($feature->info, $feature->name, dirname($feature->filename));
       }
-      else if ($feature) {
+      elseif ($feature) {
         _features_drush_set_error($module, 'FEATURES_FEATURE_NOT_ENABLED');
       }
       else {
@@ -518,15 +518,20 @@ function drush_features_update_all() {
       $features_to_update[] = $module->name;
     }
   }
-  drush_print(dt('The following modules will be updated: !modules', array('!modules' => implode(', ', $features_to_update))));
-  if (drush_confirm(dt('Do you really want to continue?'))) {
-    foreach ($features_to_update as $module_name) {
-      drush_invoke_process(drush_sitealias_get_record('@self'), 'features-update', array($module_name));
-    }
+  $dt_args = array('!modules' => implode(', ', $features_to_update));
+  drush_print(dt('The following modules will be updated: !modules', $dt_args));
+  if (!drush_confirm(dt('Do you really want to continue?'))) {
+    return drush_user_abort('Aborting.');
   }
-  else {
-    drush_die('Aborting.');
-  }
+  // If we got here, set affirmative to TRUE, so that the user doesn't have to
+  // confirm each and every feature. Start off by storing the current value,
+  // so we can set it back afteward.
+  $skip_confirmation = drush_get_context('DRUSH_AFFIRMATIVE');
+  drush_set_context('DRUSH_AFFIRMATIVE', TRUE);
+  // Now update all the features.
+  drush_invoke('features-update', $features_to_update);
+  // Now set it back as it was, in case other commands are called after this.
+  drush_set_context('DRUSH_AFFIRMATIVE', $skip_confirmation);
 }
 
 /**
@@ -539,12 +544,16 @@ function drush_features_update_all() {
  */
 function _drush_features_export($info, $module_name = NULL, $directory = NULL) {
   $root = drush_get_option(array('r', 'root'), drush_locate_root());
+  $skip_confirmation = drush_get_context('DRUSH_AFFIRMATIVE');
   if ($root) {
     $destination = drush_get_option(array('destination'), 'sites/all/modules/features');
     $directory = isset($directory) ? $directory : $destination . '/' . $module_name;
     if (is_dir($directory)) {
-      drush_print(dt('Module appears to already exist in !dir', array('!dir' => $directory)));
-      if (!drush_confirm(dt('Do you really want to continue?'))) {
+      $warning = dt('Module appears to already exist in !dir', array('!dir' => $directory));
+      drush_log($warning, 'warning');
+      // If we aren't skipping confirmation and the directory already exists,
+      // prompt the user.
+      if (!$skip_confirmation && !drush_confirm(dt('Do you really want to continue?'))) {
         drush_die('Aborting.');
       }
     }
@@ -594,7 +603,7 @@ function _drush_features_generate_export(&$info, &$module_name) {
     }
     $export['version'] = $version;
   }
-  else if ($version = drush_get_option(array('version-increment'))) {
+  elseif ($version = drush_get_option(array('version-increment'))) {
     // Determine current version and increment it.
     $export_load = features_export_prepare($export, $module_name);
     $version = $export_load['version'];
@@ -636,6 +645,9 @@ function drush_features_revert() {
 
     // Determine if revert should be forced.
     $force = drush_get_option('force');
+    // Determine if -y was supplied. If so, we can filter out needless output
+    // from this command.
+    $skip_confirmation = drush_get_context('DRUSH_AFFIRMATIVE');
 
     // Parse list of arguments.
     $modules = array();
@@ -660,6 +672,7 @@ function drush_features_revert() {
 
     // Process modules.
     foreach ($modules as $module => $components_needed) {
+      $dt_args['@module'] = $module;
       if (($feature = features_load_feature($module, TRUE)) && module_exists($module)) {
 
         $components = array();
@@ -675,7 +688,8 @@ function drush_features_revert() {
         else {
           $states = features_get_component_states(array($feature->name), FALSE);
           foreach ($states[$feature->name] as $component => $state) {
-            if (in_array($state, array(FEATURES_OVERRIDDEN, FEATURES_NEEDS_REVIEW, FEATURES_REBUILDABLE)) && features_hook($component, 'features_revert')) {
+            $revertable_states = array(FEATURES_OVERRIDDEN, FEATURES_NEEDS_REVIEW, FEATURES_REBUILDABLE);
+            if (in_array($state, $revertable_states) && features_hook($component, 'features_revert')) {
               $components[] = $component;
             }
           }
@@ -689,17 +703,19 @@ function drush_features_revert() {
         }
         else {
           foreach ($components as $component) {
-            if (drush_confirm(dt('Do you really want to revert @component?', array('@component' => $component)))) {
+            $dt_args['@component'] = $component;
+            $confirmation_message = 'Do you really want to revert @module.@component?';
+            if ($skip_confirmation || drush_confirm(dt($confirmation_message, $dt_args))) {
               features_revert(array($module => array($component)));
-              drush_log(dt('Reverted @component.', array('@component' => $component)), 'ok');
+              drush_log(dt('Reverted @module.@component.', $dt_args), 'ok');
             }
             else {
-              drush_log(dt('Skipping @component.', array('@component' => $component)), 'ok');
+              drush_log(dt('Skipping @module.@component.', $dt_args), 'ok');
             }
           }
         }
       }
-      else if ($feature) {
+      elseif ($feature) {
         _features_drush_set_error($module, 'FEATURES_FEATURE_NOT_ENABLED');
       }
       else {
@@ -744,15 +760,13 @@ function drush_features_revert_all() {
   }
 
   if ($features_to_revert) {
-    drush_print(dt('The following modules will be reverted: !modules', array('!modules' => implode(', ', $features_to_revert))));
-    if (drush_confirm(dt('Do you really want to continue?'))) {
-      foreach ($features_to_revert as $module) {
-        drush_invoke_process(drush_sitealias_get_record('@self'), 'features-revert', array($module), array('force' => $force, '#integrate' => TRUE));
-      }
-    }
-    else {
+    $dt_args = array('!modules' => implode(', ', $features_to_revert));
+    drush_print(dt('The following modules will be reverted: !modules', $dt_args));
+    // Confirm that the user would like to continue. If not, simply abort.
+    if (!drush_confirm(dt('Do you really want to continue?'))) {
       return drush_user_abort('Aborting.');
     }
+    drush_invoke('features-revert', $features_to_revert);
   }
   else {
     drush_log(dt('Current state already matches defaults, aborting.'), 'ok');
@@ -785,11 +799,11 @@ function drush_features_diff() {
     if (drush_confirm(dt('It seems that the Diff module is not available. Would you like to download and enable it?'))) {
       // Download it if it's not already here.
       $project_info = drush_get_projects();
-      if (empty($project_info['diff']) && !drush_invoke_process(drush_sitealias_get_record('@self'), 'dl', array('diff'), array('#integrate' => TRUE))) {
+      if (empty($project_info['diff']) && !drush_invoke('dl', array('diff'))) {
         return drush_set_error(dt('Diff module could not be downloaded.'));
       }
 
-      if (!drush_invoke_process(drush_sitealias_get_record('@self'), 'en', array('diff'), array('#integrate' => TRUE))) {
+      if (!drush_invoke('en', array('diff'))) {
         return drush_set_error(dt('Diff module could not be enabled.'));
       }
     }
