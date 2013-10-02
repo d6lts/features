@@ -64,6 +64,11 @@ define('FEATURES_DUPLICATES_CONFLICT', 0);
 define('FEATURES_DUPLICATES_ALLOWED', 1);
 
 /**
+ * The default destination path for features exported via the UI.
+ */
+define('FEATURES_DEFAULT_EXPORT_PATH', 'sites/all/modules');
+
+/**
  * Implements hook_menu().
  */
 function features_menu() {
