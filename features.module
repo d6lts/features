@@ -333,9 +333,18 @@ function features_modules_enabled($modules) {
   }
 
   if (!empty($items)) {
+    // Need to include any new files.
+    // @todo Redo function so can take in list of modules to include.
+    features_include_defaults(NULL, TRUE);
     _features_restore('enable', $items);
     // Rebuild the list of features includes.
     features_include(TRUE);
+    // Reorders components to match hook order and removes non-existant.
+    $all_components = array_keys(features_get_components());
+    foreach ($items as $module => $components) {
+      $items[$module] = array_intersect($all_components, $components);
+    }
+    _features_restore('rebuild', $items);
   }
 }
 
