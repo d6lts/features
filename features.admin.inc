@@ -104,23 +104,23 @@ function features_export_form($form, $form_state, $feature = NULL) {
     '#description' => t('Example: Image gallery') . ' (' . t('Do not begin name with numbers.') . ')',
     '#type' => 'textfield',
     '#default_value' => !empty($feature->info['name']) ? $feature->info['name'] : '',
-    '#attributes' => array('class' => array('feature-name')),
   );
   $form['info']['module_name'] = array(
-    '#type' => 'textfield',
+    '#type' => 'machine_name',
     '#title' => t('Machine-readable name'),
     '#description' => t('Example: image_gallery') . '<br/>' . t('May only contain lowercase letters, numbers and underscores. <strong>Try to avoid conflicts with the names of existing Drupal projects.</strong>'),
     '#required' => TRUE,
     '#default_value' => $feature_name,
-    '#attributes' => array('class' => array('feature-module-name')),
-    '#element_validate' => array('features_export_form_validate_field'),
+    '#machine_name' => array(
+      'exists' => 'features_export_form_module_name_exists',
+      'source' => array('info', 'name'),
+    ),
   );
-  // If recreating this feature, disable machine name field and blank out
-  // js-attachment classes to ensure the machine name cannot be changed.
+  // If recreating this feature, disable machine name field to ensure the
+  // machine name cannot be changed.
   if (isset($feature)) {
     $form['info']['module_name']['#value'] = $feature_name;
     $form['info']['module_name']['#disabled'] = TRUE;
-    $form['info']['name']['#attributes'] = array();
   }
   $form['info']['description'] = array(
     '#title' => t('Description'),
@@ -221,6 +221,13 @@ function features_export_form($form, $form_state, $feature = NULL) {
   $form['#attached']['library'][] = array('system', 'ui.dialog');
 
   return $form;
+}
+
+/**
+ * Machine name existence callback for the module name.
+ */
+function features_export_form_module_name_exists($value) {
+  return (bool) features_get_info('module', $value);
 }
 
 /**
@@ -779,16 +786,6 @@ function features_info_file_preview($form, &$form_state){
  */
 function features_export_form_validate_field($element, &$form_state) {
   switch ($element['#name']) {
-    case 'module_name':
-      if (!preg_match('!^[a-z0-9_]+$!', $element['#value'])) {
-        form_error($element, t('The machine-readable name must contain only lowercase letters, numbers, and underscores.'));
-      }
-      // If user is filling out the feature name for the first time and uses
-      // the name of an existing module throw an error.
-      else if (empty($element['#default_value']) && features_get_info('module', $element['#value'])) {
-        form_error($element, t('A module by the name @name already exists on your site. Please choose a different name.', array('@name' => $element['#value'])));
-      }
-      break;
     case 'project_status_url':
       if (!empty($element['#value']) && !valid_url($element['#value'])) {
         form_error($element, t('The URL %url is invalid. Please enter a fully-qualified URL, such as http://www.example.com/feed.xml.', array('%url' => $element['#value'])));
