@@ -241,7 +241,8 @@ function menu_links_features_export_render($module, $data, $export = NULL) {
         // Don't show new identifier unless we are actually exporting.
         $link['options']['identifier'] = $new_identifier;
         // identifiers are renewed, => that means we need to update them in the db
-        menu_link_save($temp = $link);
+        $temp = $link;
+        menu_link_save($temp);
       }
 
        unset($link['plid']);
