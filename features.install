@@ -53,7 +53,7 @@ function _features_install_menu() {
 
 /**
  * Update 6100: Set module on all feature node types to 'features'.
-
+ *
  * This update can be re-run as needed to repair any node types that are not
  * removed after disabling the associated feature.
  *
