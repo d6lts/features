@@ -220,6 +220,42 @@ function hook_features_rebuild($module_name) {
 }
 
 /**
+ * Invoked before a restore operation is run.
+ *
+ * This hook is called before any of the restore operations on the components is
+ * run.
+ *
+ * @param string $op
+ *   The operation that is triggered: revert, rebuild, disable, enable
+ * @param array $items
+ *   The items handled by the operation.
+ */
+function hook_features_pre_restore($op, $items) {
+  if ($op == 'rebuild') {
+    // Use features rebuild to rebuild the features independent exports too.
+    entity_defaults_rebuild();
+  }
+}
+
+/**
+ * Invoked after a restore operation is run.
+ *
+ * This hook is called after any of the restore operations on the components is
+ * run.
+ *
+ * @param string $op
+ *   The operation that is triggered: revert, rebuild, disable, enable
+ * @param array $items
+ *   The items handled by the operation.
+ */
+function hook_features_post_restore($op, $items) {
+  if ($op == 'rebuild') {
+    // Use features rebuild to rebuild the features independent exports too.
+    entity_defaults_rebuild();
+  }
+}
+
+/**
  * Alter the final array of Component names to be exported, just prior to
  * the rendering of defaults. Allows modules a final say in whether or not
  * certain Components are exported (the Components' actual data, however,

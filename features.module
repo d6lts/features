@@ -932,6 +932,8 @@ function _features_restore($op, $items = array()) {
     }
   }
 
+  // Invoke global pre restore hook.
+  module_invoke_all('features_pre_restore', $op, $items);
   foreach ($items as $module_name => $components) {
     foreach ($components as $component) {
       // Invoke pre hook
@@ -955,6 +957,8 @@ function _features_restore($op, $items = array()) {
       module_invoke($module_name, $post_hook, $component);
     }
   }
+  // Invoke global post restore hook.
+  module_invoke_all('features_post_restore', $op, $items);
 }
 
 /**
