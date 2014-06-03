@@ -293,12 +293,32 @@ function hook_features_pipe_alter(&$pipe, $data, $export) {
  */
 
 /**
+ * Deprecated as of 7.x-2.0.
+ *
  * Alter the default fields right before they are cached into the database.
  *
  * @param &$fields
  *   By reference. The fields that have been declared by another feature.
  */
 function hook_field_default_fields_alter(&$fields) {
+}
+
+/**
+ * Alter the base fields right before they are cached into the database.
+ *
+ * @param &$fields
+ *   By reference. The fields that have been declared by another feature.
+ */
+function hook_field_default_field_bases_alter(&$fields) {
+}
+
+/**
+ * Alter the field instances right before they are cached into the database.
+ *
+ * @param &$fields
+ *   By reference. The fields that have been declared by another feature.
+ */
+function hook_field_default_field_instances_alter(&$fields) {
 }
 
 /**
