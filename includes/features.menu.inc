@@ -296,16 +296,13 @@ function menu_links_features_rebuild_ordered($menu_links, $reset = FALSE) {
         foreach ($unordered as $key => $link) {
           $identifier = menu_links_features_identifier($link);
           $parent = isset($link['parent_identifier']) ? $link['parent_identifier'] : '';
-          if (empty($parent)) {
-            $ordered[$identifier] = 0;
-            $all_links[$identifier] = $link;
-            unset($unordered[$key]);
+          $weight = 0;
+          if (isset($ordered[$parent])) {
+            $weight = $ordered[$parent] + 1;
           }
-          elseif (isset($ordered[$parent])) {
-            $ordered[$identifier] = $ordered[$parent] + 1;
-            $all_links[$identifier] = $link;
-            unset($unordered[$key]);
-          }
+          $ordered[$identifier] = $weight;
+          $all_links[$identifier] = $link;
+          unset($unordered[$key]);
         }
       } while (count($unordered) < $current);
     }
