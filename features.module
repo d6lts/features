@@ -290,6 +290,11 @@ function features_permission() {
       'description' => t('Allow feature exports to be generated and written directly to site.'),
       'restrict access' => TRUE,
     ),
+    'rename features' => array(
+      'title' => t('Edit feature machine name'),
+      'description' => t('Allows editing machine name of a disabled feature'),
+      'restrict access' => TRUE,
+    ),
   );
 }
 
