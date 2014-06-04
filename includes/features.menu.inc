@@ -390,11 +390,14 @@ function features_menu_link_load($identifier) {
 
     foreach($links as $link) {
       $link->options = unserialize($link->options);
-
-      // title or previous identifier matches
-      if ((isset($link->options['identifier']) && strcmp($link->options['identifier'], $identifier) == 0)
-          || (isset($clean_title) && strcmp(features_clean_title($link->link_title), $clean_title) == 0)) {
-
+      // Links with a stored identifier must only be matched on that identifier,
+      // to prevent cross over assumptions.
+      if (isset($link->options['identifier'])) {
+        if (strcmp($link->options['identifier'], $identifier) == 0) {
+          return (array)$link;
+        }
+      }
+      elseif ((strcmp(features_clean_title($link->link_title), $clean_title) == 0)) {
         return (array)$link;
       }
     }
