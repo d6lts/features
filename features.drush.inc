@@ -232,6 +232,7 @@ function drush_features_list() {
 function drush_features_components() {
   $args = func_get_args();
   $components = _drush_features_component_list();
+  ksort($components);
   // If no args supplied, prompt with a list.
   if (empty($args)) {
     $types = array_keys($components);
