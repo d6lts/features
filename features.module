@@ -214,11 +214,11 @@ function features_theme() {
 
   $items = array();
   $items['features_module_status'] = array(
-    'variables' => array('module' => null, 'status' => null)
+    'variables' => array('module' => NULL, 'status' => NULL)
   ) + $base;
 
   $items['features_components'] = array(
-    'variables' => array('info' => null, 'sources' => null),
+    'variables' => array('info' => NULL, 'sources' => NULL),
   ) + $base;
 
   $items['features_component_key'] = $base;
@@ -227,7 +227,7 @@ function features_theme() {
   ) + $base;
 
   $items['features_storage_link'] = array(
-    'variables' => array('storage' => null, 'text' => null, 'path' => null, 'options' => array()),
+    'variables' => array('storage' => NULL, 'text' => NULL, 'path' => NULL, 'options' => array()),
   ) + $base;
 
   $items['features_form_components'] =
@@ -304,10 +304,10 @@ function features_permission() {
 function features_help($path, $arg) {
   switch ($path) {
     case 'admin/help#features':
-      $output = file_get_contents(drupal_get_path('module', 'features') .'/README.txt');
-      return module_exists('markdown') ? filter_xss_admin(module_invoke('markdown', 'filter', 'process', 0, -1, $output)) : '<pre>'. check_plain($output) .'</pre>';
+      $output = file_get_contents(drupal_get_path('module', 'features') . '/README.txt');
+      return module_exists('markdown') ? filter_xss_admin(module_invoke('markdown', 'filter', 'process', 0, -1, $output)) : '<pre>' . check_plain($output) . '</pre>';
     case 'admin/build/features':
-      return '<p>'. t('A "Feature" is a certain type of Drupal module which contains a package of configuration that, when enabled, provides a new set of functionality for your Drupal site. Enable features by selecting the checkboxes below and clicking the Save configuration button. If the configuration of the feature has been changed its "State" will be either "overridden" or "needs review", otherwise it will be "default", indicating that the configuration has not been changed. Click on the state to see more details about the feature and its components.') .'</p>';
+      return '<p>' . t('A "Feature" is a certain type of Drupal module which contains a package of configuration that, when enabled, provides a new set of functionality for your Drupal site. Enable features by selecting the checkboxes below and clicking the Save configuration button. If the configuration of the feature has been changed its "State" will be either "overridden" or "needs review", otherwise it will be "default", indicating that the configuration has not been changed. Click on the state to see more details about the feature and its components.') . '</p>';
   }
 }
 
@@ -659,7 +659,7 @@ function features_get_info($type = 'module', $name = NULL, $reset = FALSE) {
       if (!empty($row->info['features'])) {
         // Fix css/js paths
         if (!empty($row->info['stylesheets'])) {
-          foreach($row->info['stylesheets'] as $media => $css) {
+          foreach ($row->info['stylesheets'] as $media => $css) {
             $row->info['stylesheets'][$media] = array_keys($css);
           }
         }
@@ -794,7 +794,7 @@ function features_get_conflicts($reset = FALSE) {
         if (isset($component_info[$type]['duplicates']) && $component_info[$type]['duplicates'] == FEATURES_DUPLICATES_ALLOWED) {
           continue;
         }
-        else if (count($modules) > 1) {
+        elseif (count($modules) > 1) {
           foreach ($modules as $module) {
             if (!isset($conflicts[$module])) {
               $conflicts[$module] = array();
@@ -845,7 +845,7 @@ function features_get_module_status($module) {
   if (module_exists($module)) {
     return FEATURES_MODULE_ENABLED;
   }
-  else if (features_get_modules($module)) {
+  elseif (features_get_modules($module)) {
     return FEATURES_MODULE_DISABLED;
   }
   else {
