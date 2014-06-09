@@ -157,7 +157,6 @@ jQuery.fn.sortElements = (function(){
       }
 
       function updateComponentCountInfo(item, section) {
-        console.log(section);
         switch (section) {
           case 'select':
             var parent = $(item).closest('.features-export-list').siblings('.features-export-component');
