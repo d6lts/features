@@ -569,11 +569,9 @@ function _drush_features_export($info, $module_name = NULL, $directory = NULL) {
     $destination = drush_get_option(array('destination'), variable_get('features_default_export_path', FEATURES_DEFAULT_EXPORT_PATH));
     $directory = isset($directory) ? $directory : $destination . '/' . $module_name;
     if (is_dir($directory)) {
-      $warning = dt('Module appears to already exist in !dir', array('!dir' => $directory));
-      drush_log($warning, 'warning');
       // If we aren't skipping confirmation and the directory already exists,
-      // prompt the user.
-      if (!$skip_confirmation && !drush_confirm(dt('Do you really want to continue?'))) {
+      // prompt the user. This message most make sense for but fe and fu.
+      if (!$skip_confirmation && !drush_confirm(dt('Module located at !dir will be updated. Do you want to continue?', array('!dir' => $directory)))) {
         drush_die('Aborting.');
       }
     }
