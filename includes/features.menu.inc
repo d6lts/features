@@ -312,6 +312,11 @@ function menu_links_features_rebuild_ordered($menu_links, $reset = FALSE) {
       // Exit out when the above does no changes this loop.
       } while (count($unordered) < $current);
     }
+    // Add all remaining unordered items to the ordered list.
+    foreach ($unordered as $link) {
+      $identifier = menu_links_features_identifier($link);
+      $ordered[$identifier] = 0;
+    }
     asort($ordered);
   }
 
