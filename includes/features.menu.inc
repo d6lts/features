@@ -297,13 +297,19 @@ function menu_links_features_rebuild_ordered($menu_links, $reset = FALSE) {
           $identifier = menu_links_features_identifier($link);
           $parent = isset($link['parent_identifier']) ? $link['parent_identifier'] : '';
           $weight = 0;
+          // Parent has been seen, so weigh this above parent.
           if (isset($ordered[$parent])) {
             $weight = $ordered[$parent] + 1;
+          }
+          // Next loop will try to find parent weight instead.
+          elseif ($parent) {
+            continue;
           }
           $ordered[$identifier] = $weight;
           $all_links[$identifier] = $link;
           unset($unordered[$key]);
         }
+      // Exit out when the above does no changes this loop.
       } while (count($unordered) < $current);
     }
     asort($ordered);
