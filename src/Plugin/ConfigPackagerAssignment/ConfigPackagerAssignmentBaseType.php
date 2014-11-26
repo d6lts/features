@@ -16,7 +16,6 @@ use Drupal\config_packager\ConfigPackagerAssignmentMethodBase;
  * @Plugin(
  *   id = \Drupal\config_packager\Plugin\ConfigPackagerAssignment\ConfigPackagerAssignmentBaseType::METHOD_ID,
  *   weight = -2,
- *   cache = 0,
  *   name = @Translation("Base type"),
  *   description = @Translation("Designated types of configuration are used as the base for configuration package modules. For example, if content types are selected as a base type, a package will be generated for each content type, including all configuration dependent on that content type."),
  *   config_route_name = "config_packager.assignment_base"

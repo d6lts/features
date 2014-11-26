@@ -4,9 +4,11 @@ profile:
   description: 'A bunch of test stuff.'
 assignment:
   enabled:
-    base-type: '-20'
-    core-type: '-19'
+    base-type: '-2'
+    core-type: '0'
+    dependency: '10'
   method_weights:
-    core-type: '-19'
-    base-type: '-20'
+    base-type: '-2'
+    core-type: '0'
+    dependency: '10'
 langcode: en

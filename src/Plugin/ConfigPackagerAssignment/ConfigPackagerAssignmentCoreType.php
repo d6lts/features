@@ -7,7 +7,6 @@
 
 namespace Drupal\config_packager\Plugin\ConfigPackagerAssignment;
 
-use Drupal\component\Utility\Unicode;
 use Drupal\config_packager\ConfigPackagerAssignmentMethodBase;
 
 /**
@@ -15,8 +14,7 @@ use Drupal\config_packager\ConfigPackagerAssignmentMethodBase;
  *
  * @Plugin(
  *   id = \Drupal\config_packager\Plugin\ConfigPackagerAssignment\ConfigPackagerAssignmentCoreType::METHOD_ID,
- *   weight = -2,
- *   cache = 0,
+ *   weight = 0,
  *   name = @Translation("Core type"),
  *   description = @Translation("Designated types of configuration are assigned to a core configuration package module. For example, if image styles are selected as a core type, a core package will be generated and image styles will be assigned to it."),
  *   config_route_name = "config_packager.assignment_core"
