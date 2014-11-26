@@ -1,0 +1,12 @@
+services:
+  plugin.manager.packager_assignment_method:
+    class: Drupal\config_packager\ConfigPackagerAssignmentMethodManager
+    arguments: ['@container.namespaces', '@cache.discovery', '@module_handler']
+  config_packager_assigner:
+    class: Drupal\config_packager\ConfigPackagerAssigner
+    arguments: ['@config_packager.manager', '@plugin.manager.packager_assignment_method', '@config.factory']
+    calls:
+      - [initConfigPackagerManager]
+  config_packager.manager:
+    class: Drupal\config_packager\ConfigPackagerManager
+    arguments: ['@entity.manager', '@config.storage', '@config.manager']

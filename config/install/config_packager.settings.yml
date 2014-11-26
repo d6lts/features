@@ -1,0 +1,8 @@
+profile:
+  machine_name: ''
+  name: ''
+  description: ''
+assignment:
+  enabled:
+    base-type: 0
+langcode: 'en'

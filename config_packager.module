@@ -1,0 +1,74 @@
+<?php
+
+/**
+ * @file
+ * Allows site administrators to modify configuration.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_help().
+ */
+function config_packager_help($route_name, RouteMatchInterface $route_match) {
+  switch ($route_name) {
+    case 'help.page.config_packager':
+      $output = '';
+      $output .= '<h3>' . t('About') . '</h3>';
+      $output .= '<p>' . t('The Configuration Packager module provides a user interface for exporting bundles of configuration into modules. For more information, see the online project page for <a href="!url">Configuration Packager module</a>', array(
+        '!url' => 'http://drupal.org/project/config_packager',
+      )) . '</p>';
+      return $output;
+    case 'config_packager.assignment':
+      $output = '';
+      $output .= '<p>' . t('Enable package assignment methods and select the order in which they will be run.') . '</p>';
+      return $output;
+    case 'config_packager.export':
+      $output = '';
+      $output .= '<p>' . t('Export bundles of configuration into modules.') . '</p>';
+      return $output;
+  }
+}
+
+/**
+ * Implements hook_theme().
+ */
+function config_packager_theme() {
+  return array(
+    'config_packager_assignment_configure_form' => array(
+      'render element' => 'form',
+      'file' => 'config_packager.admin.inc',
+    ),
+    'config_packager_items' => array(
+      'variables' => array(
+        'items' => array(),
+      ),
+      'file' => 'config_packager.admin.inc',
+      'function' => 'theme_config_packager_items',
+    ),
+  );
+}
+
+/**
+ * Implements hook_file_download().
+ */
+function config_packager_file_download($uri) {
+  $scheme = file_uri_scheme($uri);
+  $target = file_uri_target($uri);
+  $archive_name = \Drupal::config('config_packager.settings')->get('profile.machine_name') . '.tar.gz';
+  if ($scheme == 'temporary' && $target == $archive_name) {
+    return array(
+      'Content-disposition' => 'attachment; filename="' . $archive_name . '"',
+    );
+  }
+}
+
+/**
+ * Implements hook_modules_installed().
+ */
+function config_packager_modules_installed($modules) {
+  if (!in_array('config_packager', $modules)) {
+    $assigner = \Drupal::service('config_packager_assigner');
+    $assigner->purgeConfiguration();
+  }
+}

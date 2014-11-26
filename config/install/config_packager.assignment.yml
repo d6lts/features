@@ -1,0 +1,6 @@
+case:
+  types:
+    node_type: node_type
+base:
+  types:
+    node_type: node_type
