@@ -207,7 +207,7 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
   public function assignConfigPackage($package_name, array $item_names) {
     $config_collection = $this->getConfigCollection();
     foreach ($item_names as $item_name) {
-      if (!in_array($item_name, $this->packages[$package_name]['config'])) {
+      if (empty($config_collection[$item_name]['package']) && !in_array($item_name, $this->packages[$package_name]['config'])) {
         $this->packages[$package_name]['config'][] = $item_name;
         $config_collection[$item_name]['package'] = $package_name;
       }
@@ -448,133 +448,10 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
     }
   }
 
-  public function setSorting() {
-    // Define sorting of speciic configuration types.
-    $sorting = [
-      // Roots should be the basis of distinct package.
-      'roots' => [
-        'node_type',
-      ],
-      // Bases should be in a base feature.
-      'bases' => [
-        'entity_form_mode',
-        'entity_view_mode',
-      ],
-      // Bases should be in a base feature if they have multiple dependents.
-      'bases_if_multiple' => [
-        'date_format',
-        'field_storage_config',
-        'image_style',
-        'user_role'
-      ]
-      // 
-    ];
-
-/*
-    [block] => Block
-    [block_content_type] => Custom block type
-    [comment_type] => Comment type
-    [contact_form] => Contact form
-    [editor] => Text Editor
-    [field_config] => Field
-    [field_storage_config] => Field storage
-    [filter_format] => Text format
-    [image_style] => Image style
-    [migration] => Migration
-    [node_type] => Content type
-    [rdf_mapping] => RDF mapping
-    [search_page] => Search page
-    [shortcut_set] => Shortcut set
-    [action] => Action
-    [menu] => Menu
-    [taxonomy_vocabulary] => Taxonomy vocabulary
-    [tour] => Tour
-    [user_role] => Role
-    [view] => View
-    [entity_view_display] => Entity view display
-    [entity_form_mode] => Form mode
-    [entity_form_display] => Entity form display
-    [entity_view_mode] => View mode
-    [date_format] => Date format
-    [base_field_override] => Base field override
-*/
-
-  }
-
   /**
-   * {@inheritdoc}
+   * Iterate through packages and profile and prepare file names and contents.
    */
-  public function setPackagesbak() {
-
-
-    // Collect dependency data.
-    $dependencies = [];
-    $config = [];
-    // Get raw configuration data without overrides.
-    foreach ($this->configManager->getConfigFactory()->listAll() as $name) {
-      $data = $this->configManager->getConfigFactory()->get($name)->getRawData();
-      $config[$name] = $data;
-      if (isset($data['dependencies']['entity'])) {
-        foreach ($data['dependencies']['entity'] as $dependency) {
-          $dependencies[$dependency][] = $name;
-        }
-      }
-    }
-
-    // Process base configuration, defined as configuration that is required
-    // by multiple other entities
-    foreach ($dependencies as $name => $entities) {
-      if (!isset($config[$name]['dependencies']['entity'])) {
-        foreach ($sorting['bases'] as $key) {
-          if (strpos($name, $key) === 0) {
-            $config[$entity]['feature'] = 'base';
-            break;
-          }
-        }
-      }
-    }
-
-    // Process root configuration, defined as configuration that is a
-    // dependency of other configuration but itself has no
-    // dependencies.
-    foreach ($dependencies as $name => $entities) {
-      if (!isset($config[$name]['dependencies']['entity'])) {
-        foreach ($sorting['roots'] as $key) {
-          if (strpos($name, $key) === 0) {
-            $machine_name = substr($name, strrpos($name, '.') + 1);
-            $label = isset($config[$name]['label']) ? $config[$name]['label'] : (isset($config[$name]['name']) ? $config[$name]['name'] : $name);
-            $package[$machine_name] = $label;
-            // Assign this entity and its dependents to the feature.
-            $config[$name]['feature'] = $machine_name;
-            foreach ($entities as $entity) {
-              // Assign a feature only if none is assigned.
-              if (!isset($config[$entity]['feature'])) {
-                $config[$entity]['feature'] = $machine_name;
-              }
-            }
-
-            break;
-          }
-        }
-      }
-    }
-    // Claim all configuration that includes the machine name.
-    foreach ($package as $machine_name => $name) {
-      // Reverse sort so that child package will claim items before parent
-      // package. E.g., event_registration will claim before event.
-      foreach (rsort(array_keys($config)) as $entity) {
-        // Assign a feature only if none is assigned.
-        if (!isset($config[$entity]['feature']) && strpos($entity, $machine_name !== FALSE)) {
-          $config[$entity]['feature'] = $machine_name;
-          break;
-        }
-      }
-    }
-    foreach ($config as $entity => $data) {
-    }
-  }
-
-  public function prepareFiles() {
+  protected function prepareFiles() {
     // Add package files first so their filename values can be altered to nest
     // them in a profile.
     $this->addPackageFiles();

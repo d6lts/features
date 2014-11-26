@@ -1,8 +1,12 @@
 profile:
-  machine_name: ''
-  name: ''
-  description: ''
+  machine_name: testing
+  name: Testing
+  description: 'A bunch of test stuff.'
 assignment:
   enabled:
-    base-type: 0
-langcode: 'en'
+    base-type: '-20'
+    core-type: '-19'
+  method_weights:
+    core-type: '-19'
+    base-type: '-20'
+langcode: en
