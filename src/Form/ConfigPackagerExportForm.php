@@ -81,6 +81,8 @@ class ConfigPackagerExportForm extends FormBase {
     $this->assigner->assignConfigPackages();
     $packages = $this->configPackagerManager->getPackages();
     $config_collection = $this->configPackagerManager->getConfigCollection();
+    // Add in unpackaged configuration items.
+    $this->addUnpackaged($packages, $config_collection);
     $config_types = $this->configPackagerManager->getConfigTypes();
     // Add dependencies.
     $config_types['dependencies'] = $this->t('Dependencies');
@@ -189,6 +191,23 @@ class ConfigPackagerExportForm extends FormBase {
       '#value' => $this->t('Export'),
     );
     return $form;
+  }
+
+  /**
+   * Add a pseudo-package to display unpackaged configuration.
+   */
+  protected function addUnpackaged(array &$packages, array $config_collection) {
+    $packages['unpackaged'] = array(
+      'machine_name' => 'unpackaged',
+      'name' => $this->t('Unpackaged'),
+      'description' => $this->t('Configuration that has not been added to any package.'),
+      'config' => array(),
+    );
+    foreach ($config_collection as $item_name => $item) {
+      if (empty($item['package'])) {
+        $packages['unpackaged']['config'][] = $item_name;
+      }
+    }
   }
 
   /**
