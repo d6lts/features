@@ -208,8 +208,16 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
     $config_collection = $this->getConfigCollection();
     foreach ($item_names as $item_name) {
       if (empty($config_collection[$item_name]['package']) && !in_array($item_name, $this->packages[$package_name]['config'])) {
+        // Add the item to the package's config array.
         $this->packages[$package_name]['config'][] = $item_name;
+        // Mark the item as already assigned.
         $config_collection[$item_name]['package'] = $package_name;
+        // Set any module dependencies of the configuration item as package
+        // dependencies.
+        if (isset($config_collection[$item_name]['data']['dependencies']['module'])) {
+          $dependencies =& $this->packages[$package_name]['dependencies'];
+          $dependencies = array_unique(array_merge($dependencies, $config_collection[$item_name]['data']['dependencies']['module']));
+        }
       }
     }
     $this->setConfigCollection($config_collection);
@@ -234,6 +242,28 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
     }
   }
 
+  /**
+   * Initialize and return a package or profile array.
+   *
+   * @param string $machine_name
+   *   Machine name of the package.
+   * @param string $name
+   *   Human readable name of the package.
+   * @param string $description
+   *   Description of the package.
+   * @return array
+   *   An array with the following keys:
+   *   - 'machine_name': machine name of the project.
+   *   - 'name': human readable name of the project.
+   *   - 'description': description of the project.
+   *   - 'type': type of Drupal project ('profile' or 'module').
+   *   - 'core': Drupal core compatibility ('8.x'),
+   *   - 'dependencies': array of module dependencies.
+   *   - 'config': array of names of configuration items.
+   *   - 'files' array of files, each having the following keys:
+   *      - 'filename': the name of the file.
+   *      - 'string': the contents of the file.
+   */
   protected function getProject($machine_name, $name = NULL, $description = '', $type = 'module') {
     $description = $description ?: $this->t('@name configuration.', array('@name' => $name));
     return [
@@ -248,18 +278,12 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
     ];
   }
 
-  protected function refreshPackageDependencies(&$package) {
-    $dependencies = &$package['dependencies'];
-    foreach ($package['config'] as $config) {
-      if (isset($config['dependencies']) && isset($config['dependencies']['module'])) {
-        $dependencies = array_merge($dependencies, $config['dependencies']['module']);
-      }
-    }
-    $dependencies = array_unique($dependencies);
-    sort($dependencies);
-  }
-
-  // Generate and add .info.yml files.
+  /**
+   * Generate and add .info.yml files to a package.
+   *
+   * @param array $package
+   *   The package.
+   */
   protected function addInfoFile(&$package) {
     $machine_name = $package['machine_name'];
     // Filter to standard keys of the profiles that we will use in info files.
@@ -292,6 +316,9 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
     ];
   }
 
+  /**
+   * Generate and add files to the profile.
+   */
   protected function addProfileFiles() {
     foreach ($this->packages as &$package) {
       foreach ($package['files'] as &$file) {
@@ -305,14 +332,15 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
     $this->addInfoFile($this->profile);
   }
 
+  /**
+   * Generate and add files to all packages.
+   */
   protected function addPackageFiles() {
     $config_collection = $this->getConfigCollection();
     foreach ($this->packages as $machine_name => &$package) {
       // Only add files if there is at least one piece of configuration
       // present.
       if (!empty($package['config'])) {
-        // Ensure the dependency information is current.
-        $this->refreshPackageDependencies($package);
         // Add .info.yml files.
         $this->addInfoFile($package);
         // Add configuration files.
@@ -333,6 +361,19 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
     unset($package);
   }
 
+  /**
+   * Return a human readable name.
+   *
+   * If no human readable name is available, generate a default one based on
+   * the machine name.
+   *
+   * @param string $machine_name
+   *   Machine name of the package.
+   * @param string $name
+   *   Human readable name, if any, of the package.
+   * @return string
+   *   Human readable name of the package.
+   */
   protected function getName($machine_name, $name = NULL) {
     // Provide a default name based on the machine name.
     if (empty($name)) {

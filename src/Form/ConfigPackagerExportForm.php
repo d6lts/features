@@ -9,6 +9,7 @@ namespace Drupal\config_packager\Form;
 
 use Drupal\Component\Utility\String;
 use Drupal\Component\Utility\Xss;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormState;
 use Drupal\Core\Form\FormStateInterface;
@@ -22,13 +23,6 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class ConfigPackagerExportForm extends FormBase {
 
   /**
-   * The package assigner.
-   *
-   * @var array
-   */
-  protected $assigner;
-
-  /**
    * The configuration packager manager.
    *
    * @var array
@@ -36,14 +30,29 @@ class ConfigPackagerExportForm extends FormBase {
   protected $configPackagerManager;
 
   /**
+   * The package assigner.
+   *
+   * @var array
+   */
+  protected $assigner;
+
+  /**
+   * The module handler service.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
+  protected $moduleHandler;
+
+  /**
    * Constructs a ConfigPackagerExportForm object.
    *
    * @param \Drupal\Core\Config\StorageInterface $target_storage
    *   The target storage.
    */
-  public function __construct(ConfigPackagerManagerInterface $config_packager_manager, ConfigPackagerAssignerInterface $assigner) {
+  public function __construct(ConfigPackagerManagerInterface $config_packager_manager, ConfigPackagerAssignerInterface $assigner, ModuleHandlerInterface $module_handler) {
     $this->configPackagerManager = $config_packager_manager;
     $this->assigner = $assigner;
+    $this->moduleHandler = $module_handler;
   }
 
   /**
@@ -52,7 +61,8 @@ class ConfigPackagerExportForm extends FormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('config_packager.manager'),
-      $container->get('config_packager_assigner')
+      $container->get('config_packager_assigner'),
+      $container->get('module_handler')
     );
   }
 
@@ -72,7 +82,11 @@ class ConfigPackagerExportForm extends FormBase {
     $packages = $this->configPackagerManager->getPackages();
     $config_collection = $this->configPackagerManager->getConfigCollection();
     $config_types = $this->configPackagerManager->getConfigTypes();
+    // Add dependencies.
+    $config_types['dependencies'] = $this->t('Dependencies');
+    uasort($config_types, 'strnatcasecmp');
     $packager_config = \Drupal::config('config_packager.settings');
+    $module_names = array();
 
     $form['profile_name'] = array(
       '#title' => $this->t('Profile name'),
@@ -115,6 +129,19 @@ class ConfigPackagerExportForm extends FormBase {
           'name' => String::checkPlain($item_name),
           'label' => String::checkPlain($item['label']),
         );
+      }
+      // Add dependencies.
+      if (!empty($package['dependencies'])) {
+        $package_config['dependencies'] = array();
+        foreach ($package['dependencies'] as $dependency) {
+          if (!isset($module_names[$dependency])) {
+            $module_names[$dependency] = $this->moduleHandler->getName($dependency);
+          }
+          $package_config['dependencies'][] = array(
+            'name' => $dependency,
+            'label' => $module_names[$dependency],
+          );
+        }
       }
       $form['preview'][$package['machine_name']] = array(
         '#type' => 'container',
