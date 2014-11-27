@@ -6,9 +6,11 @@ assignment:
   enabled:
     base-type: '-2'
     core-type: '0'
+    namespace: '5'
     dependency: '10'
   method_weights:
     base-type: '-2'
     core-type: '0'
+    namespace: '5'
     dependency: '10'
 langcode: en

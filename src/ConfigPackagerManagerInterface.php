@@ -167,6 +167,15 @@ interface ConfigPackagerManagerInterface {
   public function assignConfigPackage($package_name, array $item_names);
 
   /**
+   * Assign configuration items with names matching given strings to given
+   * packages.
+   *
+   * @param array $patterns
+   *   Array with string patterns as keys and package machine names as values.
+   */
+  public function assignConfigByPattern(array $patterns);
+
+  /**
    * For given configuration items, assign any dependent configuration to the
    * same package.
    *

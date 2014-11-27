@@ -226,6 +226,25 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
   /**
    * {@inheritdoc}
    */
+  public function assignConfigByPattern(array $patterns) {
+    $config_collection = $this->getConfigCollection();
+    // Reverse sort by key so that child package will claim items before parent
+    // package. E.g., event_registration will claim before event.
+    krsort($config_collection);
+    foreach ($patterns as $pattern => $machine_name) {
+      if (isset($this->packages[$machine_name])) {
+        foreach ($config_collection as $item_name => $item) {
+          if (empty($item['package']) && strpos($item['short_name'], $pattern) !== FALSE) {
+            $this->assignConfigPackage($machine_name, [$item_name]);
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function assignConfigDependents(array $item_names = NULL) {
     $config_collection = $this->getConfigCollection();
     if (empty($item_names)) {
