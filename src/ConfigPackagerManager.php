@@ -528,7 +528,9 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
   
     // Remove any previous version of the exported archive.
     $archive_name = file_directory_temp() . '/' . \Drupal::config('config_packager.settings')->get('profile.machine_name') . '.tar.gz';
-    file_unmanaged_delete($archive_name);
+    if (file_exists($archive_name)) {
+      file_unmanaged_delete($archive_name);
+    }
 
     $archiver = new ArchiveTar($archive_name);
 
