@@ -38,7 +38,7 @@ class AssignmentBaseForm extends AssignmentFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $types = $form_state->getValue('types');
+    $types = array_filter($form_state->getValue('types'));
 
     $this->configFactory->get('config_packager.assignment')->set('base.types', $types)->save();
 

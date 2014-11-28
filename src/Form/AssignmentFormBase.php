@@ -56,18 +56,17 @@ abstract class AssignmentFormBase extends FormBase {
   }
 
   /**
-   * Add a configuration types select.
+   * Add configuration types checkboxes.
    */
   protected function setTypeSelect(&$form, $defaults) {
     $options = $this->configPackagerManager->getConfigTypes();
 
     $form['types'] = array(
-      '#type' => 'select',
+      '#type' => 'checkboxes',
       '#title' => $this->t('Types'),
       '#description' => $this->t('Select the types of configuration that should be considered base types.'),
       '#options' => $options,
       '#default_value' => $defaults,
-      '#multiple' => TRUE,
     );
   }
 

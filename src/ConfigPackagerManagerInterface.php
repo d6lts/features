@@ -14,8 +14,12 @@ interface ConfigPackagerManagerInterface {
 
   /**
    * Simple configuration.
+   *
+   * Core uses system.simple, but since we're using this key in configuration
+   * arrays we can't include a period.
+   * @see https://www.drupal.org/node/2297311
    */
-  const SYSTEM_SIMPLE_CONFIG = 'system.simple';
+  const SYSTEM_SIMPLE_CONFIG = 'system_simple';
 
   /**
    * Reset packages and configuration assignment.
