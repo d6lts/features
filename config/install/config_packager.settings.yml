@@ -1,7 +1,7 @@
 profile:
-  machine_name: testing
-  name: Testing
-  description: 'A bunch of test stuff.'
+  machine_name: ''
+  name: ''
+  description: ''
 assignment:
   enabled:
     base-type: '-2'
