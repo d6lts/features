@@ -234,7 +234,7 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
     foreach ($patterns as $pattern => $machine_name) {
       if (isset($this->packages[$machine_name])) {
         foreach ($config_collection as $item_name => $item) {
-          if (empty($item['package']) && strpos($item['short_name'], $pattern) !== FALSE) {
+          if (empty($item['package']) && preg_match('/[_\-.]' . $pattern . '[_\-.]/', $item['short_name'])) {
             $this->assignConfigPackage($machine_name, [$item_name]);
           }
         }
