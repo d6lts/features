@@ -499,8 +499,8 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
       // we add reverse dependencies: the configuration that is dependent on
       // a given piece of configuration.
       foreach ($config_collection as $config) {
-        if (isset($config['data']['dependencies']['entity'])) {
-          foreach ($config['data']['dependencies']['entity'] as $name) {
+        if (isset($config['data']['dependencies']['config'])) {
+          foreach ($config['data']['dependencies']['config'] as $name) {
             if (isset($config_collection[$name])) {
               $config_collection[$name]['dependents'][] = $config['name'];
             }
