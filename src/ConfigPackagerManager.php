@@ -315,6 +315,9 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
     );
     $info = array_intersect_key($package, array_combine($info_keys, $info_keys));
 
+    // Assign to a "package" named for the profile.
+    $info['package'] = $this->profile['name'];
+
     // Add in the configuration in a form used by the Configuragion
     // Development (config_devel) module, allowing that module to update
     // configuration.
