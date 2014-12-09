@@ -109,12 +109,25 @@ class ConfigPackagerExportForm extends FormBase {
       '#description' => $this->t('A unique machine-readable name for the install profile or distribution. It must only contain lowercase letters, numbers, and underscores.'),
     );
 
+    $form['use_profile'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Include install profile'),
+      '#default_value' => FALSE,
+      '#description' => $this->t('Select this option to have your configuration modules packaged into an install profile.'),
+    );
+
     $form['profile_description'] = array(
       '#title' => $this->t('Distribution description'),
       '#type' => 'textfield',
       '#default_value' => $packager_config->get('profile.description'),
       '#description' => $this->t('A description of your install profile or distribution.'),
       '#size' => 30,
+      // Show only if the use_profile option is selected.
+      '#states' => array(
+        'visible' => array(
+          ':input[name="use_profile"]' => array('checked' => TRUE),
+        ),
+      ),
     );
 
     // Offer a preview of the packages.
@@ -223,8 +236,12 @@ class ConfigPackagerExportForm extends FormBase {
 
     $this->assigner->assignConfigPackages();
 
-    $this->configPackagerManager->generate();
-
+    if ($form_state->getValue('use_profile')) {
+      $this->configPackagerManager->generateProfile(ConfigPackagerManagerInterface::GENERATE_METHOD_ARCHIVE);
+    }
+    else {
+      $this->configPackagerManager->generatePackages(ConfigPackagerManagerInterface::GENERATE_METHOD_ARCHIVE);
+    }
     // Redirect to the archive file download.
     $form_state->setRedirect('config_packager.export_download');
   }

@@ -234,7 +234,7 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
     foreach ($patterns as $pattern => $machine_name) {
       if (isset($this->packages[$machine_name])) {
         foreach ($config_collection as $item_name => $item) {
-          if (empty($item['package']) && preg_match('/[_\-.]' . $pattern . '[_\-.]/', $item['short_name'])) {
+          if (empty($item['package']) && preg_match('/[_\-.]' . $pattern . '[_\-.]/', '.' . $item['short_name'] . '.')) {
             $this->assignConfigPackage($machine_name, [$item_name]);
           }
         }
@@ -490,6 +490,7 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
             'label' => $label,
             'type' => $config_type,
             'data' => $data,
+            // @todo: use // ConfigDependencyManager::getDependentEntities('config', $name) ?
             'dependents' => []
           ];
         }
@@ -513,22 +514,80 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
 
   /**
    * Iterate through packages and profile and prepare file names and contents.
+   *
+   * @param boolean $add_profile
+   *   Whether to add an install profile. Defaults to FALSE.
    */
-  protected function prepareFiles() {
+  protected function prepareFiles($add_profile = FALSE) {
     // Add package files first so their filename values can be altered to nest
     // them in a profile.
     $this->addPackageFiles();
-    // @todo: make profile optional.
-    $this->addProfileFiles();
+    if ($add_profile) {
+      $this->addProfileFiles();
+    }
   }
 
   /**
    * {@inheritdoc}
    */
-  public function generate() {
+  public function generatePackages($method, $package_names = array()) {
+    $this->generate($method, FALSE, $package_names);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function generateProfile($method, $package_names = array()) {
+    $this->generate($method, TRUE, $package_names);
+  }
+
+  /**
+   * Generate a file representation of configuration packages and, optionally,
+   * an install profile.
+   *
+   * @param string $method
+   *   The method to use, either
+   *   ConfigPackagerManagerInterface::GENERATE_METHOD_ARCHIVE to generate an
+   *   archive (tarball) or
+   *   ConfigPackagerManagerInterface::GENERATE_METHOD_WRITE to write files
+   *   to the file system.
+   * @param boolean $add_profile
+   *   Whether to add an install profile. Defaults to FALSE.
+   * @param array $package_names
+   *   Array of names of packages to be generated. If none are specified, all
+   *   available packages will be added.
+   */
+  protected function generate($method, $add_profile = FALSE, $package_names = array()) {
     // Prepare the files.
-    $this->prepareFiles();
+    $this->prepareFiles($add_profile);
   
+    $packages = $this->getPackages();
+
+    // Filter out the packages that weren't requested.
+    if (!empty($package_names)) {
+      $packages = array_intersect_key($packages, array_fill_keys($package_names, NULL));
+    }
+
+    switch ($method) {
+      case ConfigPackagerManagerInterface::GENERATE_METHOD_ARCHIVE:
+        $this->generateArchive($add_profile, $packages);
+        break;
+      case ConfigPackagerManagerInterface::GENERATE_METHOD_WRITE:
+        $this->generateWrite($add_profile, $packages);
+        break;
+    }
+  }
+
+  /**
+   * Generate a compressed archive (tarball) of specified packages, or of all
+   * packages if none are specified.
+   *
+   * @param boolean $add_profile
+   *   Whether to add an install profile. Defaults to FALSE.
+   * @param array $packages
+   *   Array of package data.
+   */
+  protected function generateArchive($add_profile = FALSE, $packages = array()) {
     // Remove any previous version of the exported archive.
     $archive_name = file_directory_temp() . '/' . \Drupal::config('config_packager.settings')->get('profile.machine_name') . '.tar.gz';
     if (file_exists($archive_name)) {
@@ -537,17 +596,45 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
 
     $archiver = new ArchiveTar($archive_name);
 
-    // Add profile files, if any.
-    foreach ($this->profile['files'] as $file)  {
-      $archiver->addString($file['filename'], $file['string']);
+    if ($add_profile) {
+      // Add profile files, if any.
+      foreach ($this->profile['files'] as $file)  {
+        $archiver->addString($file['filename'], $file['string']);
+      }
     }
 
     // Add package files.
-    foreach ($this->packages as $package) {
+    foreach ($packages as $package) {
       foreach ($package['files'] as $file)  {
         $archiver->addString($file['filename'], $file['string']);
       }
     }
   }
 
+  /**
+   * Write to the file system specified packages, or of all packages if none
+   * are specified.
+   *
+   * @param boolean $add_profile
+   *   Whether to add an install profile. Defaults to FALSE.
+   * @param array $packages
+   *   Array of package data.
+   */
+  protected function generateWrite($add_profile = FALSE, $packages = array()) {
+    $base_directory = $add_profile ? 'profiles' : 'modules';
+
+    // Add profile files.
+    if ($add_profile) {
+      foreach ($this->profile['files'] as $file)  {
+        file_put_contents($base_directory . '/' . $file['filename'], $file['string']);
+      }
+    }
+
+    // Add package files.
+    foreach ($packages as $package) {
+      foreach ($package['files'] as $file)  {
+        file_put_contents($base_directory . '/' . $file['filename'], $file['string']);
+      }
+    }
+  }
 }

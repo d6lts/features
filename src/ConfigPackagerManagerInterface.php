@@ -22,6 +22,16 @@ interface ConfigPackagerManagerInterface {
   const SYSTEM_SIMPLE_CONFIG = 'system_simple';
 
   /**
+   * Archive file generation method.
+   */
+  const GENERATE_METHOD_ARCHIVE = 'archive';
+
+  /**
+   * Write file generation method.
+   */
+  const GENERATE_METHOD_WRITE = 'write';
+
+  /**
    * Reset packages and configuration assignment.
    */
   public function reset();
@@ -197,8 +207,34 @@ interface ConfigPackagerManagerInterface {
   public function getConfigTypes();
 
   /**
-   * Generates a packager tarball.
+   * Generate file representations of configuration packages.
+   *
+   * @param string $method
+   *   The method to use, either
+   *   ConfigPackagerManagerInterface::GENERATE_METHOD_ARCHIVE to generate an
+   *   archive (tarball) or
+   *   ConfigPackagerManagerInterface::GENERATE_METHOD_WRITE to write files
+   *   to the file system.
+   * @param array $package_names
+   *   Array of names of packages to be generated. If none are specified, all
+   *   available packages will be added.
    */
-  public function generate();
+  public function generatePackages($method, $package_names = array());
+
+  /**
+   * Generate file representations of an install profile and configuration
+   * packages.
+   *
+   * @param string $method
+   *   The method to use, either
+   *   ConfigPackagerManagerInterface::GENERATE_METHOD_ARCHIVE to generate an
+   *   archive (tarball) or
+   *   ConfigPackagerManagerInterface::GENERATE_METHOD_WRITE to write files
+   *   to the file system.
+   * @param array $package_names
+   *   Array of names of packages to be generated. If none are specified, all
+   *   available packages will be added.
+   */
+  public function generateProfile($method, $package_names = array());
 
 }
