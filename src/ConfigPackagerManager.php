@@ -303,7 +303,7 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
    * @param array $package
    *   The package.
    */
-  protected function addInfoFile(&$package) {
+  protected function addInfoFile(array &$package) {
     $machine_name = $package['machine_name'];
     // Filter to standard keys of the profiles that we will use in info files.
     $info_keys = array(
@@ -393,6 +393,7 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
    *   Machine name of the package.
    * @param string $name
    *   Human readable name, if any, of the package.
+   *
    * @return string
    *   Human readable name of the package.
    */
@@ -426,6 +427,9 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
 
   /**
    * Get stored configuration for a given configuration type.
+   *
+   * @param string $config_type
+   *   The type of configuration.
    */
   protected function getConfigByType($config_type) {
     // For a given entity type, load all entities.
@@ -530,15 +534,15 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function generatePackages($method, $package_names = array()) {
-    $this->generate($method, FALSE, $package_names);
+  public function generatePackages($method, array $package_names = array()) {
+    return $this->generate($method, FALSE, $package_names);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function generateProfile($method, $package_names = array()) {
-    $this->generate($method, TRUE, $package_names);
+  public function generateProfile($method, array $package_names = array()) {
+    return $this->generate($method, TRUE, $package_names);
   }
 
   /**
@@ -556,8 +560,15 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
    * @param array $package_names
    *   Array of names of packages to be generated. If none are specified, all
    *   available packages will be added.
+   *
+   * @return array
+   *   Array of results for profile and/or packages, each result including the
+   *   following keys:
+   *   - 'success': boolean TRUE or FALSE for successful writing.
+   *   - 'message': a message about the result of the operation.
+   *   - 'variables': an array of substitutions to be used in the message.
    */
-  protected function generate($method, $add_profile = FALSE, $package_names = array()) {
+  protected function generate($method, $add_profile = FALSE, array $package_names = array()) {
     // Prepare the files.
     $this->prepareFiles($add_profile);
   
@@ -570,12 +581,19 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
 
     switch ($method) {
       case ConfigPackagerManagerInterface::GENERATE_METHOD_ARCHIVE:
-        $this->generateArchive($add_profile, $packages);
+        $return = $this->generateArchive($add_profile, $packages);
         break;
       case ConfigPackagerManagerInterface::GENERATE_METHOD_WRITE:
-        $this->generateWrite($add_profile, $packages);
+        $return = $this->generateWrite($add_profile, $packages);
         break;
     }
+    foreach ($return as $message) {
+      $type = $message['success'] ? 'status' : 'error';
+      drupal_set_message($this->t($message['message'], $message['variables']), $type);
+      $type = $message['success'] ? 'notice' : 'error';
+      \Drupal::logger('config_packager')->{$type}($message['message'], $message['variables']);
+    }
+    return $return;
   }
 
   /**
@@ -587,7 +605,14 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
    * @param array $packages
    *   Array of package data.
    */
-  protected function generateArchive($add_profile = FALSE, $packages = array()) {
+  protected function generateArchive($add_profile = FALSE, array $packages = array()) {
+    // If no packages were specified, get all packages.
+    if (empty($packages)) {
+      $packages = $this->getPackages();
+    }
+
+    $return = array();
+
     // Remove any previous version of the exported archive.
     $archive_name = file_directory_temp() . '/' . \Drupal::config('config_packager.settings')->get('profile.machine_name') . '.tar.gz';
     if (file_exists($archive_name)) {
@@ -597,17 +622,92 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
     $archiver = new ArchiveTar($archive_name);
 
     if ($add_profile) {
-      // Add profile files, if any.
-      foreach ($this->profile['files'] as $file)  {
-        $archiver->addString($file['filename'], $file['string']);
-      }
+      $profile = $this->getProfile();
+      $this->archivePackage($return, $profile, $archiver);
     }
 
     // Add package files.
     foreach ($packages as $package) {
-      foreach ($package['files'] as $file)  {
-        $archiver->addString($file['filename'], $file['string']);
+      $this->archivePackage($return, $package, $archiver);
+    }
+  }
+
+  /**
+   * Write a package or profile's files to an archive.
+   *
+   * @param array &$return
+   *   The return value, passed by reference.
+   * @param array $package
+   *   The package or profile.
+   * @param ArchiveTar $archiver
+   *   The archiver.
+   */
+  protected function archivePackage(array &$return, array $package, ArchiveTar $archiver) {
+    $success = TRUE;
+    foreach ($package['files'] as $file) {
+      try {
+        $this->archiveFile($archiver, $file);
       }
+      catch(\Exception $exception) {
+        $this->archiveFailure($return, $package, $exception);
+        $success = FALSE;
+        break;
+      }
+    }
+    if ($success) {
+      $this->archiveSuccess($return, $package);
+    }
+  }
+
+  /**
+   * Register a successful package or profile archive operation.
+   *
+   * @param array &$return
+   *   The return value, passed by reference.
+   * @param array $package
+   *   The package or profile.
+   */
+  protected function archiveSuccess(array &$return, array $package) {
+    $type = $package['type'] == 'module' ? $this->t('Package') : $this->t('Profile');
+    $return[] = array(
+      'success' => TRUE,
+      'message' => $this->t('!type @package written to archive.'),
+      'variables' => array('!type' => $type, '@package' => $package['name']),
+    );
+  }
+
+  /**
+   * Register a failed package or profile archive operation.
+   *
+   * @param array &$return
+   *   The return value, passed by reference.
+   * @param array $package
+   *   The package or profile.
+   * @param Exception $exception
+   *   The exception object.
+   */
+  protected function archiveFailure(&$return, array $package, Exception $exception) {
+    $type = $package['type'] == 'package' ? $this->t('Package') : $this->t('Profile');
+    $return[] = array(
+      'success' => FALSE,
+      'message' => $this->t('!type @package not written to archive. Error: @error.'),
+      'variables' => array('!type' => $type, '@package' => $package['name'], '@error' => $exception->getMessage()),
+    );
+  }
+
+  /**
+   * Write a file to the file system, creating its directory as needed.
+   *
+   * @param ArchiveTar $archiver
+   *   The archiver.
+   * @param array $file
+   *   Array with keys 'filename' and 'string'.
+   *
+   * @throws Exception
+   */
+  protected function archiveFile(ArchiveTar $archiver, array $file) {
+    if ($archiver->addString($file['filename'], $file['string']) === FALSE) {
+      throw new \Exception($this->t('Failed to archive file @filename.', array('@filename' => basename($file['filename']))));
     }
   }
 
@@ -619,22 +719,127 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
    *   Whether to add an install profile. Defaults to FALSE.
    * @param array $packages
    *   Array of package data.
+   *
+   * @return array
+   *   Array of results for profile and/or packages, each result including the
+   *   following keys:
+   *   - 'success': boolean TRUE or FALSE for successful writing.
+   *   - 'message': a message about the result of the operation.
+   *   - 'variables': an array of substitutions to be used in the message.
    */
-  protected function generateWrite($add_profile = FALSE, $packages = array()) {
-    $base_directory = $add_profile ? 'profiles' : 'modules';
+  protected function generateWrite($add_profile = FALSE, array $packages = array()) {
+    // If no packages were specified, get all packages.
+    if (empty($packages)) {
+      $packages = $this->getPackages();
+    }
+
+    // If it's a profile, write it to the 'profiles' directory. Otherwise,
+    // it goes in 'modules/custom'.
+    $base_directory = $add_profile ? 'profiles' : 'modules/custom';
+
+    $return = array();
 
     // Add profile files.
     if ($add_profile) {
-      foreach ($this->profile['files'] as $file)  {
-        file_put_contents($base_directory . '/' . $file['filename'], $file['string']);
-      }
+      $profile = $this->getProfile();
+      $this->writePackage($return, $profile, $base_directory);
     }
 
     // Add package files.
     foreach ($packages as $package) {
-      foreach ($package['files'] as $file)  {
-        file_put_contents($base_directory . '/' . $file['filename'], $file['string']);
+      $this->writePackage($return, $package, $base_directory);
+    }
+    return $return;
+  }
+
+  /**
+   * Write a package or profile's files to the file system.
+   *
+   * @param array &$return
+   *   The return value, passed by reference.
+   * @param array $package
+   *   The package or profile.
+   * @param string $base_directory
+   *   The base directory.
+   */
+  protected function writePackage(array &$return, array $package, $base_directory) {
+    $success = TRUE;
+    foreach ($package['files'] as $file) {
+      try {
+        $this->writeFile($base_directory, $file);
       }
+      catch(Exception $exception) {
+        $this->writeFailure($return, $package, $base_directory, $exception);
+        $success = FALSE;
+        break;
+      }
+    }
+    if ($success) {
+      $this->writeSuccess($return, $package, $base_directory);
+    }
+  }
+
+  /**
+   * Register a successful package or profile write operation.
+   *
+   * @param array &$return
+   *   The return value, passed by reference.
+   * @param array $package
+   *   The package or profile.
+   * @param string $base_directory
+   *   The base directory.
+   */
+  protected function writeSuccess(&$return, $package, $base_directory) {
+    $directory = $base_directory . '/' . dirname($package['files']['info']['filename']);
+    $type = $package['type'] == 'package' ? $this->t('Package') : $this->t('Profile');
+    $return[] = array(
+      'success' => TRUE,
+      'message' => $this->t('!type @package written to @directory.'),
+      'variables' => array('!type' => $type, '@package' => $package['name'], '@directory' => $directory),
+    );
+  }
+
+  /**
+   * Register a failed package or profile write operation.
+   *
+   * @param array &$return
+   *   The return value, passed by reference.
+   * @param array $package
+   *   The package or profile.
+   * @param string $base_directory
+   *   The base directory.
+   * @param Exception $exception
+   *   The exception object.
+   */
+  protected function writeFailure(&$return, $package, $base_directory, Exception $exception) {
+    $directory = $base_directory . '/' . dirname($package['files']['info']['filename']);
+    $type = $package['type'] == 'package' ? $this->t('Package') : $this->t('Profile');
+    $return[] = array(
+      'success' => FALSE,
+      'message' => $this->t('!type @package not written to @directory. Error: @error.'),
+      'variables' => array('!type' => $type, '@package' => $package['name'], '@directory' => $directory, '@error' => $exception->getMessage()),
+    );
+  }
+
+  /**
+   * Write a file to the file system, creating its directory as needed.
+   *
+   * @param string $base_directory
+   *   Directory to prepend to file path.
+   * @param array $file
+   *   Array with keys 'filename' and 'string'.
+   *
+   * @throws Exception
+   */
+  protected function writeFile($base_directory, $file) {
+    $directory = $base_directory . '/' . dirname($file['filename']);
+    if (!is_dir($directory)) {
+      if (drupal_mkdir($directory, NULL, TRUE) === FALSE) {
+        throw new \Exception($this->t('Failed to create directory @directory.', array('@directory' => $directory)));
+      }
+    }
+    if (file_put_contents($base_directory . '/' . $file['filename'], $file['string']) === FALSE) {
+      throw new \Exception($this->t('Failed to write file @filename.', array('@filename' => basename($file['filename']))));
     }
   }
 }

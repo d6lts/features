@@ -219,7 +219,7 @@ interface ConfigPackagerManagerInterface {
    *   Array of names of packages to be generated. If none are specified, all
    *   available packages will be added.
    */
-  public function generatePackages($method, $package_names = array());
+  public function generatePackages($method, array $package_names = array());
 
   /**
    * Generate file representations of an install profile and configuration
@@ -235,6 +235,6 @@ interface ConfigPackagerManagerInterface {
    *   Array of names of packages to be generated. If none are specified, all
    *   available packages will be added.
    */
-  public function generateProfile($method, $package_names = array());
+  public function generateProfile($method, array $package_names = array());
 
 }
