@@ -22,8 +22,6 @@ function config_packager_drush_command() {
     'arguments' => array(
       'package' => 'The package to list. Optional; if specified, lists all configuration objects assigned to that package. If no package is specified, lists all of the packages available to be generated.',
     ),
-    'options' => array(
-    ),
     'outputformat' => array(
       'default' => 'table',
       'pipe-format' => 'list',
