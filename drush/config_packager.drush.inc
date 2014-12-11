@@ -38,7 +38,7 @@ function config_packager_drush_command() {
   );
 
   $items['config-packager-generate-packages'] = array(
-    'description' => 'Generate configuration modules.',
+    'description' => 'Generate configuration modules. If a comma-separated list of package names is passed as an argument, only those packages will be generated. If the --add-profile option is passed, the packages will be bundled into an install profile.',
     'examples' => array(
       "drush config-packager-generate-packages" => 'Generate all available packages.',
       "drush config-packager-generate-packages 'article,page'" => "Generate the article and page packages.",
