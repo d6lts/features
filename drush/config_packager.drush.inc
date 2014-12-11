@@ -5,6 +5,8 @@
  * Configuration Packager module drush integration.
  */
 
+use Drupal\config_packager\ConfigPackagerManagerInterface;
+
 /**
  * Implements hook_drush_command().
  */
@@ -33,6 +35,22 @@ function config_packager_drush_command() {
       'output-data-type' => 'format-table',
     ),
     'aliases' => array('cp-lp'),
+  );
+
+  $items['config-packager-generate-packages'] = array(
+    'description' => 'Generate configuration modules.',
+    'examples' => array(
+      "drush config-packager-generate-packages" => 'Generate all available packages.',
+      "drush config-packager-generate-packages 'article,page'" => "Generate the article and page packages.",
+      "drush config-packager-generate-packages --add-profile" => "Generate all available packages and add them to an install profile.",
+    ),
+    'arguments' => array(
+      'packages' => 'Comma-separated list of names of the packages to be generated.',
+    ),
+    'options' => array(
+      'add-profile' => 'Package configuration modules in an install profile.',
+    ),
+    'aliases' => array('cp-gp'),
   );
 
   return $items;
@@ -69,8 +87,39 @@ function drush_config_packager_list_packages($package = '') {
     }
   }
   else {
+    drush_log(dt('Package "@package" not found.', array('@package' => $package)), 'warning');
     return FALSE;
   }
 
   return $result;
+}
+
+/**
+ * Drush command callback for config-packager-list-packages.
+ */
+function drush_config_packager_generate_packages($packages = NULL) {
+  if (is_null($packages)) {
+    $packages = array();
+  }
+  else {
+    $packages = _convert_csv_to_array($packages);
+  }
+  $manager = \Drupal::service('config_packager.manager');
+  $assigner = \Drupal::service('config_packager_assigner');
+  $assigner->assignConfigPackages();
+
+  $add_profile = drush_get_option('add-profile');
+
+  $method = ConfigPackagerManagerInterface::GENERATE_METHOD_WRITE;
+
+  if ($add_profile) {
+    $result = $manager->generateProfile($method, $packages);
+  }
+  else {
+    $result = $manager->generatePackages($method, $packages);
+  }
+  foreach ($result as $message) {
+    $type = $message['success'] ? 'success' : 'error';
+    drush_log($message['message'], $message['variables'], $type);
+  }
 }
