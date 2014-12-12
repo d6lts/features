@@ -9,6 +9,7 @@ namespace Drupal\config_packager\Plugin\ConfigPackagerAssignment;
 
 use Drupal\component\Utility\Unicode;
 use Drupal\config_packager\ConfigPackagerAssignmentMethodBase;
+use Drupal\config_packager\ConfigPackagerManagerInterface;
 use Drupal\Core\Config\ExtensionInstallStorage;
 
 /**
@@ -47,13 +48,43 @@ class ConfigPackagerAssignmentExclude extends ConfigPackagerAssignmentMethodBase
       }
     }
 
-    // Exclude by already provided by modules.
-    $packaged = $settings->get('exclude.packaged');
-    if ($packaged) {
+    // Exclude configuration already provided by modules.
+    $exclude_module = $settings->get('exclude.module');
+    if (!empty($exclude_module['enabled'])) {
       $extension_config_storage = new ExtensionInstallStorage($this->configStorage);
       $install_list = $extension_config_storage->listAll();
+      // There are two settings that can limit what's included.
+      // First, we can skipped configuration provided by the install profile.
+      $module_profile = !empty($exclude_module['profile']);
+      // Second, we can skip configuration provided by namespaced modules.
+      $module_namespace = !empty($exclude_module['namespace']);
+      if ($module_profile || $module_namespace) {
+        $modules = array();
+        // Load the names of any configuration objects provided by the install
+        // profile.
+        if ($module_profile) {
+          $profile = drupal_get_profile();
+          $modules = array_merge($modules, $this->configPackagerManager->getModuleList($profile));
+        }
+        // Load the names of any configuration objects provided by modules
+        // having the namespace of the current package set.
+        if ($module_namespace) {
+          if ($machine_name = $this->configFactory->get('config_packager.settings')->get('profile.machine_name')) {
+            $modules = array_merge($modules, $this->configPackagerManager->getModuleList(NULL, $machine_name));
+          }
+        }
+        // If any configuration was found, remove it from the list.
+        foreach ($modules as $extension) {
+          $extension_list = $this->configPackagerManager->getExtensionConfig($extension);
+          $install_list = array_diff($install_list, $extension_list);
+        }
+      }
       foreach ($install_list as $item_name) {
-        unset($config_collection[$item_name]);
+        // Don't exclude simple configuration, since it's always
+        // module-provided.
+        if ($config_collection[$item_name]['type'] !== ConfigPackagerManagerInterface::SYSTEM_SIMPLE_CONFIG) {
+          unset($config_collection[$item_name]);
+        }
       }
     }
     $this->configPackagerManager->setConfigCollection($config_collection);

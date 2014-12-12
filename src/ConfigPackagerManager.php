@@ -6,15 +6,18 @@
  */
 
 namespace Drupal\config_packager;
-use Drupal\Core\Archiver\ArchiveTar;
 use Drupal\Component\Serialization\Yaml;
 use Drupal\config_packager\ConfigPackagerAssignerInterface;
 use Drupal\config_packager\ConfigPackagerManagerInterface;
+use Drupal\Core\Archiver\ArchiveTar;
 use Drupal\Core\Config\ConfigManagerInterface;
+use Drupal\Core\Config\FileStorage;
 use Drupal\Core\Config\InstallStorage;
 use Drupal\Core\Config\StorageInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
+use Drupal\Core\Extension\Extension;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
@@ -44,6 +47,13 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
    * @var \Drupal\Core\Config\ConfigManagerInterface
    */
   protected $configManager;
+
+  /**
+   * The module handler.
+   *
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface
+   */
+  protected $moduleHandler;
 
   /**
    * The configuration present on the site.
@@ -76,15 +86,20 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
   /**
    * Constructs a ConfigPackagerManager object.
    *
+   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
+   *   The entity manager.
    * @param \Drupal\Core\Config\StorageInterface $config_storage
    *   The target storage.
    * @param \Drupal\Core\Config\ConfigManagerInterface $config_manager
    *   The configuration manager.
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+   *   The module handler.
    */
-  public function __construct(EntityManagerInterface $entity_manager, StorageInterface $config_storage, ConfigManagerInterface $config_manager) {
+  public function __construct(EntityManagerInterface $entity_manager, StorageInterface $config_storage, ConfigManagerInterface $config_manager, ModuleHandlerInterface $module_handler) {
     $this->entityManager = $entity_manager;
     $this->configStorage = $config_storage;
     $this->configManager = $config_manager;
+    $this->moduleHandler = $module_handler;
     $this->packages = [];
     $this->initProfile();
     $this->configCollection = [];
@@ -423,6 +438,42 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
     return [
       ConfigPackagerManagerInterface::SYSTEM_SIMPLE_CONFIG => $this->t('Simple configuration'),
     ] + $entity_types;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getModuleList($name = NULL, $namespace = NULL) {
+    $modules = $this->moduleHandler->getModuleList();
+    if (!empty($name) || !empty($namespace)) {
+      $return = [];
+      if (!empty($name) && isset($modules[$name])) {
+        $return[$name] = $modules[$name];
+      }
+      if (!empty($namespace)) {
+        foreach ($modules as $module_name => $extension) {
+          if (strpos($module_name, $namespace) === 0) {
+            $return[$module_name] = $extension;
+          }
+        }
+      }
+      return $return;
+    }
+    return $modules;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getExtensionConfig(Extension $extension) {
+    $config_path = $extension->getPath() .  '/' . InstallStorage::CONFIG_INSTALL_DIRECTORY;
+
+    if (is_dir($config_path)) {
+      $install_storage = new FileStorage($config_path);
+      return $install_storage->listAll();
+    }
+
+    return [];
   }
 
   /**

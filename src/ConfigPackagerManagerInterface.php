@@ -7,6 +7,9 @@
 
 namespace Drupal\config_packager;
 
+use Drupal\config_packager\ConfigPackagerAssignerInterface;
+use Drupal\Core\Extension\Extension;
+
 /**
  * Provides an interface for the ConfigPackagerManager.
  */
@@ -205,6 +208,41 @@ interface ConfigPackagerManagerInterface {
    *   An array with machine name keys and human readable values.
    */
   public function getConfigTypes();
+
+  /**
+   * Return an array of installed modules.
+   *
+   * If a $name and/or $namespace is specified, only matching modules will be
+   * returned. Otherwise, all install are returned.
+   *
+   * @param string $name
+   *   The name of a specific module to return.
+   * @param string $namespace
+   *   A namespace prefix to match modules by.
+   *
+   * @return \Drupal\Core\Extension\Extension[]
+   *   An associative array whose keys are the names of the modules and whose
+   *   values are Extension objects.
+   *
+   * @see Drupal\Core\Extension\ModuleHandlerInterface::getModuleList()
+   */
+  public function getModuleList($name = NULL, $namespace = NULL);
+
+
+  /**
+   * Return an array of names of configuration objects provided by a given
+   * extension.
+   *
+   * If a $name and/or $namespace is specified, only matching modules will be
+   * returned. Otherwise, all install are returned.
+   *
+   * @param Extension $extension
+   *   An Extension object.
+   *
+   * @return array
+   *   An array of configuration object names.
+   */
+  public function getExtensionConfig(Extension $extension);
 
   /**
    * Generate file representations of configuration packages.

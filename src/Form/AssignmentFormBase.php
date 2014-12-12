@@ -72,7 +72,7 @@ abstract class AssignmentFormBase extends FormBase {
     $form['types'] = array(
       '#type' => 'checkboxes',
       '#title' => $this->t('Types'),
-      '#description' => $this->t('Select the types of configuration that should be considered !type types.', array('!type' => $type)),
+      '#description' => $this->t('Select types of configuration that should be considered !type types.', array('!type' => $type)),
       '#options' => $options,
       '#default_value' => $defaults,
     );

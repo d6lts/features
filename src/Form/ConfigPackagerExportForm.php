@@ -107,6 +107,7 @@ class ConfigPackagerExportForm extends FormBase {
       ),
       '#default_value' => $packager_config->get('profile.machine_name'),
       '#description' => $this->t('A unique machine-readable name for the install profile or distribution. It must only contain lowercase letters, numbers, and underscores.'),
+      '#required' => TRUE,
     );
 
     $form['use_profile'] = array(
@@ -114,6 +115,9 @@ class ConfigPackagerExportForm extends FormBase {
       '#title' => t('Include install profile'),
       '#default_value' => FALSE,
       '#description' => $this->t('Select this option to have your configuration modules packaged into an install profile.'),
+      '#attributes' => array(
+        'data-use-profile' => 'status',
+      ),
     );
 
     $form['profile_description'] = array(
@@ -125,7 +129,7 @@ class ConfigPackagerExportForm extends FormBase {
       // Show only if the use_profile option is selected.
       '#states' => array(
         'visible' => array(
-          ':input[name="use_profile"]' => array('checked' => TRUE),
+          ':input[data-use-profile="status"]' => array('checked' => TRUE),
         ),
       ),
     );
