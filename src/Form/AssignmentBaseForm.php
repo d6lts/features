@@ -7,8 +7,8 @@
 
 namespace Drupal\config_packager\Form;
 
-use Drupal\Core\Form\FormStateInterface;
 use Drupal\config_packager\Form\AssignmentFormBase;
+use Drupal\Core\Form\FormStateInterface;
 
 /**
  * Configure the selected configuration assignment method for this site.
@@ -28,7 +28,7 @@ class AssignmentBaseForm extends AssignmentFormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
 
     $defaults = $this->configFactory->get('config_packager.assignment')->get('base.types');
-    $this->setTypeSelect($form, $defaults);
+    $this->setTypeSelect($form, $defaults, $this->t('base'));
     $this->setActions($form);
 
     return $form;

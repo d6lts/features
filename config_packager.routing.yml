@@ -36,4 +36,11 @@ config_packager.assignment_core:
     _title: 'Configure core package assignment'
   requirements:
     _permission: 'administer site configuration'
-    
+
+config_packager.assignment_exclude:
+  path: '/admin/config/development/configuration/packager/assignment/exclude'
+  defaults:
+    _form: '\Drupal\config_packager\Form\AssignmentExcludeForm'
+    _title: 'Configure package exclusion'
+  requirements:
+    _permission: 'administer site configuration'

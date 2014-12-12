@@ -4,11 +4,13 @@ profile:
   description: ''
 assignment:
   enabled:
+    exclude: '-10'
     base-type: '-2'
     core-type: '0'
     namespace: '5'
     dependency: '10'
   method_weights:
+    exclude: '-10'
     base-type: '-2'
     core-type: '0'
     namespace: '5'

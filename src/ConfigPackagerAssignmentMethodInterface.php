@@ -7,8 +7,9 @@
 
 namespace Drupal\config_packager;
 
-use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\config_packager\ConfigPackagerManagerInterface;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\StorageInterface;
 
 /**
  * Interface for package assignment classes.
@@ -31,6 +32,14 @@ interface ConfigPackagerAssignmentMethodInterface {
    *   The configuration factory.
    */
   public function setConfigFactory(ConfigFactoryInterface $config_factory);
+
+  /**
+   * Injects the configuration storage.
+   *
+   * @param \Drupal\Core\Config\StorageInterface $config_storage
+   *   The configuration storage.
+   */
+  public function setConfigStorage(StorageInterface $config_storage);
 
   /**
    * Performs package assignment.

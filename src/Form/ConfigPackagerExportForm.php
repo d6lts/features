@@ -9,12 +9,12 @@ namespace Drupal\config_packager\Form;
 
 use Drupal\Component\Utility\String;
 use Drupal\Component\Utility\Xss;
+use Drupal\config_packager\ConfigPackagerAssignerInterface;
+use Drupal\config_packager\ConfigPackagerManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormState;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\config_packager\ConfigPackagerAssignerInterface;
-use Drupal\config_packager\ConfigPackagerManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**

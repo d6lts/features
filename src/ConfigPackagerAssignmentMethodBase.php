@@ -7,8 +7,9 @@
 
 namespace Drupal\config_packager;
 
-use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\config_packager\ConfigPackagerManager;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\StorageInterface;
 use Drupal\Core\Session\AccountInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 
@@ -33,6 +34,13 @@ abstract class ConfigPackagerAssignmentMethodBase implements ConfigPackagerAssig
   protected $configFactory;
 
   /**
+   * The config storage.
+   *
+   * @var \Drupal\Core\Config\StorageInterface
+   */
+  protected $configStorage;
+
+  /**
    * {@inheritdoc}
    */
   public function setconfigPackagerManager(ConfigPackagerManagerInterface $config_packager_manager) {
@@ -44,6 +52,13 @@ abstract class ConfigPackagerAssignmentMethodBase implements ConfigPackagerAssig
    */
   public function setConfigFactory(ConfigFactoryInterface $config_factory) {
     $this->configFactory = $config_factory;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setConfigStorage(StorageInterface $config_storage) {
+    $this->configStorage = $config_storage;
   }
 
 }

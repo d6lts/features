@@ -8,8 +8,9 @@
 namespace Drupal\config_packager;
 
 use Drupal\Component\Plugin\PluginManagerInterface;
-use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\config_packager\ConfigPackagerManagerInterface;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\StorageInterface;
 use Drupal\Core\Site\Settings;
 
 /**
@@ -39,6 +40,13 @@ class ConfigPackagerAssigner implements ConfigPackagerAssignerInterface {
   protected $configFactory;
 
   /**
+   * The configuration storage.
+   *
+   * @var \Drupal\Core\Config\StorageInterface
+   */
+  protected $configStorage;
+
+  /**
    * Local cache for package assignment method instances.
    *
    * @var array
@@ -54,11 +62,14 @@ class ConfigPackagerAssigner implements ConfigPackagerAssignerInterface {
    *   The package assignment methods plugin manager
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The configuration factory.
+   * @param \Drupal\Core\Config\StorageInterface $config_storage
+   *   The configuration factory.
    */
-  public function __construct(ConfigPackagerManagerInterface $config_packager_manager, PluginManagerInterface $assigner_manager, ConfigFactoryInterface $config_factory) {
+  public function __construct(ConfigPackagerManagerInterface $config_packager_manager, PluginManagerInterface $assigner_manager, ConfigFactoryInterface $config_factory, StorageInterface $config_storage) {
     $this->configPackagerManager = $config_packager_manager;
     $this->assignerManager = $assigner_manager;
     $this->configFactory = $config_factory;
+    $this->configStorage = $config_storage;
   }
 
   /**
@@ -135,6 +146,7 @@ class ConfigPackagerAssigner implements ConfigPackagerAssignerInterface {
       $instance = $this->assignerManager->createInstance($method_id, array());
       $instance->setConfigPackagerManager($this->configPackagerManager);
       $instance->setConfigFactory($this->configFactory);
+      $instance->setConfigStorage($this->configStorage);
       $this->methods[$method_id] = $instance;
     }
     return $this->methods[$method_id];

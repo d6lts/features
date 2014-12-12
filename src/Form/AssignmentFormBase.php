@@ -7,10 +7,11 @@
 
 namespace Drupal\config_packager\Form;
 
+use Drupal\config_packager\ConfigPackagerManagerInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\StorageInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
-use Drupal\config_packager\ConfigPackagerManagerInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -21,9 +22,16 @@ abstract class AssignmentFormBase extends FormBase {
   /**
    * Stores the configuration object for config_packager.
    *
-   * @var \Drupal\Core\Config\Config
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
    */
   protected $configFactory;
+
+  /**
+   * Stores the configuration storage object for config_packager.
+   *
+   * @var \Drupal\Core\Config\StorageInterface
+   */
+  protected $configStorage;
 
   /**
    * The configuration packager manager.
@@ -58,13 +66,13 @@ abstract class AssignmentFormBase extends FormBase {
   /**
    * Add configuration types checkboxes.
    */
-  protected function setTypeSelect(&$form, $defaults) {
+  protected function setTypeSelect(&$form, $defaults, $type) {
     $options = $this->configPackagerManager->getConfigTypes();
 
     $form['types'] = array(
       '#type' => 'checkboxes',
       '#title' => $this->t('Types'),
-      '#description' => $this->t('Select the types of configuration that should be considered base types.'),
+      '#description' => $this->t('Select the types of configuration that should be considered !type types.', array('!type' => $type)),
       '#options' => $options,
       '#default_value' => $defaults,
     );
