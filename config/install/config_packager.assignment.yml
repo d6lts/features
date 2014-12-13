@@ -11,3 +11,7 @@ core:
 exclude:
   packaged: 1
   types: {  }
+  module:
+    enabled: 1
+    profile: 1
+    namespace: 0
