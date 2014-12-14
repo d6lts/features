@@ -10,6 +10,7 @@ use Drupal\Component\Serialization\Yaml;
 use Drupal\config_packager\ConfigPackagerAssignerInterface;
 use Drupal\config_packager\ConfigPackagerManagerInterface;
 use Drupal\Core\Archiver\ArchiveTar;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\ConfigManagerInterface;
 use Drupal\Core\Config\FileStorage;
 use Drupal\Core\Config\InstallStorage;
@@ -56,6 +57,13 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
   protected $moduleHandler;
 
   /**
+   * The Configuration Packager profile settings.
+   *
+   * @var array
+   */
+  protected $profileSettings;
+
+  /**
    * The configuration present on the site.
    *
    * @var array
@@ -88,6 +96,8 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
    *
    * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
    *   The entity manager.
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The configuration factory.
    * @param \Drupal\Core\Config\StorageInterface $config_storage
    *   The target storage.
    * @param \Drupal\Core\Config\ConfigManagerInterface $config_manager
@@ -95,11 +105,12 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler.
    */
-  public function __construct(EntityManagerInterface $entity_manager, StorageInterface $config_storage, ConfigManagerInterface $config_manager, ModuleHandlerInterface $module_handler) {
+  public function __construct(EntityManagerInterface $entity_manager, ConfigFactoryInterface $config_factory, StorageInterface $config_storage, ConfigManagerInterface $config_manager, ModuleHandlerInterface $module_handler) {
     $this->entityManager = $entity_manager;
     $this->configStorage = $config_storage;
     $this->configManager = $config_manager;
     $this->moduleHandler = $module_handler;
+    $this->profileSettings = $config_factory->get('config_packager.settings')->get('profile');
     $this->packages = [];
     $this->initProfile();
     $this->configCollection = [];
@@ -109,7 +120,7 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
    * {@inheritdoc}
    */
   public function reset() {
-    $this->packages = array();
+    $this->packages = [];
     // Don't use getConfigCollection because reset() may be called in
     // cases where we don't need to load config.
     foreach ($this->configCollection as &$config) {
@@ -182,11 +193,11 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
    */
   protected function initProfile() {
     if (empty($this->profile)) {
-      $packager_settings = \Drupal::config('config_packager.settings');
-      $machine_name = $packager_settings->get('profile.machine_name');
-      $name = $packager_settings->get('profile.name');
-      $description = $packager_settings->get('profile.description');
-      $this->assignProfile($machine_name, $name, $description);
+      $this->assignProfile(
+        $this->profileSettings['machine_name'],
+        $this->profileSettings['name'],
+        $this->profileSettings['description']
+      );
     }
   }
 
@@ -293,13 +304,14 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
    *   - 'type': type of Drupal project ('profile' or 'module').
    *   - 'core': Drupal core compatibility ('8.x'),
    *   - 'dependencies': array of module dependencies.
+   *   - 'themes': array of names of themes to enable.
    *   - 'config': array of names of configuration items.
    *   - 'files' array of files, each having the following keys:
    *      - 'filename': the name of the file.
    *      - 'string': the contents of the file.
    */
   protected function getProject($machine_name, $name = NULL, $description = '', $type = 'module') {
-    $description = $description ?: $this->t('@name configuration.', array('@name' => $name));
+    $description = $description ?: $this->t('@name configuration.', ['@name' => $name]);
     return [
       'machine_name' => $machine_name,
       'name' => $this->getName($machine_name, $name),
@@ -307,6 +319,7 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
       'type' => $type,
       'core' => '8.x',
       'dependencies' => [],
+      'themes' => [],
       'config' => [],
       'files' => []
     ];
@@ -321,13 +334,14 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
   protected function addInfoFile(array &$package) {
     $machine_name = $package['machine_name'];
     // Filter to standard keys of the profiles that we will use in info files.
-    $info_keys = array(
+    $info_keys = [
       'name',
       'description',
       'type',
       'core',
-      'dependencies'
-    );
+      'dependencies',
+      'themes'
+    ];
     $info = array_intersect_key($package, array_combine($info_keys, $info_keys));
 
     // Assign to a "package" named for the profile.
@@ -341,14 +355,35 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
       $info['config_devel'] = $package['config'];
     }
 
-    // Prefix modules with the profile name.
-    if ($info['type'] == 'module') {
-      $machine_name = $this->profile['machine_name'] . '_' . $machine_name;
-      $info['name'] = $this->profile['name'] . ' ' . $info['name'];
+    switch ($info['type']) {
+      // Prefix modules with the profile name.
+      case 'module':
+        $machine_name = $this->profile['machine_name'] . '_' . $machine_name;
+        $info['name'] = $this->profile['name'] . ' ' . $info['name'];
+        break;
+      // Conditionally merge in profile dependencies and theme info.
+      case 'profile':
+        if ($this->profileSettings['add_standard']) {
+          $info_file_name = 'core/profiles/standard/standard.info.yml';
+          if (file_exists($info_file_name)) {
+            $profile_info = \Drupal::service('info_parser')->parse($info_file_name);
+            // Merge in dependencies and themes data.
+            foreach (['dependencies', 'themes'] as $key) {
+              $info[$key] = array_unique(
+                array_merge(
+                  $info[$key],
+                  $profile_info[$key]
+                )
+              );
+              sort($info[$key]);
+            }
+          }
+        }
+        break;
     }
     $package['files']['info'] = [
       'filename' => $machine_name . '/' . $machine_name . '.info.yml',
-      // Filter to remove any empty keys, e.g., an empty dependencies array.
+      // Filter to remove any empty keys, e.g., an empty themes array.
       'string' => Yaml::encode(array_filter($info))
     ];
   }
@@ -357,7 +392,9 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
    * Generate and add files to the profile.
    */
   protected function addProfileFiles() {
-    foreach ($this->packages as &$package) {
+    // Adjust file paths to include the profile.
+    $packages = $this->getPackages();
+    foreach ($packages as &$package) {
       foreach ($package['files'] as &$file) {
         $file['filename'] = $this->profile['machine_name'] . '/modules/custom/' . $file['filename'];
       }
@@ -366,7 +403,39 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
     }
     // Clean up the $package pass by reference.
     unset($package);
-    $this->addInfoFile($this->profile);
+    $this->setPackages($packages);
+
+    // Add the profile's files.
+    $profile = $this->getProfile();
+    $this->addInfoFile($profile);
+    // Conditionally add .profile and .install files from Standard profile.
+    if ($this->profileSettings['add_standard']) {
+      $files = [
+        'install',
+        'profile',
+      ];
+      // Iterate through the files.
+      foreach ($files as $extension) {
+        $filename = 'core/profiles/standard/standard.' . $extension;
+        if (file_exists($filename)) {
+          // Read the file contents.
+          $string = file_get_contents($filename);
+          // Substitute the profile's machine name and name for the Standard
+          // profile's equivalents.
+          $string = str_replace(
+            ['standard', 'Standard'],
+            [$profile['machine_name'], $profile['name']],
+            $string
+          );
+          // Add the files to those to be output.
+          $profile['files'][$extension] = [
+            'filename' => $profile['machine_name'] . '/' . $profile['machine_name'] . '.' . $extension,
+            'string' => $string
+          ];
+        }
+      }
+    }
+    $this->setProfile($profile);
   }
 
   /**
@@ -639,8 +708,12 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
         break;
     }
     foreach ($return as $message) {
-      $type = $message['success'] ? 'status' : 'error';
-      drupal_set_message($this->t($message['message'], $message['variables']), $type);
+      // Archive writing doesn't merit a message, and if done through the UI
+      // would appear on the subsequent page load.
+      if ($method == ConfigPackagerManagerInterface::GENERATE_METHOD_WRITE) {
+        $type = $message['success'] ? 'status' : 'error';
+        drupal_set_message($this->t($message['message'], $message['variables']), $type);
+      }
       $type = $message['success'] ? 'notice' : 'error';
       \Drupal::logger('config_packager')->{$type}($message['message'], $message['variables']);
     }
@@ -662,10 +735,10 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
       $packages = $this->getPackages();
     }
 
-    $return = array();
+    $return = [];
 
     // Remove any previous version of the exported archive.
-    $archive_name = file_directory_temp() . '/' . \Drupal::config('config_packager.settings')->get('profile.machine_name') . '.tar.gz';
+    $archive_name = file_directory_temp() . '/' . $this->profileSettings['machine_name'] . '.tar.gz';
     if (file_exists($archive_name)) {
       file_unmanaged_delete($archive_name);
     }
@@ -681,6 +754,8 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
     foreach ($packages as $package) {
       $this->archivePackage($return, $package, $archiver);
     }
+
+    return $return;
   }
 
   /**
@@ -720,11 +795,14 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
    */
   protected function archiveSuccess(array &$return, array $package) {
     $type = $package['type'] == 'module' ? $this->t('Package') : $this->t('Profile');
-    $return[] = array(
+    $return[] = [
       'success' => TRUE,
       'message' => $this->t('!type @package written to archive.'),
-      'variables' => array('!type' => $type, '@package' => $package['name']),
-    );
+      'variables' => [
+        '!type' => $type,
+        '@package' => $package['name']
+      ],
+    ];
   }
 
   /**
@@ -739,11 +817,15 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
    */
   protected function archiveFailure(&$return, array $package, Exception $exception) {
     $type = $package['type'] == 'package' ? $this->t('Package') : $this->t('Profile');
-    $return[] = array(
+    $return[] = [
       'success' => FALSE,
       'message' => $this->t('!type @package not written to archive. Error: @error.'),
-      'variables' => array('!type' => $type, '@package' => $package['name'], '@error' => $exception->getMessage()),
-    );
+      'variables' => [
+        '!type' => $type,
+        '@package' => $package['name'],
+        '@error' => $exception->getMessage()
+      ],
+    ];
   }
 
   /**
@@ -758,7 +840,7 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
    */
   protected function archiveFile(ArchiveTar $archiver, array $file) {
     if ($archiver->addString($file['filename'], $file['string']) === FALSE) {
-      throw new \Exception($this->t('Failed to archive file @filename.', array('@filename' => basename($file['filename']))));
+      throw new \Exception($this->t('Failed to archive file @filename.', ['@filename' => basename($file['filename'])]));
     }
   }
 
@@ -788,7 +870,7 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
     // it goes in 'modules/custom'.
     $base_directory = $add_profile ? 'profiles' : 'modules/custom';
 
-    $return = array();
+    $return = [];
 
     // Add profile files.
     if ($add_profile) {
@@ -842,12 +924,16 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
    */
   protected function writeSuccess(&$return, $package, $base_directory) {
     $directory = $base_directory . '/' . dirname($package['files']['info']['filename']);
-    $type = $package['type'] == 'package' ? $this->t('Package') : $this->t('Profile');
-    $return[] = array(
+    $type = $package['type'] == 'module' ? $this->t('Package') : $this->t('Profile');
+    $return[] = [
       'success' => TRUE,
       'message' => $this->t('!type @package written to @directory.'),
-      'variables' => array('!type' => $type, '@package' => $package['name'], '@directory' => $directory),
-    );
+      'variables' => [
+        '!type' => $type,
+        '@package' => $package['name'],
+        '@directory' => $directory
+      ],
+    ];
   }
 
   /**
@@ -865,11 +951,16 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
   protected function writeFailure(&$return, $package, $base_directory, Exception $exception) {
     $directory = $base_directory . '/' . dirname($package['files']['info']['filename']);
     $type = $package['type'] == 'package' ? $this->t('Package') : $this->t('Profile');
-    $return[] = array(
+    $return[] = [
       'success' => FALSE,
       'message' => $this->t('!type @package not written to @directory. Error: @error.'),
-      'variables' => array('!type' => $type, '@package' => $package['name'], '@directory' => $directory, '@error' => $exception->getMessage()),
-    );
+      'variables' => [
+        '!type' => $type,
+        '@package' => $package['name'],
+        '@directory' => $directory,
+        '@error' => $exception->getMessage()
+      ],
+    ];
   }
 
   /**
@@ -886,11 +977,11 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
     $directory = $base_directory . '/' . dirname($file['filename']);
     if (!is_dir($directory)) {
       if (drupal_mkdir($directory, NULL, TRUE) === FALSE) {
-        throw new \Exception($this->t('Failed to create directory @directory.', array('@directory' => $directory)));
+        throw new \Exception($this->t('Failed to create directory @directory.', ['@directory' => $directory]));
       }
     }
     if (file_put_contents($base_directory . '/' . $file['filename'], $file['string']) === FALSE) {
-      throw new \Exception($this->t('Failed to write file @filename.', array('@filename' => basename($file['filename']))));
+      throw new \Exception($this->t('Failed to write file @filename.', ['@filename' => basename($file['filename'])]));
     }
   }
 }

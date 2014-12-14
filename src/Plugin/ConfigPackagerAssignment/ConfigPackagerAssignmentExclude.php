@@ -82,7 +82,7 @@ class ConfigPackagerAssignmentExclude extends ConfigPackagerAssignmentMethodBase
       foreach ($install_list as $item_name) {
         // Don't exclude simple configuration, since it's always
         // module-provided.
-        if ($config_collection[$item_name]['type'] !== ConfigPackagerManagerInterface::SYSTEM_SIMPLE_CONFIG) {
+        if (isset($config_collection[$item_name]) && $config_collection[$item_name]['type'] !== ConfigPackagerManagerInterface::SYSTEM_SIMPLE_CONFIG) {
           unset($config_collection[$item_name]);
         }
       }

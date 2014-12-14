@@ -1,7 +1,9 @@
 profile:
-  machine_name: ''
   name: ''
+  machine_name: ''
+  add: 1
   description: ''
+  add_standard: 1
 assignment:
   enabled:
     exclude: '-10'

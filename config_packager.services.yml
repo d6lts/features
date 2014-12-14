@@ -9,4 +9,4 @@ services:
       - [initConfigPackagerManager]
   config_packager.manager:
     class: Drupal\config_packager\ConfigPackagerManager
-    arguments: ['@entity.manager', '@config.storage', '@config.manager', '@module_handler']
+    arguments: ['@entity.manager', '@config.factory', '@config.storage', '@config.manager', '@module_handler']

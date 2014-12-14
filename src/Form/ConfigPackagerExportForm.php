@@ -90,48 +90,65 @@ class ConfigPackagerExportForm extends FormBase {
     $packager_config = \Drupal::config('config_packager.settings');
     $module_names = array();
 
-    $form['profile_name'] = array(
-      '#title' => $this->t('Profile name'),
+    $form['profile'] = array(
+      '#type' => 'container',
+      '#tree' => TRUE,
+    );
+
+    $profile_settings = $packager_config->get('profile');
+    $form['profile']['name'] = array(
+      '#title' => $this->t('Namespace'),
       '#type' => 'textfield',
-      '#default_value' => $packager_config->get('profile.name'),
-      '#description' => $this->t('The human-readable name of an install profile or distribution'),
+      '#default_value' => $profile_settings['name'],
+      '#description' => $this->t('The human-readable name of a set of configuration modules. This name will also be used for an install profile if "Include install profile" is selected below.'),
       '#required' => TRUE,
       '#size' => 30,
     );
 
-    $form['profile_machine_name'] = array(
+    $form['profile']['machine_name'] = array(
       '#type' => 'machine_name',
       '#maxlength' => 64,
       '#machine_name' => array(
         'source' => array('profile_name'),
       ),
-      '#default_value' => $packager_config->get('profile.machine_name'),
+      '#default_value' => $profile_settings['machine_name'],
       '#description' => $this->t('A unique machine-readable name for the install profile or distribution. It must only contain lowercase letters, numbers, and underscores.'),
       '#required' => TRUE,
     );
 
-    $form['use_profile'] = array(
+    $form['profile']['add'] = array(
       '#type' => 'checkbox',
       '#title' => t('Include install profile'),
-      '#default_value' => FALSE,
+      '#default_value' => $profile_settings['add'],
       '#description' => $this->t('Select this option to have your configuration modules packaged into an install profile.'),
       '#attributes' => array(
-        'data-use-profile' => 'status',
+        'data-add-profile' => 'status',
       ),
     );
 
-    $form['profile_description'] = array(
+    $show_if_profile_add_checked = array(
+      'visible' => array(
+        ':input[data-add-profile="status"]' => array('checked' => TRUE),
+      ),
+    );
+
+    $form['profile']['description'] = array(
       '#title' => $this->t('Distribution description'),
       '#type' => 'textfield',
-      '#default_value' => $packager_config->get('profile.description'),
+      '#default_value' => $profile_settings['description'],
       '#description' => $this->t('A description of your install profile or distribution.'),
       '#size' => 30,
-      // Show only if the use_profile option is selected.
-      '#states' => array(
-        'visible' => array(
-          ':input[data-use-profile="status"]' => array('checked' => TRUE),
-        ),
-      ),
+      // Show only if the profile.add option is selected.
+      '#states' => $show_if_profile_add_checked,
+    );
+
+    $form['profile']['add_standard'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Add code from Standard profile'),
+      '#default_value' => $profile_settings['add_standard'],
+      '#description' => $this->t('Select this option to add code from the Standard install profile to your install profile. Without this addition, your install profile will be missing some initial setup.'),
+      // Show only if the profile.add option is selected.
+      '#states' => $show_if_profile_add_checked,
     );
 
     // Offer a preview of the packages.
@@ -232,15 +249,14 @@ class ConfigPackagerExportForm extends FormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
 
+    $profile_settings = $form_state->getValue('profile');
     \Drupal::config('config_packager.settings')
-      ->set('profile.machine_name', $form_state->getValue('profile_machine_name'))
-      ->set('profile.name', $form_state->getValue('profile_name'))
-      ->set('profile.description', $form_state->getValue('profile_description'))
+      ->set('profile', $profile_settings)
       ->save();
 
     $this->assigner->assignConfigPackages();
 
-    if ($form_state->getValue('use_profile')) {
+    if ($profile_settings['add']) {
       $this->configPackagerManager->generateProfile(ConfigPackagerManagerInterface::GENERATE_METHOD_ARCHIVE);
     }
     else {

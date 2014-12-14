@@ -9,9 +9,8 @@ core:
     image_style: image_style
     entity_view_mode: entity_view_mode
 exclude:
-  packaged: 1
   types: {  }
   module:
     enabled: 1
     profile: 1
-    namespace: 0
+    namespace: 1

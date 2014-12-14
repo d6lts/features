@@ -79,6 +79,7 @@ interface ConfigPackagerManagerInterface {
    *   - 'type': type of Drupal project ('module').
    *   - 'core': Drupal core compatibility ('8.x'),
    *   - 'dependencies': array of module dependencies.
+   *   - 'themes': array of names of themes to enable.
    *   - 'config': array of names of configuration items.
    *   - 'files' array of files, each having the following keys:
    *      - 'filename': the name of the file.
@@ -97,6 +98,7 @@ interface ConfigPackagerManagerInterface {
    *   - 'type': type of Drupal project ('module').
    *   - 'core': Drupal core compatibility ('8.x'),
    *   - 'dependencies': array of module dependencies.
+   *   - 'themes': array of names of themes to enable.
    *   - 'config': array of names of configuration items.
    *   - 'files' array of files, each having the following keys:
    *      - 'filename': the name of the file.
@@ -115,6 +117,7 @@ interface ConfigPackagerManagerInterface {
    *   - 'type': type of Drupal project ('profile').
    *   - 'core': Drupal core compatibility ('8.x'),
    *   - 'dependencies': array of module dependencies.
+   *   - 'themes': array of names of themes to enable.
    *   - 'config': array of names of configuration items.
    *   - 'files' array of files, each having the following keys:
    *      - 'filename': the name of the file.
@@ -133,6 +136,7 @@ interface ConfigPackagerManagerInterface {
    *   - 'type': type of Drupal project ('profile').
    *   - 'core': Drupal core compatibility ('8.x'),
    *   - 'dependencies': array of module dependencies.
+   *   - 'themes': array of names of themes to enable.
    *   - 'config': array of names of configuration items.
    *   - 'files' array of files, each having the following keys:
    *      - 'filename': the name of the file.
