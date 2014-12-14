@@ -10,6 +10,7 @@ core:
     entity_view_mode: entity_view_mode
 exclude:
   types: {  }
+  curated: 1
   module:
     enabled: 1
     profile: 1

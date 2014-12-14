@@ -32,6 +32,13 @@ class AssignmentExcludeForm extends AssignmentFormBase {
 
     $module_settings = $settings->get('exclude.module');
 
+    $form['curated'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Exclude designated site-specific configuration'),
+      '#default_value' => $settings->get('exclude.curated'),
+      '#description' => $this->t('Select this option to exclude from packaging items on a curated list of site-specific configuration.'),
+    );
+
     $form['module'] = array(
       '#type' => 'container',
       '#tree' => TRUE,
@@ -80,11 +87,13 @@ class AssignmentExcludeForm extends AssignmentFormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $types = array_filter($form_state->getValue('types'));
-    $exclude_module = $form_state->getValue('module');
+    $curated = $form_state->getValue('curated');
+    $module = $form_state->getValue('module');
 
     $this->configFactory->get('config_packager.assignment')
-      ->set('exclude.module', $exclude_module)
       ->set('exclude.types', $types)
+      ->set('exclude.curated', $curated)
+      ->set('exclude.module', $module)
       ->save();
 
     $form_state->setRedirect('config_packager.assignment');

@@ -87,6 +87,37 @@ class ConfigPackagerAssignmentExclude extends ConfigPackagerAssignmentMethodBase
         }
       }
     }
+
+    // Exclude configuration items on a curated list of site-specific
+    // configuration.
+    if ($settings->get('exclude.curated')) {
+      $item_names = [
+        'core.extension',
+        'field.settings',
+        'field_ui.settings',
+        'filter.settings',
+        'forum.settings',
+        'image.settings',
+        'node.settings',
+        'system.authorize',
+        'system.cron',
+        'system.date',
+        'system.file',
+        'system.diff',
+        'system.logging',
+        'system.maintenance',
+        'system.performance',
+        'system.site',
+        'system.theme',
+        'system.theme.global',
+        'update.settings',
+      ];
+      foreach ($item_names as $item_name) {
+        unset($config_collection[$item_name]);
+      }
+    }
+
+    // Register the updated data.
     $this->configPackagerManager->setConfigCollection($config_collection);
   }
 
