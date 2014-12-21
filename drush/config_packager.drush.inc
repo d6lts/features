@@ -62,34 +62,40 @@ function drush_config_packager_list_packages($package = '') {
   $assigner = \Drupal::service('config_packager_assigner');
   $assigner->assignConfigPackages();
   $packages = $manager->getPackages();
+  $profile = $manager->getProfile();
 
   $result = array();
 
   // If no package was specified, list all packages.
   if (empty($package)) {
     drush_hide_output_fields(array('object'));
-    foreach ($packages as $machine_name => $item) {
-      $result[$machine_name] = array(
-        'machine_name' => $machine_name,
+    foreach ($packages as $item) {
+      $result[$item['machine_name']] = array(
+        'machine_name' => $item['machine_name'],
         'name' => $item['name'],
       );
     }
+    return $result;
   }
   // If a valid package was listed, list its configuration.
-  elseif (isset($packages[$package]['config'])) {
-    drush_hide_output_fields(array('machine_name', 'name'));
-    foreach ($packages[$package]['config'] as $item_name) {
-      $result[$item_name] = array(
-        'object' => $item_name,
-      );
-    }
-  }
   else {
-    drush_log(dt('Package "@package" not found.', array('@package' => $package)), 'warning');
-    return FALSE;
+    foreach ($packages as $item) {
+      if ($item['machine_name'] == $package) {
+        drush_hide_output_fields(array('machine_name', 'name'));
+        foreach ($item['config'] as $item_name) {
+          $result[$item_name] = array(
+            'object' => $item_name,
+          );
+        }
+        return $result;
+      }
+    }
+
   }
 
-  return $result;
+  // If no matching package found, return an error.
+  drush_log(dt('Package "@package" not found.', array('@package' => $package)), 'warning');
+  return FALSE;
 }
 
 /**
@@ -109,6 +115,23 @@ function drush_config_packager_generate_packages($packages = NULL) {
   $add_profile = drush_get_option('add-profile');
 
   $method = ConfigPackagerManagerInterface::GENERATE_METHOD_WRITE;
+
+  // If any packages exist, confirm before overwriting.
+  if ($existing_packages = $manager->getPackageDirectories($packages, $add_profile)) {
+    foreach ($existing_packages as $name => $directory) {
+      drush_print(dt("The extension @name already exists at !directory.", array('@name' => $name, '!directory' => $directory)));
+    }
+    // Apparently format_plural is not always available.
+    if (count($existing_packages) == 1) {
+      $message = dt('Would you like to overwrite it?');
+    }
+    else {
+      $message = dt('Would you like to overwrite them?');
+    }
+    if (!drush_confirm($message)) {
+      return drush_user_abort();
+    }
+  }
 
   if ($add_profile) {
     $result = $manager->generateProfile($method, $packages);

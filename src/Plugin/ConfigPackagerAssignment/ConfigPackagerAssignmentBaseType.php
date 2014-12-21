@@ -38,13 +38,13 @@ class ConfigPackagerAssignmentBaseType extends ConfigPackagerAssignmentMethodBas
 
     foreach ($config_collection as $item_name => $item) {
       if (in_array($item['type'], $base_types)) {
-        if (!isset($packages[$item['short_name']])) {
+        if (!isset($packages[$item['name_short']])) {
           $description = $this->t('Provide @label @type and related configuration.', array('@label' => $item['label'], '@type' => Unicode::strtolower($config_types[$item['type']])));
           if (isset($item['data']['description'])) {
             $description .= ' ' . $item['data']['description'];
           }
-          $this->configPackagerManager->initPackage($item['short_name'], $item['label'], $description);
-          $this->configPackagerManager->assignConfigPackage($item['short_name'], [$item_name]);
+          $this->configPackagerManager->initPackage($item['name_short'], $item['label'], $description);
+          $this->configPackagerManager->assignConfigPackage($item['name_short'], [$item_name]);
           $this->configPackagerManager->assignConfigDependents([$item_name]);
         }
       }

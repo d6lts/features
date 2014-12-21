@@ -64,13 +64,13 @@ class ConfigPackagerAssignmentExclude extends ConfigPackagerAssignmentMethodBase
         // profile.
         if ($module_profile) {
           $profile = drupal_get_profile();
-          $modules = array_merge($modules, $this->configPackagerManager->getModuleList($profile));
+          $modules = array_merge($modules, $this->configPackagerManager->getModuleList([$profile]));
         }
         // Load the names of any configuration objects provided by modules
         // having the namespace of the current package set.
         if ($module_namespace) {
           if ($machine_name = $this->configFactory->get('config_packager.settings')->get('profile.machine_name')) {
-            $modules = array_merge($modules, $this->configPackagerManager->getModuleList(NULL, $machine_name));
+            $modules = array_merge($modules, $this->configPackagerManager->getModuleList([], $machine_name));
           }
         }
         // If any configuration was found, remove it from the list.

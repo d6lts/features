@@ -18,6 +18,7 @@ use Drupal\Core\Config\StorageInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Extension\Extension;
+use Drupal\Core\Extension\ExtensionDiscovery;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
@@ -202,18 +203,73 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function getPackageDirectories(array $machine_names = array(), $add_profile = FALSE) {
+    if (empty($machine_names)) {
+      $machine_names = $this->getPackageMachineNames();
+    }
+
+    // If the add_profile argument was set, add the profile's machine name.
+    if ($add_profile) {
+      $profile = $this->getProfile();
+      $machine_names[] = $profile['machine_name'];
+    }
+
+    // ModuleHandler::getModuleDirectories() returns data only for installed
+    // modules. system_rebuild_module_data() includes only the site's install
+    // profile directory, while we may need to include a custom profile.
+    // @see _system_rebuild_module_data().
+    // @todo: update to use \Drupal::root().
+    $listing = new ExtensionDiscovery(DRUPAL_ROOT);
+    $profile_directories = [];
+    // Register the install profile.
+    $installed_profile = drupal_get_profile();
+    if ($installed_profile) {
+      $profile_directories[] = drupal_get_path('profile', $installed_profile);
+    }
+    // Register the profile directory.
+    $profile_directory = 'profiles/' . $profile['machine_name'];
+    if (is_dir($profile_directory)) {
+      $profile_directories[] = $profile_directory;
+    }
+    $listing->setProfileDirectories($profile_directories);
+
+    // Find modules.
+    $modules = $listing->scan('module');
+
+    // Find installation profiles.
+    $profiles = $listing->scan('profile');
+
+    foreach ($profiles as $key => $profile) {
+      $modules[$key] = $profile;
+    }
+
+    // Filter to include only the requested packages.
+    $modules = array_intersect_key($modules, array_fill_keys($machine_names, NULL));
+    $directories = array();
+    foreach ($modules as $name => $module) {
+      // @todo: update to use \Drupal::root()?
+      $directories[$name] = $module->getPath();
+    }
+
+    return $directories;
+  }
+
+  /**
    * Set the profile to a given machine_name, name, and description.
    */
   protected function assignProfile($machine_name, $name = NULL, $description = '') {
-    $this->profile = $this->getProject($machine_name, $name, $description, 'profile');
+    $profile = $this->getProject($machine_name, $name, $description, 'profile');
+    $this->setProfile($profile);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function initPackage($machine_name, $name = NULL, $description = '') {
-    if (!isset($this->packages[$machine_name])) {
-      $this->packages[$machine_name] = $this->getProject($machine_name, $name, $description);
+  public function initPackage($machine_name_short, $name = NULL, $description = '') {
+    if (!isset($this->packages[$machine_name_short])) {
+      $this->packages[$machine_name_short] = $this->getProject($machine_name_short, $name, $description);
     }
   }
 
@@ -221,10 +277,10 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
    * {@inheritdoc}
    */
   public function initCorePackage() {
-    $machine_name = 'core';
+    $machine_name_short = 'core';
     $name = $this->t('Core');
     $description = $this->t('Provide core components required by other configuration modules.');
-    $this->initPackage($machine_name, $name, $description);
+    $this->initPackage($machine_name_short, $name, $description);
   }
 
   /**
@@ -257,11 +313,11 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
     // Reverse sort by key so that child package will claim items before parent
     // package. E.g., event_registration will claim before event.
     krsort($config_collection);
-    foreach ($patterns as $pattern => $machine_name) {
-      if (isset($this->packages[$machine_name])) {
+    foreach ($patterns as $pattern => $machine_name_short) {
+      if (isset($this->packages[$machine_name_short])) {
         foreach ($config_collection as $item_name => $item) {
-          if (empty($item['package']) && preg_match('/[_\-.]' . $pattern . '[_\-.]/', '.' . $item['short_name'] . '.')) {
-            $this->assignConfigPackage($machine_name, [$item_name]);
+          if (empty($item['package']) && preg_match('/[_\-.]' . $pattern . '[_\-.]/', '.' . $item['name_short'] . '.')) {
+            $this->assignConfigPackage($machine_name_short, [$item_name]);
           }
         }
       }
@@ -290,16 +346,20 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
   /**
    * Initialize and return a package or profile array.
    *
-   * @param string $machine_name
-   *   Machine name of the package.
-   * @param string $name
-   *   Human readable name of the package.
+   * @param string $machine_name_short
+   *   Machine name of the package without a profile prefix.
+   * @param string $name_short
+   *   Human readable name of the package without a profile prefix.
    * @param string $description
    *   Description of the package.
    * @return array
    *   An array with the following keys:
-   *   - 'machine_name': machine name of the project.
-   *   - 'name': human readable name of the project.
+   *   - 'machine_name': machine name of the project such as 'example_article'.
+   *   - 'machine_name_short': short machine name of the project such as
+   *     'article'.
+   *   - 'name': human readable name of the project such as 'Example Article'.
+   *   - 'name_short': short human readable name of the project such as
+   *     'Article'.
    *   - 'description': description of the project.
    *   - 'type': type of Drupal project ('profile' or 'module').
    *   - 'core': Drupal core compatibility ('8.x'),
@@ -310,11 +370,14 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
    *      - 'filename': the name of the file.
    *      - 'string': the contents of the file.
    */
-  protected function getProject($machine_name, $name = NULL, $description = '', $type = 'module') {
-    $description = $description ?: $this->t('@name configuration.', ['@name' => $name]);
-    return [
-      'machine_name' => $machine_name,
-      'name' => $this->getName($machine_name, $name),
+  protected function getProject($machine_name_short, $name_short = NULL, $description = '', $type = 'module') {
+    $description = $description ?: $this->t('@name configuration.', ['@name' => $name_short]);
+    $name_short = $this->getName($machine_name_short, $name_short);
+    $project = [
+      'machine_name' => $machine_name_short,
+      'machine_name_short' => $machine_name_short,
+      'name' => $name_short,
+      'name_short' => $name_short,
       'description' => $description,
       'type' => $type,
       'core' => '8.x',
@@ -323,6 +386,40 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
       'config' => [],
       'files' => []
     ];
+    if ($type == 'module') {
+      $this->setPackageNames($project);
+    }
+
+    return $project;
+  }
+
+  /**
+   * Refresh names for all packages to ensure they reflect current profile
+   * naming.
+   *
+   * The profile data (machine_name, name) may have changed since the package
+   * was generated.
+   */
+  protected function refreshPackageNames() {
+    $packages = $this->getPackages();
+    foreach ($packages as &$package) {
+      $this->setPackageNames($package);
+    }
+    // Clean up the $file pass by reference.
+    unset($package);
+    $this->setPackages($packages);
+  }
+
+  /**
+   * Prefix a package's short machine name and name with those of the profile.
+   *
+   * @param array &$package
+   *   A package array, passed by reference.
+   */
+  protected function setPackageNames(array &$package) {
+    $profile = $this->getProfile();
+    $package['machine_name'] = $profile['machine_name'] . '_' . $package['machine_name_short'];
+    $package['name'] = $profile['name'] . ' ' . $package['name_short'];
   }
 
   /**
@@ -332,7 +429,6 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
    *   The package.
    */
   protected function addInfoFile(array &$package) {
-    $machine_name = $package['machine_name'];
     // Filter to standard keys of the profiles that we will use in info files.
     $info_keys = [
       'name',
@@ -342,7 +438,7 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
       'dependencies',
       'themes'
     ];
-    $info = array_intersect_key($package, array_combine($info_keys, $info_keys));
+    $info = array_intersect_key($package, array_fill_keys($info_keys, NULL));
 
     // Assign to a "package" named for the profile.
     $info['package'] = $this->profile['name'];
@@ -355,34 +451,34 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
       $info['config_devel'] = $package['config'];
     }
 
-    switch ($info['type']) {
-      // Prefix modules with the profile name.
-      case 'module':
-        $machine_name = $this->profile['machine_name'] . '_' . $machine_name;
-        $info['name'] = $this->profile['name'] . ' ' . $info['name'];
-        break;
-      // Conditionally merge in profile dependencies and theme info.
-      case 'profile':
-        if ($this->profileSettings['add_standard']) {
-          $info_file_name = 'core/profiles/standard/standard.info.yml';
-          if (file_exists($info_file_name)) {
-            $profile_info = \Drupal::service('info_parser')->parse($info_file_name);
-            // Merge in dependencies and themes data.
-            foreach (['dependencies', 'themes'] as $key) {
-              $info[$key] = array_unique(
-                array_merge(
-                  $info[$key],
-                  $profile_info[$key]
-                )
-              );
-              sort($info[$key]);
-            }
+    // Add profile-specific info data.
+    if ($info['type'] == 'profile') {
+      // Set the distribution name.
+      $info['distribution'] = [
+        'name' => $info['name']
+      ];
+
+      // Optionally add data from the standard profile.
+      if ($this->profileSettings['add_standard']) {
+        $info_file_name = 'core/profiles/standard/standard.info.yml';
+        if (file_exists($info_file_name)) {
+          $profile_info = \Drupal::service('info_parser')->parse($info_file_name);
+          // Merge in dependencies and themes data.
+          foreach (['dependencies', 'themes'] as $key) {
+            $info[$key] = array_unique(
+              array_merge(
+                $info[$key],
+                $profile_info[$key]
+              )
+            );
+            sort($info[$key]);
           }
         }
-        break;
+      }
     }
+
     $package['files']['info'] = [
-      'filename' => $machine_name . '/' . $machine_name . '.info.yml',
+      'filename' => $package['machine_name'] . '/' . $package['machine_name'] . '.info.yml',
       // Filter to remove any empty keys, e.g., an empty themes array.
       'string' => Yaml::encode(array_filter($info))
     ];
@@ -443,7 +539,7 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
    */
   protected function addPackageFiles() {
     $config_collection = $this->getConfigCollection();
-    foreach ($this->packages as $machine_name => &$package) {
+    foreach ($this->packages as &$package) {
       // Only add files if there is at least one piece of configuration
       // present.
       if (!empty($package['config'])) {
@@ -457,7 +553,7 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
             unset($config['data']['uuid']);
           }
           $package['files'][$name] = [
-            'filename'=> $this->profile['machine_name'] . '_' . $package['machine_name'] . '/' . InstallStorage::CONFIG_INSTALL_DIRECTORY . '/' . $config['name'] . '.yml',
+            'filename'=> $package['machine_name'] . '/' . InstallStorage::CONFIG_INSTALL_DIRECTORY . '/' . $config['name'] . '.yml',
             'string' => Yaml::encode($config['data'])
           ];
         }
@@ -484,9 +580,72 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
   protected function getName($machine_name, $name = NULL) {
     // Provide a default name based on the machine name.
     if (empty($name)) {
-      $name = ucwords(str_replace('_', ' ', $machine_name));
+      $name = str_replace('_', ' ', $machine_name);
     }
-    return $name;
+    // Drupal extensions use title case.
+    // @see https://www.drupal.org/node/1346158
+    return ucwords($name);
+  }
+
+  /**
+   * Return an array of package machine names packages.
+   *
+   * @param array $machine_names_short
+   *   Array of names. If empty, all availble package short names will be
+   *   returned.
+   * @param boolean $add_profile
+   *   Whether to add an install profile. Defaults to FALSE.
+   *
+   * @return array
+   *   Array of short names.
+   */
+  protected function getPackageMachineNames(array $machine_names_short = array(), $add_profile = FALSE) {
+    $packages = $this->getPackages();
+
+    // If specific names were requested, use only those.
+    if (!empty($machine_names_short)) {
+      $packages = array_intersect_key($packages, array_fill_keys($machine_names_short, NULL));
+    }
+
+    // Iterate through the packages for their machine names.
+    $machine_names = [];
+    foreach ($packages as $package) {
+      $machine_names[] = $package['machine_name'];
+    }
+
+    return $machine_names;
+  }
+
+  /**
+   * Return an array of short package names.
+   *
+   * The ConfigPackagerManager::packages property is keyed by short package
+   * names while each package has a 'machine_name' key that is the short name
+   * prefixed by the profile machine name and an underscore. Here we remove
+   * this prefix and return short names.
+   *
+   * @param array $machine_names
+   *   Array of names. If empty, all availble package short names will be
+   *   returned.
+   *
+   * @return array
+   *   Array of short names.
+   */
+  protected function getPackageMachineNamesShort(array $machine_names = array()) {
+    // If no specific machine names were requested, return all.
+    if (empty($machine_names)) {
+      return array_keys($this->proifles);
+    }
+
+    // Iterate through the packages for their short machine names.
+    $machine_names_short = [];
+    foreach ($packages as $package) {
+      if (in_array($package['machine_name'], $machine_names)) {
+        $machine_names_short[] = $package['machine_name_short'];
+      }
+    }
+
+    return $machine_names_short;
   }
 
   /**
@@ -512,13 +671,19 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function getModuleList($name = NULL, $namespace = NULL) {
+  public function getModuleList(array $names = array(), $namespace = NULL) {
     $modules = $this->moduleHandler->getModuleList();
-    if (!empty($name) || !empty($namespace)) {
+    if (!empty($names) || !empty($namespace)) {
       $return = [];
-      if (!empty($name) && isset($modules[$name])) {
-        $return[$name] = $modules[$name];
+
+      // Detect modules by name.
+      foreach ($names as $name) {
+        if (!empty($name) && isset($modules[$name])) {
+          $return[$name] = $modules[$name];
+        }
       }
+
+      // Detect modules by namespace.
       if (!empty($namespace)) {
         foreach ($modules as $module_name => $extension) {
           if (strpos($module_name, $namespace) === 0) {
@@ -555,6 +720,7 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
     // For a given entity type, load all entities.
     if ($config_type && $config_type !== ConfigPackagerManagerInterface::SYSTEM_SIMPLE_CONFIG) {
       $entity_storage = $this->entityManager->getStorage($config_type);
+      $names = [];
       foreach ($entity_storage->loadMultiple() as $entity) {
         $entity_id = $entity->id();
         $label = $entity->label() ?: $entity_id;
@@ -610,7 +776,7 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
           $data = $this->configStorage->read($name);
           $config_collection[$name] = [
             'name' => $name,
-            'short_name' => $item_name,
+            'name_short' => $item_name,
             'label' => $label,
             'type' => $config_type,
             'data' => $data,
@@ -643,6 +809,9 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
    *   Whether to add an install profile. Defaults to FALSE.
    */
   protected function prepareFiles($add_profile = FALSE) {
+    // Ensure package names are current.
+    $this->refreshPackageNames();
+
     // Add package files first so their filename values can be altered to nest
     // them in a profile.
     $this->addPackageFiles();
@@ -654,14 +823,26 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function generatePackages($method, array $package_names = array()) {
+  public function generatePackages($method, array $package_names = array(), $short_names = TRUE) {
+    // If we have specific package names requested not in the short format,
+    // convert them to the short format.
+    if (!empty($package_names) && !$short_names) {
+      $package_names = $this->getPackageMachineNamesShort($package_names);
+    }
+
     return $this->generate($method, FALSE, $package_names);
   }
 
   /**
    * {@inheritdoc}
    */
-  public function generateProfile($method, array $package_names = array()) {
+  public function generateProfile($method, array $package_names = array(), $short_names = TRUE) {
+    // If we have specific package names requested not in the short format,
+    // convert them to the short format.
+    if (!empty($package_names) && !$short_names) {
+      $package_names = $this->getPackageMachineNamesShort($package_names);
+    }
+
     return $this->generate($method, TRUE, $package_names);
   }
 

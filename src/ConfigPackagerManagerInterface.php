@@ -45,7 +45,7 @@ interface ConfigPackagerManagerInterface {
    * @return array
    *   An array of items, each with the following keys:
    *   - 'name': prefixed configuration item name.
-   *   - 'short_name': configuration item name without prefix.
+   *   - 'name_short': configuration item name without prefix.
    *   - 'label': human readable name of configuration item.
    *   - 'type': type of configuration.
    *   - 'data': the contents of the configuration item in exported format.
@@ -59,7 +59,7 @@ interface ConfigPackagerManagerInterface {
    * @param array $config_collection
    *   An array of items, each with the following keys:
    *   - 'name': prefixed configuration item name.
-   *   - 'short_name': configuration item name without prefix.
+   *   - 'name_short': configuration item name without prefix.
    *   - 'label': human readable name of configuration item.
    *   - 'type': type of configuration.
    *   - 'data': the contents of the configuration item in exported format.
@@ -73,8 +73,12 @@ interface ConfigPackagerManagerInterface {
    *
    * @return array
    *   An array of items, each with the following keys:
-   *   - 'machine_name': maching name of the package.
-   *   - 'name': human readable name of the package.
+   *   - 'machine_name': machine name of the package such as 'example_article'.
+   *   - 'machine_name_short': short machine name of the package such as
+   *     'article'.
+   *   - 'name': human readable name of the package such as 'Example Article'.
+   *   - 'name_short': short human readable name of the package such as
+   *     'Article'.
    *   - 'description': description of the package.
    *   - 'type': type of Drupal project ('module').
    *   - 'core': Drupal core compatibility ('8.x'),
@@ -92,8 +96,12 @@ interface ConfigPackagerManagerInterface {
    *
    * @param array $packages
    *   An array of packages, each with the following keys:
-   *   - 'machine_name': machine name of the package.
-   *   - 'name': human readable name of the package.
+   *   - 'machine_name': machine name of the package such as 'example_article'.
+   *   - 'machine_name_short': short machine name of the package such as
+   *     'article'.
+   *   - 'name': human readable name of the package such as 'Example Article'.
+   *   - 'name_short': short human readable name of the package such as
+   *     'Article'.
    *   - 'description': description of the package.
    *   - 'type': type of Drupal project ('module').
    *   - 'core': Drupal core compatibility ('8.x'),
@@ -111,8 +119,12 @@ interface ConfigPackagerManagerInterface {
    *
    * @return array
    *   An array with the following keys:
-   *   - 'machine_name': machine name of the profile.
-   *   - 'name': human readable name of the profile.
+   *   - 'machine_name': machine name of the profile such as 'example'.
+   *   - 'machine_name_short': short machine name. For a profile, this is the
+   *     same as the machine_name.
+   *   - 'name': human readable name of the package such as 'Example'.
+   *   - 'name_short': short human readable name. For a profile, this is the
+   *     same as the name.
    *   - 'description': description of the profile.
    *   - 'type': type of Drupal project ('profile').
    *   - 'core': Drupal core compatibility ('8.x'),
@@ -130,8 +142,12 @@ interface ConfigPackagerManagerInterface {
    *
    * @param array $profile
    *   An array with the following keys:
-   *   - 'machine_name': machine name of the profile.
-   *   - 'name': human readable name of the profile.
+   *   - 'machine_name': machine name of the profile such as 'example'.
+   *   - 'machine_name_short': short machine name. For a profile, this is the
+   *     same as the machine_name.
+   *   - 'name': human readable name of the package such as 'Example'.
+   *   - 'name_short': short human readable name. For a profile, this is the
+   *     same as the name.
    *   - 'description': description of the profile.
    *   - 'type': type of Drupal project ('profile').
    *   - 'core': Drupal core compatibility ('8.x'),
@@ -171,6 +187,28 @@ interface ConfigPackagerManagerInterface {
    *   Description of the package.
    */
   public function initPackage($machine_name, $name = NULL, $description = '');
+
+  /**
+   * Return an array of directories in which packages are present.
+   *
+   * This method scans to find package modules whether or not they are
+   * currently active (installed). As well as the directories that are
+   * usually scanned for modules and profiles, a profile directory for the
+   * current profile is scanned if it exists. For example, if the value
+   * for ConfigPackagerManager::profile['machine_name'] is 'example', a
+   * directory profiles/example will be scanned if it exists. Therefore, when
+   * regenerating package modules, existing ones from a prior export will be
+   * recognized.
+   *
+   * @param array $machine_names
+   *   Array of package machine names.
+   * @param boolean $add_profile
+   *   Whether to add an install profile. Defaults to FALSE.
+   *
+   * @return array
+   *   Array of package directories keyed by package machine name.
+   */
+  public function getPackageDirectories(array $machine_names = array(), $add_profile = FALSE);
 
   /**
    * Initialize a "core" configuration package.
@@ -219,8 +257,8 @@ interface ConfigPackagerManagerInterface {
    * If a $name and/or $namespace is specified, only matching modules will be
    * returned. Otherwise, all install are returned.
    *
-   * @param string $name
-   *   The name of a specific module to return.
+   * @param array $names
+   *   An array of names of specific modules to return.
    * @param string $namespace
    *   A namespace prefix to match modules by.
    *
@@ -230,7 +268,7 @@ interface ConfigPackagerManagerInterface {
    *
    * @see Drupal\Core\Extension\ModuleHandlerInterface::getModuleList()
    */
-  public function getModuleList($name = NULL, $namespace = NULL);
+  public function getModuleList(array $names = array(), $namespace = NULL);
 
 
   /**
@@ -260,8 +298,11 @@ interface ConfigPackagerManagerInterface {
    * @param array $package_names
    *   Array of names of packages to be generated. If none are specified, all
    *   available packages will be added.
+   * @param boolean $short_names
+   *   Boolean TRUE is any package names given in the $package_names argument
+   *   are in the short machine name format, FALSE if they are not.
    */
-  public function generatePackages($method, array $package_names = array());
+  public function generatePackages($method, array $package_names = array(), $short_names = TRUE);
 
   /**
    * Generate file representations of an install profile and configuration
@@ -276,7 +317,10 @@ interface ConfigPackagerManagerInterface {
    * @param array $package_names
    *   Array of names of packages to be generated. If none are specified, all
    *   available packages will be added.
+   * @param boolean $short_names
+   *   Boolean TRUE is any package names given in the $package_names argument
+   *   are in the short machine name format, FALSE if they are not.
    */
-  public function generateProfile($method, array $package_names = array());
+  public function generateProfile($method, array $package_names = array(), $short_names = FALSE);
 
 }
