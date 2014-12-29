@@ -2,9 +2,17 @@ services:
   plugin.manager.packager_assignment_method:
     class: Drupal\config_packager\ConfigPackagerAssignmentMethodManager
     arguments: ['@container.namespaces', '@cache.discovery', '@module_handler']
+  plugin.manager.packager_generation_method:
+    class: Drupal\config_packager\ConfigPackagerGenerationMethodManager
+    arguments: ['@container.namespaces', '@cache.discovery', '@module_handler']
   config_packager_assigner:
     class: Drupal\config_packager\ConfigPackagerAssigner
     arguments: ['@config_packager.manager', '@plugin.manager.packager_assignment_method', '@config.factory', '@config.storage']
+    calls:
+      - [initConfigPackagerManager]
+  config_packager_generator:
+    class: Drupal\config_packager\ConfigPackagerGenerator
+    arguments: ['@config_packager.manager', '@plugin.manager.packager_generation_method', '@config.factory']
     calls:
       - [initConfigPackagerManager]
   config_packager.manager:

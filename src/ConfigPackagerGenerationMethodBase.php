@@ -2,20 +2,20 @@
 
 /**
  * @file
- * Contains \Drupal\config_packager\ConfigPackagerAssignmentMethodBase.
+ * Contains \Drupal\config_packager\ConfigPackagerGenerationMethodBase.
  */
 
 namespace Drupal\config_packager;
 
 use Drupal\config_packager\ConfigPackagerManager;
 use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Config\StorageInterface;
+use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 
 /**
  * Base class for package assignment methods.
  */
-abstract class ConfigPackagerAssignmentMethodBase implements ConfigPackagerAssignmentMethodInterface {
+abstract class ConfigPackagerGenerationMethodBase implements ConfigPackagerGenerationMethodInterface {
   use StringTranslationTrait;
 
   /**
@@ -33,16 +33,9 @@ abstract class ConfigPackagerAssignmentMethodBase implements ConfigPackagerAssig
   protected $configFactory;
 
   /**
-   * The config storage.
-   *
-   * @var \Drupal\Core\Config\StorageInterface
-   */
-  protected $configStorage;
-
-  /**
    * {@inheritdoc}
    */
-  public function setconfigPackagerManager(ConfigPackagerManagerInterface $config_packager_manager) {
+  public function setConfigPackagerManager(ConfigPackagerManagerInterface $config_packager_manager) {
     $this->configPackagerManager = $config_packager_manager;
   }
 
@@ -56,8 +49,8 @@ abstract class ConfigPackagerAssignmentMethodBase implements ConfigPackagerAssig
   /**
    * {@inheritdoc}
    */
-  public function setConfigStorage(StorageInterface $config_storage) {
-    $this->configStorage = $config_storage;
+  public function exportFormSubmit(array &$form, FormStateInterface $form_state) {
+
   }
 
 }

@@ -10,6 +10,7 @@ namespace Drupal\config_packager\Form;
 use Drupal\Component\Utility\String;
 use Drupal\Component\Utility\Xss;
 use Drupal\config_packager\ConfigPackagerAssignerInterface;
+use Drupal\config_packager\ConfigPackagerGeneratorInterface;
 use Drupal\config_packager\ConfigPackagerManagerInterface;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBase;
@@ -37,6 +38,13 @@ class ConfigPackagerExportForm extends FormBase {
   protected $assigner;
 
   /**
+   * The package generator.
+   *
+   * @var array
+   */
+  protected $generator;
+
+  /**
    * The module handler service.
    *
    * @var \Drupal\Core\Extension\ModuleHandlerInterface
@@ -49,9 +57,10 @@ class ConfigPackagerExportForm extends FormBase {
    * @param \Drupal\Core\Config\StorageInterface $target_storage
    *   The target storage.
    */
-  public function __construct(ConfigPackagerManagerInterface $config_packager_manager, ConfigPackagerAssignerInterface $assigner, ModuleHandlerInterface $module_handler) {
+  public function __construct(ConfigPackagerManagerInterface $config_packager_manager, ConfigPackagerAssignerInterface $assigner, ConfigPackagerGeneratorInterface $generator, ModuleHandlerInterface $module_handler) {
     $this->configPackagerManager = $config_packager_manager;
     $this->assigner = $assigner;
+    $this->generator = $generator;
     $this->moduleHandler = $module_handler;
   }
 
@@ -62,6 +71,7 @@ class ConfigPackagerExportForm extends FormBase {
     return new static(
       $container->get('config_packager.manager'),
       $container->get('config_packager_assigner'),
+      $container->get('config_packager_generator'),
       $container->get('module_handler')
     );
   }
@@ -112,7 +122,7 @@ class ConfigPackagerExportForm extends FormBase {
         'source' => array('profile_name'),
       ),
       '#default_value' => $profile_settings['machine_name'],
-      '#description' => $this->t('A unique machine-readable name for the install profile or distribution. It must only contain lowercase letters, numbers, and underscores.'),
+      '#description' => $this->t('A unique machine-readable name of a set of configuration modules. This name will also be used for an install profile if "Include install profile" is selected below. It must only contain lowercase letters, numbers, and underscores.'),
       '#required' => TRUE,
     );
 
@@ -217,8 +227,26 @@ class ConfigPackagerExportForm extends FormBase {
     }
     $form['#attached']['css'][] = drupal_get_path('module', 'config_packager') . '/css/config_packager.admin.css';
 
+    // Offer available generation methods.
+    $generation_info = $this->generator->getGenerationMethods();
+    // Sort generation methods by weight.
+    uasort($generation_info, '\Drupal\Component\Utility\SortArray::sortByWeightElement');
+    $method_options = array();
+    foreach ($generation_info as $method_id => $method) {
+      $method_options[$method_id] = '<strong>' . String::checkPlain($method['name']) . '</strong>: ' . String::checkPlain($method['description']);
+    }
+
+    $form['method_id'] = array(
+      '#type' => 'radios',
+      '#title' => $this->t('Generation method'),
+      // Set the lowest-weight method as default.
+      '#default_value' => key($method_options),
+      '#options' => $method_options,
+      '#description' => $this->t('Select a package generation method.'),
+    );
+
     $form['description'] = array(
-      '#markup' => '<p>' . $this->t('Use the export button below to download your packaged configuration modules.') . '</p>',
+      '#markup' => '<p>' . $this->t('Use the export button below to generate your packaged configuration modules.') . '</p>',
     );
     $form['submit'] = array(
       '#type' => 'submit',
@@ -256,14 +284,15 @@ class ConfigPackagerExportForm extends FormBase {
 
     $this->assigner->assignConfigPackages();
 
+    $method_id = $form_state->getValue('method_id');
     if ($profile_settings['add']) {
-      $this->configPackagerManager->generateProfile(ConfigPackagerManagerInterface::GENERATE_METHOD_ARCHIVE);
+      $this->generator->generateProfile($method_id);
     }
     else {
-      $this->configPackagerManager->generatePackages(ConfigPackagerManagerInterface::GENERATE_METHOD_ARCHIVE);
+      $this->generator->generatePackages($method_id);
     }
-    // Redirect to the archive file download.
-    $form_state->setRedirect('config_packager.export_download');
+
+    $this->generator->applyExportFormSubmit($method_id, $form, $form_state);
   }
 
 }

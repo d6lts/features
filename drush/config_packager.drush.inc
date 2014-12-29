@@ -17,7 +17,7 @@ function config_packager_drush_command() {
     'description' => 'Display a list of all packages available to be generated. If a package name is provided as an argument, then all of the configuration objects assigned to that package will be listed.',
     'examples' => array(
       "drush config-packager-list-packages" => 'Display a list of all packages available to be generated.',
-      "drush config-packager-list-packages 'article'" => "Display a list of all configuration objects assigned to the 'article' package.",
+      "drush config-packager-list-packages 'example_article'" => "Display a list of all configuration objects assigned to the 'example_article' package.",
     ),
     'arguments' => array(
       'package' => 'The package to list. Optional; if specified, lists all configuration objects assigned to that package. If no package is specified, lists all of the packages available to be generated.',
@@ -39,7 +39,7 @@ function config_packager_drush_command() {
     'description' => 'Generate configuration modules. If a comma-separated list of package names is passed as an argument, only those packages will be generated. If the --add-profile option is passed, the packages will be bundled into an install profile.',
     'examples' => array(
       "drush config-packager-generate-packages" => 'Generate all available packages.',
-      "drush config-packager-generate-packages 'article,page'" => "Generate the article and page packages.",
+      "drush config-packager-generate-packages 'example_article,example_page'" => "Generate the example_article and example_page packages.",
       "drush config-packager-generate-packages --add-profile" => "Generate all available packages and add them to an install profile.",
     ),
     'arguments' => array(
@@ -108,13 +108,16 @@ function drush_config_packager_generate_packages($packages = NULL) {
   else {
     $packages = _convert_csv_to_array($packages);
   }
+
   $manager = \Drupal::service('config_packager.manager');
   $assigner = \Drupal::service('config_packager_assigner');
+  $generator = \Drupal::service('config_packager_generator');
   $assigner->assignConfigPackages();
 
   $add_profile = drush_get_option('add-profile');
 
-  $method = ConfigPackagerManagerInterface::GENERATE_METHOD_WRITE;
+  // Use the write generation method.
+  $method_id = \Drupal\config_packager\Plugin\ConfigPackagerGeneration\ConfigPackagerGenerationWrite::METHOD_ID;
 
   // If any packages exist, confirm before overwriting.
   if ($existing_packages = $manager->getPackageDirectories($packages, $add_profile)) {
@@ -134,10 +137,10 @@ function drush_config_packager_generate_packages($packages = NULL) {
   }
 
   if ($add_profile) {
-    $result = $manager->generateProfile($method, $packages);
+    $result = $generator->generateProfile($method_id, $packages, FALSE);
   }
   else {
-    $result = $manager->generatePackages($method, $packages);
+    $result = $generator->generatePackages($method_id, $packages, FALSE);
   }
   foreach ($result as $message) {
     $type = $message['success'] ? 'success' : 'error';

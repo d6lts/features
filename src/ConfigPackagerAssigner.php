@@ -11,7 +11,6 @@ use Drupal\Component\Plugin\PluginManagerInterface;
 use Drupal\config_packager\ConfigPackagerManagerInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\StorageInterface;
-use Drupal\Core\Site\Settings;
 
 /**
  * Class responsible for performing package assignment.
@@ -59,7 +58,7 @@ class ConfigPackagerAssigner implements ConfigPackagerAssignerInterface {
    * @param \Drupal\config_packager\ConfigPackagerManagerInterface $config_packager_manager
    *    The configuration packager manager.
    * @param \Drupal\Component\Plugin\PluginManagerInterface $assigner_manager
-   *   The package assignment methods plugin manager
+   *   The package assignment methods plugin manager.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The configuration factory.
    * @param \Drupal\Core\Config\StorageInterface $config_storage
@@ -102,11 +101,7 @@ class ConfigPackagerAssigner implements ConfigPackagerAssignerInterface {
   }
 
   /**
-   * Performs package assignment using the specified assignment method.
-   *
-   * @param string $method_id
-   *   The string identifier of the package assignment method to use to package
-   *   configuration.
+   * {@inheritdoc}
    */
   public function assignConfigPackages() {
     foreach ($this->getEnabledAssigners() as $method_id => $info) {

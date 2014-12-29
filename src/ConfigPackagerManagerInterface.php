@@ -8,6 +8,7 @@
 namespace Drupal\config_packager;
 
 use Drupal\config_packager\ConfigPackagerAssignerInterface;
+use Drupal\config_packager\ConfigPackagerGeneratorInterface;
 use Drupal\Core\Extension\Extension;
 
 /**
@@ -23,16 +24,6 @@ interface ConfigPackagerManagerInterface {
    * @see https://www.drupal.org/node/2297311
    */
   const SYSTEM_SIMPLE_CONFIG = 'system_simple';
-
-  /**
-   * Archive file generation method.
-   */
-  const GENERATE_METHOD_ARCHIVE = 'archive';
-
-  /**
-   * Write file generation method.
-   */
-  const GENERATE_METHOD_WRITE = 'write';
 
   /**
    * Reset packages and configuration assignment.
@@ -177,6 +168,22 @@ interface ConfigPackagerManagerInterface {
   public function setAssigner(ConfigPackagerAssignerInterface $assigner);
 
   /**
+   * Get a reference to a package generator.
+   *
+   * @return \Drupal\config_packager\ConfigPackagerGeneratorInterface
+   *   The package generator.
+   */
+  public function getGenerator();
+
+  /**
+   * Injects the package generator.
+   *
+   * @param \Drupal\config_packager\ConfigPackagerGeneratorInterface @generator
+   *   The package generator.
+   */
+  public function setGenerator(ConfigPackagerGeneratorInterface $generator);
+
+  /**
    * Initialize a configuration package.
    *
    * @param string $machine_name
@@ -244,6 +251,23 @@ interface ConfigPackagerManagerInterface {
   public function assignConfigDependents(array $item_names = NULL);
 
   /**
+   * Return an array of short package names.
+   *
+   * The ConfigPackagerManager::packages property is keyed by short package
+   * names while each package has a 'machine_name' key that is the short name
+   * prefixed by the profile machine name and an underscore. Here we remove
+   * this prefix and return short names.
+   *
+   * @param array $machine_names
+   *   Array of names. If empty, all availble package short names will be
+   *   returned.
+   *
+   * @return array
+   *   Array of short names.
+   */
+  public function getPackageMachineNamesShort(array $machine_names = array());
+
+  /**
    * Get the types of configuration available on the site.
    *
    * @return array
@@ -270,7 +294,6 @@ interface ConfigPackagerManagerInterface {
    */
   public function getModuleList(array $names = array(), $namespace = NULL);
 
-
   /**
    * Return an array of names of configuration objects provided by a given
    * extension.
@@ -287,40 +310,11 @@ interface ConfigPackagerManagerInterface {
   public function getExtensionConfig(Extension $extension);
 
   /**
-   * Generate file representations of configuration packages.
+   * Iterate through packages and profile and prepare file names and contents.
    *
-   * @param string $method
-   *   The method to use, either
-   *   ConfigPackagerManagerInterface::GENERATE_METHOD_ARCHIVE to generate an
-   *   archive (tarball) or
-   *   ConfigPackagerManagerInterface::GENERATE_METHOD_WRITE to write files
-   *   to the file system.
-   * @param array $package_names
-   *   Array of names of packages to be generated. If none are specified, all
-   *   available packages will be added.
-   * @param boolean $short_names
-   *   Boolean TRUE is any package names given in the $package_names argument
-   *   are in the short machine name format, FALSE if they are not.
+   * @param boolean $add_profile
+   *   Whether to add an install profile. Defaults to FALSE.
    */
-  public function generatePackages($method, array $package_names = array(), $short_names = TRUE);
-
-  /**
-   * Generate file representations of an install profile and configuration
-   * packages.
-   *
-   * @param string $method
-   *   The method to use, either
-   *   ConfigPackagerManagerInterface::GENERATE_METHOD_ARCHIVE to generate an
-   *   archive (tarball) or
-   *   ConfigPackagerManagerInterface::GENERATE_METHOD_WRITE to write files
-   *   to the file system.
-   * @param array $package_names
-   *   Array of names of packages to be generated. If none are specified, all
-   *   available packages will be added.
-   * @param boolean $short_names
-   *   Boolean TRUE is any package names given in the $package_names argument
-   *   are in the short machine name format, FALSE if they are not.
-   */
-  public function generateProfile($method, array $package_names = array(), $short_names = FALSE);
+  public function prepareFiles($add_profile = FALSE);
 
 }

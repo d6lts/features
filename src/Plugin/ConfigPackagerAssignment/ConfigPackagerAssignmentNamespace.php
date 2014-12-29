@@ -10,8 +10,7 @@ namespace Drupal\config_packager\Plugin\ConfigPackagerAssignment;
 use Drupal\config_packager\ConfigPackagerAssignmentMethodBase;
 
 /**
- * Class for assigning configuration to packages based on configuration
- * dependencies.
+ * Class for assigning configuration to packages based on namespaces.
  *
  * @Plugin(
  *   id = \Drupal\config_packager\Plugin\ConfigPackagerAssignment\ConfigPackagerAssignmentNamespace::METHOD_ID,

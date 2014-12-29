@@ -10,7 +10,7 @@ namespace Drupal\config_packager\Plugin\ConfigPackagerAssignment;
 use Drupal\config_packager\ConfigPackagerAssignmentMethodBase;
 
 /**
- * Class for assigning configuration to packages based on entity types .
+ * Class for assigning configuration to a core package based on entity types.
  *
  * @Plugin(
  *   id = \Drupal\config_packager\Plugin\ConfigPackagerAssignment\ConfigPackagerAssignmentCoreType::METHOD_ID,

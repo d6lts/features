@@ -11,7 +11,7 @@ use Drupal\component\Utility\Unicode;
 use Drupal\config_packager\ConfigPackagerAssignmentMethodBase;
 
 /**
- * Class for assigning configuration to packages based on entity types .
+ * Class for assigning configuration to packages based on entity types.
  *
  * @Plugin(
  *   id = \Drupal\config_packager\Plugin\ConfigPackagerAssignment\ConfigPackagerAssignmentBaseType::METHOD_ID,

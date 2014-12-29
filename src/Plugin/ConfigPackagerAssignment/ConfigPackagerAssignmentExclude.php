@@ -13,7 +13,7 @@ use Drupal\config_packager\ConfigPackagerManagerInterface;
 use Drupal\Core\Config\ExtensionInstallStorage;
 
 /**
- * Class for assigning configuration to packages based on entity types .
+ * Class for excluding configuration from packages.
  *
  * @Plugin(
  *   id = \Drupal\config_packager\Plugin\ConfigPackagerAssignment\ConfigPackagerAssignmentExclude::METHOD_ID,
