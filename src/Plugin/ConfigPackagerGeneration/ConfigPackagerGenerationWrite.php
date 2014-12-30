@@ -52,12 +52,12 @@ class ConfigPackagerGenerationWrite extends ConfigPackagerGenerationMethodBase {
     // Add profile files.
     if ($add_profile) {
       $profile = $this->configPackagerManager->getProfile();
-      $this->writePackage($return, $profile, $base_directory);
+      $this->generatePackage($return, $profile, $base_directory);
     }
 
     // Add package files.
     foreach ($packages as $package) {
-      $this->writePackage($return, $package, $base_directory);
+      $this->generatePackage($return, $package, $base_directory);
     }
     return $return;
   }
@@ -72,20 +72,20 @@ class ConfigPackagerGenerationWrite extends ConfigPackagerGenerationMethodBase {
    * @param string $base_directory
    *   The base directory.
    */
-  protected function writePackage(array &$return, array $package, $base_directory) {
+  protected function generatePackage(array &$return, array $package, $base_directory) {
     $success = TRUE;
     foreach ($package['files'] as $file) {
       try {
-        $this->writeFile($base_directory, $file);
+        $this->generateFile($base_directory, $file);
       }
       catch(Exception $exception) {
-        $this->writeFailure($return, $package, $base_directory, $exception);
+        $this->failure($return, $package, $base_directory, $exception);
         $success = FALSE;
         break;
       }
     }
     if ($success) {
-      $this->writeSuccess($return, $package, $base_directory);
+      $this->success($return, $package, $base_directory);
     }
   }
 
@@ -99,7 +99,7 @@ class ConfigPackagerGenerationWrite extends ConfigPackagerGenerationMethodBase {
    * @param string $base_directory
    *   The base directory.
    */
-  protected function writeSuccess(&$return, $package, $base_directory) {
+  protected function success(&$return, $package, $base_directory) {
     $directory = $base_directory . '/' . dirname($package['files']['info']['filename']);
     $type = $package['type'] == 'module' ? $this->t('Package') : $this->t('Profile');
     $return[] = [
@@ -126,7 +126,7 @@ class ConfigPackagerGenerationWrite extends ConfigPackagerGenerationMethodBase {
    * @param Exception $exception
    *   The exception object.
    */
-  protected function writeFailure(&$return, $package, $base_directory, Exception $exception) {
+  protected function failure(&$return, $package, $base_directory, Exception $exception) {
     $directory = $base_directory . '/' . dirname($package['files']['info']['filename']);
     $type = $package['type'] == 'package' ? $this->t('Package') : $this->t('Profile');
     $return[] = [
@@ -152,7 +152,7 @@ class ConfigPackagerGenerationWrite extends ConfigPackagerGenerationMethodBase {
    *
    * @throws Exception
    */
-  protected function writeFile($base_directory, $file) {
+  protected function generateFile($base_directory, $file) {
     $directory = $base_directory . '/' . dirname($file['filename']);
     if (!is_dir($directory)) {
       if (drupal_mkdir($directory, NULL, TRUE) === FALSE) {

@@ -57,12 +57,12 @@ class ConfigPackagerGenerationArchive extends ConfigPackagerGenerationMethodBase
 
     if ($add_profile) {
       $profile = $this->configPackagerManager->getProfile();
-      $this->archivePackage($return, $profile, $archiver);
+      $this->generatePackage($return, $profile, $archiver);
     }
 
     // Add package files.
     foreach ($packages as $package) {
-      $this->archivePackage($return, $package, $archiver);
+      $this->generatePackage($return, $package, $archiver);
     }
 
     return $return;
@@ -78,20 +78,20 @@ class ConfigPackagerGenerationArchive extends ConfigPackagerGenerationMethodBase
    * @param ArchiveTar $archiver
    *   The archiver.
    */
-  protected function archivePackage(array &$return, array $package, ArchiveTar $archiver) {
+  protected function generatePackage(array &$return, array $package, ArchiveTar $archiver) {
     $success = TRUE;
     foreach ($package['files'] as $file) {
       try {
-        $this->archiveFile($archiver, $file);
+        $this->generateFile($archiver, $file);
       }
       catch(\Exception $exception) {
-        $this->archiveFailure($return, $package, $exception);
+        $this->failure($return, $package, $exception);
         $success = FALSE;
         break;
       }
     }
     if ($success) {
-      $this->archiveSuccess($return, $package);
+      $this->success($return, $package);
     }
   }
 
@@ -103,7 +103,7 @@ class ConfigPackagerGenerationArchive extends ConfigPackagerGenerationMethodBase
    * @param array $package
    *   The package or profile.
    */
-  protected function archiveSuccess(array &$return, array $package) {
+  protected function success(array &$return, array $package) {
     $type = $package['type'] == 'module' ? $this->t('Package') : $this->t('Profile');
     $return[] = [
       'success' => TRUE,
@@ -128,7 +128,7 @@ class ConfigPackagerGenerationArchive extends ConfigPackagerGenerationMethodBase
    * @param Exception $exception
    *   The exception object.
    */
-  protected function archiveFailure(&$return, array $package, Exception $exception) {
+  protected function failure(&$return, array $package, Exception $exception) {
     $type = $package['type'] == 'package' ? $this->t('Package') : $this->t('Profile');
     $return[] = [
       'success' => FALSE,
@@ -154,7 +154,7 @@ class ConfigPackagerGenerationArchive extends ConfigPackagerGenerationMethodBase
    *
    * @throws Exception
    */
-  protected function archiveFile(ArchiveTar $archiver, array $file) {
+  protected function generateFile(ArchiveTar $archiver, array $file) {
     if ($archiver->addString($file['filename'], $file['string']) === FALSE) {
       throw new \Exception($this->t('Failed to archive file @filename.', ['@filename' => basename($file['filename'])]));
     }
