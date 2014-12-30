@@ -225,8 +225,11 @@ class ConfigPackagerExportForm extends FormBase {
         '#rows' => $rows,
       );
     }
-    $form['#attached']['css'][] = drupal_get_path('module', 'config_packager') . '/css/config_packager.admin.css';
-
+    $form['#attached'] = array(
+      'library' => array(
+        'config_packager/drupal.config_packager.admin',
+      ),
+    );
     // Offer available generation methods.
     $generation_info = $this->generator->getGenerationMethods();
     // Sort generation methods by weight.
