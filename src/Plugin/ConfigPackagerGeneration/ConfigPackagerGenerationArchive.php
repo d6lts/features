@@ -150,13 +150,23 @@ class ConfigPackagerGenerationArchive extends ConfigPackagerGenerationMethodBase
    * @param ArchiveTar $archiver
    *   The archiver.
    * @param array $file
-   *   Array with keys 'filename' and 'string'.
+   *   Array with the following keys:
+   *   - 'filename': the name of the file.
+   *   - 'subdirectory': any subdirectory of the file within the extension
+   *      directory.
+   *   - 'directory': the extension directory of the file.
+   *   - 'string': the contents of the file.
    *
    * @throws Exception
    */
   protected function generateFile(ArchiveTar $archiver, array $file) {
-    if ($archiver->addString($file['filename'], $file['string']) === FALSE) {
-      throw new \Exception($this->t('Failed to archive file @filename.', ['@filename' => basename($file['filename'])]));
+    $filename = $file['directory'];
+    if (!empty($file['subdirectory'])) {
+      $filename .= '/' . $file['subdirectory'];
+    }
+    $filename .= '/' . $file['filename'];
+    if ($archiver->addString($filename, $file['string']) === FALSE) {
+      throw new \Exception($this->t('Failed to archive file @filename.', ['@filename' => $file['filename']]));
     }
   }
 

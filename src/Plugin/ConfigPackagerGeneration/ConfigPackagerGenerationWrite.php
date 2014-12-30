@@ -100,7 +100,7 @@ class ConfigPackagerGenerationWrite extends ConfigPackagerGenerationMethodBase {
    *   The base directory.
    */
   protected function success(&$return, $package, $base_directory) {
-    $directory = $base_directory . '/' . dirname($package['files']['info']['filename']);
+    $directory = $base_directory . '/' . $package['files']['info']['directory'];
     $type = $package['type'] == 'module' ? $this->t('Package') : $this->t('Profile');
     $return[] = [
       'success' => TRUE,
@@ -148,19 +148,27 @@ class ConfigPackagerGenerationWrite extends ConfigPackagerGenerationMethodBase {
    * @param string $base_directory
    *   Directory to prepend to file path.
    * @param array $file
-   *   Array with keys 'filename' and 'string'.
+   *   Array with the following keys:
+   *   - 'filename': the name of the file.
+   *   - 'subdirectory': any subdirectory of the file within the extension
+   *      directory.
+   *   - 'directory': the extension directory of the file.
+   *   - 'string': the contents of the file.
    *
    * @throws Exception
    */
   protected function generateFile($base_directory, $file) {
-    $directory = $base_directory . '/' . dirname($file['filename']);
+    $directory = $base_directory . '/' . $file['directory'];
+    if (!empty($file['subdirectory'])) {
+      $directory .= '/' . $file['subdirectory'];
+    }
     if (!is_dir($directory)) {
       if (drupal_mkdir($directory, NULL, TRUE) === FALSE) {
         throw new \Exception($this->t('Failed to create directory @directory.', ['@directory' => $directory]));
       }
     }
-    if (file_put_contents($base_directory . '/' . $file['filename'], $file['string']) === FALSE) {
-      throw new \Exception($this->t('Failed to write file @filename.', ['@filename' => basename($file['filename'])]));
+    if (file_put_contents($directory . '/' . $file['filename'], $file['string']) === FALSE) {
+      throw new \Exception($this->t('Failed to write file @filename.', ['@filename' => $file['filename']]));
     }
   }
 

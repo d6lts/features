@@ -78,6 +78,9 @@ interface ConfigPackagerManagerInterface {
    *   - 'config': array of names of configuration items.
    *   - 'files' array of files, each having the following keys:
    *      - 'filename': the name of the file.
+   *      - 'subdirectory': any subdirectory of the file within the extension
+   *         directory.
+   *      - 'directory': the extension directory of the file.
    *      - 'string': the contents of the file.
    */
   public function getPackages();
@@ -101,6 +104,9 @@ interface ConfigPackagerManagerInterface {
    *   - 'config': array of names of configuration items.
    *   - 'files' array of files, each having the following keys:
    *      - 'filename': the name of the file.
+   *      - 'subdirectory': any subdirectory of the file within the extension
+   *         directory.
+   *      - 'directory': the extension directory of the file.
    *      - 'string': the contents of the file.
    */
   public function setPackages(array $packages);
@@ -124,6 +130,9 @@ interface ConfigPackagerManagerInterface {
    *   - 'config': array of names of configuration items.
    *   - 'files' array of files, each having the following keys:
    *      - 'filename': the name of the file.
+   *      - 'subdirectory': any subdirectory of the file within the extension
+   *         directory.
+   *      - 'directory': the extension directory of the file.
    *      - 'string': the contents of the file.
    */
   public function getProfile();
@@ -147,6 +156,9 @@ interface ConfigPackagerManagerInterface {
    *   - 'config': array of names of configuration items.
    *   - 'files' array of files, each having the following keys:
    *      - 'filename': the name of the file.
+   *      - 'subdirectory': any subdirectory of the file within the extension
+   *         directory.
+   *      - 'directory': the extension directory of the file.
    *      - 'string': the contents of the file.
    */
   public function setProfile(array $profile);

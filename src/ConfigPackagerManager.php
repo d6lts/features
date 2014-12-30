@@ -235,8 +235,7 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
     // modules. system_rebuild_module_data() includes only the site's install
     // profile directory, while we may need to include a custom profile.
     // @see _system_rebuild_module_data().
-    // @todo: update to use \Drupal::root().
-    $listing = new ExtensionDiscovery(DRUPAL_ROOT);
+    $listing = new ExtensionDiscovery(\Drupal::root());
     $profile_directories = [];
     // Register the install profile.
     $installed_profile = drupal_get_profile();
@@ -264,7 +263,7 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
     $modules = array_intersect_key($modules, array_fill_keys($machine_names, NULL));
     $directories = array();
     foreach ($modules as $name => $module) {
-      // @todo: update to use \Drupal::root()?
+      // @todo: prefix with \Drupal::root()?
       $directories[$name] = $module->getPath();
     }
 
@@ -383,6 +382,9 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
    *   - 'config': array of names of configuration items.
    *   - 'files' array of files, each having the following keys:
    *      - 'filename': the name of the file.
+   *      - 'subdirectory': any subdirectory of the file within the extension
+   *         directory.
+   *      - 'directory': the extension directory of the file.
    *      - 'string': the contents of the file.
    */
   protected function getProject($machine_name_short, $name_short = NULL, $description = '', $type = 'module') {
@@ -493,7 +495,9 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
     }
 
     $package['files']['info'] = [
-      'filename' => $package['machine_name'] . '/' . $package['machine_name'] . '.info.yml',
+      'filename' => $package['machine_name'] . '.info.yml',
+      'subdirectory' => NULL,
+      'directory' => $package['machine_name'],
       // Filter to remove any empty keys, e.g., an empty themes array.
       'string' => Yaml::encode(array_filter($info))
     ];
@@ -507,7 +511,7 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
     $packages = $this->getPackages();
     foreach ($packages as &$package) {
       foreach ($package['files'] as &$file) {
-        $file['filename'] = $this->profile['machine_name'] . '/modules/custom/' . $file['filename'];
+        $file['directory'] = $this->profile['machine_name'] . '/modules/custom/' . $file['directory'];
       }
       // Clean up the $file pass by reference.
       unset($file);
@@ -540,7 +544,9 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
           );
           // Add the files to those to be output.
           $profile['files'][$extension] = [
-            'filename' => $profile['machine_name'] . '/' . $profile['machine_name'] . '.' . $extension,
+            'filename' => $profile['machine_name'] . '.' . $extension,
+            'subdirectory' => NULL,
+            'directory' => $profile['machine_name'],
             'string' => $string
           ];
         }
@@ -568,7 +574,9 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
             unset($config['data']['uuid']);
           }
           $package['files'][$name] = [
-            'filename'=> $package['machine_name'] . '/' . InstallStorage::CONFIG_INSTALL_DIRECTORY . '/' . $config['name'] . '.yml',
+            'filename'=> $config['name'] . '.yml',
+            'subdirectory' => InstallStorage::CONFIG_INSTALL_DIRECTORY,
+            'directory' => $package['machine_name'],
             'string' => Yaml::encode($config['data'])
           ];
         }
