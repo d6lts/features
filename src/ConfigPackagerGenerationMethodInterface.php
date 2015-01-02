@@ -40,6 +40,9 @@ interface ConfigPackagerGenerationMethodInterface {
    *   Whether to add an install profile. Defaults to FALSE.
    * @param array $packages
    *   Array of package data.
+   *
+   * @return array
+   *   An array of packages data.
    */
   public function prepare($add_profile = FALSE, array $packages = array());
 

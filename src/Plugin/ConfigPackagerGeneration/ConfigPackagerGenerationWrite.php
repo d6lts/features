@@ -8,7 +8,7 @@
 namespace Drupal\config_packager\Plugin\ConfigPackagerGeneration;
 
 use Drupal\config_packager\ConfigPackagerGenerationMethodBase;
-use Drupal\Core\Writer\WriteTar;
+use Drupal\Core\Config\InstallStorage;
 
 /**
  * Class for writing packages to the local file system.
@@ -28,10 +28,63 @@ class ConfigPackagerGenerationWrite extends ConfigPackagerGenerationMethodBase {
   const METHOD_ID = 'write';
 
   /**
-   * {@inheritdoc}
+   * Overrides ConfigPackagerGenerationMethodInterface::prepare
+   *
+   * Read and merge in existing package files.
    */
   public function prepare($add_profile = FALSE, array $packages = array()) {
+    // If no packages were specified, get all packages.
+    if (empty($packages)) {
+      $packages = $this->configPackagerManager->getPackages();
+    }
 
+    // If it's a profile, write it to the 'profiles' directory. Otherwise, it
+    // goes in 'modules/custom'.
+    $base_directory = $add_profile ? 'profiles' : 'modules/custom';
+
+    // If any packages exist, read in their files.
+    $machine_names = $this->configPackagerManager->getPackageMachineNames(array_keys($packages));
+    $existing_packages = $this->configPackagerManager->getPackageDirectories($machine_names, $add_profile);
+
+    // Iterate through packages.
+    foreach ($packages as &$package) {
+      // If this package is already present, prepare files.
+      if (isset($existing_packages[$package['machine_name']])) {
+        $existing_directory = $existing_packages[$package['machine_name']];
+
+        // Reassign all files to the extension's directory.
+        foreach ($package['files'] as &$file) {
+          $file['directory'] = $existing_directory;
+        }
+        // Clean up the $file pass by reference
+        unset($file);
+
+        // Merge in the info file.
+        $info_file_uri = $existing_directory . '/' . $package['machine_name'] . '.info.yml';
+        if (file_exists($info_file_uri)) {
+          $package['files']['info']['string'] = $this->mergeInfoFile($package['files']['info']['string'], $info_file_uri);
+        }
+
+        // Remove the config directory, as it will be replaced.
+        $config_directory = $existing_directory . '/' . InstallStorage::CONFIG_INSTALL_DIRECTORY;
+        if (is_dir($config_directory)) {
+          file_unmanaged_delete_recursive($config_directory);
+        }
+      }
+      // If the package is not present, nest its files in the base directory.
+      else {
+        // Prepend all file directories with the base directory.
+        foreach ($package['files'] as &$file) {
+          $file['directory'] = $base_directory . '/' . $file['directory'];
+        }
+        // Clean up the $file pass by reference
+        unset($file);
+      }
+      // Clean up the $package pass by reference
+      unset($package);
+    }
+
+    return $packages;
   }
 
   /**
@@ -43,21 +96,17 @@ class ConfigPackagerGenerationWrite extends ConfigPackagerGenerationMethodBase {
       $packages = $this->configPackagerManager->getPackages();
     }
 
-    // If it's a profile, write it to the 'profiles' directory. Otherwise,
-    // it goes in 'modules/custom'.
-    $base_directory = $add_profile ? 'profiles' : 'modules/custom';
-
     $return = [];
 
     // Add profile files.
     if ($add_profile) {
       $profile = $this->configPackagerManager->getProfile();
-      $this->generatePackage($return, $profile, $base_directory);
+      $this->generatePackage($return, $profile);
     }
 
     // Add package files.
     foreach ($packages as $package) {
-      $this->generatePackage($return, $package, $base_directory);
+      $this->generatePackage($return, $package);
     }
     return $return;
   }
@@ -69,23 +118,21 @@ class ConfigPackagerGenerationWrite extends ConfigPackagerGenerationMethodBase {
    *   The return value, passed by reference.
    * @param array $package
    *   The package or profile.
-   * @param string $base_directory
-   *   The base directory.
    */
-  protected function generatePackage(array &$return, array $package, $base_directory) {
+  protected function generatePackage(array &$return, array $package) {
     $success = TRUE;
     foreach ($package['files'] as $file) {
       try {
-        $this->generateFile($base_directory, $file);
+        $this->generateFile($file);
       }
       catch(Exception $exception) {
-        $this->failure($return, $package, $base_directory, $exception);
+        $this->failure($return, $package, $exception);
         $success = FALSE;
         break;
       }
     }
     if ($success) {
-      $this->success($return, $package, $base_directory);
+      $this->success($return, $package);
     }
   }
 
@@ -96,11 +143,8 @@ class ConfigPackagerGenerationWrite extends ConfigPackagerGenerationMethodBase {
    *   The return value, passed by reference.
    * @param array $package
    *   The package or profile.
-   * @param string $base_directory
-   *   The base directory.
    */
-  protected function success(&$return, $package, $base_directory) {
-    $directory = $base_directory . '/' . $package['files']['info']['directory'];
+  protected function success(&$return, $package) {
     $type = $package['type'] == 'module' ? $this->t('Package') : $this->t('Profile');
     $return[] = [
       'success' => TRUE,
@@ -109,7 +153,7 @@ class ConfigPackagerGenerationWrite extends ConfigPackagerGenerationMethodBase {
       'variables' => [
         '!type' => $type,
         '@package' => $package['name'],
-        '@directory' => $directory
+        '@directory' => $package['files']['info']['directory']
       ],
     ];
   }
@@ -121,13 +165,10 @@ class ConfigPackagerGenerationWrite extends ConfigPackagerGenerationMethodBase {
    *   The return value, passed by reference.
    * @param array $package
    *   The package or profile.
-   * @param string $base_directory
-   *   The base directory.
    * @param Exception $exception
    *   The exception object.
    */
-  protected function failure(&$return, $package, $base_directory, Exception $exception) {
-    $directory = $base_directory . '/' . dirname($package['files']['info']['filename']);
+  protected function failure(&$return, $package, Exception $exception) {
     $type = $package['type'] == 'package' ? $this->t('Package') : $this->t('Profile');
     $return[] = [
       'success' => FALSE,
@@ -136,7 +177,7 @@ class ConfigPackagerGenerationWrite extends ConfigPackagerGenerationMethodBase {
       'variables' => [
         '!type' => $type,
         '@package' => $package['name'],
-        '@directory' => $directory,
+        '@directory' => $package['files']['info']['directory'],
         '@error' => $exception->getMessage()
       ],
     ];
@@ -145,8 +186,6 @@ class ConfigPackagerGenerationWrite extends ConfigPackagerGenerationMethodBase {
   /**
    * Write a file to the file system, creating its directory as needed.
    *
-   * @param string $base_directory
-   *   Directory to prepend to file path.
    * @param array $file
    *   Array with the following keys:
    *   - 'filename': the name of the file.
@@ -157,8 +196,8 @@ class ConfigPackagerGenerationWrite extends ConfigPackagerGenerationMethodBase {
    *
    * @throws Exception
    */
-  protected function generateFile($base_directory, $file) {
-    $directory = $base_directory . '/' . $file['directory'];
+  protected function generateFile($file) {
+    $directory = $file['directory'];
     if (!empty($file['subdirectory'])) {
       $directory .= '/' . $file['subdirectory'];
     }

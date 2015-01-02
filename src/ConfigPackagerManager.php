@@ -128,7 +128,7 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
     foreach ($this->configCollection as &$config) {
       $config['package'] = NULL;
     }
-    // Clean up the pass by reference
+    // Clean up the $config pass by reference.
     unset($config);
   }
 
@@ -173,6 +173,8 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
    */
   public function setProfile(array $profile) {
     $this->profile = $profile;
+    // Ensure package names are current.
+    $this->refreshPackageNames();
   }
 
   /**
@@ -263,7 +265,6 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
     $modules = array_intersect_key($modules, array_fill_keys($machine_names, NULL));
     $directories = array();
     foreach ($modules as $name => $module) {
-      // @todo: prefix with \Drupal::root()?
       $directories[$name] = $module->getPath();
     }
 
@@ -477,19 +478,11 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
 
       // Optionally add data from the standard profile.
       if ($this->profileSettings['add_standard']) {
-        $info_file_name = 'core/profiles/standard/standard.info.yml';
-        if (file_exists($info_file_name)) {
-          $profile_info = \Drupal::service('info_parser')->parse($info_file_name);
+        $info_file_uri = 'core/profiles/standard/standard.info.yml';
+        if (file_exists($info_file_uri)) {
+          $profile_info = \Drupal::service('info_parser')->parse($info_file_uri);
           // Merge in dependencies and themes data.
-          foreach (['dependencies', 'themes'] as $key) {
-            $info[$key] = array_unique(
-              array_merge(
-                $info[$key],
-                $profile_info[$key]
-              )
-            );
-            sort($info[$key]);
-          }
+          $info = $this->arrayMergeUnique($info, $profile_info, ['dependencies', 'themes']);
         }
       }
     }
@@ -582,8 +575,38 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
         }
       }
     }
-    // Clean up the pass by reference.
+    // Clean up the $package pass by reference.
     unset($package);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function arrayMergeUnique(array $array1, array $array2, $keys = array()) {
+    // If keys were specified, use only those.
+    if (!empty($keys)) {
+      $array2 = array_intersect_key($array2, array_fill_keys($keys, NULL));
+    }
+
+    // Iterate through the incoming array.
+    foreach ($array2 as $key => $value) {
+      // If its values are arrays, merge them in and sort them.
+      if (is_array($value)) {
+        $array1[$key] = array_unique(
+          array_merge(
+            $array1[$key],
+            $value
+          )
+        );
+        sort($array1[$key]);
+      }
+      // Otherwise, accept the incoming values.
+      else {
+        $array1[$key] = $value;
+      }
+    }
+
+    return $array1;
   }
 
   /**
@@ -611,18 +634,9 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
   }
 
   /**
-   * Return an array of package machine names packages.
-   *
-   * @param array $machine_names_short
-   *   Array of names. If empty, all availble package short names will be
-   *   returned.
-   * @param boolean $add_profile
-   *   Whether to add an install profile. Defaults to FALSE.
-   *
-   * @return array
-   *   Array of short names.
+   * {@inheritdoc}
    */
-  protected function getPackageMachineNames(array $machine_names_short = array(), $add_profile = FALSE) {
+  public function getPackageMachineNames(array $machine_names_short = array(), $add_profile = FALSE) {
     $packages = $this->getPackages();
 
     // If specific names were requested, use only those.
@@ -819,9 +833,6 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
    * {@inheritdoc}
    */
   public function prepareFiles($add_profile = FALSE) {
-    // Ensure package names are current.
-    $this->refreshPackageNames();
-
     // Add package files first so their filename values can be altered to nest
     // them in a profile.
     $this->addPackageFiles();

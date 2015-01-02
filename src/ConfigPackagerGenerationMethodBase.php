@@ -7,6 +7,7 @@
 
 namespace Drupal\config_packager;
 
+use Drupal\Component\Serialization\Yaml;
 use Drupal\config_packager\ConfigPackagerManager;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Form\FormStateInterface;
@@ -51,6 +52,20 @@ abstract class ConfigPackagerGenerationMethodBase implements ConfigPackagerGener
    */
   public function exportFormSubmit(array &$form, FormStateInterface $form_state) {
 
+  }
+
+  /**
+   * Merge an info file into a package's info file.
+   *
+   * @param array $package_info
+   *   The Yaml encoded package info.
+   * @param $info_file_uri
+   *   The info file's URI.
+   */
+  protected function mergeInfoFile($package_info, $info_file_uri) {
+    $package_info = Yaml::decode($package_info);
+    $existing_info = \Drupal::service('info_parser')->parse($info_file_uri);
+    return Yaml::encode($this->configPackagerManager->arrayMergeUnique($package_info, $existing_info));
   }
 
 }

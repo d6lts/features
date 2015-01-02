@@ -263,6 +263,36 @@ interface ConfigPackagerManagerInterface {
   public function assignConfigDependents(array $item_names = NULL);
 
   /**
+   * Merge two arrays and process the resulting array, ensuring values are
+   * unique and sorted.
+   *
+   * @param array $array1
+   *   The first array.
+   * @param array $array2
+   *   The second array.
+   * @param array $keys
+   *   Keys to merge. If not specified, all keys present will be merged.
+   *
+   * @return array
+   *   An array with the merged and processed results.
+   */
+  public function arrayMergeUnique(array $array1, array $array2, $keys = array());
+
+  /**
+   * Return an array of package machine names packages.
+   *
+   * @param array $machine_names_short
+   *   Array of names. If empty, all availble package short names will be
+   *   returned.
+   * @param boolean $add_profile
+   *   Whether to add an install profile. Defaults to FALSE.
+   *
+   * @return array
+   *   Array of short names.
+   */
+  public function getPackageMachineNames(array $machine_names_short = array(), $add_profile = FALSE);
+
+  /**
    * Return an array of short package names.
    *
    * The ConfigPackagerManager::packages property is keyed by short package
