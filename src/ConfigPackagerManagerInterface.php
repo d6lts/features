@@ -76,11 +76,11 @@ interface ConfigPackagerManagerInterface {
    *   - 'dependencies': array of module dependencies.
    *   - 'themes': array of names of themes to enable.
    *   - 'config': array of names of configuration items.
+   *   - 'directory': the extension's directory.
    *   - 'files' array of files, each having the following keys:
    *      - 'filename': the name of the file.
    *      - 'subdirectory': any subdirectory of the file within the extension
    *         directory.
-   *      - 'directory': the extension directory of the file.
    *      - 'string': the contents of the file.
    */
   public function getPackages();
@@ -102,11 +102,11 @@ interface ConfigPackagerManagerInterface {
    *   - 'dependencies': array of module dependencies.
    *   - 'themes': array of names of themes to enable.
    *   - 'config': array of names of configuration items.
+   *   - 'directory': the extension's directory.
    *   - 'files' array of files, each having the following keys:
    *      - 'filename': the name of the file.
    *      - 'subdirectory': any subdirectory of the file within the extension
    *         directory.
-   *      - 'directory': the extension directory of the file.
    *      - 'string': the contents of the file.
    */
   public function setPackages(array $packages);
@@ -128,11 +128,11 @@ interface ConfigPackagerManagerInterface {
    *   - 'dependencies': array of module dependencies.
    *   - 'themes': array of names of themes to enable.
    *   - 'config': array of names of configuration items.
+   *   - 'directory': the extension's directory.
    *   - 'files' array of files, each having the following keys:
    *      - 'filename': the name of the file.
    *      - 'subdirectory': any subdirectory of the file within the extension
    *         directory.
-   *      - 'directory': the extension directory of the file.
    *      - 'string': the contents of the file.
    */
   public function getProfile();
@@ -154,11 +154,11 @@ interface ConfigPackagerManagerInterface {
    *   - 'dependencies': array of module dependencies.
    *   - 'themes': array of names of themes to enable.
    *   - 'config': array of names of configuration items.
+   *   - 'directory': the extension's directory.
    *   - 'files' array of files, each having the following keys:
    *      - 'filename': the name of the file.
    *      - 'subdirectory': any subdirectory of the file within the extension
    *         directory.
-   *      - 'directory': the extension directory of the file.
    *      - 'string': the contents of the file.
    */
   public function setProfile(array $profile);

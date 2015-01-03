@@ -381,11 +381,11 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
    *   - 'dependencies': array of module dependencies.
    *   - 'themes': array of names of themes to enable.
    *   - 'config': array of names of configuration items.
+   *   - 'directory': the extension's directory.
    *   - 'files' array of files, each having the following keys:
    *      - 'filename': the name of the file.
    *      - 'subdirectory': any subdirectory of the file within the extension
    *         directory.
-   *      - 'directory': the extension directory of the file.
    *      - 'string': the contents of the file.
    */
   protected function getProject($machine_name_short, $name_short = NULL, $description = '', $type = 'module') {
@@ -402,6 +402,7 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
       'dependencies' => [],
       'themes' => [],
       'config' => [],
+      'directory' => $machine_name_short,
       'files' => []
     ];
     if ($type == 'module') {
@@ -490,7 +491,6 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
     $package['files']['info'] = [
       'filename' => $package['machine_name'] . '.info.yml',
       'subdirectory' => NULL,
-      'directory' => $package['machine_name'],
       // Filter to remove any empty keys, e.g., an empty themes array.
       'string' => Yaml::encode(array_filter($info))
     ];
@@ -503,11 +503,7 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
     // Adjust file paths to include the profile.
     $packages = $this->getPackages();
     foreach ($packages as &$package) {
-      foreach ($package['files'] as &$file) {
-        $file['directory'] = $this->profile['machine_name'] . '/modules/custom/' . $file['directory'];
-      }
-      // Clean up the $file pass by reference.
-      unset($file);
+      $package['directory'] = $this->profile['directory'] . '/modules/custom/' . $package['directory'];
     }
     // Clean up the $package pass by reference.
     unset($package);
@@ -539,7 +535,6 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
           $profile['files'][$extension] = [
             'filename' => $profile['machine_name'] . '.' . $extension,
             'subdirectory' => NULL,
-            'directory' => $profile['machine_name'],
             'string' => $string
           ];
         }
@@ -553,7 +548,10 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
    */
   protected function addPackageFiles() {
     $config_collection = $this->getConfigCollection();
-    foreach ($this->packages as &$package) {
+    $packages = $this->getPackages();
+    foreach ($packages as &$package) {
+      // Ensure the directory reflects the current full machine name.
+      $package['directory'] = $package['machine_name'];
       // Only add files if there is at least one piece of configuration
       // present.
       if (!empty($package['config'])) {
@@ -569,7 +567,6 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
           $package['files'][$name] = [
             'filename'=> $config['name'] . '.yml',
             'subdirectory' => InstallStorage::CONFIG_INSTALL_DIRECTORY,
-            'directory' => $package['machine_name'],
             'string' => Yaml::encode($config['data'])
           ];
         }
@@ -577,6 +574,7 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
     }
     // Clean up the $package pass by reference.
     unset($package);
+    $this->setPackages($packages);
   }
 
   /**

@@ -39,12 +39,7 @@ class ConfigPackagerGenerationWrite extends ConfigPackagerGenerationMethodBase {
     if (isset($existing_packages[$package['machine_name']])) {
       $existing_directory = $existing_packages[$package['machine_name']];
 
-      // Reassign all files to the extension's directory.
-      foreach ($package['files'] as &$file) {
-        $file['directory'] = $existing_directory;
-      }
-      // Clean up the $file pass by reference
-      unset($file);
+      $package['directory'] = $existing_directory;
 
       // Merge in the info file.
       $info_file_uri = $existing_directory . '/' . $package['machine_name'] . '.info.yml';
@@ -60,12 +55,8 @@ class ConfigPackagerGenerationWrite extends ConfigPackagerGenerationMethodBase {
     }
     // If the package is not present, nest its files in the base directory.
     else {
-      // Prepend all file directories with the base directory.
-      foreach ($package['files'] as &$file) {
-        $file['directory'] = $base_directory . '/' . $file['directory'];
-      }
-      // Clean up the $file pass by reference
-      unset($file);
+      // Prepend the extension's directory with the base directory.
+      $package['directory'] = $base_directory . '/' . $package['directory'];
     }
   }
 
@@ -108,7 +99,7 @@ class ConfigPackagerGenerationWrite extends ConfigPackagerGenerationMethodBase {
     $success = TRUE;
     foreach ($package['files'] as $file) {
       try {
-        $this->generateFile($file);
+        $this->generateFile($package['directory'], $file);
       }
       catch(Exception $exception) {
         $this->failure($return, $package, $exception);
@@ -138,7 +129,7 @@ class ConfigPackagerGenerationWrite extends ConfigPackagerGenerationMethodBase {
       'variables' => [
         '!type' => $type,
         '@package' => $package['name'],
-        '@directory' => $package['files']['info']['directory']
+        '@directory' => $package['directory']
       ],
     ];
   }
@@ -162,7 +153,7 @@ class ConfigPackagerGenerationWrite extends ConfigPackagerGenerationMethodBase {
       'variables' => [
         '!type' => $type,
         '@package' => $package['name'],
-        '@directory' => $package['files']['info']['directory'],
+        '@directory' => $package['directory'],
         '@error' => $exception->getMessage()
       ],
     ];
@@ -171,18 +162,18 @@ class ConfigPackagerGenerationWrite extends ConfigPackagerGenerationMethodBase {
   /**
    * Write a file to the file system, creating its directory as needed.
    *
+   * @param directory
+   *   The extension's directory.
    * @param array $file
    *   Array with the following keys:
    *   - 'filename': the name of the file.
    *   - 'subdirectory': any subdirectory of the file within the extension
    *      directory.
-   *   - 'directory': the extension directory of the file.
    *   - 'string': the contents of the file.
    *
    * @throws Exception
    */
-  protected function generateFile($file) {
-    $directory = $file['directory'];
+  protected function generateFile($directory, $file) {
     if (!empty($file['subdirectory'])) {
       $directory .= '/' . $file['subdirectory'];
     }

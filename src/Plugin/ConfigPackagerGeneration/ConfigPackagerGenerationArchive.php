@@ -36,8 +36,6 @@ class ConfigPackagerGenerationArchive extends ConfigPackagerGenerationMethodBase
   protected function preparePackage($add_profile, &$package, $existing_packages) {
     if (isset($existing_packages[$package['machine_name']])) {
       $existing_directory = $existing_packages[$package['machine_name']];
-      // Use the info file to determine the package's directory.
-      $directory = $package['files']['info']['directory'];
       // Scan for all files.
       $files = file_scan_directory($existing_directory, '/.*/');
       foreach ($files as $file) {
@@ -63,7 +61,6 @@ class ConfigPackagerGenerationArchive extends ConfigPackagerGenerationMethodBase
           $package['files'][] = [
             'filename' => $file->filename,
             'subdirectory' => $subdirectory,
-            'directory' => $directory,
             'string' => file_get_contents($file->uri)
           ];
         }
@@ -121,7 +118,7 @@ class ConfigPackagerGenerationArchive extends ConfigPackagerGenerationMethodBase
     $success = TRUE;
     foreach ($package['files'] as $file) {
       try {
-        $this->generateFile($archiver, $file);
+        $this->generateFile($package['directory'], $file, $archiver);
       }
       catch(\Exception $exception) {
         $this->failure($return, $package, $exception);
@@ -186,20 +183,21 @@ class ConfigPackagerGenerationArchive extends ConfigPackagerGenerationMethodBase
   /**
    * Write a file to the file system, creating its directory as needed.
    *
-   * @param ArchiveTar $archiver
-   *   The archiver.
+   * @param directory
+   *   The extension's directory.
    * @param array $file
    *   Array with the following keys:
    *   - 'filename': the name of the file.
    *   - 'subdirectory': any subdirectory of the file within the extension
    *      directory.
-   *   - 'directory': the extension directory of the file.
    *   - 'string': the contents of the file.
+   * @param ArchiveTar $archiver
+   *   The archiver.
    *
    * @throws Exception
    */
-  protected function generateFile(ArchiveTar $archiver, array $file) {
-    $filename = $file['directory'];
+  protected function generateFile($directory, array $file, ArchiveTar $archiver) {
+    $filename = $directory;
     if (!empty($file['subdirectory'])) {
       $filename .= '/' . $file['subdirectory'];
     }
