@@ -31,70 +31,50 @@ class ConfigPackagerGenerationArchive extends ConfigPackagerGenerationMethodBase
   const METHOD_ID = 'archive';
 
   /**
-   * Overrides ConfigPackagerGenerationMethodInterface::prepare
-   *
-   * Read and merge in existing package files.
+   * Read and merge in existing files for a given package or profile.
    */
-  public function prepare($add_profile = FALSE, array $packages = array()) {
-    // If no packages were specified, get all packages.
-    if (empty($packages)) {
-      $packages = $this->configPackagerManager->getPackages();
-    }
-
-    // If any packages exist, read in their files.
-    $machine_names = $this->configPackagerManager->getPackageMachineNames(array_keys($packages));
-    if ($existing_packages = $this->configPackagerManager->getPackageDirectories($machine_names, $add_profile)) {
-      // Packages are keyed by short machine names while the existing packages
-      // array is keyed by full machine names. Therefore, iterate the packages
-      // to find matches.
-      foreach ($packages as &$package) {
-        if (isset($existing_packages[$package['machine_name']])) {
-          $existing_directory = $existing_packages[$package['machine_name']];
-          // Use the info file to determine the package's directory.
-          $directory = $package['files']['info']['directory'];
-          // Scan for all files.
-          $files = file_scan_directory($existing_directory, '/.*/');
-          foreach ($files as $file) {
-            // Skip files in the install directory.
-            if (strpos($existing_directory, InstallStorage::CONFIG_INSTALL_DIRECTORY) !== FALSE) {
-              continue;
-            }
-            // Merge in the info file.
-            if ($file->name == $package['machine_name'] . '.info') {
-              $package['files']['info']['string'] = $this->mergeInfoFile($package['files']['info']['string'], $file->uri);
-            }
-            // Read in remaining files.
-            else {
-              // Determine if the file is within a subdirectory of the
-              // extension's directory.
-              $file_directory = dirname($file->uri);
-              if ($file_directory !== $existing_directory) {
-                $subdirectory = substr($file_directory, strlen($existing_directory) + 1);
-              }
-              else {
-                $subdirectory = NULL;
-              }
-              $package['files'][] = [
-                'filename' => $file->filename,
-                'subdirectory' => $subdirectory,
-                'directory' => $directory,
-                'string' => file_get_contents($file->uri)
-              ];
-            }
+  protected function preparePackage($add_profile, &$package, $existing_packages) {
+    if (isset($existing_packages[$package['machine_name']])) {
+      $existing_directory = $existing_packages[$package['machine_name']];
+      // Use the info file to determine the package's directory.
+      $directory = $package['files']['info']['directory'];
+      // Scan for all files.
+      $files = file_scan_directory($existing_directory, '/.*/');
+      foreach ($files as $file) {
+        // Skip files in the install directory.
+        if (strpos($existing_directory, InstallStorage::CONFIG_INSTALL_DIRECTORY) !== FALSE) {
+          continue;
+        }
+        // Merge in the info file.
+        if ($file->name == $package['machine_name'] . '.info') {
+          $package['files']['info']['string'] = $this->mergeInfoFile($package['files']['info']['string'], $file->uri);
+        }
+        // Read in remaining files.
+        else {
+          // Determine if the file is within a subdirectory of the
+          // extension's directory.
+          $file_directory = dirname($file->uri);
+          if ($file_directory !== $existing_directory) {
+            $subdirectory = substr($file_directory, strlen($existing_directory) + 1);
           }
+          else {
+            $subdirectory = NULL;
+          }
+          $package['files'][] = [
+            'filename' => $file->filename,
+            'subdirectory' => $subdirectory,
+            'directory' => $directory,
+            'string' => file_get_contents($file->uri)
+          ];
         }
       }
-      // Clean up the $package pass by reference
-      unset($package);
     }
-
-    return $packages;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function generate($add_profile = FALSE, array $packages = array()) {
+  public function generate($add_profile = FALSE, array $profile = array(), array $packages = array()) {
     // If no packages were specified, get all packages.
     if (empty($packages)) {
       $packages = $this->configPackagerManager->getPackages();
@@ -112,7 +92,10 @@ class ConfigPackagerGenerationArchive extends ConfigPackagerGenerationMethodBase
     $archiver = new ArchiveTar($archive_name);
 
     if ($add_profile) {
-      $profile = $this->configPackagerManager->getProfile();
+      // If no profile was passed, load the profile.
+      if (empty($profile)) {
+        $profile = $this->configPackagerManager->getProfile();
+      }
       $this->generatePackage($return, $profile, $archiver);
     }
 

@@ -28,69 +28,51 @@ class ConfigPackagerGenerationWrite extends ConfigPackagerGenerationMethodBase {
   const METHOD_ID = 'write';
 
   /**
-   * Overrides ConfigPackagerGenerationMethodInterface::prepare
-   *
-   * Read and merge in existing package files.
+   * Read and merge in existing files for a given package or profile.
    */
-  public function prepare($add_profile = FALSE, array $packages = array()) {
-    // If no packages were specified, get all packages.
-    if (empty($packages)) {
-      $packages = $this->configPackagerManager->getPackages();
-    }
-
+  protected function preparePackage($add_profile, &$package, $existing_packages) {
     // If it's a profile, write it to the 'profiles' directory. Otherwise, it
     // goes in 'modules/custom'.
     $base_directory = $add_profile ? 'profiles' : 'modules/custom';
 
-    // If any packages exist, read in their files.
-    $machine_names = $this->configPackagerManager->getPackageMachineNames(array_keys($packages));
-    $existing_packages = $this->configPackagerManager->getPackageDirectories($machine_names, $add_profile);
+    // If this package is already present, prepare files.
+    if (isset($existing_packages[$package['machine_name']])) {
+      $existing_directory = $existing_packages[$package['machine_name']];
 
-    // Iterate through packages.
-    foreach ($packages as &$package) {
-      // If this package is already present, prepare files.
-      if (isset($existing_packages[$package['machine_name']])) {
-        $existing_directory = $existing_packages[$package['machine_name']];
-
-        // Reassign all files to the extension's directory.
-        foreach ($package['files'] as &$file) {
-          $file['directory'] = $existing_directory;
-        }
-        // Clean up the $file pass by reference
-        unset($file);
-
-        // Merge in the info file.
-        $info_file_uri = $existing_directory . '/' . $package['machine_name'] . '.info.yml';
-        if (file_exists($info_file_uri)) {
-          $package['files']['info']['string'] = $this->mergeInfoFile($package['files']['info']['string'], $info_file_uri);
-        }
-
-        // Remove the config directory, as it will be replaced.
-        $config_directory = $existing_directory . '/' . InstallStorage::CONFIG_INSTALL_DIRECTORY;
-        if (is_dir($config_directory)) {
-          file_unmanaged_delete_recursive($config_directory);
-        }
+      // Reassign all files to the extension's directory.
+      foreach ($package['files'] as &$file) {
+        $file['directory'] = $existing_directory;
       }
-      // If the package is not present, nest its files in the base directory.
-      else {
-        // Prepend all file directories with the base directory.
-        foreach ($package['files'] as &$file) {
-          $file['directory'] = $base_directory . '/' . $file['directory'];
-        }
-        // Clean up the $file pass by reference
-        unset($file);
+      // Clean up the $file pass by reference
+      unset($file);
+
+      // Merge in the info file.
+      $info_file_uri = $existing_directory . '/' . $package['machine_name'] . '.info.yml';
+      if (file_exists($info_file_uri)) {
+        $package['files']['info']['string'] = $this->mergeInfoFile($package['files']['info']['string'], $info_file_uri);
       }
-      // Clean up the $package pass by reference
-      unset($package);
+
+      // Remove the config directory, as it will be replaced.
+      $config_directory = $existing_directory . '/' . InstallStorage::CONFIG_INSTALL_DIRECTORY;
+      if (is_dir($config_directory)) {
+        file_unmanaged_delete_recursive($config_directory);
+      }
     }
-
-    return $packages;
+    // If the package is not present, nest its files in the base directory.
+    else {
+      // Prepend all file directories with the base directory.
+      foreach ($package['files'] as &$file) {
+        $file['directory'] = $base_directory . '/' . $file['directory'];
+      }
+      // Clean up the $file pass by reference
+      unset($file);
+    }
   }
 
   /**
    * {@inheritdoc}
    */
-  public function generate($add_profile = FALSE, array $packages = array()) {
+  public function generate($add_profile = FALSE, array $profile = array(), array $packages = array()) {
     // If no packages were specified, get all packages.
     if (empty($packages)) {
       $packages = $this->configPackagerManager->getPackages();
@@ -100,7 +82,10 @@ class ConfigPackagerGenerationWrite extends ConfigPackagerGenerationMethodBase {
 
     // Add profile files.
     if ($add_profile) {
-      $profile = $this->configPackagerManager->getProfile();
+      // If no profile was passed, load the profile.
+      if (empty($profile)) {
+        $profile = $this->configPackagerManager->getProfile();
+      }
       $this->generatePackage($return, $profile);
     }
 

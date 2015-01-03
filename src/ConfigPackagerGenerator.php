@@ -84,8 +84,9 @@ class ConfigPackagerGenerator implements ConfigPackagerGeneratorInterface {
    */
   public function applyGenerationMethod($method_id, $add_profile = FALSE, array $packages = array()) {
     $method = $this->getGenerationMethodInstance($method_id);
-    $packages = $method->prepare($add_profile, $packages);
-    return $method->generate($add_profile, $packages);
+    $profile = $add_profile ? $this->configPackagerManager->getProfile() : NULL;
+    $method->prepare($add_profile, $profile, $packages);
+    return $method->generate($add_profile, $profile, $packages);
   }
 
   /**

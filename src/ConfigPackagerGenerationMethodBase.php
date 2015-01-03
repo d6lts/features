@@ -68,4 +68,46 @@ abstract class ConfigPackagerGenerationMethodBase implements ConfigPackagerGener
     return Yaml::encode($this->configPackagerManager->arrayMergeUnique($package_info, $existing_info));
   }
 
+  /**
+   * {@inheritdoc}
+   */
+  public function prepare($add_profile = FALSE, array &$profile = array(), array &$packages = array()) {
+    // If no packages were specified, get all packages.
+    if (empty($packages)) {
+      $packages = $this->configPackagerManager->getPackages();
+    }
+
+    // If any packages exist, read in their files.
+    $machine_names = $this->configPackagerManager->getPackageMachineNames(array_keys($packages));
+    $existing_packages = $this->configPackagerManager->getPackageDirectories($machine_names, $add_profile);
+
+    // Packages are keyed by short machine names while the existing packages
+    // array is keyed by full machine names.
+    foreach ($packages as &$package) {
+      $this->preparePackage($add_profile, $package, $existing_packages);
+    }
+    // Clean up the $package pass by reference
+    unset($package);
+
+    if ($add_profile) {
+      if (empty($profile)) {
+        $profile = $this->configPackagerManager->getProfile();
+      }
+      $this->preparePackage($add_profile, $profile, $existing_packages);
+    }
+  }
+
+  /**
+   * Perform any required changes on a package or profile prior to generation.
+   *
+   * @param boolean $add_profile
+   *   Whether to add an install profile. Defaults to FALSE.
+   * @param array $package
+   *   The package to be prepared.
+   * @param $existing_packages
+   *   An array of existing packages with machine names as keys and paths as
+   *   values.
+   */
+  abstract protected function preparePackage($add_profile, &$package, $existing_packages);
+
 }
