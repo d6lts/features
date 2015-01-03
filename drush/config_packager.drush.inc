@@ -32,7 +32,7 @@ function config_packager_drush_command() {
       ),
       'output-data-type' => 'format-table',
     ),
-    'aliases' => array('cp-lp'),
+    'aliases' => array('cp-list'),
   );
 
   $items['config-packager-generate-packages'] = array(
@@ -48,7 +48,7 @@ function config_packager_drush_command() {
     'options' => array(
       'add-profile' => 'Package configuration modules in an install profile.',
     ),
-    'aliases' => array('cp-gp'),
+    'aliases' => array('cp-generate'),
   );
 
   return $items;
