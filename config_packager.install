@@ -8,7 +8,7 @@
 /**
  * Implements hook_install().
  *
- * Populate the profile config_packaging settings based on site name and
+ * Populates the profile config_packaging settings based on site name and
  * slogan.
  */
 function config_packager_install() {

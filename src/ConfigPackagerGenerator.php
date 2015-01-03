@@ -150,7 +150,7 @@ class ConfigPackagerGenerator implements ConfigPackagerGeneratorInterface {
   }
 
   /**
-   * Generate a file representation of configuration packages and, optionally,
+   * Generates a file representation of configuration packages and, optionally,
    * an install profile.
    *
    * @param string $method_id

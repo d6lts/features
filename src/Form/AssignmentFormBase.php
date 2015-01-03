@@ -15,7 +15,7 @@ use Drupal\Core\Form\FormStateInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Configure the selected configuration assignment method for this site.
+ * Configures the selected configuration assignment method for this site.
  */
 abstract class AssignmentFormBase extends FormBase {
 
@@ -64,7 +64,7 @@ abstract class AssignmentFormBase extends FormBase {
   }
 
   /**
-   * Add configuration types checkboxes.
+   * Adds configuration types checkboxes.
    */
   protected function setTypeSelect(&$form, $defaults, $type) {
     $options = $this->configPackagerManager->getConfigTypes();
@@ -79,7 +79,7 @@ abstract class AssignmentFormBase extends FormBase {
   }
 
   /**
-   * Add a "Save settings" submit action.
+   * Adds a "Save settings" submit action.
    */
   protected function setActions(&$form) {
     $form['actions'] = array('#type' => 'actions');

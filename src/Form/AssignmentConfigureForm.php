@@ -19,7 +19,7 @@ use Drupal\Core\Url;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * Configure the configuration assignment methods for this site.
+ * Configures the configuration assignment methods for this site.
  */
 class AssignmentConfigureForm extends FormBase {
 

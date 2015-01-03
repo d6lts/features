@@ -31,7 +31,7 @@ class ConfigPackagerGenerationArchive extends ConfigPackagerGenerationMethodBase
   const METHOD_ID = 'archive';
 
   /**
-   * Read and merge in existing files for a given package or profile.
+   * Reads and merges in existing files for a given package or profile.
    */
   protected function preparePackage($add_profile, &$package, $existing_packages) {
     if (isset($existing_packages[$package['machine_name']])) {
@@ -105,7 +105,7 @@ class ConfigPackagerGenerationArchive extends ConfigPackagerGenerationMethodBase
   }
 
   /**
-   * Write a package or profile's files to an archive.
+   * Writes a package or profile's files to an archive.
    *
    * @param array &$return
    *   The return value, passed by reference.
@@ -132,7 +132,7 @@ class ConfigPackagerGenerationArchive extends ConfigPackagerGenerationMethodBase
   }
 
   /**
-   * Register a successful package or profile archive operation.
+   * Registers a successful package or profile archive operation.
    *
    * @param array &$return
    *   The return value, passed by reference.
@@ -155,7 +155,7 @@ class ConfigPackagerGenerationArchive extends ConfigPackagerGenerationMethodBase
   }
 
   /**
-   * Register a failed package or profile archive operation.
+   * Registers a failed package or profile archive operation.
    *
    * @param array &$return
    *   The return value, passed by reference.
@@ -181,7 +181,7 @@ class ConfigPackagerGenerationArchive extends ConfigPackagerGenerationMethodBase
   }
 
   /**
-   * Write a file to the file system, creating its directory as needed.
+   * Writes a file to the file system, creating its directory as needed.
    *
    * @param directory
    *   The extension's directory.

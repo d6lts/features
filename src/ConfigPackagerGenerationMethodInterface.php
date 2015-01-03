@@ -17,7 +17,7 @@ use Drupal\Core\Form\FormStateInterface;
 interface ConfigPackagerGenerationMethodInterface {
 
   /**
-   * Inject the config packager manager.
+   * Injects the config packager manager.
    *
    * @param \Drupal\config_packager\ConfigPackagerManagerInterface $config_packager_manager
    *   The congig packager manager to be used to retrieve the configuration
@@ -34,7 +34,7 @@ interface ConfigPackagerGenerationMethodInterface {
   public function setConfigFactory(ConfigFactoryInterface $config_factory);
   
   /**
-   * Prepare packages for generation.
+   * Prepares packages for generation.
    *
    * @param boolean $add_profile
    *   Whether to add an install profile. Defaults to FALSE.
@@ -49,7 +49,7 @@ interface ConfigPackagerGenerationMethodInterface {
   public function prepare($add_profile = FALSE, array &$profile = array(), array &$packages = array());
 
   /**
-   * Perform package generation.
+   * Performs package generation.
    *
    * @param boolean $add_profile
    *   Whether to add an install profile. Defaults to FALSE.
@@ -68,7 +68,7 @@ interface ConfigPackagerGenerationMethodInterface {
   public function generate($add_profile = FALSE, array $packages = array());
 
   /**
-   * Respond to the submission of
+   * Responds to the submission of
    * \Drupal\config_packager\Form\ConfigPackagerExportForm.
    */
   public function exportFormSubmit(array &$form, FormStateInterface $form_state);

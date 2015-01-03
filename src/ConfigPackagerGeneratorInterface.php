@@ -80,7 +80,7 @@ interface ConfigPackagerGeneratorInterface {
   public function applyGenerationMethod($method_id, $add_profile = FALSE, array $packages = array());
 
   /**
-   * Respond to the submission of
+   * Responds to the submission of
    * \Drupal\config_packager\Form\ConfigPackagerExportForm.
    */
   public function applyExportFormSubmit($method_id, &$form, FormStateInterface $form_state);
@@ -94,7 +94,7 @@ interface ConfigPackagerGeneratorInterface {
   public function getGenerationMethods();
 
   /**
-   * Generate file representations of configuration packages.
+   * Generates file representations of configuration packages.
    *
    * @param string $method_id
    *   The ID of the generation method to use.
@@ -108,7 +108,7 @@ interface ConfigPackagerGeneratorInterface {
   public function generatePackages($method_id, array $package_names = array(), $short_names = TRUE);
 
   /**
-   * Generate file representations of an install profile and configuration
+   * Generates file representations of an install profile and configuration
    * packages.
    *
    * @param string $method_id

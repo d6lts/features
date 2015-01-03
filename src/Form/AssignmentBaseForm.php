@@ -11,7 +11,7 @@ use Drupal\config_packager\Form\AssignmentFormBase;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
- * Configure the selected configuration assignment method for this site.
+ * Configures the selected configuration assignment method for this site.
  */
 class AssignmentBaseForm extends AssignmentFormBase {
 

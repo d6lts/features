@@ -28,7 +28,7 @@ class ConfigPackagerGenerationWrite extends ConfigPackagerGenerationMethodBase {
   const METHOD_ID = 'write';
 
   /**
-   * Read and merge in existing files for a given package or profile.
+   * Reads and merges in existing files for a given package or profile.
    */
   protected function preparePackage($add_profile, &$package, $existing_packages) {
     // If it's a profile, write it to the 'profiles' directory. Otherwise, it
@@ -88,7 +88,7 @@ class ConfigPackagerGenerationWrite extends ConfigPackagerGenerationMethodBase {
   }
 
   /**
-   * Write a package or profile's files to the file system.
+   * Writes a package or profile's files to the file system.
    *
    * @param array &$return
    *   The return value, passed by reference.
@@ -113,7 +113,7 @@ class ConfigPackagerGenerationWrite extends ConfigPackagerGenerationMethodBase {
   }
 
   /**
-   * Register a successful package or profile write operation.
+   * Registers a successful package or profile write operation.
    *
    * @param array &$return
    *   The return value, passed by reference.
@@ -135,7 +135,7 @@ class ConfigPackagerGenerationWrite extends ConfigPackagerGenerationMethodBase {
   }
 
   /**
-   * Register a failed package or profile write operation.
+   * Registers a failed package or profile write operation.
    *
    * @param array &$return
    *   The return value, passed by reference.
@@ -160,7 +160,7 @@ class ConfigPackagerGenerationWrite extends ConfigPackagerGenerationMethodBase {
   }
 
   /**
-   * Write a file to the file system, creating its directory as needed.
+   * Writes a file to the file system, creating its directory as needed.
    *
    * @param directory
    *   The extension's directory.

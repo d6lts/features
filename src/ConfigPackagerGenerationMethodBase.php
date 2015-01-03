@@ -55,7 +55,7 @@ abstract class ConfigPackagerGenerationMethodBase implements ConfigPackagerGener
   }
 
   /**
-   * Merge an info file into a package's info file.
+   * Merges an info file into a package's info file.
    *
    * @param array $package_info
    *   The Yaml encoded package info.
@@ -98,7 +98,7 @@ abstract class ConfigPackagerGenerationMethodBase implements ConfigPackagerGener
   }
 
   /**
-   * Perform any required changes on a package or profile prior to generation.
+   * Performs any required changes on a package or profile prior to generation.
    *
    * @param boolean $add_profile
    *   Whether to add an install profile. Defaults to FALSE.

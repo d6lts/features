@@ -207,7 +207,7 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
   }
 
   /**
-   * Initialize the profile based on stored settings.
+   * Initializes the profile based on stored settings.
    */
   protected function initProfile() {
     if (empty($this->profile)) {
@@ -272,7 +272,7 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
   }
 
   /**
-   * Set the profile to a given machine_name, name, and description.
+   * Sets the profile to a given machine_name, name, and description.
    */
   protected function assignProfile($machine_name, $name = NULL, $description = '') {
     $profile = $this->getProject($machine_name, $name, $description, 'profile');
@@ -359,7 +359,7 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
   }
 
   /**
-   * Initialize and return a package or profile array.
+   * Initializes and returns a package or profile array.
    *
    * @param string $machine_name_short
    *   Machine name of the package without a profile prefix.
@@ -413,7 +413,7 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
   }
 
   /**
-   * Refresh names for all packages to ensure they reflect current profile
+   * Refreshes names for all packages to ensure they reflect current profile
    * naming.
    *
    * The profile data (machine_name, name) may have changed since the package
@@ -430,7 +430,8 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
   }
 
   /**
-   * Prefix a package's short machine name and name with those of the profile.
+   * Prefixes a package's short machine name and name with those of the
+   * profile.
    *
    * @param array &$package
    *   A package array, passed by reference.
@@ -442,7 +443,7 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
   }
 
   /**
-   * Generate and add .info.yml files to a package.
+   * Generates and adds .info.yml files to a package.
    *
    * @param array $package
    *   The package.
@@ -497,7 +498,7 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
   }
 
   /**
-   * Generate and add files to the profile.
+   * Generates and adds files to the profile.
    */
   protected function addProfileFiles() {
     // Adjust file paths to include the profile.
@@ -544,7 +545,7 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
   }
 
   /**
-   * Generate and add files to all packages.
+   * Generates and adds files to all packages.
    */
   protected function addPackageFiles() {
     $config_collection = $this->getConfigCollection();
@@ -608,10 +609,10 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
   }
 
   /**
-   * Return a human readable name.
+   * Returns a human readable name.
    *
-   * If no human readable name is available, generate a default one based on
-   * the machine name.
+   * If no human readable name is available, this method generates a default
+   * one based on the machine name.
    *
    * @param string $machine_name
    *   Machine name of the package.
@@ -736,7 +737,7 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
   }
 
   /**
-   * Get stored configuration for a given configuration type.
+   * Gets stored configuration for a given configuration type.
    *
    * @param string $config_type
    *   The type of configuration.
@@ -780,7 +781,7 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
   }
 
   /**
-   * Load configuration from storage into a property.
+   * Loads configuration from storage into a property.
    */
   protected function initConfigCollection() {
     if (empty($this->configCollection)) {

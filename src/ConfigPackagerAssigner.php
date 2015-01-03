@@ -110,7 +110,7 @@ class ConfigPackagerAssigner implements ConfigPackagerAssignerInterface {
   }
 
   /**
-   * Apply a given package assignment method.
+   * Applies a given package assignment method.
    *
    * @param string $method_id
    *   The string identifier of the package assignment method to use to package

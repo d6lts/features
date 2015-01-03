@@ -79,7 +79,7 @@ function template_preprocess_config_packager_assignment_configure_form(&$variabl
 }
 
 /**
- * Theme individual items in an item list.
+ * Themes individual items in an item list.
  */
 function theme_config_packager_items(array $variables) {
   $items = $variables['items'];

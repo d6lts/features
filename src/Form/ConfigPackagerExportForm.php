@@ -259,7 +259,7 @@ class ConfigPackagerExportForm extends FormBase {
   }
 
   /**
-   * Add a pseudo-package to display unpackaged configuration.
+   * Adds a pseudo-package to display unpackaged configuration.
    */
   protected function addUnpackaged(array &$packages, array $config_collection) {
     $packages['unpackaged'] = array(
