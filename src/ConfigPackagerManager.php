@@ -25,7 +25,7 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
- * The ConfigPackagerManager provides helper functions for building package.
+ * The ConfigPackagerManager provides helper functions for building packages.
  */
 class ConfigPackagerManager implements ConfigPackagerManagerInterface {
   use StringTranslationTrait;
@@ -303,20 +303,42 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
    */
   public function assignConfigPackage($package_name, array $item_names) {
     $config_collection = $this->getConfigCollection();
+
+    // Determine whether the profile is requested.
+    $profile =& $this->profile;
+    if ($package_name == $profile['machine_name']) {
+      $package =& $profile;
+    }
+    // If not, a package is requested.
+    else {
+      $packages =& $this->packages;
+      if (isset($packages[$package_name])) {
+        $package =& $packages[$package_name];
+      }
+      else {
+        throw new \Exception($this->t('Failed to assign @item_name to package %package_name. Package not found.', ['@item_name' => $item_name, '@package_name' => $package_name]));
+      }
+    }
+
     foreach ($item_names as $item_name) {
-      if (empty($config_collection[$item_name]['package']) && !in_array($item_name, $this->packages[$package_name]['config'])) {
+      if (!isset($config_collection[$item_name])) {
+        throw new \Exception($this->t('Failed to assign @item_name to package %package_name. Configuration item not found.', ['@item_name' => $item_name, '@package_name' => $package_name]));
+      }
+      if (empty($config_collection[$item_name]['package']) && !in_array($item_name, $package['config'])) {
         // Add the item to the package's config array.
-        $this->packages[$package_name]['config'][] = $item_name;
+        $package['config'][] = $item_name;
         // Mark the item as already assigned.
         $config_collection[$item_name]['package'] = $package_name;
         // Set any module dependencies of the configuration item as package
         // dependencies.
         if (isset($config_collection[$item_name]['data']['dependencies']['module'])) {
-          $dependencies =& $this->packages[$package_name]['dependencies'];
+          $dependencies =& $package['dependencies'];
           $dependencies = array_unique(array_merge($dependencies, $config_collection[$item_name]['data']['dependencies']['module']));
+          sort($dependencies);
         }
       }
     }
+
     $this->setConfigCollection($config_collection);
   }
 
@@ -332,7 +354,12 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
       if (isset($this->packages[$machine_name_short])) {
         foreach ($config_collection as $item_name => $item) {
           if (empty($item['package']) && preg_match('/[_\-.]' . $pattern . '[_\-.]/', '.' . $item['name_short'] . '.')) {
-            $this->assignConfigPackage($machine_name_short, [$item_name]);
+            try {
+              $this->assignConfigPackage($machine_name_short, [$item_name]);
+            }
+            catch(\Exception $exception) {
+              \Drupal::logger('config_packager')->error($exception->getMessage());
+            }
           }
         }
       }
@@ -351,7 +378,12 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
       if (!empty($config_collection[$item_name]['package'])) {
         foreach ($config_collection[$item_name]['dependents'] as $dependent_item_name) {
           if (isset($config_collection[$dependent_item_name]) && empty($config_collection[$dependent_item_name]['package'])) {
-            $this->assignConfigPackage($config_collection[$item_name]['package'], [$dependent_item_name]);
+            try {
+              $this->assignConfigPackage($config_collection[$item_name]['package'], [$dependent_item_name]);
+            }
+            catch(\Exception $exception) {
+              \Drupal::logger('config_packager')->error($exception->getMessage());
+            }
           }
         }
       }
@@ -477,16 +509,6 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
       $info['distribution'] = [
         'name' => $info['name']
       ];
-
-      // Optionally add data from the standard profile.
-      if ($this->profileSettings['add_standard']) {
-        $info_file_uri = 'core/profiles/standard/standard.info.yml';
-        if (file_exists($info_file_uri)) {
-          $profile_info = \Drupal::service('info_parser')->parse($info_file_uri);
-          // Merge in dependencies and themes data.
-          $info = $this->arrayMergeUnique($info, $profile_info, ['dependencies', 'themes']);
-        }
-      }
     }
 
     $package['files']['info'] = [
@@ -513,71 +535,52 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
     // Add the profile's files.
     $profile = $this->getProfile();
     $this->addInfoFile($profile);
-    // Conditionally add .profile and .install files from Standard profile.
-    if ($this->profileSettings['add_standard']) {
-      $files = [
-        'install',
-        'profile',
-      ];
-      // Iterate through the files.
-      foreach ($files as $extension) {
-        $filename = 'core/profiles/standard/standard.' . $extension;
-        if (file_exists($filename)) {
-          // Read the file contents.
-          $string = file_get_contents($filename);
-          // Substitute the profile's machine name and name for the Standard
-          // profile's equivalents.
-          $string = str_replace(
-            ['standard', 'Standard'],
-            [$profile['machine_name'], $profile['name']],
-            $string
-          );
-          // Add the files to those to be output.
-          $profile['files'][$extension] = [
-            'filename' => $profile['machine_name'] . '.' . $extension,
-            'subdirectory' => NULL,
-            'string' => $string
-          ];
-        }
-      }
-    }
+    $this->addPackageFiles($profile) ;
     $this->setProfile($profile);
   }
 
   /**
    * Generates and adds files to all packages.
    */
-  protected function addPackageFiles() {
-    $config_collection = $this->getConfigCollection();
+  protected function addPackagesFiles() {
     $packages = $this->getPackages();
     foreach ($packages as &$package) {
-      // Ensure the directory reflects the current full machine name.
-      $package['directory'] = $package['machine_name'];
-      // Only add files if there is at least one piece of configuration
-      // present.
-      if (!empty($package['config'])) {
-        // Add .info.yml files.
-        $this->addInfoFile($package);
-        // Add configuration files.
-        foreach ($package['config'] as $name) {
-          $config = $config_collection[$name];
-          // The UUID is site-specfic, so don't export it.
-          if ($entity_type_id = $this->configManager->getEntityTypeIdByName($name)) {
-            unset($config['data']['uuid']);
-          }
-          $package['files'][$name] = [
-            'filename'=> $config['name'] . '.yml',
-            'subdirectory' => InstallStorage::CONFIG_INSTALL_DIRECTORY,
-            'string' => Yaml::encode($config['data'])
-          ];
-        }
-      }
+      $this->addPackageFiles($package) ;
     }
     // Clean up the $package pass by reference.
     unset($package);
     $this->setPackages($packages);
   }
 
+  /**
+   * Generates and adds files to a given package or profile.
+   */
+  protected function addPackageFiles(array &$package) {
+    $config_collection = $this->getConfigCollection();
+    // Ensure the directory reflects the current full machine name.
+    $package['directory'] = $package['machine_name'];
+    // Only add files if there is at least one piece of configuration
+    // present.
+    if (!empty($package['config'])) {
+      // Add .info.yml files.
+      if ($package['type'] == 'module') {
+        $this->addInfoFile($package);
+      }
+      // Add configuration files.
+      foreach ($package['config'] as $name) {
+        $config = $config_collection[$name];
+        // The UUID is site-specfic, so don't export it.
+        if ($entity_type_id = $this->configManager->getEntityTypeIdByName($name)) {
+          unset($config['data']['uuid']);
+        }
+        $package['files'][$name] = [
+          'filename'=> $config['name'] . '.yml',
+          'subdirectory' => InstallStorage::CONFIG_INSTALL_DIRECTORY,
+          'string' => Yaml::encode($config['data'])
+        ];
+      }
+    }
+  }
   /**
    * {@inheritdoc}
    */
@@ -834,7 +837,7 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
   public function prepareFiles($add_profile = FALSE) {
     // Add package files first so their filename values can be altered to nest
     // them in a profile.
-    $this->addPackageFiles();
+    $this->addPackagesFiles();
     if ($add_profile) {
       $this->addProfileFiles();
     }

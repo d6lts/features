@@ -152,15 +152,6 @@ class ConfigPackagerExportForm extends FormBase {
       '#states' => $show_if_profile_add_checked,
     );
 
-    $form['profile']['add_standard'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Add code from Standard profile'),
-      '#default_value' => $profile_settings['add_standard'],
-      '#description' => $this->t('Select this option to add code from the Standard install profile to your install profile. Without this addition, your install profile will be missing some initial setup.'),
-      // Show only if the profile.add option is selected.
-      '#states' => $show_if_profile_add_checked,
-    );
-
     // Offer a preview of the packages.
     $form['preview'] = array(
       '#type' => 'fieldset',

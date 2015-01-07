@@ -235,12 +235,14 @@ interface ConfigPackagerManagerInterface {
   public function initCorePackage();
 
   /**
-   * Assigns a set of configuration items to a given package.
+   * Assigns a set of configuration items to a given package or profile.
    *
    * @param string $machine_name
-   *   Machine name of the package.
+   *   Machine name of a package or the profile.
    * @param array $item_names
    *   Array of configuration item names.
+   *
+   * @throws Exception
    */
   public function assignConfigPackage($package_name, array $item_names);
 

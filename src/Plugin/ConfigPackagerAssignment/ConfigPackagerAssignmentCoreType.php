@@ -42,7 +42,12 @@ class ConfigPackagerAssignmentCoreType extends ConfigPackagerAssignmentMethodBas
           $this->configPackagerManager->initCorePackage();
           $initialized = TRUE;
         }
-        $this->configPackagerManager->assignConfigPackage('core', [$item_name]);
+        try {
+          $this->configPackagerManager->assignConfigPackage('core', [$item_name]);
+        }
+        catch(\Exception $exception) {
+          \Drupal::logger('config_packager')->error($exception->getMessage());
+        }
       }
     }
   }

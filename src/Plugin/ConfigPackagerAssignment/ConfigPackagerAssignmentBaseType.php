@@ -44,7 +44,12 @@ class ConfigPackagerAssignmentBaseType extends ConfigPackagerAssignmentMethodBas
             $description .= ' ' . $item['data']['description'];
           }
           $this->configPackagerManager->initPackage($item['name_short'], $item['label'], $description);
-          $this->configPackagerManager->assignConfigPackage($item['name_short'], [$item_name]);
+          try {
+            $this->configPackagerManager->assignConfigPackage($item['name_short'], [$item_name]);
+          }
+          catch(\Exception $exception) {
+            \Drupal::logger('config_packager')->error($exception->getMessage());
+          }
           $this->configPackagerManager->assignConfigDependents([$item_name]);
         }
       }

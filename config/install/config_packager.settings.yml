@@ -3,16 +3,17 @@ profile:
   machine_name: ''
   add: 1
   description: ''
-  add_standard: 1
 assignment:
   enabled:
     exclude: '-10'
+    profile: '-5'
     base-type: '-2'
     core-type: '0'
     namespace: '5'
     dependency: '10'
   method_weights:
     exclude: '-10'
+    profile: '-5'
     base-type: '-2'
     core-type: '0'
     namespace: '5'
