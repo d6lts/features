@@ -573,6 +573,11 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
         if ($entity_type_id = $this->configManager->getEntityTypeIdByName($name)) {
           unset($config['data']['uuid']);
         }
+        // User roles include all permissions currently assigned to them. To
+        // avoid extraneous additions, reset permissions.
+        if ($config['type'] == 'user_role') {
+          $config['data']['permissions'] = [];
+        }
         $package['files'][$name] = [
           'filename'=> $config['name'] . '.yml',
           'subdirectory' => InstallStorage::CONFIG_INSTALL_DIRECTORY,
