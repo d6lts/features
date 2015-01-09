@@ -3,7 +3,7 @@ type: module
 description: 'Enables administrators to package configuration into modules.'
 package: Configuration
 core: 8.x
-configure: config_packager.export
+configure: config_packager.assignment
 dependencies:
   - config
   - config_devel
