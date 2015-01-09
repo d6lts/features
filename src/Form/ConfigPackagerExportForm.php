@@ -119,7 +119,7 @@ class ConfigPackagerExportForm extends FormBase {
       '#type' => 'machine_name',
       '#maxlength' => 64,
       '#machine_name' => array(
-        'source' => array('profile_name'),
+        'source' => array('profile', 'name'),
       ),
       '#default_value' => $profile_settings['machine_name'],
       '#description' => $this->t('A unique machine-readable name of a set of configuration modules. This name will also be used for an install profile if "Include install profile" is selected below. It must only contain lowercase letters, numbers, and underscores.'),
