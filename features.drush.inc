@@ -43,6 +43,7 @@ function features_drush_command() {
       'destination' => "Destination path (from Drupal root) of the exported feature. Defaults to '" . $path . "'.",
       'version-set' => "Specify a version number for the feature.",
       'version-increment' => "Increment the feature's version number.",
+      'ignore-conflicts' => "Ignore conflicts and export all components.",
     ),
     'drupal dependencies' => array('features'),
     'aliases' => array('fe'),
@@ -447,9 +448,11 @@ function drush_features_export() {
       return drush_set_error('', 'No components supplied.');
     }
     $components = _drush_features_component_list();
-    $options = array(
-      'exported' => FALSE,
-    );
+    $options = array();
+
+    if (!drush_get_option('ignore-conflicts', FALSE)) {
+      $options['exported'] = FALSE;
+    }
 
     $filtered_components = _drush_features_component_filter($components, $args, $options);
     $items = $filtered_components['components'];
