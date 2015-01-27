@@ -19,7 +19,7 @@ use Drupal\Core\Config\ExtensionInstallStorage;
  *   id = \Drupal\config_packager\Plugin\ConfigPackagerAssignment\ConfigPackagerAssignmentExclude::METHOD_ID,
  *   weight = -5,
  *   name = @Translation("Exclude"),
- *   description = @Translation("Configuration items are excluded from packaging by various methods including by configuration type."),
+ *   description = @Translation("Exclude configuration items from packaging by various methods including by configuration type."),
  *   config_route_name = "config_packager.assignment_exclude"
  * )
  */
