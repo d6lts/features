@@ -14,7 +14,7 @@
 function config_packager_install() {
   $site_config = \Drupal::config('system.site');
   $site_name = $site_config->get('name');
-  \Drupal::config('config_packager.settings')
+  \Drupal::configFactory()->getEditable('config_packager.settings')
     ->set('profile.machine_name', preg_replace('@[^a-z0-9_]+@', '_', strtolower($site_name)))
     ->set('profile.name', $site_name)
     ->set('profile.description', $site_config->get('slogan'))

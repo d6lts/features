@@ -164,7 +164,7 @@ class AssignmentConfigureForm extends FormBase {
         $method_weights[$method_id] = $weight;
       }
     }
-    $settings = \Drupal::config('config_packager.settings');
+    $settings = \Drupal::configFactory()->getEditable('config_packager.settings');
     $settings->set('assignment.method_weights', $method_weights_input)->save();
     $this->assigner->saveConfiguration($method_weights);
 

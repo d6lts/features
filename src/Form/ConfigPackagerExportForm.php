@@ -272,7 +272,7 @@ class ConfigPackagerExportForm extends FormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
 
     $profile_settings = $form_state->getValue('profile');
-    \Drupal::config('config_packager.settings')
+    \Drupal::configFactory()->getEditable('config_packager.settings')
       ->set('profile', $profile_settings)
       ->save();
 

@@ -90,7 +90,7 @@ class AssignmentExcludeForm extends AssignmentFormBase {
     $curated = $form_state->getValue('curated');
     $module = $form_state->getValue('module');
 
-    $this->configFactory->get('config_packager.assignment')
+    $this->configFactory->getEditable('config_packager.assignment')
       ->set('exclude.types', $types)
       ->set('exclude.curated', $curated)
       ->set('exclude.module', $module)

@@ -40,7 +40,7 @@ class AssignmentBaseForm extends AssignmentFormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $types = array_filter($form_state->getValue('types'));
 
-    $this->configFactory->get('config_packager.assignment')->set('base.types', $types)->save();
+    $this->configFactory->getEditable('config_packager.assignment')->set('base.types', $types)->save();
 
     $form_state->setRedirect('config_packager.assignment');
     drupal_set_message($this->t('Package assignment configuration saved.'));

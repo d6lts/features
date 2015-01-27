@@ -160,7 +160,7 @@ class ConfigPackagerAssigner implements ConfigPackagerAssignerInterface {
         unset($enabled_methods[$method_id]);
       }
     }
-    $this->configFactory->get('config_packager.settings')->set('assignment.enabled', $enabled_methods)->save();
+    $this->configFactory->getEditable('config_packager.settings')->set('assignment.enabled', $enabled_methods)->save();
   }
 
   /**
