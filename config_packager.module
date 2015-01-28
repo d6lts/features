@@ -15,8 +15,8 @@ function config_packager_help($route_name, RouteMatchInterface $route_match) {
     case 'help.page.config_packager':
       $output = '';
       $output .= '<h3>' . t('About') . '</h3>';
-      $output .= '<p>' . t('The Configuration Packager module provides a user interface for exporting bundles of configuration into modules. For more information, see the online project page for <a href="!url">Configuration Packager module</a>', array(
-        '!url' => 'http://drupal.org/project/config_packager',
+      $output .= '<p>' . t('The Configuration Packager module provides a user interface for exporting bundles of configuration into modules. For more information, see the online documentation for <a href="!url">Configuration Packager module</a>', array(
+        '!url' => 'http://drupal.org//node/2404427',
       )) . '</p>';
       return $output;
     case 'config_packager.assignment':

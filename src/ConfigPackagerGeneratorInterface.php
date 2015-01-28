@@ -42,7 +42,7 @@ use Drupal\Core\Form\FormStateInterface;
  * @endcode
  *
  * For more information, see
- * @link http://drupal.org/node/1497272 Language Negotiation API @endlink
+ * @link http://drupal.org/node/2404473 Developing for Configuration Packager @endlink
  */
 interface ConfigPackagerGeneratorInterface {
 
