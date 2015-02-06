@@ -208,7 +208,7 @@ interface ConfigPackagerManagerInterface {
   public function initPackage($machine_name, $name = NULL, $description = '');
 
   /**
-   * Returns an array of directories in which packages are present.
+   * Lists directories in which packages are present.
    *
    * This method scans to find package modules whether or not they are
    * currently active (installed). As well as the directories that are
@@ -227,7 +227,7 @@ interface ConfigPackagerManagerInterface {
    * @return array
    *   Array of package directories keyed by package machine name.
    */
-  public function getPackageDirectories(array $machine_names = array(), $add_profile = FALSE);
+  public function listPackageDirectories(array $machine_names = array(), $add_profile = FALSE);
 
   /**
    * Initializes a "core" configuration package.
@@ -281,7 +281,7 @@ interface ConfigPackagerManagerInterface {
   public function arrayMergeUnique(array $array1, array $array2, $keys = array());
 
   /**
-   * Returns an array of package machine names packages.
+   * Lists package machine names.
    *
    * @param array $machine_names_short
    *   Array of names. If empty, all availble package short names will be
@@ -292,10 +292,10 @@ interface ConfigPackagerManagerInterface {
    * @return array
    *   Array of short names.
    */
-  public function getPackageMachineNames(array $machine_names_short = array(), $add_profile = FALSE);
+  public function listPackageMachineNames(array $machine_names_short = array(), $add_profile = FALSE);
 
   /**
-   * Returns an array of short package names.
+   * Lists short package names.
    *
    * The ConfigPackagerManager::packages property is keyed by short package
    * names while each package has a 'machine_name' key that is the short name
@@ -309,15 +309,15 @@ interface ConfigPackagerManagerInterface {
    * @return array
    *   Array of short names.
    */
-  public function getPackageMachineNamesShort(array $machine_names = array());
+  public function listPackageMachineNamesShort(array $machine_names = array());
 
   /**
-   * Gets the types of configuration available on the site.
+   * Lists the types of configuration available on the site.
    *
    * @return array
    *   An array with machine name keys and human readable values.
    */
-  public function getConfigTypes();
+  public function listConfigTypes();
 
   /**
    * Return an array of installed modules.
@@ -339,8 +339,7 @@ interface ConfigPackagerManagerInterface {
   public function getModuleList(array $names = array(), $namespace = NULL);
 
   /**
-   * Returns an array of names of configuration objects provided by a given
-   * extension.
+   * Lists names of configuration objects provided by a given extension.
    *
    * If a $name and/or $namespace is specified, only matching modules will be
    * returned. Otherwise, all install are returned.
@@ -351,7 +350,7 @@ interface ConfigPackagerManagerInterface {
    * @return array
    *   An array of configuration object names.
    */
-  public function getExtensionConfig(Extension $extension);
+  public function listExtensionConfig(Extension $extension);
 
   /**
    * Iterates through packages and profile and prepares file names and

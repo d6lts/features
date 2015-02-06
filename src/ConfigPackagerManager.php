@@ -222,9 +222,9 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function getPackageDirectories(array $machine_names = array(), $add_profile = FALSE) {
+  public function listPackageDirectories(array $machine_names = array(), $add_profile = FALSE) {
     if (empty($machine_names)) {
-      $machine_names = $this->getPackageMachineNames();
+      $machine_names = $this->listPackageMachineNames();
     }
 
     // If the add_profile argument was set, add the profile's machine name.
@@ -643,7 +643,7 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function getPackageMachineNames(array $machine_names_short = array(), $add_profile = FALSE) {
+  public function listPackageMachineNames(array $machine_names_short = array(), $add_profile = FALSE) {
     $packages = $this->getPackages();
 
     // If specific names were requested, use only those.
@@ -663,7 +663,7 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function getPackageMachineNamesShort(array $machine_names = array()) {
+  public function listPackageMachineNamesShort(array $machine_names = array()) {
     $packages = $this->getPackages();
 
     // If no specific machine names were requested, return all.
@@ -685,7 +685,7 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function getConfigTypes() {
+  public function listConfigTypes() {
     $definitions = [];
     foreach ($this->entityManager->getDefinitions() as $entity_type => $definition) {
       if ($definition->isSubclassOf('Drupal\Core\Config\Entity\ConfigEntityInterface')) {
@@ -733,7 +733,7 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function getExtensionConfig(Extension $extension) {
+  public function listExtensionConfig(Extension $extension) {
     $config_path = $extension->getPath() .  '/' . InstallStorage::CONFIG_INSTALL_DIRECTORY;
 
     if (is_dir($config_path)) {
@@ -745,12 +745,12 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
   }
 
   /**
-   * Gets stored configuration for a given configuration type.
+   * Lists stored configuration for a given configuration type.
    *
    * @param string $config_type
    *   The type of configuration.
    */
-  protected function getConfigByType($config_type) {
+  protected function listConfigByType($config_type) {
     // For a given entity type, load all entities.
     if ($config_type && $config_type !== ConfigPackagerManagerInterface::SYSTEM_SIMPLE_CONFIG) {
       $entity_storage = $this->entityManager->getStorage($config_type);
@@ -794,9 +794,9 @@ class ConfigPackagerManager implements ConfigPackagerManagerInterface {
   protected function initConfigCollection() {
     if (empty($this->configCollection)) {
       $config_collection = [];
-      $config_types = $this->getConfigTypes();
+      $config_types = $this->listConfigTypes();
       foreach (array_keys($config_types) as $config_type) {
-        $config = $this->getConfigByType($config_type);
+        $config = $this->listConfigByType($config_type);
         foreach ($config as $item_name => $label) {
           // Determine the full config name for the selected config entity.
           if ($config_type !== ConfigPackagerManagerInterface::SYSTEM_SIMPLE_CONFIG) {

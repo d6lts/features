@@ -78,8 +78,8 @@ abstract class ConfigPackagerGenerationMethodBase implements ConfigPackagerGener
     }
 
     // If any packages exist, read in their files.
-    $machine_names = $this->configPackagerManager->getPackageMachineNames(array_keys($packages));
-    $existing_packages = $this->configPackagerManager->getPackageDirectories($machine_names, $add_profile);
+    $machine_names = $this->configPackagerManager->listPackageMachineNames(array_keys($packages));
+    $existing_packages = $this->configPackagerManager->listPackageDirectories($machine_names, $add_profile);
 
     // Packages are keyed by short machine names while the existing packages
     // array is keyed by full machine names.

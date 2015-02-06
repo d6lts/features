@@ -34,7 +34,7 @@ class ConfigPackagerAssignmentExclude extends ConfigPackagerAssignmentMethodBase
    * {@inheritdoc}
    */
   public function assignPackages() {
-    $config_types = $this->configPackagerManager->getConfigTypes();
+    $config_types = $this->configPackagerManager->listConfigTypes();
     $settings = $this->configFactory->get('config_packager.assignment');
     $config_collection = $this->configPackagerManager->getConfigCollection();
 
@@ -75,7 +75,7 @@ class ConfigPackagerAssignmentExclude extends ConfigPackagerAssignmentMethodBase
         }
         // If any configuration was found, remove it from the list.
         foreach ($modules as $extension) {
-          $extension_list = $this->configPackagerManager->getExtensionConfig($extension);
+          $extension_list = $this->configPackagerManager->listExtensionConfig($extension);
           $install_list = array_diff($install_list, $extension_list);
         }
       }

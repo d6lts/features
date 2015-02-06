@@ -93,7 +93,7 @@ class ConfigPackagerExportForm extends FormBase {
     $config_collection = $this->configPackagerManager->getConfigCollection();
     // Add in unpackaged configuration items.
     $this->addUnpackaged($packages, $config_collection);
-    $config_types = $this->configPackagerManager->getConfigTypes();
+    $config_types = $this->configPackagerManager->listConfigTypes();
     // Add dependencies.
     $config_types['dependencies'] = $this->t('Dependencies');
     uasort($config_types, 'strnatcasecmp');

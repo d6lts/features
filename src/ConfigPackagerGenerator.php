@@ -130,7 +130,7 @@ class ConfigPackagerGenerator implements ConfigPackagerGeneratorInterface {
     // If we have specific package names requested not in the short format,
     // convert them to the short format.
     if (!empty($package_names) && !$short_names) {
-      $package_names = $this->configPackagerManager->getPackageMachineNamesShort($package_names);
+      $package_names = $this->configPackagerManager->listPackageMachineNamesShort($package_names);
     }
 
     return $this->generate($method_id, FALSE, $package_names);
@@ -143,7 +143,7 @@ class ConfigPackagerGenerator implements ConfigPackagerGeneratorInterface {
     // If we have specific package names requested not in the short format,
     // convert them to the short format.
     if (!empty($package_names) && !$short_names) {
-      $package_names = $this->configPackagerManager->getPackageMachineNamesShort($package_names);
+      $package_names = $this->configPackagerManager->listPackageMachineNamesShort($package_names);
     }
 
     return $this->generate($method_id, TRUE, $package_names);

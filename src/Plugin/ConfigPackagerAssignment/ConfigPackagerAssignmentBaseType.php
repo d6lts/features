@@ -32,7 +32,7 @@ class ConfigPackagerAssignmentBaseType extends ConfigPackagerAssignmentMethodBas
    * {@inheritdoc}
    */
   public function assignPackages() {
-    $config_types = $this->configPackagerManager->getConfigTypes();
+    $config_types = $this->configPackagerManager->listConfigTypes();
     $base_types = $this->configFactory->get('config_packager.assignment')->get('base.types');
     $config_collection = $this->configPackagerManager->getConfigCollection();
 

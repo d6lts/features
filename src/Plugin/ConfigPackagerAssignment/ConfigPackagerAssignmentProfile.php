@@ -33,7 +33,7 @@ class ConfigPackagerAssignmentProfile extends ConfigPackagerAssignmentMethodBase
    */
   public function assignPackages() {
     $profile = $this->configPackagerManager->getProfile();
-    $package_directories = $this->configPackagerManager->getPackageDirectories(array(), TRUE);
+    $package_directories = $this->configPackagerManager->listPackageDirectories(array(), TRUE);
     // Only read in from the Standard profile if this profile doesn't already
     // exist.
     if (!isset($package_directories[$profile['machine_name']])) {
@@ -41,7 +41,7 @@ class ConfigPackagerAssignmentProfile extends ConfigPackagerAssignmentMethodBase
       $config_collection = $this->configPackagerManager->getConfigCollection();
       $standard_directory = 'core/profiles/standard';
       $subdirectory = InstallStorage::CONFIG_INSTALL_DIRECTORY;
-      $item_names = $this->getStandardConfig();
+      $item_names = $this->listStandardConfig();
       foreach ($item_names as $item_name) {
         // If the configuration is present on the site, assign it.
         if (isset($config_collection[$item_name])) {
@@ -108,7 +108,7 @@ class ConfigPackagerAssignmentProfile extends ConfigPackagerAssignmentMethodBase
    * @return array
    *   An array of configuration item names.
    */
-  protected function getStandardConfig() {
+  protected function listStandardConfig() {
     return [
       'contact.form.feedback',
       'user.role.administrator'

@@ -120,7 +120,7 @@ function drush_config_packager_generate_packages($packages = NULL) {
   $method_id = \Drupal\config_packager\Plugin\ConfigPackagerGeneration\ConfigPackagerGenerationWrite::METHOD_ID;
 
   // If any packages exist, confirm before overwriting.
-  if ($existing_packages = $manager->getPackageDirectories($packages, $add_profile)) {
+  if ($existing_packages = $manager->listPackageDirectories($packages, $add_profile)) {
     foreach ($existing_packages as $name => $directory) {
       drush_print(dt("The extension @name already exists at !directory.", array('@name' => $name, '!directory' => $directory)));
     }

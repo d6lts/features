@@ -31,7 +31,7 @@ class ConfigPackagerAssignmentCoreType extends ConfigPackagerAssignmentMethodBas
    * {@inheritdoc}
    */
   public function assignPackages() {
-    $config_types = $this->configPackagerManager->getConfigTypes();
+    $config_types = $this->configPackagerManager->listConfigTypes();
     $core_types = $this->configFactory->get('config_packager.assignment')->get('core.types');
     $config_collection = $this->configPackagerManager->getConfigCollection();
 
