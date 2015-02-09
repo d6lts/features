@@ -219,8 +219,8 @@ interface ConfigPackagerManagerInterface {
    * regenerating package modules, existing ones from a prior export will be
    * recognized.
    *
-   * @param array $machine_names
-   *   Array of package machine names.
+   * @param string[] $machine_names
+   *   Package machine names.
    * @param boolean $add_profile
    *   Whether to add an install profile. Defaults to FALSE.
    *
@@ -239,8 +239,8 @@ interface ConfigPackagerManagerInterface {
    *
    * @param string $machine_name
    *   Machine name of a package or the profile.
-   * @param array $item_names
-   *   Array of configuration item names.
+   * @param string[] $item_names
+   *   Configuration item names.
    *
    * @throws Exception
    */
@@ -259,8 +259,8 @@ interface ConfigPackagerManagerInterface {
    * For given configuration items, assigns any dependent configuration to the
    * same package.
    *
-   * @param array $item_names
-   *   Array of configuration item names.
+   * @param string[] $item_names
+   *   Configuration item names.
    */
   public function assignConfigDependents(array $item_names = NULL);
 
@@ -272,7 +272,7 @@ interface ConfigPackagerManagerInterface {
    *   The first array.
    * @param array $array2
    *   The second array.
-   * @param array $keys
+   * @param string[] $keys
    *   Keys to merge. If not specified, all keys present will be merged.
    *
    * @return array
@@ -283,8 +283,8 @@ interface ConfigPackagerManagerInterface {
   /**
    * Lists package machine names.
    *
-   * @param array $machine_names_short
-   *   Array of names. If empty, all availble package short names will be
+   * @param string[] $machine_names_short
+   *   Machine names. If empty, all availble package short names will be
    *   returned.
    * @param boolean $add_profile
    *   Whether to add an install profile. Defaults to FALSE.
@@ -302,8 +302,8 @@ interface ConfigPackagerManagerInterface {
    * prefixed by the profile machine name and an underscore. Here we remove
    * this prefix and return short names.
    *
-   * @param array $machine_names
-   *   Array of names. If empty, all availble package short names will be
+   * @param string[] $machine_names
+   *   Machine names. If empty, all availble package short names will be
    *   returned.
    *
    * @return array
@@ -325,8 +325,8 @@ interface ConfigPackagerManagerInterface {
    * If a $name and/or $namespace is specified, only matching modules will be
    * returned. Otherwise, all install are returned.
    *
-   * @param array $names
-   *   An array of names of specific modules to return.
+   * @param string[] $names
+   *   Names of specific modules to return.
    * @param string $namespace
    *   A namespace prefix to match modules by.
    *

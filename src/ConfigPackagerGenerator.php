@@ -157,8 +157,8 @@ class ConfigPackagerGenerator implements ConfigPackagerGeneratorInterface {
    *   The ID of the generation method to use.
    * @param boolean $add_profile
    *   Whether to add an install profile. Defaults to FALSE.
-   * @param array $package_names
-   *   Array of names of packages to be generated. If none are specified, all
+   * @param string[] $package_names
+   *   Names of packages to be generated. If none are specified, all
    *   available packages will be added.
    *
    * @return array
