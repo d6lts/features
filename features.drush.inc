@@ -73,6 +73,9 @@ function features_drush_command() {
       'not-exported' => array(
         'description' => 'Show only components that have not been exported.',
       ),
+      'info-style' => array(
+        'description' => 'Export components in format suitable for using in an info file.',
+      ),
     ),
     'aliases' => array('fc'),
   );
@@ -254,10 +257,13 @@ function drush_features_components() {
   elseif (drush_get_option(array('not-exported', 'o'), NULL)) {
     $options['exported'] = FALSE;
   }
+  if (drush_get_option(array('info-style', 'is'), NULL)) {
+    $options['info style'] = TRUE;
+  }
 
   $filtered_components = _drush_features_component_filter($components, $args, $options);
   if ($filtered_components){
-    _drush_features_component_print($filtered_components);
+    _drush_features_component_print($filtered_components, $options);
   }
 }
 
@@ -422,11 +428,17 @@ function _drush_features_component_filter($all_components, $patterns = array(), 
 /**
  * Prints a list of filtered components.
  */
-function _drush_features_component_print($filtered_components) {
+function _drush_features_component_print($filtered_components, $options = array()) {
   $rows = array(array(dt('Available sources')));
   foreach ($filtered_components['components'] as $source => $components) {
     foreach ($components as $name => $value) {
-      $row = array($source .':'. $name);
+      if (!empty($options['info style'])) {
+        // Output as .info file style.
+        $row = array('features[' . $source . '][] = "' . $name . '"');
+      }
+      else {
+        $row = array($source .':'. $name);
+      }
       if (isset($filtered_components['sources'][$source .':'. $name])) {
         $row[] = dt('Provided by') . ': ' . $filtered_components['sources'][$source .':'. $name];
       }
