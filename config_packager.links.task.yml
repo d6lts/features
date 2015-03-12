@@ -1,0 +1,16 @@
+config_packager.package:
+  route_name: config_packager.export
+  title: 'Export Configuration Modules'
+  base_route: config.sync
+
+config_packager.export:
+  route_name: config_packager.export
+  title: Export
+  parent_id: config_packager.package
+  weight: -1
+
+config_packager.assignment:
+  route_name: config_packager.assignment
+  title: 'Configure Package Assigners'
+  parent_id: config_packager.package
+  
