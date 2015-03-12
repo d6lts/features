@@ -2,16 +2,16 @@
 
 /**
  * @file
- * Contains \Drupal\config_packager\Form\AssignmentConfigureForm.
+ * Contains \Drupal\features\Form\AssignmentConfigureForm.
  */
 
-namespace Drupal\config_packager\Form;
+namespace Drupal\features\Form;
 
 use Drupal\Component\Utility\String;
 use Drupal\Component\Utility\Unicode;
 use Drupal\Component\Utility\Xss;
-use Drupal\config_packager\ConfigPackagerManagerInterface;
-use Drupal\config_packager\ConfigPackagerAssignerInterface;
+use Drupal\features\FeaturesManagerInterface;
+use Drupal\features\FeaturesAssignerInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
@@ -24,29 +24,29 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 class AssignmentConfigureForm extends FormBase {
 
   /**
-   * The configuration packager manager.
+   * The features manager.
    *
-   * @var \Drupal\config_packager\ConfigPackagerManagerInterface
+   * @var \Drupal\features\FeaturesManagerInterface
    */
-  protected $configPackagerManager;
+  protected $featuresManager;
 
   /**
    * The package assigner.
    *
-   * @var \Drupal\config_packager\ConfigPackagerAssignerInterface
+   * @var \Drupal\features\FeaturesAssignerInterface
    */
   protected $assigner;
 
   /**
    * Constructs a AssignmentConfigureForm object.
    *
-   * @param \Drupal\config_packager\ConfigPackagerManagerInterface $config_packager_manager
-   *   The configuration packager manager.
-   * @param \Drupal\config_packager\ConfigPackagerAssignerInterface $assigner
+   * @param \Drupal\features\FeaturesManagerInterface $features_manager
+   *   The features manager.
+   * @param \Drupal\features\FeaturesAssignerInterface $assigner
    *   The configuration assignment methods manager.
    */
-  public function __construct(ConfigPackagerManagerInterface $config_packager_manager, ConfigPackagerAssignerInterface $assigner) {
-    $this->configPackagerManager = $config_packager_manager;
+  public function __construct(FeaturesManagerInterface $features_manager, FeaturesAssignerInterface $assigner) {
+    $this->featuresManager = $features_manager;
     $this->assigner = $assigner;
   }
 
@@ -55,8 +55,8 @@ class AssignmentConfigureForm extends FormBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('config_packager.manager'),
-      $container->get('config_packager_assigner')
+      $container->get('features.manager'),
+      $container->get('features_assigner')
     );
   }
 
@@ -64,7 +64,7 @@ class AssignmentConfigureForm extends FormBase {
    * {@inheritdoc}
    */
   public function getFormID() {
-    return 'config_packager_assignment_configure_form';
+    return 'features_assignment_configure_form';
   }
 
   /**
@@ -73,7 +73,7 @@ class AssignmentConfigureForm extends FormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
     $assignment_info = $this->assigner->getAssignmentMethods();
 
-    $settings = \Drupal::config('config_packager.settings');
+    $settings = \Drupal::config('features.settings');
     $enabled_methods = $settings->get('assignment.enabled') ?: array();
     $methods_weight = $settings->get('assignment.method_weights') ?: array();
 
@@ -164,11 +164,11 @@ class AssignmentConfigureForm extends FormBase {
         $method_weights[$method_id] = $weight;
       }
     }
-    $settings = \Drupal::configFactory()->getEditable('config_packager.settings');
+    $settings = \Drupal::configFactory()->getEditable('features.settings');
     $settings->set('assignment.method_weights', $method_weights_input)->save();
     $this->assigner->saveConfiguration($method_weights);
 
-    $form_state->setRedirect('config_packager.assignment');
+    $form_state->setRedirect('features.assignment');
     drupal_set_message($this->t('Package assignment configuration saved.'));
   }
 

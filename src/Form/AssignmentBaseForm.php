@@ -2,12 +2,12 @@
 
 /**
  * @file
- * Contains \Drupal\config_packager\Form\AssignmentBaseForm.
+ * Contains \Drupal\features\Form\AssignmentBaseForm.
  */
 
-namespace Drupal\config_packager\Form;
+namespace Drupal\features\Form;
 
-use Drupal\config_packager\Form\AssignmentFormBase;
+use Drupal\features\Form\AssignmentFormBase;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
@@ -19,7 +19,7 @@ class AssignmentBaseForm extends AssignmentFormBase {
    * {@inheritdoc}
    */
   public function getFormID() {
-    return 'config_packager_assignment_base_form';
+    return 'features_assignment_base_form';
   }
 
   /**
@@ -27,7 +27,7 @@ class AssignmentBaseForm extends AssignmentFormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
 
-    $defaults = $this->configFactory->get('config_packager.assignment')->get('base.types');
+    $defaults = $this->configFactory->get('features.assignment')->get('base.types');
     $this->setTypeSelect($form, $defaults, $this->t('base'));
     $this->setActions($form);
 
@@ -40,9 +40,9 @@ class AssignmentBaseForm extends AssignmentFormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $types = array_filter($form_state->getValue('types'));
 
-    $this->configFactory->getEditable('config_packager.assignment')->set('base.types', $types)->save();
+    $this->configFactory->getEditable('features.assignment')->set('base.types', $types)->save();
 
-    $form_state->setRedirect('config_packager.assignment');
+    $form_state->setRedirect('features.assignment');
     drupal_set_message($this->t('Package assignment configuration saved.'));
   }
 

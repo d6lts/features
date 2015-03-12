@@ -1,0 +1,15 @@
+features.package:
+  route_name: features.export
+  title: 'Export Configuration Modules'
+  base_route: config.sync
+
+features.export:
+  route_name: features.export
+  title: Export
+  parent_id: features.package
+  weight: -1
+
+features.assignment:
+  route_name: features.assignment
+  title: 'Configure Package Assigners'
+  parent_id: features.package

@@ -1,0 +1,5 @@
+drupal.features.admin:
+  version: VERSION
+  css:
+    theme:
+      css/features.admin.css: {}

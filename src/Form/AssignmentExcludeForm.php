@@ -2,12 +2,12 @@
 
 /**
  * @file
- * Contains \Drupal\config_packager\Form\AssignmentExcludeForm.
+ * Contains \Drupal\features\Form\AssignmentExcludeForm.
  */
 
-namespace Drupal\config_packager\Form;
+namespace Drupal\features\Form;
 
-use Drupal\config_packager\Form\AssignmentFormBase;
+use Drupal\features\Form\AssignmentFormBase;
 use Drupal\Core\Form\FormStateInterface;
 
 /**
@@ -19,7 +19,7 @@ class AssignmentExcludeForm extends AssignmentFormBase {
    * {@inheritdoc}
    */
   public function getFormID() {
-    return 'config_packager_assignment_exclude_form';
+    return 'features_assignment_exclude_form';
   }
 
   /**
@@ -27,7 +27,7 @@ class AssignmentExcludeForm extends AssignmentFormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
 
-    $settings = $this->configFactory->get('config_packager.assignment');
+    $settings = $this->configFactory->get('features.assignment');
     $this->setTypeSelect($form, $settings->get('exclude.types'), $this->t('exclude'));
 
     $module_settings = $settings->get('exclude.module');
@@ -68,7 +68,7 @@ class AssignmentExcludeForm extends AssignmentFormBase {
       '#states' => $show_if_module_enabled_checked,
     );
 
-    $machine_name = $this->configFactory->get('config_packager.settings')->get('profile.machine_name');
+    $machine_name = $this->configFactory->get('features.settings')->get('profile.machine_name');
     $form['module']['namespace'] = array(
       '#type' => 'checkbox',
       '#title' => t("Don't exclude configuration by namespace"),
@@ -90,13 +90,13 @@ class AssignmentExcludeForm extends AssignmentFormBase {
     $curated = $form_state->getValue('curated');
     $module = $form_state->getValue('module');
 
-    $this->configFactory->getEditable('config_packager.assignment')
+    $this->configFactory->getEditable('features.assignment')
       ->set('exclude.types', $types)
       ->set('exclude.curated', $curated)
       ->set('exclude.module', $module)
       ->save();
 
-    $form_state->setRedirect('config_packager.assignment');
+    $form_state->setRedirect('features.assignment');
     drupal_set_message($this->t('Package assignment configuration saved.'));
   }
 

@@ -2,12 +2,12 @@
 
 /**
  * @file
- * Contains \Drupal\config_packager\Form\AssignmentFormBase.
+ * Contains \Drupal\features\Form\AssignmentFormBase.
  */
 
-namespace Drupal\config_packager\Form;
+namespace Drupal\features\Form;
 
-use Drupal\config_packager\ConfigPackagerManagerInterface;
+use Drupal\features\FeaturesManagerInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\StorageInterface;
 use Drupal\Core\Form\FormBase;
@@ -20,37 +20,37 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 abstract class AssignmentFormBase extends FormBase {
 
   /**
-   * Stores the configuration object for config_packager.
+   * Stores the configuration object for features.
    *
    * @var \Drupal\Core\Config\ConfigFactoryInterface
    */
   protected $configFactory;
 
   /**
-   * Stores the configuration storage object for config_packager.
+   * Stores the configuration storage object for features.
    *
    * @var \Drupal\Core\Config\StorageInterface
    */
   protected $configStorage;
 
   /**
-   * The configuration packager manager.
+   * The features manager.
    *
-   * @var \Drupal\config_packager\ConfigPackagerManagerInterface
+   * @var \Drupal\features\FeaturesManagerInterface
    */
-  protected $configPackagerManager;
+  protected $featuresManager;
 
   /**
    * Constructs a AssignmentBaseForm object.
    *
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The factory for configuration objects.
-   * @param \Drupal\config_packager\ConfigPackagerManagerInterface $config_packager_manager
-   *   The configuration packager manager.
+   * @param \Drupal\features\FeaturesManagerInterface $features_manager
+   *   The features manager.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, ConfigPackagerManagerInterface $config_packager_manager) {
+  public function __construct(ConfigFactoryInterface $config_factory, FeaturesManagerInterface $features_manager) {
     $this->configFactory = $config_factory;
-    $this->configPackagerManager = $config_packager_manager;
+    $this->featuresManager = $features_manager;
   }
 
   /**
@@ -59,7 +59,7 @@ abstract class AssignmentFormBase extends FormBase {
   public static function create(ContainerInterface $container) {
     return new static(
       $container->get('config.factory'),
-      $container->get('config_packager.manager')
+      $container->get('features.manager')
     );
   }
 
@@ -67,7 +67,7 @@ abstract class AssignmentFormBase extends FormBase {
    * Adds configuration types checkboxes.
    */
   protected function setTypeSelect(&$form, $defaults, $type) {
-    $options = $this->configPackagerManager->listConfigTypes();
+    $options = $this->featuresManager->listConfigTypes();
 
     $form['types'] = array(
       '#type' => 'checkboxes',

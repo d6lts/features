@@ -1,5 +1,0 @@
-drupal.config_packager.admin:
-  version: VERSION
-  css:
-    theme:
-      css/config_packager.admin.css: {}

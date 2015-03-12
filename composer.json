@@ -1,5 +1,5 @@
 {
-  "name": "drupal/config_packager",
+  "name": "drupal/features",
   "description": "Enables administrators to package configuration into modules.",
   "type": "drupal-module",
   "license": "GPL-2.0+",
