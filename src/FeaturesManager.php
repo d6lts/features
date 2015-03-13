@@ -16,6 +16,7 @@ use Drupal\Core\Config\ConfigManagerInterface;
 use Drupal\Core\Config\FileStorage;
 use Drupal\Core\Config\InstallStorage;
 use Drupal\Core\Config\StorageInterface;
+use Drupal\Core\Config\ExtensionInstallStorage;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Extension\Extension;
@@ -107,7 +108,9 @@ class FeaturesManager implements FeaturesManagerInterface {
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler.
    */
-  public function __construct(EntityManagerInterface $entity_manager, ConfigFactoryInterface $config_factory, StorageInterface $config_storage, ConfigManagerInterface $config_manager, ModuleHandlerInterface $module_handler) {
+  public function __construct(EntityManagerInterface $entity_manager, ConfigFactoryInterface $config_factory,
+                              StorageInterface $config_storage, ConfigManagerInterface $config_manager,
+                              ModuleHandlerInterface $module_handler) {
     $this->entityManager = $entity_manager;
     $this->configStorage = $config_storage;
     $this->configManager = $config_manager;
@@ -116,6 +119,27 @@ class FeaturesManager implements FeaturesManagerInterface {
     $this->packages = [];
     $this->initProfile();
     $this->configCollection = [];
+  }
+
+  /**
+   * Returns the full name of a config item.
+   *
+   * @param string $type
+   *   The config type, or '' to indicate $name is already prefixed.
+   * @param string $name
+   *   The config name, without prefix.
+   *
+   * @return string
+   *   The config item's full name.
+   */
+  protected function getFullName($type, $name) {
+    if ($type == FeaturesManagerInterface::SYSTEM_SIMPLE_CONFIG || !$type) {
+      return $name;
+    }
+
+    $definition = $this->entityManager->getDefinition($type);
+    $prefix = $definition->getConfigPrefix() . '.';
+    return $prefix . $name;
   }
 
   /**
@@ -222,6 +246,31 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * {@inheritdoc}
    */
+  public function getExistingPackages($enabled = FALSE) {
+    $result = array();
+    if ($enabled) {
+      $modules = $this->moduleHandler->getModuleList();
+    }
+    else {
+      // ModuleHandler::getModuleList() returns data only for installed modules.
+      // We want to search all possible exports for Features that might be disabled
+      $listing = new ExtensionDiscovery(\Drupal::root());
+      $modules = $listing->scan('module');
+    }
+    foreach ($modules as $name => $module) {
+      $info_file_uri = $module->getPath() . '/' . $name . '.info.' . FileStorage::getFileExtension();
+      $existing_info = \Drupal::service('info_parser')->parse($info_file_uri);
+      if (isset($existing_info['features'])) {
+        $existing_info['module'] = $module;
+        $result[$name] = $existing_info;
+      }
+    }
+    return $result;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function listPackageDirectories(array $machine_names = array(), $add_profile = FALSE) {
     if (empty($machine_names)) {
       $machine_names = $this->listPackageMachineNames();
@@ -230,24 +279,50 @@ class FeaturesManager implements FeaturesManagerInterface {
     // If the add_profile argument was set, add the profile's machine name.
     if ($add_profile) {
       $profile = $this->getProfile();
-      $machine_names[] = $profile['machine_name'];
+      if (!empty($profile['machine_name'])) {
+        $machine_names[] = $profile['machine_name'];
+      }
     }
 
+    $modules = $this->getAllModules($add_profile);
+
+    // Filter to include only the requested packages.
+    $modules = array_intersect_key($modules, array_fill_keys($machine_names, NULL));
+    $directories = array();
+    foreach ($modules as $name => $module) {
+      $directories[$name] = $module->getPath();
+    }
+
+    return $directories;
+  }
+
+  /**
+   * Return a list of modules regardless of if they are enabled
+   * @param bool $add_profile
+   *   determine if custom profile is also included
+   */
+  protected function getAllModules($add_profile = FALSE) {
     // ModuleHandler::getModuleDirectories() returns data only for installed
     // modules. system_rebuild_module_data() includes only the site's install
     // profile directory, while we may need to include a custom profile.
     // @see _system_rebuild_module_data().
     $listing = new ExtensionDiscovery(\Drupal::root());
+
     $profile_directories = [];
     // Register the install profile.
     $installed_profile = drupal_get_profile();
     if ($installed_profile) {
       $profile_directories[] = drupal_get_path('profile', $installed_profile);
     }
-    // Register the profile directory.
-    $profile_directory = 'profiles/' . $profile['machine_name'];
-    if (is_dir($profile_directory)) {
-      $profile_directories[] = $profile_directory;
+    if ($add_profile) {
+      $profile = $this->getProfile();
+      if (!empty($profile['machine_name'])) {
+        // Register the profile directory.
+        $profile_directory = 'profiles/' . $profile['machine_name'];
+        if (is_dir($profile_directory)) {
+          $profile_directories[] = $profile_directory;
+        }
+      }
     }
     $listing->setProfileDirectories($profile_directories);
 
@@ -261,14 +336,7 @@ class FeaturesManager implements FeaturesManagerInterface {
       $modules[$key] = $profile;
     }
 
-    // Filter to include only the requested packages.
-    $modules = array_intersect_key($modules, array_fill_keys($machine_names, NULL));
-    $directories = array();
-    foreach ($modules as $name => $module) {
-      $directories[$name] = $module->getPath();
-    }
-
-    return $directories;
+    return $modules;
   }
 
   /**
@@ -479,7 +547,8 @@ class FeaturesManager implements FeaturesManagerInterface {
       $package['machine_name'] = $profile['machine_name'] . '_' . $package['machine_name_short'];
       $package['name'] = $profile['name'] . ' ' . $package['name_short'];
     }
-    $module_list = $this->moduleHandler->getModuleList();
+
+    $module_list = $this->getAllModules();
     if (isset($module_list[$package['machine_name']])) {
       $package['status'] = $this->moduleHandler->moduleExists($package['machine_name'])
         ? FeaturesManagerInterface::STATUS_ENABLED
@@ -749,14 +818,8 @@ class FeaturesManager implements FeaturesManagerInterface {
    * {@inheritdoc}
    */
   public function listExtensionConfig(Extension $extension) {
-    $config_path = $extension->getPath() .  '/' . InstallStorage::CONFIG_INSTALL_DIRECTORY;
-
-    if (is_dir($config_path)) {
-      $install_storage = new FileStorage($config_path);
-      return $install_storage->listAll();
-    }
-
-    return [];
+    $extension_storage = new ExtensionInstallStorage($this->configStorage);
+    return array_keys($extension_storage->getComponentNames('module', array($extension->getName())));
   }
 
   /**
@@ -813,15 +876,7 @@ class FeaturesManager implements FeaturesManagerInterface {
       foreach (array_keys($config_types) as $config_type) {
         $config = $this->listConfigByType($config_type);
         foreach ($config as $item_name => $label) {
-          // Determine the full config name for the selected config entity.
-          if ($config_type !== FeaturesManagerInterface::SYSTEM_SIMPLE_CONFIG) {
-            $definition = $this->entityManager->getDefinition($config_type);
-            $name = $definition->getConfigPrefix() . '.' . $item_name;
-          }
-          // The config name is used directly for simple configuration.
-          else {
-            $name = $item_name;
-          }
+          $name = $this->getFullName($config_type, $item_name);
           $data = $this->configStorage->read($name);
           $config_collection[$name] = [
             'name' => $name,

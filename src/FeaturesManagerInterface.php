@@ -222,6 +222,15 @@ interface FeaturesManagerInterface {
   public function initPackage($machine_name, $name = NULL, $description = '');
 
   /**
+   * List modules that are existing exported Packages
+   * @param bool $enabled
+   *   Determine if only enabled modules are searched
+   * @return array
+   *   Module's info.yml config data
+   */
+  public function getExistingPackages($enabled = FALSE);
+
+  /**
    * Lists directories in which packages are present.
    *
    * This method scans to find package modules whether or not they are

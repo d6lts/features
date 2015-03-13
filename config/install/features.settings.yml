@@ -5,6 +5,7 @@ profile:
   description: ''
 assignment:
   enabled:
+    existing: '-99'
     exclude: '-10'
     profile: '-5'
     base-type: '-2'
@@ -12,6 +13,7 @@ assignment:
     namespace: '5'
     dependency: '10'
   method_weights:
+    existing: '-99'
     exclude: '-10'
     profile: '-5'
     base-type: '-2'
