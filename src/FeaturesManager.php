@@ -413,6 +413,7 @@ class FeaturesManager implements FeaturesManagerInterface {
    *   - 'dependencies': array of module dependencies.
    *   - 'themes': array of names of themes to enable.
    *   - 'config': array of names of configuration items.
+   *   - 'status': the status of the project module
    *   - 'directory': the extension's directory.
    *   - 'files' array of files, each having the following keys:
    *      - 'filename': the name of the file.
@@ -434,6 +435,9 @@ class FeaturesManager implements FeaturesManagerInterface {
       'dependencies' => [],
       'themes' => [],
       'config' => [],
+      'status' => FeaturesManagerInterface::STATUS_DEFAULT,
+      'version' => '',
+      'state' => FeaturesManagerInterface::STATE_DEFAULT,
       'directory' => $machine_name_short,
       'files' => []
     ];
@@ -464,14 +468,26 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * Prefixes a package's short machine name and name with those of the
    * profile.
+   * Also fill in module-specific properties, such as status, version
    *
    * @param array &$package
    *   A package array, passed by reference.
    */
   protected function setPackageNames(array &$package) {
     $profile = $this->getProfile();
-    $package['machine_name'] = $profile['machine_name'] . '_' . $package['machine_name_short'];
-    $package['name'] = $profile['name'] . ' ' . $package['name_short'];
+    if (!empty($profile['machine_name'])) {
+      $package['machine_name'] = $profile['machine_name'] . '_' . $package['machine_name_short'];
+      $package['name'] = $profile['name'] . ' ' . $package['name_short'];
+    }
+    $module_list = $this->moduleHandler->getModuleList();
+    print_r($module_list);
+    if (isset($module_list[$package['machine_name']])) {
+      $package['status'] = $this->moduleHandler->moduleExists($package['machine_name'])
+        ? FeaturesManagerInterface::STATUS_ENABLED
+        : FeaturesManagerInterface::STATUS_DISABLED;
+      //TODO: Determine module version
+      // $package['version'] = '';
+    }
   }
 
   /**
@@ -845,6 +861,32 @@ class FeaturesManager implements FeaturesManagerInterface {
     $this->addPackagesFiles();
     if ($add_profile) {
       $this->addProfileFiles();
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function statusLabel($status) {
+    switch ($status) {
+      case FeaturesManagerInterface::STATUS_NO_EXPORT:
+        return t('Not exported');
+      case FeaturesManagerInterface::STATUS_DISABLED:
+        return t('Disabled');
+      case FeaturesManagerInterface::STATUS_ENABLED:
+        return t('Enabled');
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function stateLabel($state) {
+    switch ($state) {
+      case FeaturesManagerInterface::STATE_DEFAULT:
+        return t('Default');
+      case FeaturesManagerInterface::STATE_OVERRIDDEN:
+        return t('Overridden');
     }
   }
 

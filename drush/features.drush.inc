@@ -14,25 +14,28 @@ function features_drush_command() {
   $items = array();
 
   $items['features-list-packages'] = array(
-    'description' => 'Display a list of all packages available to be generated. If a package name is provided as an argument, then all of the configuration objects assigned to that package will be listed.',
+    'description' => 'Display a list of all existing features and packages available to be generated.  If a package name is provided as an argument, then all of the configuration objects assigned to that package will be listed.',
     'examples' => array(
-      "drush features-list-packages" => 'Display a list of all packages available to be generated.',
+      "drush features-list-packages" => 'Display a list of all existing featurea and packages available to be generated.',
       "drush features-list-packages 'example_article'" => "Display a list of all configuration objects assigned to the 'example_article' package.",
     ),
     'arguments' => array(
-      'package' => 'The package to list. Optional; if specified, lists all configuration objects assigned to that package. If no package is specified, lists all of the packages available to be generated.',
+      'package' => 'The package to list. Optional; if specified, lists all configuration objects assigned to that package. If no package is specified, lists all of the features.',
     ),
     'outputformat' => array(
       'default' => 'table',
       'pipe-format' => 'list',
       'field-labels' => array(
-        'machine_name' => 'Machine name',
         'name' => 'Name',
+        'machine_name' => 'Machine name',
+        'status' => 'Status',
+        'version' => 'Version',
+        'state' => 'State',
         'object' => 'Configuration object',
       ),
       'output-data-type' => 'format-table',
     ),
-    'aliases' => array('cp-list'),
+    'aliases' => array('fl'),
   );
 
   $items['features-generate-packages'] = array(
@@ -71,8 +74,13 @@ function drush_features_list_packages($package = '') {
     drush_hide_output_fields(array('object'));
     foreach ($packages as $item) {
       $result[$item['machine_name']] = array(
-        'machine_name' => $item['machine_name'],
         'name' => $item['name'],
+        'machine_name' => $item['machine_name'],
+        'status' => $manager->statusLabel($item['status']),
+        'version' => $item['version'],
+        'state' => ($item['state'] != FeaturesManagerInterface::STATE_DEFAULT)
+          ? $manager->stateLabel($item['state'])
+          : '',
       );
     }
     return $result;
@@ -81,7 +89,7 @@ function drush_features_list_packages($package = '') {
   else {
     foreach ($packages as $item) {
       if ($item['machine_name'] == $package) {
-        drush_hide_output_fields(array('machine_name', 'name'));
+        drush_hide_output_fields(array('machine_name', 'name', 'status', 'version', 'state'));
         foreach ($item['config'] as $item_name) {
           $result[$item_name] = array(
             'object' => $item_name,

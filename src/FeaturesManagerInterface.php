@@ -26,6 +26,20 @@ interface FeaturesManagerInterface {
   const SYSTEM_SIMPLE_CONFIG = 'system_simple';
 
   /**
+   * Constants for package/module status
+   */
+  const STATUS_NO_EXPORT = 0;
+  const STATUS_DISABLED = 1;
+  const STATUS_ENABLED = 2;
+  const STATUS_DEFAULT = STATUS_NO_EXPORT;
+
+  /**
+   * Constants for package/module state
+   */
+  const STATE_DEFAULT = 0;
+  const STATE_OVERRIDDEN = 1;
+
+  /**
    * Resets packages and configuration assignment.
    */
   public function reset();
@@ -360,5 +374,19 @@ interface FeaturesManagerInterface {
    *   Whether to add an install profile. Defaults to FALSE.
    */
   public function prepareFiles($add_profile = FALSE);
+
+  /**
+   * Helper function to return a translatable label for the different status constants
+   * @param int $status
+   * @return string
+   */
+  public function statusLabel($status);
+
+  /**
+   * Helper function to return a translatable label for the different state constants
+   * @param int $state
+   * @return string
+   */
+  public function stateLabel($state);
 
 }
