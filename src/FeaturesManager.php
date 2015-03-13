@@ -316,7 +316,7 @@ class FeaturesManager implements FeaturesManagerInterface {
         $package =& $packages[$package_name];
       }
       else {
-        throw new \Exception($this->t('Failed to assign @item_name to package %package_name. Package not found.', ['@item_name' => $item_name, '@package_name' => $package_name]));
+        throw new \Exception($this->t('Failed to package %package_name. Package not found.', ['@package_name' => $package_name]));
       }
     }
 
