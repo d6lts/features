@@ -37,7 +37,7 @@ class FeaturesAssignmentCoreType extends FeaturesAssignmentMethodBase {
 
     $initialized = FALSE;
     foreach ($config_collection as $item_name => $item) {
-      if (in_array($item['type'], $core_types)) {
+      if (in_array($item['type'], $core_types) && !isset($item['package'])) {
         if (!$initialized) {
           $this->featuresManager->initCorePackage();
           $initialized = TRUE;
