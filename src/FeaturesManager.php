@@ -480,7 +480,6 @@ class FeaturesManager implements FeaturesManagerInterface {
       $package['name'] = $profile['name'] . ' ' . $package['name_short'];
     }
     $module_list = $this->moduleHandler->getModuleList();
-    print_r($module_list);
     if (isset($module_list[$package['machine_name']])) {
       $package['status'] = $this->moduleHandler->moduleExists($package['machine_name'])
         ? FeaturesManagerInterface::STATUS_ENABLED
