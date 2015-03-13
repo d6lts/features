@@ -584,6 +584,7 @@ class FeaturesManager implements FeaturesManagerInterface {
     // configuration.
     // @see https://www.drupal.org/node/2300717.
     if (!empty($package['config'])) {
+      $info['features'] = TRUE;
       $info['config_devel'] = $package['config'];
     }
 
