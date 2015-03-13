@@ -84,7 +84,7 @@ class FeaturesGenerator implements FeaturesGeneratorInterface {
    */
   public function applyGenerationMethod($method_id, $add_profile = FALSE, array $packages = array()) {
     $method = $this->getGenerationMethodInstance($method_id);
-    $profile = $add_profile ? $this->featuresManager->getProfile() : NULL;
+    $profile = $add_profile ? $this->featuresManager->getProfile() : array();
     $method->prepare($add_profile, $profile, $packages);
     return $method->generate($add_profile, $profile, $packages);
   }
