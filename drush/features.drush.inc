@@ -38,20 +38,21 @@ function features_drush_command() {
     'aliases' => array('fl'),
   );
 
-  $items['features-generate-packages'] = array(
-    'description' => 'Generate configuration modules. If a comma-separated list of package names is passed as an argument, only those packages will be generated. If the --add-profile option is passed, the packages will be bundled into an install profile.',
-    'examples' => array(
-      "drush features-generate-packages" => 'Generate all available packages.',
-      "drush features-generate-packages 'example_article,example_page'" => "Generate the example_article and example_page packages.",
-      "drush features-generate-packages --add-profile" => "Generate all available packages and add them to an install profile.",
-    ),
+  $items['features-export'] = array(
+    'description' => "Export the configuration on your site into a custom module.",
     'arguments' => array(
-      'packages' => 'Comma-separated list of names of the packages to be generated.',
+      'package' => 'A space delimited list of features to export.',
     ),
     'options' => array(
       'add-profile' => 'Package configuration modules in an install profile.',
     ),
-    'aliases' => array('cp-generate'),
+    'examples' => array(
+      "drush features-export" => 'Export all available packages.',
+      "drush features-export example_article example_page" => "Export the example_article and example_page packages.",
+      "drush features-export --add-profile" => "Export all available packages and add them to an install profile.",
+    ),
+    // add previous "fu" alias for compatibility
+    'aliases' => array('fex', 'fu'),
   );
 
   return $items;
@@ -107,15 +108,10 @@ function drush_features_list_packages($package = '') {
 }
 
 /**
- * Drush command callback for features-list-packages.
+ * Drush command callback for features-export.
  */
-function drush_features_generate_packages($packages = NULL) {
-  if (is_null($packages)) {
-    $packages = array();
-  }
-  else {
-    $packages = _convert_csv_to_array($packages);
-  }
+function drush_features_export($packages = NULL) {
+  $packages = func_get_args();
 
   $manager = \Drupal::service('features.manager');
   $assigner = \Drupal::service('features_assigner');
@@ -124,8 +120,21 @@ function drush_features_generate_packages($packages = NULL) {
 
   $add_profile = drush_get_option('add-profile');
 
-  // Use the write generation method.
-  $method_id = \Drupal\features\Plugin\FeaturesGeneration\FeaturesGenerationWrite::METHOD_ID;
+  $all_packages = $manager->getPackages();
+  foreach ($packages as $name) {
+    if (!isset($all_packages[$name])) {
+      return drush_set_error('', dt("The package @name does not exist.", array('@name' => $name)));
+    }
+  }
+
+  if (empty($packages)) {
+    $packages = array_keys($all_packages);
+    $dt_args = array('!modules' => implode(', ', $packages));
+    drush_print(dt('The following modules will be updated: !modules', $dt_args));
+    if (!drush_confirm(dt('Do you really want to continue?'))) {
+      return drush_user_abort('Aborting.');
+    }
+  }
 
   // If any packages exist, confirm before overwriting.
   if ($existing_packages = $manager->listPackageDirectories($packages, $add_profile)) {
@@ -143,6 +152,9 @@ function drush_features_generate_packages($packages = NULL) {
       return drush_user_abort();
     }
   }
+
+  // Use the write generation method.
+  $method_id = \Drupal\features\Plugin\FeaturesGeneration\FeaturesGenerationWrite::METHOD_ID;
 
   if ($add_profile) {
     $result = $generator->generateProfile($method_id, $packages, FALSE);
