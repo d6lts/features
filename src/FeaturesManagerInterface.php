@@ -152,7 +152,7 @@ interface FeaturesManagerInterface {
   public function getProfile();
 
   /**
-   * Gets a representation of man install profile.
+   * Sets a representation of an install profile.
    *
    * @param array $profile
    *   An array with the following keys:

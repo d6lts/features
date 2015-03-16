@@ -11,8 +11,7 @@ use Drupal\features\FeaturesAssignmentMethodBase;
 use Drupal\Core\Config\InstallStorage;
 
 /**
- * Class for assigning configuration to packages based on configuration
- * dependencies.
+ * Class for adding configuration for the optional install profile.
  *
  * @Plugin(
  *   id = \Drupal\features\Plugin\FeaturesAssignment\FeaturesAssignmentProfile::METHOD_ID,
