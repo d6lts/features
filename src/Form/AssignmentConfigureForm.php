@@ -157,16 +157,14 @@ class AssignmentConfigureForm extends FormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
 
-    $enabled_methods = $form_state->getValue('enabled');
-    $method_weights_input = $form_state->getValue('weight');
-    foreach ($method_weights_input as $method_id => $weight) {
-      if ($enabled_methods[$method_id]) {
-        $method_weights[$method_id] = $weight;
-      }
-    }
+    $enabled_methods = array_filter($form_state->getValue('enabled'));
+    ksort($enabled_methods);
+    $method_weights = $form_state->getValue('weight');
+    ksort($method_weights);
+
     $settings = \Drupal::configFactory()->getEditable('features.settings');
-    $settings->set('assignment.method_weights', $method_weights_input)->save();
-    $this->assigner->saveConfiguration($method_weights);
+    $settings->set('assignment.method_weights', $method_weights)->save();
+    $this->assigner->saveConfiguration($enabled_methods);
 
     $form_state->setRedirect('features.assignment');
     drupal_set_message($this->t('Package assignment configuration saved.'));

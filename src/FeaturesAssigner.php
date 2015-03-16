@@ -153,9 +153,7 @@ class FeaturesAssigner implements FeaturesAssignerInterface {
   public function saveConfiguration($enabled_methods) {
     $definitions = $this->getAssignmentMethods();
 
-    // Order the package assignment method list by weight.
-    asort($enabled_methods);
-    foreach ($enabled_methods as $method_id => $weight) {
+    foreach ($enabled_methods as $method_id) {
       if (!isset($definitions[$method_id])) {
         unset($enabled_methods[$method_id]);
       }

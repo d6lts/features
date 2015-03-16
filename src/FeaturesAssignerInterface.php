@@ -63,7 +63,7 @@ interface FeaturesAssignerInterface {
    * Returns the enabled package assignment methods.
    *
    * @return array
-   *   An array of package assignment method definitions keyed by method id.
+   *   An array of package assignment method IDs.
    */
   public function getAssignmentMethods();
 
@@ -71,7 +71,7 @@ interface FeaturesAssignerInterface {
    * Saves a list of package assignment methods.
    *
    * @param array $enabled_methods
-   *   An array of package assignment method weights keyed by method ID.
+   *   An array of package assignment method IDs.
    */
   public function saveConfiguration($enabled_methods);
 

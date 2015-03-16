@@ -1,23 +1,23 @@
-profile:
-  name: ''
-  machine_name: ''
-  add: 1
-  description: ''
 assignment:
   enabled:
-    existing: '-99'
-    exclude: '-10'
-    profile: '-5'
-    base-type: '-2'
-    core-type: '0'
-    namespace: '5'
-    dependency: '10'
+    base-type: 1
+    core-type: 1
+    dependency: 1
+    exclude: 1
+    existing: 1
+    namespace: 1
+    profile: 1
   method_weights:
-    existing: '-99'
-    exclude: '-10'
-    profile: '-5'
-    base-type: '-2'
-    core-type: '0'
-    namespace: '5'
-    dependency: '10'
+    base-type: -2
+    core-type: 0
+    dependency: 10
+    exclude: -10
+    existing: -20
+    namespace: 5
+    profile: -5
 langcode: en
+profile:
+  add: 0
+  description: ''
+  name: ''
+  machine_name: ''
