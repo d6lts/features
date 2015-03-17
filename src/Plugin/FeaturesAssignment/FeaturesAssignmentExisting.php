@@ -17,7 +17,7 @@ use Drupal\features\FeaturesManagerInterface;
  *   id = \Drupal\features\Plugin\FeaturesAssignment\FeaturesAssignmentExisting::METHOD_ID,
  *   weight = -99,
  *   name = @Translation("Existing"),
- *   description = @Translation("Add previously exported config to their existing packages."),
+ *   description = @Translation("Detect and add existing package modules."),
  * )
  */
 class FeaturesAssignmentExisting extends FeaturesAssignmentMethodBase {
@@ -34,6 +34,7 @@ class FeaturesAssignmentExisting extends FeaturesAssignmentMethodBase {
     $existing = $this->featuresManager->getExistingPackages();
 
     foreach ($existing as $name => $info) {
+      $this->featuresManager->initPackage($name, $info['name'], !empty($info['description']) ? $info['description'] : '');
       $config = $this->featuresManager->listExtensionConfig($info['module']);
       $this->featuresManager->assignConfigPackage($name, $config);
     }
