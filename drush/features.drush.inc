@@ -13,6 +13,11 @@ use Drupal\features\FeaturesManagerInterface;
 function features_drush_command() {
   $items = array();
 
+  $items['features-status'] = array(
+    'description' => 'Display current Features settings.',
+    'aliases' => array('fs'),
+  );
+
   $items['features-list-packages'] = array(
     'description' => 'Display a list of all existing features and packages available to be generated.  If a package name is provided as an argument, then all of the configuration objects assigned to that package will be listed.',
     'examples' => array(
@@ -56,6 +61,20 @@ function features_drush_command() {
   );
 
   return $items;
+}
+
+/**
+ * Drush command callback for features-status.
+ */
+function drush_features_status() {
+  $manager = \Drupal::service('features.manager');
+  $assigner = \Drupal::service('features_assigner');
+  $profile = $manager->getProfile();
+  $methods = $assigner->getEnabledAssigners();
+  drush_print(dt('Profile name: !profile', array('!profile' => $profile['machine_name'])));
+  $dt_args = array('!methods' => implode(', ', array_keys($methods)));
+  drush_print(dt('The following assignment methods are enabled:'));
+  drush_print(dt('  !methods', $dt_args));
 }
 
 /**
