@@ -927,7 +927,7 @@ class FeaturesManager implements FeaturesManagerInterface {
       case FeaturesManagerInterface::STATUS_NO_EXPORT:
         return t('Not exported');
       case FeaturesManagerInterface::STATUS_DISABLED:
-        return t('Disabled');
+        return t('Uninstalled');
       case FeaturesManagerInterface::STATUS_ENABLED:
         return t('Enabled');
     }
