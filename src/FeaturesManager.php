@@ -67,6 +67,13 @@ class FeaturesManager implements FeaturesManagerInterface {
   protected $profileSettings;
 
   /**
+   * The Features export settings.
+   *
+   * @var array
+   */
+  protected $exportSettings;
+
+  /**
    * The configuration present on the site.
    *
    * @var array
@@ -116,6 +123,7 @@ class FeaturesManager implements FeaturesManagerInterface {
     $this->configManager = $config_manager;
     $this->moduleHandler = $module_handler;
     $this->profileSettings = $config_factory->get('features.settings')->get('profile');
+    $this->exportSettings = $config_factory->get('features.settings')->get('export');
     $this->packages = [];
     $this->initProfile();
     $this->configCollection = [];
@@ -228,6 +236,13 @@ class FeaturesManager implements FeaturesManagerInterface {
    */
   public function setGenerator(FeaturesGeneratorInterface $generator) {
     $this->generator = $generator;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getExportSettings() {
+    return $this->exportSettings;
   }
 
   /**
@@ -542,12 +557,6 @@ class FeaturesManager implements FeaturesManagerInterface {
    *   A package array, passed by reference.
    */
   protected function setPackageNames(array &$package) {
-    $profile = $this->getProfile();
-    if (!empty($profile['machine_name'])) {
-      $package['machine_name'] = $profile['machine_name'] . '_' . $package['machine_name_short'];
-      $package['name'] = $profile['name'] . ' ' . $package['name_short'];
-    }
-
     $module_list = $this->getAllModules();
     if (isset($module_list[$package['machine_name']])) {
       $package['status'] = $this->moduleHandler->moduleExists($package['machine_name'])
@@ -584,7 +593,7 @@ class FeaturesManager implements FeaturesManagerInterface {
     // configuration.
     // @see https://www.drupal.org/node/2300717.
     if (!empty($package['config'])) {
-      $info['features'] = TRUE;
+      $info['features'] = $package['machine_name_short'];
       $info['config_devel'] = $package['config'];
     }
 
@@ -608,15 +617,6 @@ class FeaturesManager implements FeaturesManagerInterface {
    * Generates and adds files to the profile.
    */
   protected function addProfileFiles() {
-    // Adjust file paths to include the profile.
-    $packages = $this->getPackages();
-    foreach ($packages as &$package) {
-      $package['directory'] = $this->profile['directory'] . '/modules/custom/' . $package['directory'];
-    }
-    // Clean up the $package pass by reference.
-    unset($package);
-    $this->setPackages($packages);
-
     // Add the profile's files.
     $profile = $this->getProfile();
     $this->addInfoFile($profile);
@@ -753,7 +753,7 @@ class FeaturesManager implements FeaturesManagerInterface {
 
     // If no specific machine names were requested, return all.
     if (empty($machine_names)) {
-      return array_keys($this->proifles);
+      return array_keys($this->packages);
     }
 
     // Iterate through the packages for their short machine names.
