@@ -96,7 +96,7 @@ class FeaturesAssigner implements FeaturesAssignerInterface {
    * @return array
    *   An array of enabled assignment methods.
    */
-  protected function getEnabledAssigners() {
+  public function getEnabledAssigners() {
     return $this->configFactory->get('features.settings')->get('assignment.enabled') ?: array();
   }
 
