@@ -17,6 +17,8 @@ assignment:
     namespace: 5
     packages: -20
     profile: -5
+export:
+  folder: 'custom'
 langcode: en
 profile:
   add: 0

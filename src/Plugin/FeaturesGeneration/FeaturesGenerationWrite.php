@@ -31,10 +31,6 @@ class FeaturesGenerationWrite extends FeaturesGenerationMethodBase {
    * Reads and merges in existing files for a given package or profile.
    */
   protected function preparePackage($add_profile, &$package, $existing_packages) {
-    // If it's a profile, write it to the 'profiles' directory. Otherwise, it
-    // goes in 'modules/custom'.
-    $base_directory = $add_profile ? 'profiles' : 'modules/custom';
-
     // If this package is already present, prepare files.
     if (isset($existing_packages[$package['machine_name']])) {
       $existing_directory = $existing_packages[$package['machine_name']];
@@ -52,11 +48,6 @@ class FeaturesGenerationWrite extends FeaturesGenerationMethodBase {
       if (is_dir($config_directory)) {
         file_unmanaged_delete_recursive($config_directory);
       }
-    }
-    // If the package is not present, nest its files in the base directory.
-    else {
-      // Prepend the extension's directory with the base directory.
-      $package['directory'] = $base_directory . '/' . $package['directory'];
     }
   }
 

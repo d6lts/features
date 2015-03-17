@@ -70,8 +70,19 @@ function drush_features_status() {
   $manager = \Drupal::service('features.manager');
   $assigner = \Drupal::service('features_assigner');
   $profile = $manager->getProfile();
+  $exportSettings = $manager->getExportSettings();
   $methods = $assigner->getEnabledAssigners();
-  drush_print(dt('Profile name: !profile', array('!profile' => $profile['machine_name'])));
+  if (empty($profile['machine_name'])) {
+    drush_print(dt('Export namespace: none'));
+  }
+  else {
+    drush_print(dt('Export namespace: !name (!machine_name)',
+      array(
+        '!name' => $profile['name'],
+        '!machine_name' => $profile['machine_name']
+      )));
+  }
+  drush_print(dt('Export folder: !folder', array('!folder' => $exportSettings['folder'])));
   $dt_args = array('!methods' => implode(', ', array_keys($methods)));
   drush_print(dt('The following assignment methods are enabled:'));
   drush_print(dt('  !methods', $dt_args));
@@ -139,17 +150,17 @@ function drush_features_export($packages = NULL) {
 
   $add_profile = drush_get_option('add-profile');
 
-  $all_packages = $manager->getPackages();
+  $all_packages = $manager->listPackageMachineNames();
   foreach ($packages as $name) {
-    if (!isset($all_packages[$name])) {
+    if (!in_array($name, $all_packages)) {
       return drush_set_error('', dt("The package @name does not exist.", array('@name' => $name)));
     }
   }
 
   if (empty($packages)) {
-    $packages = array_keys($all_packages);
+    $packages = $all_packages;
     $dt_args = array('!modules' => implode(', ', $packages));
-    drush_print(dt('The following modules will be updated: !modules', $dt_args));
+    drush_print(dt('The following extensions will be exported: !modules', $dt_args));
     if (!drush_confirm(dt('Do you really want to continue?'))) {
       return drush_user_abort('Aborting.');
     }

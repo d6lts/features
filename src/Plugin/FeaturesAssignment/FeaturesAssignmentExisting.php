@@ -34,7 +34,7 @@ class FeaturesAssignmentExisting extends FeaturesAssignmentMethodBase {
     $existing = $this->featuresManager->getExistingPackages();
     foreach ($existing as $name => $info) {
       $config = $this->featuresManager->listExtensionConfig($info['module']);
-      $this->featuresManager->assignConfigPackage($name, $config);
+      $this->featuresManager->assignConfigPackage($info['features'], $config);
     }
   }
 

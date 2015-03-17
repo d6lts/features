@@ -210,6 +210,14 @@ interface FeaturesManagerInterface {
   public function setGenerator(FeaturesGeneratorInterface $generator);
 
   /**
+   * Return the current export settings
+   * @return array
+   *   'folder' - subdirectory to export packages to
+   *   'namespace' - module namespace being being exported
+   */
+  public function getExportSettings();
+
+  /**
    * Initializes a configuration package.
    *
    * @param string $machine_name

@@ -83,16 +83,38 @@ abstract class FeaturesGenerationMethodBase implements FeaturesGenerationMethodI
 
     // Packages are keyed by short machine names while the existing packages
     // array is keyed by full machine names.
+    if (empty($profile)) {
+      $profile = $this->featuresManager->getProfile();
+    }
+    $exportSettings = $this->featuresManager->getExportSettings();
     foreach ($packages as &$package) {
+      if ($add_profile) {
+        // adjust export directory to be in profile
+        $path = 'profiles/' . $profile['directory'] . '/modules';
+      }
+      else {
+        $path = 'modules';
+      }
+      if (!empty($exportSettings['folder'])) {
+        $path .= '/' . $exportSettings['folder'];
+      }
+
+      // prepend the namespace of the current profile
+      if (!empty($profile['machine_name'])) {
+        $package['machine_name'] = $profile['machine_name'] . '_' . $package['machine_name_short'];
+        if (empty($existing_packages[$package['machine_name']])) {
+          $package['files']['info']['filename'] = $profile['machine_name'] . '_' . $package['files']['info']['filename'];
+        }
+      }
+      $package['directory'] = $path . '/' . $package['machine_name'];
+
       $this->preparePackage($add_profile, $package, $existing_packages);
     }
     // Clean up the $package pass by reference
     unset($package);
 
     if ($add_profile) {
-      if (empty($profile)) {
-        $profile = $this->featuresManager->getProfile();
-      }
+      $profile['directory'] = 'profiles/' . $profile['directory'];
       $this->preparePackage($add_profile, $profile, $existing_packages);
     }
   }
