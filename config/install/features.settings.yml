@@ -6,6 +6,7 @@ assignment:
     exclude: 1
     existing: 1
     namespace: 1
+    packages: 1
     profile: 1
   method_weights:
     base-type: -2
@@ -14,6 +15,7 @@ assignment:
     exclude: -10
     existing: -20
     namespace: 5
+    packages: 8
     profile: -5
 langcode: en
 profile:
