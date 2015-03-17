@@ -6,14 +6,16 @@ assignment:
     exclude: 1
     existing: 1
     namespace: 1
+    packages: 1
     profile: 1
   method_weights:
     base-type: -2
     core-type: 0
     dependency: 10
     exclude: -10
-    existing: -20
+    existing: 8
     namespace: 5
+    packages: -20
     profile: -5
 langcode: en
 profile:

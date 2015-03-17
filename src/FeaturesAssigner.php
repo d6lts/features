@@ -94,10 +94,16 @@ class FeaturesAssigner implements FeaturesAssignerInterface {
    * Gets enabled assignment methods.
    *
    * @return array
-   *   An array of enabled assignment methods.
+   *   An array of enabled assignment methods, sorted by weight.
    */
   public function getEnabledAssigners() {
-    return $this->configFactory->get('features.settings')->get('assignment.enabled') ?: array();
+    $enabled = $this->configFactory->get('features.settings')->get('assignment.enabled');
+    $weights = $this->configFactory->get('features.settings')->get('assignment.method_weights');
+    foreach ($enabled as $key => $value) {
+      $enabled[$key] = $weights[$key];
+    }
+    asort($enabled);
+    return $enabled;
   }
 
   /**
