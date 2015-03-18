@@ -824,12 +824,9 @@ class FeaturesManager implements FeaturesManagerInterface {
   }
 
   /**
-   * Lists stored configuration for a given configuration type.
-   *
-   * @param string $config_type
-   *   The type of configuration.
+   * {@inheritdoc}
    */
-  protected function listConfigByType($config_type) {
+  public function listConfigByType($config_type) {
     // For a given entity type, load all entities.
     if ($config_type && $config_type !== FeaturesManagerInterface::SYSTEM_SIMPLE_CONFIG) {
       $entity_storage = $this->entityManager->getStorage($config_type);

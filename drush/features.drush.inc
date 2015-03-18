@@ -57,7 +57,32 @@ function features_drush_command() {
       "drush features-export --add-profile" => "Export all available packages and add them to an install profile.",
     ),
     // add previous "fu" alias for compatibility
-    'aliases' => array('fex', 'fu'),
+    'aliases' => array('fex', 'fu', 'fua', 'fu-all'),
+  );
+
+  $items['features-add'] = array(
+    'description' => "Add a config item to a feature package.",
+    'arguments' => array(
+      'feature' => 'Feature package to add to.',
+      'components' => 'List of config items to add.',
+    ),
+    'aliases' => array('fa'),
+  );
+
+  $items['features-components'] = array(
+    'description' => 'List features components.',
+    'arguments' => array(
+      'patterns' => 'The features components type to list. Omit this argument to list all components.',
+    ),
+    'options' => array(
+      'exported' => array(
+        'description' => 'Show only components that have been exported.',
+      ),
+      'not-exported' => array(
+        'description' => 'Show only components that have not been exported.',
+      ),
+    ),
+    'aliases' => array('fc'),
   );
 
   return $items;
@@ -197,3 +222,250 @@ function drush_features_export($packages = NULL) {
     drush_log($message['message'], $message['variables'], $type);
   }
 }
+
+/**
+ * Add a component to a features module
+ * the selected components.
+ */
+function drush_features_add() {
+}
+
+
+/**
+ * List components, with pattern matching.
+ */
+function drush_features_components() {
+  $args = func_get_args();
+  $components = _drush_features_component_list();
+  ksort($components);
+  // If no args supplied, prompt with a list.
+  if (empty($args)) {
+    $types = array_keys($components);
+    array_unshift($types, 'all');
+    $choice = drush_choice($types, 'Enter a number to choose which component type to list.');
+    if ($choice === FALSE) {
+      return;
+    }
+
+    $args = ($choice == 0) ? array('*') : array($types[$choice]);
+  }
+  $options = array(
+    'provided by' => TRUE,
+  );
+  if (drush_get_option(array('exported', 'e'), NULL)) {
+    $options['not exported'] = FALSE;
+  }
+  elseif (drush_get_option(array('not-exported', 'o'), NULL)) {
+    $options['exported'] = FALSE;
+  }
+
+  $filtered_components = _drush_features_component_filter($components, $args, $options);
+  if ($filtered_components){
+    _drush_features_component_print($filtered_components);
+  }
+}
+
+/**
+ * Returns a listing of all known components, indexed by source.
+ */
+function _drush_features_component_list() {
+  $manager = \Drupal::service('features.manager');
+  $types = $manager->listConfigTypes();
+  $result = array();
+  foreach ($types as $config_type => $title) {
+    $config = $manager->listConfigByType($config_type);
+    $result[$config_type] = $config;
+  }
+  return $result;
+}
+
+/**
+ * Filters components by patterns.
+ */
+function _drush_features_component_filter($all_components, $patterns = array(), $options = array()) {
+  $options += array(
+    'exported' => TRUE,
+    'not exported' => TRUE,
+    'provided by' => FALSE,
+  );
+  $pool = array();
+  // Maps exported components to feature modules.
+  $components_map = _drush_features_get_component_map();
+  // First filter on exported state.
+  foreach ($all_components as $source => $components) {
+    foreach ($components as $name => $title) {
+      $exported = sizeof($components_map[$source][$name]) > 0;
+      if ($exported) {
+        if ($options['exported']) {
+          $pool[$source][$name] = $title;
+        }
+      }
+      else {
+        if ($options['not exported']) {
+          $pool[$source][$name] = $title;
+        }
+      }
+    }
+  }
+
+  $state_string = '';
+
+  if (!$options['exported']) {
+    $state_string = 'unexported';
+  }
+  elseif (!$options['not exported']) {
+    $state_string = 'exported';
+  }
+
+  $selected = array();
+  foreach ($patterns as $pattern) {
+    // Rewrite * to %. Let users use both as wildcard.
+    $pattern = strtr($pattern, array('*' => '%'));
+    $sources = array();
+    list($source_pattern, $component_pattern) = explode(':', $pattern, 2);
+    // If source is empty, use a pattern.
+    if ($source_pattern == '') {
+      $source_pattern = '%';
+    }
+    if ($component_pattern == '') {
+      $component_pattern = '%';
+    }
+
+    $preg_source_pattern = strtr(preg_quote($source_pattern, '/'), array('%' => '.*'));
+    $preg_component_pattern = strtr(preg_quote($component_pattern, '/'), array('%' => '.*'));
+    /*
+     * If it isn't a pattern, but a simple string, we don't anchor the
+     * pattern, this allows for abbreviating. Else, we do, as this seems more
+     * natural for patterns.
+     */
+    if (strpos($source_pattern, '%') !== FALSE) {
+      $preg_source_pattern = '^' . $preg_source_pattern . '$';
+    }
+    if (strpos($component_pattern, '%') !== FALSE) {
+      $preg_component_pattern = '^' . $preg_component_pattern . '$';
+    }
+    $matches = array();
+
+    // Find the sources.
+    $all_sources = array_keys($pool);
+    $matches = preg_grep('/' . $preg_source_pattern . '/', $all_sources);
+    if (sizeof($matches) > 0) {
+      // If we have multiple matches and the source string wasn't a
+      // pattern, check if one of the matches is equal to the pattern, and
+      // use that, or error out.
+      if (sizeof($matches) > 1 and $preg_source_pattern[0] != '^') {
+        if (in_array($source_pattern, $matches)) {
+          $matches = array($source_pattern);
+        }
+        else {
+          return drush_set_error('', dt('Ambiguous source "!source", matches !matches', array('!source' => $source_pattern, '!matches' => join(', ', $matches))));
+        }
+      }
+      // Loose the indexes preg_grep preserved.
+      $sources = array_values($matches);
+    }
+    else {
+      return drush_set_error('', dt('No !state sources match "!source"', array('!state' => $state_string, '!source' => $source_pattern)));
+    }
+
+    // Now find the components.
+    foreach ($sources as $source) {
+      // Find the components.
+      $all_components = array_keys($pool[$source]);
+      // See if there's any matches.
+      $matches = preg_grep('/' . $preg_component_pattern . '/', $all_components);
+      if (sizeof($matches) > 0) {
+        // If we have multiple matches and the components string wasn't a
+        // pattern, check if one of the matches is equal to the pattern, and
+        // use that, or error out.
+        if (sizeof($matches) > 1 and $preg_component_pattern[0] != '^') {
+          if (in_array($component_pattern, $matches)) {
+            $matches = array($component_pattern);
+          }
+          else {
+            return drush_set_error('', dt('Ambiguous component "!component", matches !matches', array('!component' => $component_pattern, '!matches' => join(', ', $matches))));
+          }
+        }
+        if (!is_array($selected[$source])) {
+          $selected[$source] = array();
+        }
+        $selected[$source] += array_intersect_key($pool[$source], array_flip($matches));
+      }
+      else {
+        // No matches. If the source was a pattern, just carry on, else
+        // error out. Allows for patterns like :*field*
+        if ($preg_source_pattern[0] != '^') {
+          return drush_set_error('', dt('No !state !source components match "!component"', array('!state' => $state_string, '!component' => $component_pattern, '!source' => $source)));
+        }
+      }
+    }
+  }
+
+  // Lastly, provide feature module information on the selected components, if
+  // requested.
+  $provided_by = array();
+  if ($options['provided by'] && $options['exported'] ) {
+    foreach ($selected as $source => $components) {
+      foreach ($components as $name => $title) {
+        $exported = sizeof($components_map[$source][$name]) > 0;
+        if ($exported) {
+          $provided_by[$source . ':' . $name] = join(', ', $components_map[$source][$name]);
+        }
+      }
+    }
+  }
+
+  return array(
+    'components' => $selected,
+    'sources' => $provided_by,
+  );
+}
+
+/**
+ * Provide a component to feature map (port of features_get_component_map).
+ */
+function _drush_features_get_component_map() {
+  $result = array();
+  $manager = \Drupal::service('features.manager');
+  $assigner = \Drupal::service('features_assigner');
+  $assigner->assignConfigPackages();
+  $components = $manager->getConfigCollection();
+  $packages = $manager->getPackages();
+
+  $types = $manager->listConfigTypes();
+  $result = array();
+  foreach ($types as $config_type => $title) {
+    $config = $manager->listConfigByType($config_type);
+    $result[$config_type] = array();
+    foreach ($config as $config_name => $item) {
+      $result[$config_type][$config_name] = array();
+    }
+  }
+
+  // now fill in the package info that we know about
+  foreach ($components as $item_name => $item) {
+    if (!empty($item['package']) && ($package = $packages[$item['package']])) {
+      $result[$item['type']][$item['name_short']][] = $package['machine_name'];
+    }
+  }
+  return $result;
+}
+
+/**
+ * Prints a list of filtered components.
+ */
+function _drush_features_component_print($filtered_components) {
+  $rows = array(array(dt('Available sources')));
+  foreach ($filtered_components['components'] as $source => $components) {
+    foreach ($components as $name => $value) {
+      $row = array($source .':'. $name);
+      if (isset($filtered_components['sources'][$source .':'. $name])) {
+        $row[] = dt('Provided by') . ': ' . $filtered_components['sources'][$source .':'. $name];
+      }
+      $rows[] = $row;
+    }
+  }
+
+  drush_print_table($rows, TRUE);
+}
+

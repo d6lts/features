@@ -351,6 +351,14 @@ interface FeaturesManagerInterface {
   public function listConfigTypes();
 
   /**
+   * Lists stored configuration for a given configuration type.
+   *
+   * @param string $config_type
+   *   The type of configuration.
+   */
+  public function listConfigByType($config_type);
+
+  /**
    * Return an array of installed modules.
    *
    * If a $name and/or $namespace is specified, only matching modules will be
