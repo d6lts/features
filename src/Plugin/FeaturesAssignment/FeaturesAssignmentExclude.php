@@ -35,7 +35,7 @@ class FeaturesAssignmentExclude extends FeaturesAssignmentMethodBase {
    */
   public function assignPackages() {
     $config_types = $this->featuresManager->listConfigTypes();
-    $settings = $this->configFactory->get('features.assignment');
+    $settings = $this->featuresManager->getAssignmentSettings();
     $config_collection = $this->featuresManager->getConfigCollection();
 
     // Exclude by configuration type.
@@ -69,9 +69,8 @@ class FeaturesAssignmentExclude extends FeaturesAssignmentMethodBase {
         // Load the names of any configuration objects provided by modules
         // having the namespace of the current package set.
         if ($module_namespace) {
-          if ($machine_name = $this->configFactory->get('features.settings')->get('profile.machine_name')) {
-            $modules = array_merge($modules, $this->featuresManager->getModuleList([], $machine_name));
-          }
+          $profile = $this->featuresManager->getProfile();
+          $modules = array_merge($modules, $this->featuresManager->getModuleList([], $profile['machine_name']));
         }
         // If any configuration was found, remove it from the list.
         foreach ($modules as $extension) {

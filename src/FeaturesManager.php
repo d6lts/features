@@ -74,6 +74,13 @@ class FeaturesManager implements FeaturesManagerInterface {
   protected $exportSettings;
 
   /**
+   * The Features assignment settings.
+   *
+   * @var array
+   */
+  protected $assignmentSettings;
+
+  /**
    * The configuration present on the site.
    *
    * @var array
@@ -124,23 +131,16 @@ class FeaturesManager implements FeaturesManagerInterface {
     $this->moduleHandler = $module_handler;
     $this->profileSettings = $config_factory->get('features.settings')->get('profile');
     $this->exportSettings = $config_factory->get('features.settings')->get('export');
+    $this->assignmentSettings = $config_factory->getEditable('features.assignment');
     $this->packages = [];
     $this->initProfile();
     $this->configCollection = [];
   }
 
   /**
-   * Returns the full name of a config item.
-   *
-   * @param string $type
-   *   The config type, or '' to indicate $name is already prefixed.
-   * @param string $name
-   *   The config name, without prefix.
-   *
-   * @return string
-   *   The config item's full name.
+   * {@inheritdoc}
    */
-  protected function getFullName($type, $name) {
+  public function getFullName($type, $name) {
     if ($type == FeaturesManagerInterface::SYSTEM_SIMPLE_CONFIG || !$type) {
       return $name;
     }
@@ -167,9 +167,35 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function getConfigCollection() {
-    $this->initConfigCollection();
+  public function getConfigCollection($reset = FALSE) {
+    $this->initConfigCollection($reset);
     return $this->configCollection;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFullConfigCollection() {
+    $module_exclude = $this->assignmentSettings->get('exclude.module');
+    $old_setting = $module_exclude['enabled'];
+    // disable excluding module config
+    $module_exclude['enabled'] = 0;
+    $this->assignmentSettings->set('exclude.module', $module_exclude);
+
+    $this->reset();
+    // force recalculation of config.  Loads all config
+    $this->getConfigCollection(TRUE);
+    // now run assignment methods
+    if (!isset($this->assigner)) {
+      $this->assigner = \Drupal::service('features_assigner');
+    }
+    $this->assigner->assignConfigPackages();
+    $result = $this->configCollection;
+
+    // restore previous setting
+    $module_exclude['enabled'] = $old_setting;
+    $this->assignmentSettings->set('exclude.module', $module_exclude);
+    return $result;
   }
 
   /**
@@ -243,6 +269,13 @@ class FeaturesManager implements FeaturesManagerInterface {
    */
   public function getExportSettings() {
     return $this->exportSettings;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getAssignmentSettings() {
+    return $this->assignmentSettings;
   }
 
   /**
@@ -367,8 +400,9 @@ class FeaturesManager implements FeaturesManagerInterface {
    */
   public function initPackage($machine_name_short, $name = NULL, $description = '') {
     if (!isset($this->packages[$machine_name_short])) {
-      $this->packages[$machine_name_short] = $this->getProject($machine_name_short, $name, $description);
+      return $this->packages[$machine_name_short] = $this->getProject($machine_name_short, $name, $description);
     }
+    return NULL;
   }
 
   /**
@@ -405,7 +439,7 @@ class FeaturesManager implements FeaturesManagerInterface {
 
     foreach ($item_names as $item_name) {
       if (!isset($config_collection[$item_name])) {
-        throw new \Exception($this->t('Failed to assign @item_name to package %package_name. Configuration item not found.', ['@item_name' => $item_name, '@package_name' => $package_name]));
+        throw new \Exception($this->t('Failed to assign @item_name to package @package_name. Configuration item not found.', ['@item_name' => $item_name, '@package_name' => $package_name]));
       }
       if (empty($config_collection[$item_name]['package']) && !in_array($item_name, $package['config'])) {
         // Add the item to the package's config array.
@@ -791,7 +825,8 @@ class FeaturesManager implements FeaturesManagerInterface {
    * {@inheritdoc}
    */
   public function getModuleList(array $names = array(), $namespace = NULL) {
-    $modules = $this->moduleHandler->getModuleList();
+    // get all modules regardless of enabled/disabled
+    $modules = $this->getAllModules();
     if (!empty($names) || !empty($namespace)) {
       $return = [];
 
@@ -803,9 +838,10 @@ class FeaturesManager implements FeaturesManagerInterface {
       }
 
       // Detect modules by namespace.
-      if (!empty($namespace)) {
+      // If namespace is provided but is empty, then match all modules
+      if (isset($namespace)) {
         foreach ($modules as $module_name => $extension) {
-          if (strpos($module_name, $namespace) === 0) {
+          if (empty($namespace) || (strpos($module_name, $namespace) === 0)) {
             $return[$module_name] = $extension;
           }
         }
@@ -867,8 +903,8 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * Loads configuration from storage into a property.
    */
-  protected function initConfigCollection() {
-    if (empty($this->configCollection)) {
+  protected function initConfigCollection($reset = FALSE) {
+    if ($reset || empty($this->configCollection)) {
       $config_collection = [];
       $config_types = $this->listConfigTypes();
       foreach (array_keys($config_types) as $config_type) {
@@ -914,6 +950,36 @@ class FeaturesManager implements FeaturesManagerInterface {
     if ($add_profile) {
       $this->addProfileFiles();
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getExportInfo($package, $add_profile = FALSE, $profile = NULL) {
+    if (empty($profile)) {
+      $profile = $this->getProfile();
+    }
+    $exportSettings = $this->getExportSettings();
+
+    $full_name = $package['machine_name'];
+
+    if ($add_profile) {
+      // adjust export directory to be in profile
+      $path = 'profiles/' . $profile['directory'] . '/modules';
+    }
+    else {
+      $path = 'modules';
+    }
+    if (!empty($exportSettings['folder'])) {
+      $path .= '/' . $exportSettings['folder'];
+    }
+
+    // prepend the namespace of the current profile
+    if (!empty($profile['machine_name'])) {
+      $full_name = $profile['machine_name'] . '_' . $package['machine_name_short'];
+    }
+
+    return array($full_name, $path);
   }
 
   /**

@@ -46,6 +46,8 @@ interface FeaturesManagerInterface {
 
   /**
    * Get an array of site configuration.
+   * $param bool $reset
+   *   If True, recalculate the configuration (undo all assignment methods)
    *
    * @return array
    *   An array of items, each with the following keys:
@@ -56,7 +58,16 @@ interface FeaturesManagerInterface {
    *   - 'data': the contents of the configuration item in exported format.
    *   - 'dependents': array of names of dependent configuration items.
    */
-  public function getConfigCollection();
+  public function getConfigCollection($reset = FALSE);
+
+  /**
+   * Similar to getConfigCollection but includes all possible module config
+   * Prevents the exclude.module.enable filter in AssignmentExclude from filtering results
+   * Use when you need the full site config without namespace or module filtering
+   * NOTE: This runs all other assignment methods
+   * @return array
+   */
+  public function getFullConfigCollection();
 
   /**
    * Sets an array of site configuration.
@@ -218,6 +229,11 @@ interface FeaturesManagerInterface {
   public function getExportSettings();
 
   /**
+   * Return the current assignment settings
+   */
+  public function getAssignmentSettings();
+
+  /**
    * Initializes a configuration package.
    *
    * @param string $machine_name
@@ -226,6 +242,8 @@ interface FeaturesManagerInterface {
    *   Human readable name of the package.
    * @param string $description
    *   Description of the package.
+   * @return array
+   *   Returns the created package array
    */
   public function initPackage($machine_name, $name = NULL, $description = '');
 
@@ -399,6 +417,29 @@ interface FeaturesManagerInterface {
    *   Whether to add an install profile. Defaults to FALSE.
    */
   public function prepareFiles($add_profile = FALSE);
+
+  /**
+   * Returns the full name of a config item.
+   *
+   * @param string $type
+   *   The config type, or '' to indicate $name is already prefixed.
+   * @param string $name
+   *   The config name, without prefix.
+   *
+   * @return string
+   *   The config item's full name.
+   */
+  public function getFullName($type, $name);
+
+  /**
+   * Return the full machine name and directory for exporting a package
+   * @param string $package
+   * @param bool $add_profile
+   * @param array $profile
+   * @return array($full_name, $directory)
+   */
+  public function getExportInfo($package, $add_profile = FALSE, $profile = NULL);
+
 
   /**
    * Helper function to return a translatable label for the different status constants

@@ -86,27 +86,17 @@ abstract class FeaturesGenerationMethodBase implements FeaturesGenerationMethodI
     if (empty($profile)) {
       $profile = $this->featuresManager->getProfile();
     }
-    $exportSettings = $this->featuresManager->getExportSettings();
     foreach ($packages as &$package) {
-      if ($add_profile) {
-        // adjust export directory to be in profile
-        $path = 'profiles/' . $profile['directory'] . '/modules';
-      }
-      else {
-        $path = 'modules';
-      }
-      if (!empty($exportSettings['folder'])) {
-        $path .= '/' . $exportSettings['folder'];
-      }
+      list($full_name, $path) = $this->featuresManager->getExportInfo($package, $add_profile, $profile);
 
       // prepend the namespace of the current profile
       if (!empty($profile['machine_name'])) {
-        $package['machine_name'] = $profile['machine_name'] . '_' . $package['machine_name_short'];
-        if (empty($existing_packages[$package['machine_name']])) {
+        $package['machine_name'] = $full_name;
+        if (empty($existing_packages[$full_name])) {
           $package['files']['info']['filename'] = $profile['machine_name'] . '_' . $package['files']['info']['filename'];
         }
       }
-      $package['directory'] = $path . '/' . $package['machine_name'];
+      $package['directory'] = $path . '/' . $full_name;
 
       $this->preparePackage($add_profile, $package, $existing_packages);
     }

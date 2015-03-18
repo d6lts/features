@@ -63,10 +63,10 @@ function features_drush_command() {
   $items['features-add'] = array(
     'description' => "Add a config item to a feature package.",
     'arguments' => array(
-      'feature' => 'Feature package to add to.',
-      'components' => 'List of config items to add.',
+      'feature' => 'Feature package to export and add config to.',
+      'components' => 'Patterns of config to add, see features-components for the format of patterns.',
     ),
-    'aliases' => array('fa'),
+    'aliases' => array('fa', 'fe'),
   );
 
   $items['features-components'] = array(
@@ -92,6 +92,8 @@ function features_drush_command() {
  * Drush command callback for features-status.
  */
 function drush_features_status() {
+  $args = func_get_args();
+
   $manager = \Drupal::service('features.manager');
   $assigner = \Drupal::service('features_assigner');
   $profile = $manager->getProfile();
@@ -111,6 +113,16 @@ function drush_features_status() {
   $dt_args = array('!methods' => implode(', ', array_keys($methods)));
   drush_print(dt('The following assignment methods are enabled:'));
   drush_print(dt('  !methods', $dt_args));
+
+  if (!empty($args)) {
+    $config = $manager->getFullConfigCollection();
+    if (count($args) > 1) {
+      print_r(array_keys($config));
+    }
+    else {
+      print_r($config[$args[0]]);
+    }
+  }
 }
 
 /**
@@ -121,7 +133,6 @@ function drush_features_list_packages($package = '') {
   $assigner = \Drupal::service('features_assigner');
   $assigner->assignConfigPackages();
   $packages = $manager->getPackages();
-  $profile = $manager->getProfile();
 
   $result = array();
 
@@ -171,6 +182,9 @@ function drush_features_export($packages = NULL) {
   $manager = \Drupal::service('features.manager');
   $assigner = \Drupal::service('features_assigner');
   $generator = \Drupal::service('features_generator');
+  // this is going to filter based on current namespace
+  // so might need to clear the namespace before calling to export
+  // packages outside the current namespace
   $assigner->assignConfigPackages();
 
   $add_profile = drush_get_option('add-profile');
@@ -228,6 +242,71 @@ function drush_features_export($packages = NULL) {
  * the selected components.
  */
 function drush_features_add() {
+  if ($args = func_get_args()) {
+
+    $manager = \Drupal::service('features.manager');
+    $assigner = \Drupal::service('features_assigner');
+    $generator = \Drupal::service('features_generator');
+    $assigner->assignConfigPackages();
+
+    $module = array_shift($args);
+    if (empty($args)) {
+      return drush_set_error('', 'No components supplied.');
+    }
+    $components = _drush_features_component_list();
+    $options = array(
+      'exported' => FALSE,
+    );
+
+    $filtered_components = _drush_features_component_filter($components, $args, $options);
+    $items = $filtered_components['components'];
+
+    if (empty($items)) {
+      return drush_set_error('', 'No components to add.');
+    }
+
+    $packages = array($module);
+    // If any packages exist, confirm before overwriting.
+    if ($existing_packages = $manager->listPackageDirectories($packages)) {
+      foreach ($existing_packages as $name => $directory) {
+        drush_print(dt("The extension @name already exists at !directory.", array('@name' => $name, '!directory' => $directory)));
+      }
+      // Apparently format_plural is not always available.
+      if (count($existing_packages) == 1) {
+        $message = dt('Would you like to overwrite it?');
+      }
+      else {
+        $message = dt('Would you like to overwrite them?');
+      }
+      if (!drush_confirm($message)) {
+        return drush_user_abort();
+      }
+    }
+    else {
+      $package = $manager->initPackage($module, $module, '');
+      list($full_name, $path) = $manager->getExportInfo($package);
+      drush_print(dt('Will create a new extension @name in !directory', array('@name' => $full_name, '!directory' => $path)));
+      if (!drush_confirm(dt('Do you really want to continue?'))) {
+        drush_die('Aborting.');
+      }
+    }
+
+    $config = _drush_features_build_config($items);
+
+    $manager->assignConfigPackage($module, $config);
+
+    // Use the write generation method.
+    $method_id = \Drupal\features\Plugin\FeaturesGeneration\FeaturesGenerationWrite::METHOD_ID;
+
+    $result = $generator->generatePackages($method_id, $packages, FALSE);
+    foreach ($result as $message) {
+      $type = $message['success'] ? 'success' : 'error';
+      drush_log($message['message'], $message['variables'], $type);
+    }
+  }
+  else {
+    return drush_set_error('', 'No feature name given.');
+  }
 }
 
 
@@ -236,6 +315,7 @@ function drush_features_add() {
  */
 function drush_features_components() {
   $args = func_get_args();
+
   $components = _drush_features_component_list();
   ksort($components);
   // If no args supplied, prompt with a list.
@@ -266,15 +346,30 @@ function drush_features_components() {
 }
 
 /**
+ * Returns an array of full config names given a array[$type][$component]
+ * @param $items
+ */
+function _drush_features_build_config($items) {
+  $manager = \Drupal::service('features.manager');
+  $result = array();
+  foreach ($items as $config_type => $item) {
+    foreach ($item as $item_name => $title) {
+      $result[] = $manager->getFullName($config_type, $item_name);
+    }
+  }
+  return $result;
+}
+
+
+/**
  * Returns a listing of all known components, indexed by source.
  */
 function _drush_features_component_list() {
-  $manager = \Drupal::service('features.manager');
-  $types = $manager->listConfigTypes();
   $result = array();
-  foreach ($types as $config_type => $title) {
-    $config = $manager->listConfigByType($config_type);
-    $result[$config_type] = $config;
+  $manager = \Drupal::service('features.manager');
+  $config = $manager->getFullConfigCollection();
+  foreach ($config as $item_name => $item) {
+    $result[$item['type']][$item['name_short']] = $item['label'];
   }
   return $result;
 }
@@ -427,27 +522,20 @@ function _drush_features_component_filter($all_components, $patterns = array(), 
 function _drush_features_get_component_map() {
   $result = array();
   $manager = \Drupal::service('features.manager');
-  $assigner = \Drupal::service('features_assigner');
-  $assigner->assignConfigPackages();
-  $components = $manager->getConfigCollection();
+  // recalc full config list without running assignments
+  $config = $manager->getFullConfigCollection();
   $packages = $manager->getPackages();
 
-  $types = $manager->listConfigTypes();
-  $result = array();
-  foreach ($types as $config_type => $title) {
-    $config = $manager->listConfigByType($config_type);
-    $result[$config_type] = array();
-    foreach ($config as $config_name => $item) {
-      $result[$config_type][$config_name] = array();
+  foreach ($config as $item_name => $item) {
+    if (!isset($result[$item['type']][$item['name_short']])) {
+      $result[$item['type']][$item['name_short']] = array();
     }
-  }
-
-  // now fill in the package info that we know about
-  foreach ($components as $item_name => $item) {
-    if (!empty($item['package']) && ($package = $packages[$item['package']])) {
+    if (!empty($item['package'])) {
+      $package = $packages[$item['package']];
       $result[$item['type']][$item['name_short']][] = $package['machine_name'];
     }
   }
+
   return $result;
 }
 
