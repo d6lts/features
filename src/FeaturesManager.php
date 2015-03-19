@@ -288,7 +288,6 @@ class FeaturesManager implements FeaturesManagerInterface {
    * {@inheritdoc}
    */
   public function getExistingPackages($enabled = FALSE, $namespace = NULL) {
-    print "Namespace: $namespace\n";
     $result = array();
     if ($enabled) {
       $modules = $this->moduleHandler->getModuleList();
@@ -309,7 +308,6 @@ class FeaturesManager implements FeaturesManagerInterface {
         }
       }
     }
-    print_r($result);
     return $result;
   }
 
