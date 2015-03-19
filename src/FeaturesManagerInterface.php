@@ -61,13 +61,13 @@ interface FeaturesManagerInterface {
   public function getConfigCollection($reset = FALSE);
 
   /**
-   * Similar to getConfigCollection but includes all possible module config
-   * Prevents the exclude.module.enable filter in AssignmentExclude from filtering results
-   * Use when you need the full site config without namespace or module filtering
-   * NOTE: This runs all other assignment methods
-   * @return array
+   * Apply a namespace to the current config.
+   * Causes Assignment plugins to be executed based on the new namespace
+   * @param string $namespace
+   *   if NULL, use the current namespace
+   *   if empty, clears the namespace
    */
-  public function getFullConfigCollection();
+  public function applyNamespace($namespace = NULL);
 
   /**
    * Sets an array of site configuration.
@@ -251,10 +251,12 @@ interface FeaturesManagerInterface {
    * List modules that are existing exported Packages
    * @param bool $enabled
    *   Determine if only enabled modules are searched
+   * @param string $namespace
+   *   If set, only returns modules matching the namespace
    * @return array
    *   Module's info.yml config data
    */
-  public function getExistingPackages($enabled = FALSE);
+  public function getExistingPackages($enabled = FALSE, $namespace = NULL);
 
   /**
    * Lists directories in which packages are present.

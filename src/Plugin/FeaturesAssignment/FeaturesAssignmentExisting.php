@@ -31,7 +31,8 @@ class FeaturesAssignmentExisting extends FeaturesAssignmentMethodBase {
    * {@inheritdoc}
    */
   public function assignPackages() {
-    $existing = $this->featuresManager->getExistingPackages();
+    $profile = $this->featuresManager->getProfile();
+    $existing = $this->featuresManager->getExistingPackages(FALSE, $profile['machine_name']);
     foreach ($existing as $name => $info) {
       $config = $this->featuresManager->listExtensionConfig($info['module']);
       $this->featuresManager->assignConfigPackage($info['features'], $config);

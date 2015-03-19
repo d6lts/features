@@ -175,27 +175,20 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function getFullConfigCollection() {
-    $module_exclude = $this->assignmentSettings->get('exclude.module');
-    $old_setting = $module_exclude['enabled'];
-    // disable excluding module config
-    $module_exclude['enabled'] = 0;
-    $this->assignmentSettings->set('exclude.module', $module_exclude);
-
-    $this->reset();
-    // force recalculation of config.  Loads all config
-    $this->getConfigCollection(TRUE);
-    // now run assignment methods
+  public function applyNamespace($namespace = NULL) {
+    if (isset($namespace)) {
+      $this->profile['machine_name'] = $namespace;
+    }
+    if (isset($this->configCollection)) {
+      // force recalculation of config if already created
+      $this->reset();
+      $this->getConfigCollection(TRUE);
+    }
+    // call the assignment plugins
     if (!isset($this->assigner)) {
       $this->assigner = \Drupal::service('features_assigner');
     }
     $this->assigner->assignConfigPackages();
-    $result = $this->configCollection;
-
-    // restore previous setting
-    $module_exclude['enabled'] = $old_setting;
-    $this->assignmentSettings->set('exclude.module', $module_exclude);
-    return $result;
   }
 
   /**
@@ -294,7 +287,8 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function getExistingPackages($enabled = FALSE) {
+  public function getExistingPackages($enabled = FALSE, $namespace = NULL) {
+    print "Namespace: $namespace\n";
     $result = array();
     if ($enabled) {
       $modules = $this->moduleHandler->getModuleList();
@@ -306,13 +300,16 @@ class FeaturesManager implements FeaturesManagerInterface {
       $modules = $listing->scan('module');
     }
     foreach ($modules as $name => $module) {
-      $info_file_uri = $module->getPath() . '/' . $name . '.info.' . FileStorage::getFileExtension();
-      $existing_info = \Drupal::service('info_parser')->parse($info_file_uri);
-      if (isset($existing_info['features'])) {
-        $existing_info['module'] = $module;
-        $result[$name] = $existing_info;
+      if (empty($namespace) || (strpos($name, $namespace) === 0)) {
+        $info_file_uri = $module->getPath() . '/' . $name . '.info.' . FileStorage::getFileExtension();
+        $existing_info = \Drupal::service('info_parser')->parse($info_file_uri);
+        if (isset($existing_info['features'])) {
+          $existing_info['module'] = $module;
+          $result[$name] = $existing_info;
+        }
       }
     }
+    print_r($result);
     return $result;
   }
 

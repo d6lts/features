@@ -85,7 +85,31 @@ function features_drush_command() {
     'aliases' => array('fc'),
   );
 
+  foreach ($items as $name => &$item) {
+    $item['options']['all'] = array(
+      'description' => 'Clear namespace to use all site config.'
+    );
+    $item['options']['name'] = array(
+      'description' => 'Use a specific namespace.'
+    );
+  }
+
   return $items;
+}
+
+/**
+ * Applies global options for Features drush commands
+ *   --all  clears the namespace
+ *   --name="namespace"  set the namespace
+ */
+function _drush_features_options() {
+  $namespace = drush_get_option('name');
+  if (drush_get_option('all')) {
+    $namespace = '';
+  }
+
+  $manager = \Drupal::service('features.manager');
+  $manager->applyNamespace($namespace);
 }
 
 /**
@@ -93,6 +117,7 @@ function features_drush_command() {
  */
 function drush_features_status() {
   $args = func_get_args();
+  _drush_features_options();
 
   $manager = \Drupal::service('features.manager');
   $assigner = \Drupal::service('features_assigner');
@@ -115,7 +140,7 @@ function drush_features_status() {
   drush_print(dt('  !methods', $dt_args));
 
   if (!empty($args)) {
-    $config = $manager->getFullConfigCollection();
+    $config = $manager->getConfigCollection();
     if (count($args) > 1) {
       print_r(array_keys($config));
     }
@@ -129,9 +154,8 @@ function drush_features_status() {
  * Drush command callback for features-list-packages.
  */
 function drush_features_list_packages($package = '') {
+  _drush_features_options();
   $manager = \Drupal::service('features.manager');
-  $assigner = \Drupal::service('features_assigner');
-  $assigner->assignConfigPackages();
   $packages = $manager->getPackages();
 
   $result = array();
@@ -178,14 +202,10 @@ function drush_features_list_packages($package = '') {
  */
 function drush_features_export($packages = NULL) {
   $packages = func_get_args();
+  _drush_features_options();
 
   $manager = \Drupal::service('features.manager');
-  $assigner = \Drupal::service('features_assigner');
   $generator = \Drupal::service('features_generator');
-  // this is going to filter based on current namespace
-  // so might need to clear the namespace before calling to export
-  // packages outside the current namespace
-  $assigner->assignConfigPackages();
 
   $add_profile = drush_get_option('add-profile');
 
@@ -243,11 +263,10 @@ function drush_features_export($packages = NULL) {
  */
 function drush_features_add() {
   if ($args = func_get_args()) {
+    _drush_features_options();
 
     $manager = \Drupal::service('features.manager');
-    $assigner = \Drupal::service('features_assigner');
     $generator = \Drupal::service('features_generator');
-    $assigner->assignConfigPackages();
 
     $module = array_shift($args);
     if (empty($args)) {
@@ -315,6 +334,7 @@ function drush_features_add() {
  */
 function drush_features_components() {
   $args = func_get_args();
+  _drush_features_options();
 
   $components = _drush_features_component_list();
   ksort($components);
@@ -367,7 +387,7 @@ function _drush_features_build_config($items) {
 function _drush_features_component_list() {
   $result = array();
   $manager = \Drupal::service('features.manager');
-  $config = $manager->getFullConfigCollection();
+  $config = $manager->getConfigCollection();
   foreach ($config as $item_name => $item) {
     $result[$item['type']][$item['name_short']] = $item['label'];
   }
@@ -523,7 +543,7 @@ function _drush_features_get_component_map() {
   $result = array();
   $manager = \Drupal::service('features.manager');
   // recalc full config list without running assignments
-  $config = $manager->getFullConfigCollection();
+  $config = $manager->getConfigCollection();
   $packages = $manager->getPackages();
 
   foreach ($config as $item_name => $item) {
