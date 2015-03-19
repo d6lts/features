@@ -8,6 +8,7 @@
 use Drupal\features\FeaturesManagerInterface;
 use Drupal\features\FeaturesInstallStorage;
 use Drupal\Component\Diff\DiffFormatter;
+use Drupal\Core\Extension\ModuleHandlerInterface;
 
 /**
  * Implements hook_drush_command().
@@ -97,6 +98,20 @@ function features_drush_command() {
       'lines' => 'Generate diffs with <n> lines of context instead of the usual two.',
     ),
     'aliases' => array('fd'),
+  );
+
+  $items['features-import'] = array(
+    'description' => "Import a module config into your site.",
+    'arguments' => array(
+      'feature' => 'A space delimited list of features or feature:component pairs to import.',
+    ),
+    'options' => array(
+      'force' => "Force import even if config is not overridden.",
+    ),
+    'examples' => array(
+      'drush feature-import foo.node foo.taxonomy bar' => 'Import node and taxonomy config of feature "foo". Import all config of feature "bar".',
+    ),
+    'aliases' => array('fim', 'fr'),
   );
 
   foreach ($items as $name => &$item) {
@@ -400,15 +415,11 @@ function drush_features_diff() {
     $filter_ctypes = explode(',', $filter_ctypes);
   }
 
-  $package_names = $manager->listPackageMachineNamesShort(array($module));
-  if (empty($package_names)) {
-    drush_log(dt('No such feature is enabled: ' . $module), 'error');
+  $feature = _drush_features_load_feature($module, TRUE);
+  if (empty($feature)) {
+    drush_log(dt('No such feature is available: @module', array('@module' => $module)), 'error');
     return;
   }
-  $package_name = $package_names[0];
-
-  $packages = $manager->getPackages();
-  $feature = $packages[$package_name];
 
   $lines = drush_get_option('lines');
   $lines = isset($lines) ? $lines : 2;
@@ -469,6 +480,132 @@ function drush_features_diff() {
       }
     }
   }
+}
+
+/**
+ * Import module config into the active store
+ * Same as the old "revert" functionality
+ */
+function drush_features_import() {
+  if ($args = func_get_args()) {
+    _drush_features_options();
+
+    // Determine if revert should be forced.
+    $force = drush_get_option('force');
+    // Determine if -y was supplied. If so, we can filter out needless output
+    // from this command.
+    $skip_confirmation = drush_get_context('DRUSH_AFFIRMATIVE');
+
+    $manager = \Drupal::service('features.manager');
+    $active_storage = \Drupal::service('config.storage');
+    $config_revert = \Drupal::service('config_update.config_update');
+    $extension_storage = new FeaturesInstallStorage($active_storage);
+    $config_revert->setExtensionStorage($extension_storage);
+
+    // Parse list of arguments.
+    $modules = array();
+    foreach ($args as $arg) {
+      $arg = explode(':', $arg);
+      $module = array_shift($arg);
+      $component = array_shift($arg);
+
+      if (isset($module)) {
+        if (empty($component)) {
+          // If we received just a feature name, this means that we need all of it's components.
+          $modules[$module] = TRUE;
+        }
+        elseif ($modules[$module] !== TRUE) {
+          if (!isset($modules[$module])) {
+            $modules[$module] = array();
+          }
+          $modules[$module][] = $component;
+        }
+      }
+    }
+
+    // Process modules.
+    foreach ($modules as $module => $components_needed) {
+
+      $dt_args['@module'] = $module;
+      $feature = _drush_features_load_feature($module, TRUE);
+      if (empty($feature)) {
+        drush_log(dt('No such feature is available: @module', $dt_args), 'error');
+        return;
+      }
+
+      if ($feature['status'] != FeaturesManagerInterface::STATUS_ENABLED) {
+        drush_log(dt('No such feature is enabled: @module', $dt_args), 'error');
+        return;
+      }
+
+      // Forcefully revert all components of a feature.
+      if ($force) {
+        $components = $feature['config'];
+      }
+      // Only revert components that are detected to be Overridden.
+      else {
+        $components = _drush_features_detect_overrides($feature);
+      }
+
+      if (!empty($components_needed) && is_array($components_needed)) {
+        $components = array_intersect($components, $components_needed);
+      }
+
+      if (empty($components)) {
+        drush_log(dt('Current state already matches active config, aborting.'), 'ok');
+      }
+      else {
+        $config = $manager->getConfigCollection();
+        foreach ($components as $component) {
+          $item = $config[$component];
+          $dt_args['@component'] = $component;
+          $confirmation_message = 'Do you really want to revert @module : @component?';
+          if ($skip_confirmation || drush_confirm(dt($confirmation_message, $dt_args))) {
+            $config_revert->revert($item['type'], $item['name_short']);
+            drush_log(dt('Reverted @module : @component.', $dt_args), 'ok');
+          }
+          else {
+            drush_log(dt('Skipping @module : @component.', $dt_args), 'ok');
+          }
+        }
+      }
+    }
+  }
+  else {
+    drush_features_list();
+    return;
+  }
+}
+
+/**
+ * Loads a Features package
+ * @param string $module name
+ * @param bool $any
+ *   If TRUE then check for any module, not just a Features module
+ * @return array
+ */
+function _drush_features_load_feature($module, $any = FALSE) {
+  $manager = \Drupal::service('features.manager');
+  $packages = $manager->getPackages();
+  $package_names = $manager->listPackageMachineNamesShort(array($module));
+  $feature = NULL;
+  if ($any && empty($package_names)) {
+    // see if this is a non-features module
+    $module_handler = \Drupal::service('module_handler');
+    $modules = $module_handler->getModuleList();
+    if (!empty($modules[$module])) {
+      $manager->initPackage($module, $module);
+      $extension = $modules[$module];
+      $config = $manager->listExtensionConfig($extension);
+      $feature = $packages[$module];
+      $feature['config'] = $config;
+      $feature['status'] = FeaturesManagerInterface::STATUS_ENABLED;
+    }
+  }
+  elseif (!$any) {
+    $feature = $packages[$package_names[0]];
+  }
+  return $feature;
 }
 
 /**
