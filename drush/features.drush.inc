@@ -6,6 +6,8 @@
  */
 
 use Drupal\features\FeaturesManagerInterface;
+use Drupal\features\FeaturesInstallStorage;
+use Drupal\Component\Diff\DiffFormatter;
 
 /**
  * Implements hook_drush_command().
@@ -83,6 +85,18 @@ function features_drush_command() {
       ),
     ),
     'aliases' => array('fc'),
+  );
+
+  $items['features-diff'] = array(
+    'description' => "Show the difference between the active config and the default config stored in a feature package.",
+    'arguments' => array(
+      'feature' => 'The feature in question.',
+    ),
+    'options' => array(
+      'ctypes' => 'Comma separated list of component types to limit the output to. Defaults to all types.',
+      'lines' => 'Generate diffs with <n> lines of context instead of the usual two.',
+    ),
+    'aliases' => array('fd'),
   );
 
   foreach ($items as $name => &$item) {
@@ -164,6 +178,8 @@ function drush_features_list_packages($package = '') {
   if (empty($package)) {
     drush_hide_output_fields(array('object'));
     foreach ($packages as $item) {
+      _drush_features_detect_overrides($item);
+
       $result[$item['machine_name']] = array(
         'name' => $item['name'],
         'machine_name' => $item['machine_name'],
@@ -366,6 +382,96 @@ function drush_features_components() {
 }
 
 /**
+ * Lists the differences in the package config vs the active store
+ * @param string $package
+ */
+function drush_features_diff() {
+  if (!$args = func_get_args()) {
+    drush_features_list();
+    return;
+  }
+  _drush_features_options();
+
+  $manager = \Drupal::service('features.manager');
+
+  $module = $args[0];
+  $filter_ctypes = drush_get_option("ctypes");
+  if ($filter_ctypes) {
+    $filter_ctypes = explode(',', $filter_ctypes);
+  }
+
+  $package_names = $manager->listPackageMachineNamesShort(array($module));
+  if (empty($package_names)) {
+    drush_log(dt('No such feature is enabled: ' . $module), 'error');
+    return;
+  }
+  $package_name = $package_names[0];
+
+  $packages = $manager->getPackages();
+  $feature = $packages[$package_name];
+
+  $lines = drush_get_option('lines');
+  $lines = isset($lines) ? $lines : 2;
+
+  $formatter = new DiffFormatter();
+  $formatter->leading_context_lines = $lines;
+  $formatter->trailing_context_lines = $lines;
+  $formatter->show_header = FALSE;
+
+  if (drush_get_context('DRUSH_NOCOLOR')) {
+    $red = $green = "%s";
+  }
+  else {
+    $red = "\033[31;40m\033[1m%s\033[0m";
+    $green = "\033[0;32;40m\033[1m%s\033[0m";
+  }
+
+  $overrides = _drush_features_detect_overrides($feature);
+
+  if (empty($overrides)) {
+    drush_print(dt('Active config matches stored config for @module.', array('@module' => $module)));
+  }
+  else {
+    $config_diff = \Drupal::service('config_update.config_diff');
+    $active_storage = \Drupal::service('config.storage');
+    $extension_storage = new FeaturesInstallStorage($active_storage);
+    $install_list = $extension_storage->getAllFolders();
+
+    // Print key for colors
+    drush_print(dt('Legend: '));
+    drush_print(sprintf($red,   dt('Code:    drush features-revert will replace the active config with the displayed code.')));
+    drush_print(sprintf($green, dt('Active:  drush features-export will update the exported feature with the displayed active config')));
+
+    foreach ($overrides as $name) {
+      $message = '';
+      $active = $active_storage->read($name);
+      $extension = $extension_storage->read($name);
+      if (empty($extension)) {
+        $extension = array();
+        $message = sprintf($green, t('(not exported)'));
+      }
+      $diff = $config_diff->diff($extension, $active);
+      $rows = explode("\n", $formatter->format($diff));
+      drush_print();
+      drush_print(dt("Config !name !message", array('!name' => $name, '!message' => $message)));
+      if (!empty($extension)) {
+        foreach ($rows as $row) {
+          if (strpos($row, '>') === 0) {
+            drush_print(sprintf($green, $row));
+          }
+          elseif (strpos($row, '<') === 0) {
+            drush_print(sprintf($red, $row));
+          }
+          else {
+            drush_print($row);
+          }
+        }
+      }
+    }
+  }
+}
+
+/**
  * Returns an array of full config names given a array[$type][$component]
  * @param $items
  */
@@ -379,7 +485,6 @@ function _drush_features_build_config($items) {
   }
   return $result;
 }
-
 
 /**
  * Returns a listing of all known components, indexed by source.
@@ -577,3 +682,29 @@ function _drush_features_component_print($filtered_components) {
   drush_print_table($rows, TRUE);
 }
 
+/**
+ * Determine which config is overridden in a package
+ * @param array $feature
+ *   the package array
+ *   the 'state' property is updated if overrides are detected
+ */
+function _drush_features_detect_overrides(&$feature) {
+  $config_diff = \Drupal::service('config_update.config_diff');
+  $active_storage = \Drupal::service('config.storage');
+  $extension_storage = new FeaturesInstallStorage($active_storage);
+
+  $different = array();
+  foreach ($feature['config'] as $name) {
+    $active = $active_storage->read($name);
+    $extension = $extension_storage->read($name);
+    $extension = !empty($extension) ? $extension : array();
+    if (!$config_diff->same($extension, $active)) {
+      $different[] = $name;
+    }
+  }
+
+  if (!empty($different)) {
+    $feature['state'] = FeaturesManagerInterface::STATE_OVERRIDDEN;
+  }
+  return $different;
+}

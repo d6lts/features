@@ -7,3 +7,4 @@ configure: features.assignment
 dependencies:
   - config
   - config_devel
+  - config_update

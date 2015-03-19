@@ -10,7 +10,7 @@ namespace Drupal\features\Plugin\FeaturesAssignment;
 use Drupal\component\Utility\Unicode;
 use Drupal\features\FeaturesAssignmentMethodBase;
 use Drupal\features\FeaturesManagerInterface;
-use Drupal\Core\Config\ExtensionInstallStorage;
+use Drupal\features\FeaturesInstallStorage;
 
 /**
  * Class for excluding configuration from packages.
@@ -51,7 +51,7 @@ class FeaturesAssignmentExclude extends FeaturesAssignmentMethodBase {
     // Exclude configuration already provided by modules.
     $exclude_module = $settings->get('exclude.module');
     if (!empty($exclude_module['enabled'])) {
-      $extension_config_storage = new ExtensionInstallStorage($this->configStorage);
+      $extension_config_storage = new FeaturesInstallStorage($this->configStorage);
       $install_list = $extension_config_storage->listAll();
       // There are two settings that can limit what's included.
       // First, we can skipped configuration provided by the install profile.

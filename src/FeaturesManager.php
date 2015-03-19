@@ -11,12 +11,12 @@ use Drupal\Component\Serialization\Yaml;
 use Drupal\features\FeaturesAssignerInterface;
 use Drupal\features\FeaturesGeneratorInterface;
 use Drupal\features\FeaturesManagerInterface;
+use Drupal\features\FeaturesInstallStorage;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\ConfigManagerInterface;
 use Drupal\Core\Config\FileStorage;
 use Drupal\Core\Config\InstallStorage;
 use Drupal\Core\Config\StorageInterface;
-use Drupal\Core\Config\ExtensionInstallStorage;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Entity\EntityTypeInterface;
 use Drupal\Core\Extension\Extension;
@@ -850,7 +850,7 @@ class FeaturesManager implements FeaturesManagerInterface {
    * {@inheritdoc}
    */
   public function listExtensionConfig(Extension $extension) {
-    $extension_storage = new ExtensionInstallStorage($this->configStorage);
+    $extension_storage = new FeaturesInstallStorage($this->configStorage);
     return array_keys($extension_storage->getComponentNames('module', array($extension->getName())));
   }
 
