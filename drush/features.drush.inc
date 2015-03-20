@@ -500,7 +500,7 @@ function drush_features_import() {
     $manager = \Drupal::service('features.manager');
     $active_storage = \Drupal::service('config.storage');
     $extension_storage = new FeaturesInstallStorage($active_storage);
-    $config_revert = new ConfigReverter(\Drupal::service('entity.manager'), $active_storage, \Drupal::service('config.factory'), $extension_storage);
+    $config_revert = new ConfigReverter(\Drupal::service('entity.manager'), $active_storage, $extension_storage, \Drupal::service('config.factory'));
 
     // Parse list of arguments.
     $modules = array();
