@@ -37,3 +37,12 @@ features.assignment_exclude:
     _title: 'Configure package exclusion'
   requirements:
     _permission: 'administer site configuration'
+
+features.settings:
+  path: '/admin/config/development/configuration/features/settings'
+  defaults:
+    _form: '\Drupal\features_ui\Form\FeaturesSettingsForm'
+    _title: 'Settings'
+  requirements:
+    _permission: 'administer site configuration'
+

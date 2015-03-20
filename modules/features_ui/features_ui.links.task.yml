@@ -1,6 +1,6 @@
 features.package:
   route_name: features.export
-  title: 'Export Configuration Modules'
+  title: 'Export Features'
   base_route: config.sync
 
 features.export:
@@ -12,4 +12,9 @@ features.export:
 features.assignment:
   route_name: features.assignment
   title: 'Configure Package Assigners'
+  parent_id: features.package
+
+features.settings:
+  route_name: features.settings
+  title: 'Settings'
   parent_id: features.package

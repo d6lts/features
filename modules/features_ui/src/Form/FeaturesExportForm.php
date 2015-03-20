@@ -97,60 +97,7 @@ class FeaturesExportForm extends FormBase {
     // Add dependencies.
     $config_types['dependencies'] = $this->t('Dependencies');
     uasort($config_types, 'strnatcasecmp');
-    $features_config = \Drupal::config('features.settings');
     $module_names = array();
-
-    $form['profile'] = array(
-      '#type' => 'container',
-      '#tree' => TRUE,
-    );
-
-    $profile_settings = $features_config->get('profile');
-    $form['profile']['name'] = array(
-      '#title' => $this->t('Namespace'),
-      '#type' => 'textfield',
-      '#default_value' => $profile_settings['name'],
-      '#description' => $this->t('The human-readable name of a set of configuration modules. This name will also be used for an install profile if "Include install profile" is selected below.'),
-      '#required' => TRUE,
-      '#size' => 30,
-    );
-
-    $form['profile']['machine_name'] = array(
-      '#type' => 'machine_name',
-      '#maxlength' => 64,
-      '#machine_name' => array(
-        'source' => array('profile', 'name'),
-      ),
-      '#default_value' => $profile_settings['machine_name'],
-      '#description' => $this->t('A unique machine-readable name of a set of configuration modules. This name will also be used for an install profile if "Include install profile" is selected below. It must only contain lowercase letters, numbers, and underscores.'),
-      '#required' => TRUE,
-    );
-
-    $form['profile']['add'] = array(
-      '#type' => 'checkbox',
-      '#title' => t('Include install profile'),
-      '#default_value' => $profile_settings['add'],
-      '#description' => $this->t('Select this option to have your configuration modules packaged into an install profile.'),
-      '#attributes' => array(
-        'data-add-profile' => 'status',
-      ),
-    );
-
-    $show_if_profile_add_checked = array(
-      'visible' => array(
-        ':input[data-add-profile="status"]' => array('checked' => TRUE),
-      ),
-    );
-
-    $form['profile']['description'] = array(
-      '#title' => $this->t('Distribution description'),
-      '#type' => 'textfield',
-      '#default_value' => $profile_settings['description'],
-      '#description' => $this->t('A description of your install profile or distribution.'),
-      '#size' => 30,
-      // Show only if the profile.add option is selected.
-      '#states' => $show_if_profile_add_checked,
-    );
 
     // Offer a preview of the packages.
     $form['preview'] = array(
@@ -270,11 +217,7 @@ class FeaturesExportForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-
-    $profile_settings = $form_state->getValue('profile');
-    \Drupal::configFactory()->getEditable('features.settings')
-      ->set('profile', $profile_settings)
-      ->save();
+    $profile_settings = \Drupal::config('features.settings')->get('profile');
 
     $this->assigner->assignConfigPackages();
 
