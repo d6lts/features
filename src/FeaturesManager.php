@@ -330,7 +330,7 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function isFeaturesModule($module) {
+  public function isFeatureModule($module) {
     $info = $this->getExtensionInfo($module);
     return isset($info['features']);
   }
@@ -351,7 +351,7 @@ class FeaturesManager implements FeaturesManagerInterface {
     }
     foreach ($modules as $name => $module) {
       if (empty($namespace) || (strpos($name, $namespace) === 0)) {
-        if ($this->isFeaturesModule($module)) {
+        if ($this->isFeatureModule($module)) {
           $result[$name] = $this->getExtensionInfo($module);
         }
       }

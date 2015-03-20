@@ -448,7 +448,7 @@ interface FeaturesManagerInterface {
    *   Either the name of an module or a full module extension object
    * @return bool
    */
-  public function isFeaturesModule($module);
+  public function isFeatureModule($module);
 
   /**
    * Helper function to return a translatable label for the different status constants
