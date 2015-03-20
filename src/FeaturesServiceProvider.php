@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\config_share\ConfigShareServiceProvider.
+ * Contains \Drupal\features\FeaturesServiceProvider.
  */
 
 namespace Drupal\features;
@@ -11,7 +11,7 @@ use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\DependencyInjection\ServiceProviderBase;
 
 /**
- * Service provider implementation for Features to override config.installer
+ * Service provider implementation for Features to override config.installer.
  *
  * @ingroup container
  */

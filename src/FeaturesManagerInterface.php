@@ -403,13 +403,13 @@ interface FeaturesManagerInterface {
    * If a $name and/or $namespace is specified, only matching modules will be
    * returned. Otherwise, all install are returned.
    *
-   * @param Extension $extension
-   *   An Extension object.
+   * @param mixed $extension
+   *   A string name of an extension or a full Extension object.
    *
    * @return array
    *   An array of configuration object names.
    */
-  public function listExtensionConfig(Extension $extension);
+  public function listExtensionConfig($extension);
 
   /**
    * Iterates through packages and profile and prepares file names and
@@ -442,6 +442,13 @@ interface FeaturesManagerInterface {
    */
   public function getExportInfo($package, $add_profile = FALSE, $profile = NULL);
 
+  /**
+   * Determine if the module is a Features package
+   * @param mixed $name
+   *   Either the name of an module or a full module extension object
+   * @return bool
+   */
+  public function isFeaturesModule($module);
 
   /**
    * Helper function to return a translatable label for the different status constants

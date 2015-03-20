@@ -285,6 +285,57 @@ class FeaturesManager implements FeaturesManagerInterface {
   }
 
   /**
+   * Return the name of an extension
+   * @param mixed $extension
+   *   The string name of an extension, or a full Extension object
+   * @return string
+   */
+  protected function getExtensionName($extension) {
+    if (is_string($extension)) {
+      return $extension;
+    }
+    else {
+      return $extension->getName();
+    }
+  }
+
+  /**
+   * Return the path to an extension info.yml file
+   * @param mixed $extension
+   *   The string name of an extension, or a full Extension object
+   * @param string $type
+   *   The type of extension
+   * @return string
+   */
+  protected function getExtensionPath($extension, $type = 'module') {
+    if (is_string($extension)) {
+      return drupal_get_filename($type, $extension);
+    }
+    else {
+      return $extension->getPathname();
+    }
+  }
+
+  /**
+   * Return the contents of an extensions info.yml file
+   * @param mixed $extension
+   *   The string name of an extension, or a full Extension object
+   * @return array info.yml data
+   */
+  protected function getExtensionInfo($extension, $type = 'module') {
+    $info_file_uri = $this->getExtensionPath($extension, $type);
+    return \Drupal::service('info_parser')->parse($info_file_uri);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isFeaturesModule($module) {
+    $info = $this->getExtensionInfo($module);
+    return isset($info['features']);
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function getExistingPackages($enabled = FALSE, $namespace = NULL) {
@@ -300,11 +351,8 @@ class FeaturesManager implements FeaturesManagerInterface {
     }
     foreach ($modules as $name => $module) {
       if (empty($namespace) || (strpos($name, $namespace) === 0)) {
-        $info_file_uri = $module->getPath() . '/' . $name . '.info.' . FileStorage::getFileExtension();
-        $existing_info = \Drupal::service('info_parser')->parse($info_file_uri);
-        if (isset($existing_info['features'])) {
-          $existing_info['module'] = $module;
-          $result[$name] = $existing_info;
+        if ($this->isFeaturesModule($module)) {
+          $result[$name] = $this->getExtensionInfo($module);
         }
       }
     }
@@ -849,9 +897,10 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function listExtensionConfig(Extension $extension) {
+  public function listExtensionConfig($extension) {
     $extension_storage = new FeaturesInstallStorage($this->configStorage);
-    return array_keys($extension_storage->getComponentNames('module', array($extension->getName())));
+    $name = $this->getExtensionName($extension);
+    return array_keys($extension_storage->getComponentNames('module', array($name)));
   }
 
   /**

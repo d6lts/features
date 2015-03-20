@@ -34,7 +34,8 @@ class FeaturesAssignmentExisting extends FeaturesAssignmentMethodBase {
     $profile = $this->featuresManager->getProfile();
     $existing = $this->featuresManager->getExistingPackages(FALSE, $profile['machine_name']);
     foreach ($existing as $name => $info) {
-      $config = $this->featuresManager->listExtensionConfig($info['module']);
+      $config = $this->featuresManager->listExtensionConfig($name);
+      // The 'features' key contains the short machine_name of the module.
       $this->featuresManager->assignConfigPackage($info['features'], $config);
     }
   }

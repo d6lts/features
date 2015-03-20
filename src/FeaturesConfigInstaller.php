@@ -2,13 +2,14 @@
 
 /**
  * @file
- * Contains Drupal\config_share\ConfigShareConfigInstaller.
+ * Contains Drupal\features\FeaturesConfigInstaller.
  */
 
 namespace Drupal\features;
 
 use Drupal\Core\Config\ConfigInstaller;
 use Drupal\Core\Config\FileStorage;
+use Drupal\features\FeaturesManagerInterface;
 
 class FeaturesConfigInstaller extends ConfigInstaller {
 
@@ -16,11 +17,9 @@ class FeaturesConfigInstaller extends ConfigInstaller {
    * {@inheritdoc}
    */
   public function findPreExistingConfiguration($type, $name) {
-    $module_path = drupal_get_path('module', $name);
-    $info_file_uri = "$module_path/$name.info." . FileStorage::getFileExtension();
-    $info = \Drupal::service('info_parser')->parse($info_file_uri);
-    if (isset($info['features'])) {
-      // allow a Features package to be enabled even if it's config conflicts
+    $manager = \Drupal::service('features.manager');
+    if (($type == 'module') && $manager->isFeatureModule($name)) {
+      // Allow a Features package to be enabled even if it's config conflicts.
       return array();
     }
     return parent::findPreExistingConfiguration($type, $name);
