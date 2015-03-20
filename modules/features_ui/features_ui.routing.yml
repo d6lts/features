@@ -1,0 +1,39 @@
+features.export:
+  path: '/admin/config/development/configuration/features'
+  defaults:
+    _form: '\Drupal\features_ui\Form\FeaturesExportForm'
+    _title: 'Export'
+  requirements:
+    _permission: 'export configuration'
+
+features.assignment:
+  path: '/admin/config/development/configuration/features/assignment'
+  defaults:
+    _form: '\Drupal\features_ui\Form\AssignmentConfigureForm'
+    _title: 'Assignment'
+  requirements:
+    _permission: 'administer site configuration'
+
+features.assignment_base:
+  path: '/admin/config/development/configuration/features/assignment/base'
+  defaults:
+    _form: '\Drupal\features_ui\Form\AssignmentBaseForm'
+    _title: 'Configure base package assignment'
+  requirements:
+    _permission: 'administer site configuration'
+
+features.assignment_core:
+  path: '/admin/config/development/configuration/features/assignment/core'
+  defaults:
+    _form: '\Drupal\features_ui\Form\AssignmentCoreForm'
+    _title: 'Configure core package assignment'
+  requirements:
+    _permission: 'administer site configuration'
+
+features.assignment_exclude:
+  path: '/admin/config/development/configuration/features/assignment/exclude'
+  defaults:
+    _form: '\Drupal\features_ui\Form\AssignmentExcludeForm'
+    _title: 'Configure package exclusion'
+  requirements:
+    _permission: 'administer site configuration'

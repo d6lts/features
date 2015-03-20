@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains \Drupal\features\Form\AssignmentConfigureForm.
+ * Contains \Drupal\features_ui\Form\AssignmentConfigureForm.
  */
 
-namespace Drupal\features\Form;
+namespace Drupal\features_ui\Form;
 
 use Drupal\Component\Utility\String;
 use Drupal\Component\Utility\Unicode;

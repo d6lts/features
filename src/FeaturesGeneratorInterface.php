@@ -81,7 +81,7 @@ interface FeaturesGeneratorInterface {
 
   /**
    * Responds to the submission of
-   * \Drupal\features\Form\FeaturesExportForm.
+   * \Drupal\features_ui\Form\FeaturesExportForm.
    */
   public function applyExportFormSubmit($method_id, &$form, FormStateInterface $form_state);
 

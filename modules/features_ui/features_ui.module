@@ -1,0 +1,27 @@
+<?php
+
+/**
+ * @file
+ * Allows site administrators to modify configuration.
+ */
+
+use Drupal\Core\Routing\RouteMatchInterface;
+
+/**
+ * Implements hook_theme().
+ */
+function features_ui_theme() {
+  return array(
+    'features_assignment_configure_form' => array(
+      'render element' => 'form',
+      'file' => 'features_ui.admin.inc',
+    ),
+    'features_items' => array(
+      'variables' => array(
+        'items' => array(),
+      ),
+      'file' => 'features_ui.admin.inc',
+      'function' => 'theme_features_items',
+    ),
+  );
+}

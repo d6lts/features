@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains \Drupal\features\Form\FeaturesExportForm.
+ * Contains \Drupal\features_ui\Form\FeaturesExportForm.
  */
 
-namespace Drupal\features\Form;
+namespace Drupal\features_ui\Form;
 
 use Drupal\Component\Utility\String;
 use Drupal\Component\Utility\Xss;
@@ -218,7 +218,7 @@ class FeaturesExportForm extends FormBase {
     }
     $form['#attached'] = array(
       'library' => array(
-        'features/drupal.features.admin',
+        'features_ui/drupal.features_ui.admin',
       ),
     );
     // Offer available generation methods.

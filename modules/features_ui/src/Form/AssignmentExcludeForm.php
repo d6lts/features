@@ -2,12 +2,12 @@
 
 /**
  * @file
- * Contains \Drupal\features\Form\AssignmentExcludeForm.
+ * Contains \Drupal\features_ui\Form\AssignmentExcludeForm.
  */
 
-namespace Drupal\features\Form;
+namespace Drupal\features_ui\Form;
 
-use Drupal\features\Form\AssignmentFormBase;
+use Drupal\features_ui\Form\AssignmentFormBase;
 use Drupal\Core\Form\FormStateInterface;
 
 /**

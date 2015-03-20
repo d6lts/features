@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Allows site administrators to modify configuration.
+ * Main hooks for Features module.
  */
 
 use Drupal\Core\Routing\RouteMatchInterface;
@@ -28,25 +28,6 @@ function features_help($route_name, RouteMatchInterface $route_match) {
       $output .= '<p>' . t('Export bundles of configuration into modules.') . '</p>';
       return $output;
   }
-}
-
-/**
- * Implements hook_theme().
- */
-function features_theme() {
-  return array(
-    'features_assignment_configure_form' => array(
-      'render element' => 'form',
-      'file' => 'features.admin.inc',
-    ),
-    'features_items' => array(
-      'variables' => array(
-        'items' => array(),
-      ),
-      'file' => 'features.admin.inc',
-      'function' => 'theme_features_items',
-    ),
-  );
 }
 
 /**

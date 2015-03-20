@@ -2,10 +2,10 @@
 
 /**
  * @file
- * Contains \Drupal\features\Form\AssignmentFormBase.
+ * Contains \Drupal\features_ui\Form\AssignmentFormBase.
  */
 
-namespace Drupal\features\Form;
+namespace Drupal\features_ui\Form;
 
 use Drupal\features\FeaturesManagerInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
