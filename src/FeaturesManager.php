@@ -665,13 +665,10 @@ class FeaturesManager implements FeaturesManagerInterface {
     // Assign to a "package" named for the profile.
     $info['package'] = $this->profile['name'];
 
-    // Add in the configuration in a form used by the Configuragion
-    // Development (config_devel) module, allowing that module to update
-    // configuration.
-    // @see https://www.drupal.org/node/2300717.
     if (!empty($package['config'])) {
+      // Save the current machine_name_short in the info file so the package
+      // can be reloaded later by the AssignmentPackages plugin.
       $info['features'] = $package['machine_name_short'];
-      $info['config_devel'] = $package['config'];
     }
 
     // Add profile-specific info data.
