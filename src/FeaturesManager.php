@@ -640,7 +640,10 @@ class FeaturesManager implements FeaturesManagerInterface {
         ? FeaturesManagerInterface::STATUS_ENABLED
         : FeaturesManagerInterface::STATUS_DISABLED;
       //TODO: Determine module version
-      // $package['version'] = '';
+      $info = $this->getExtensionInfo($package['machine_name']);
+      if (!empty($info)) {
+        $package['version'] = $info['version'];
+      }
     }
   }
 
