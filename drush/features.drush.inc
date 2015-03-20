@@ -9,6 +9,7 @@ use Drupal\features\FeaturesManagerInterface;
 use Drupal\features\FeaturesInstallStorage;
 use Drupal\Component\Diff\DiffFormatter;
 use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\config_update\ConfigReverter;
 
 /**
  * Implements hook_drush_command().
@@ -498,9 +499,8 @@ function drush_features_import() {
 
     $manager = \Drupal::service('features.manager');
     $active_storage = \Drupal::service('config.storage');
-    $config_revert = \Drupal::service('config_update.config_update');
     $extension_storage = new FeaturesInstallStorage($active_storage);
-    $config_revert->setExtensionStorage($extension_storage);
+    $config_revert = new ConfigReverter(\Drupal::service('entity.manager'), $active_storage, \Drupal::service('config.factory'), $extension_storage);
 
     // Parse list of arguments.
     $modules = array();
