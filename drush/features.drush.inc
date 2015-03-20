@@ -602,7 +602,7 @@ function _drush_features_load_feature($module, $any = FALSE) {
       $feature['status'] = FeaturesManagerInterface::STATUS_ENABLED;
     }
   }
-  elseif (!$any) {
+  elseif (!empty($package_names)) {
     $feature = $packages[$package_names[0]];
   }
   return $feature;
