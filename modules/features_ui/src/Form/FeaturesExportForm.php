@@ -143,31 +143,28 @@ class FeaturesExportForm extends FormBase {
         'features_ui/drupal.features_ui.admin',
       ),
     );
+
     // Offer available generation methods.
     $generation_info = $this->generator->getGenerationMethods();
     // Sort generation methods by weight.
     uasort($generation_info, '\Drupal\Component\Utility\SortArray::sortByWeightElement');
-    $method_options = array();
-    foreach ($generation_info as $method_id => $method) {
-      $method_options[$method_id] = '<strong>' . String::checkPlain($method['name']) . '</strong>: ' . String::checkPlain($method['description']);
-    }
-
-    $form['method_id'] = array(
-      '#type' => 'radios',
-      '#title' => $this->t('Generation method'),
-      // Set the lowest-weight method as default.
-      '#default_value' => key($method_options),
-      '#options' => $method_options,
-      '#description' => $this->t('Select a package generation method.'),
-    );
 
     $form['description'] = array(
-      '#markup' => '<p>' . $this->t('Use the export button below to generate your packaged configuration modules.') . '</p>',
+      '#markup' => '<p>' . $this->t('Use an export method button below to generate the selected configuration modules.') . '</p>',
     );
-    $form['submit'] = array(
-      '#type' => 'submit',
-      '#value' => $this->t('Export'),
-    );
+
+    $form['actions'] = array('#type' => 'actions', '#tree' => TRUE);
+    foreach ($generation_info as $method_id => $method) {
+      $form['actions'][$method_id] = array(
+        '#type' => 'submit',
+        '#name' => $method_id,
+        '#value' => $this->t('!name', array('!name' => $method['name'])),
+        '#attributes' => array(
+          'title' => String::checkPlain($method['description']),
+        ),
+      );
+    }
+
     return $form;
   }
 
@@ -322,21 +319,34 @@ class FeaturesExportForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $profile_settings = \Drupal::config('features.settings')->get('profile');
 
     $this->assigner->assignConfigPackages();
 
     $packages = array_filter($form_state->getValue('preview'));
-    $method_id = $form_state->getValue('method_id');
 
-    if ($profile_settings['add']) {
-      $this->generator->generateProfile($method_id, $packages, FALSE);
-    }
-    else {
-      $this->generator->generatePackages($method_id, $packages, FALSE);
+    if (empty($packages)) {
+      drupal_set_message(t('Please select one or more packages to export.'), 'warning');
+      return;
     }
 
-    $this->generator->applyExportFormSubmit($method_id, $form, $form_state);
+    $method_id = NULL;
+    $trigger = $form_state->getTriggeringElement();
+    $op = $form_state->getValue('op');
+    if (!empty($trigger) && empty($op)) {
+      $method_id = $trigger['#name'];
+    }
+
+    if (!empty($method_id)) {
+      $profile_settings = \Drupal::config('features.settings')->get('profile');
+      if ($profile_settings['add']) {
+        $this->generator->generateProfile($method_id, $packages, FALSE);
+      }
+      else {
+        $this->generator->generatePackages($method_id, $packages, FALSE);
+      }
+
+      $this->generator->applyExportFormSubmit($method_id, $form, $form_state);
+    }
   }
 
 }

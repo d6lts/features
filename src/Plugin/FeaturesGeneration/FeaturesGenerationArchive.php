@@ -19,7 +19,7 @@ use Drupal\Core\Form\FormStateInterface;
  * @Plugin(
  *   id = \Drupal\features\Plugin\FeaturesGeneration\FeaturesGenerationArchive::METHOD_ID,
  *   weight = -2,
- *   name = @Translation("Archive"),
+ *   name = @Translation("Download Archive"),
  *   description = @Translation("Generate packages and optional profile as a compressed archive for download."),
  * )
  */
