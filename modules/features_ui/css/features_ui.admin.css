@@ -6,32 +6,33 @@ span.features-item-list span {
   white-space: nowrap;
 }
 
-#edit-features-wrapper td {
+.features-listing td {
   vertical-align: top;
 }
 
-#edit-features-wrapper td.module {
+.features-listing td.feature-name {
   font-size: 14px;
+  white-space: nowrap;
 }
 
-#edit-features-wrapper td details {
+.features-listing td details {
   border: 0;
   margin: 0;
   height: 20px;
 }
 
-#edit-features-wrapper details[open] {
+.features-listing details[open] {
   height: auto;
   overflow: visible;
   white-space: normal;
 }
 
-#edit-features-wrapper td summary {
+.features-listing td summary {
   padding: 0;
   text-transform: none;
   font-weight: normal;
 }
 
-#edit-features-wrapper td .features-item-label {
+.features-listing td .features-item-label {
   font-weight: bold;
 }

@@ -219,11 +219,11 @@ class FeaturesExportForm extends FormBase {
   protected function buildPackageDetail($package) {
     $config_collection = $this->featuresManager->getConfigCollection();
 
-    $element['name'] = $package['name'];
+    $element['name'] = array('data' => String::checkPlain($package['name']), 'class' => array('feature-name'));
     $element['machine_name'] = $package['machine_name'];
     $element['status'] = $this->featuresManager->statusLabel($package['status']);
     // Use 'data' instead of plain string value so a blank version doesn't remove column from table.
-    $element['version'] = array('data' =>  String::checkPlain($package['version']));
+    $element['version'] = array('data' => String::checkPlain($package['version']));
     $overrides = $this->featuresManager->detectOverrides($package);
     if (!empty($overrides) && ($package['status'] != FeaturesManagerInterface::STATUS_NO_EXPORT)) {
       $element['state'] = $this->featuresManager->stateLabel(FeaturesManagerInterface::STATE_OVERRIDDEN);
