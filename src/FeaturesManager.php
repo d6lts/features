@@ -411,7 +411,7 @@ class FeaturesManager implements FeaturesManagerInterface {
    * @param bool $add_profile
    *   determine if custom profile is also included
    */
-  protected function getAllModules($add_profile = FALSE) {
+  public function getAllModules($add_profile = FALSE, $namespace = NULL) {
     // ModuleHandler::getModuleDirectories() returns data only for installed
     // modules. system_rebuild_module_data() includes only the site's install
     // profile directory, while we may need to include a custom profile.
@@ -446,7 +446,22 @@ class FeaturesManager implements FeaturesManagerInterface {
       $modules[$key] = $profile;
     }
 
-    return $modules;
+    $return = array();
+    // Detect modules by namespace.
+    // If namespace is provided but is empty, then match all modules
+    foreach ($modules as $module_name => $extension) {
+      if (!empty($namespace)) {
+        dsm($module_name);
+        dsm(strpos($module_name, $namespace));
+      }
+      if (empty($namespace) || (strpos($module_name, $namespace) === 0)) {
+        if (!empty($namespace)) {
+          dsm('Added');
+        }
+        $return[$module_name] = $extension;
+      }
+    }
+    return $return;
   }
 
   /**

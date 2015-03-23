@@ -412,6 +412,16 @@ interface FeaturesManagerInterface {
   public function getModuleList(array $names = array(), $namespace = NULL);
 
   /**
+   * Return a list of modules regardless of if they are enabled
+   * @param bool $add_profile
+   *   determine if custom profile is also included
+   * @param string $namespace
+   *   A namespace prefix to match modules by.
+   *
+   */
+  public function getAllModules($add_profile = FALSE, $namespace = NULL);
+
+  /**
    * Lists names of configuration objects provided by a given extension.
    *
    * If a $name and/or $namespace is specified, only matching modules will be

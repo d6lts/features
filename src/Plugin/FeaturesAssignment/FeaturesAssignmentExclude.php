@@ -70,7 +70,7 @@ class FeaturesAssignmentExclude extends FeaturesAssignmentMethodBase {
         // having the namespace of the current package set.
         if ($module_namespace) {
           $profile = $this->featuresManager->getProfile();
-          $modules = array_merge($modules, $this->featuresManager->getModuleList([], $profile['machine_name']));
+          $modules = array_merge($modules, $this->featuresManager->getAllModules(FALSE, $profile['machine_name']));
         }
         // If any configuration was found, remove it from the list.
         foreach ($modules as $extension) {
