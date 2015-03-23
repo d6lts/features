@@ -95,6 +95,12 @@ class FeaturesManager implements FeaturesManagerInterface {
   protected $packages;
 
   /**
+   * The list of defined package sets
+   * @var array
+   */
+  protected $package_sets;
+
+  /**
    * The install profile, also used as the "package" value in info files.
    *
    * @var array
@@ -133,6 +139,7 @@ class FeaturesManager implements FeaturesManagerInterface {
     $this->exportSettings = $config_factory->get('features.settings')->get('export');
     $this->assignmentSettings = $config_factory->getEditable('features.assignment');
     $this->packages = [];
+    $this->package_sets = NULL;
     $this->initProfile();
     $this->configCollection = [];
   }
@@ -155,6 +162,7 @@ class FeaturesManager implements FeaturesManagerInterface {
    */
   public function reset() {
     $this->packages = [];
+    $this->package_sets = NULL;
     // Don't use getConfigCollection because reset() may be called in
     // cases where we don't need to load config.
     foreach ($this->configCollection as &$config) {
@@ -178,6 +186,7 @@ class FeaturesManager implements FeaturesManagerInterface {
   public function applyNamespace($namespace = NULL) {
     if (isset($namespace)) {
       $this->profile['machine_name'] = $namespace;
+      $this->refreshPackageNames();
     }
     if (isset($this->configCollection)) {
       // force recalculation of config if already created
@@ -210,6 +219,16 @@ class FeaturesManager implements FeaturesManagerInterface {
    */
   public function setPackages(array $packages) {
     $this->packages = $packages;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getPackageSets() {
+    if (!isset($this->package_sets)) {
+      $this->refreshPackageNames();
+    }
+    return $this->package_sets;
   }
 
   /**
@@ -431,9 +450,9 @@ class FeaturesManager implements FeaturesManagerInterface {
   }
 
   /**
-   * Sets the profile to a given machine_name, name, and description.
+   * {@inheritdoc}
    */
-  protected function assignProfile($machine_name, $name = NULL, $description = '') {
+  public function assignProfile($machine_name, $name = NULL, $description = '') {
     $profile = $this->getProject($machine_name, $name, $description, 'profile');
     $this->setProfile($profile);
   }
@@ -617,6 +636,15 @@ class FeaturesManager implements FeaturesManagerInterface {
    */
   protected function refreshPackageNames() {
     $packages = $this->getPackages();
+    $this->package_sets = [];
+    // Add current profile to package sets.
+    if (!empty($this->profile['machine_name'])) {
+      $set = array(
+        'name' => $this->profile['name'],
+        'description' => $this->profile['description']
+      );
+      $this->package_sets[$this->profile['machine_name']] = $set;
+    }
     foreach ($packages as &$package) {
       $this->setPackageNames($package);
     }
@@ -643,6 +671,25 @@ class FeaturesManager implements FeaturesManagerInterface {
       $info = $this->getExtensionInfo($package['machine_name']);
       if (!empty($info)) {
         $package['version'] = $info['version'];
+        $package['package'] = $info['package'];
+      }
+    }
+    $this->updatePackageSet($package);
+  }
+
+  /**
+   * Update or create the $package_set entry for this package
+   * @param array $package
+   */
+  protected function updatePackageSet(array $package) {
+    if ($package['machine_name'] != $package['machine_name_short']) {
+      $set_name = substr($package['machine_name'], 0, strlen($package['machine_name']) - strlen($package['machine_name_short']) - 1);
+      if (empty($this->package_sets[$set_name])) {
+        $set = array(
+          'name' => $package['package'],
+          'description' => '',
+        );
+        $this->package_sets[$set_name] = $set;
       }
     }
   }

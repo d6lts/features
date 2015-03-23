@@ -137,6 +137,15 @@ interface FeaturesManagerInterface {
   public function setPackages(array $packages);
 
   /**
+   * Gets a list of defined package sets
+   * @return array
+   *   An array of package sets (keyed by set machine_name), each with the following keys
+   *   - 'name': human readable name of the set
+   *   - 'description': description of the package set
+   */
+  public function getPackageSets();
+
+  /**
    * Gets a representation of an install profile.
    *
    * @return array
@@ -246,6 +255,11 @@ interface FeaturesManagerInterface {
    *   Returns the created package array
    */
   public function initPackage($machine_name, $name = NULL, $description = '');
+
+  /**
+   * Sets the profile to a given machine_name, name, and description.
+   */
+  public function assignProfile($machine_name, $name = NULL, $description = '');
 
   /**
    * List modules that are existing exported Packages

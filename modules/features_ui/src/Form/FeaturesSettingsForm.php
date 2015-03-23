@@ -116,7 +116,7 @@ class FeaturesSettingsForm extends FormBase {
       '#type' => 'textfield',
       '#default_value' => $profile_settings['description'],
       '#description' => $this->t('A description of your install profile or distribution.'),
-      '#size' => 30,
+      '#size' => 80,
       // Show only if the profile.add option is selected.
       '#states' => $show_if_profile_add_checked,
     );

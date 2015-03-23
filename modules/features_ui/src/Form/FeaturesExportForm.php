@@ -88,8 +88,21 @@ class FeaturesExportForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
 
-    $this->assigner->assignConfigPackages();
+    $trigger = $form_state->getTriggeringElement();
+    if ($trigger['#name'] == 'package_set') {
+      $package_set = $form_state->getValue('package_set', '');
+      if ($package_set == '_') {
+        $package_set = '';
+      }
+      $this->featuresManager->applyNamespace($package_set);
+    }
+    else {
+      $this->assigner->assignConfigPackages();
+    }
     $packages = $this->featuresManager->getPackages();
+    $profile = $this->featuresManager->getProfile();
+    $package_sets = $this->featuresManager->getPackageSets();
+
     $config_collection = $this->featuresManager->getConfigCollection();
     // Add in unpackaged configuration items.
     $this->addUnpackaged($packages, $config_collection);
@@ -99,10 +112,43 @@ class FeaturesExportForm extends FormBase {
     uasort($config_types, 'strnatcasecmp');
     $module_names = array();
 
+    $current_set = !empty($profile['machine_name']) ? $profile['machine_name'] : '_';
+    $options = array(
+      '_' => t('--All--'),
+    );
+    foreach ($package_sets as $name => $set) {
+      $options[$name] = $set['name'];
+    }
+    $form['#prefix'] = '<div id="edit-features-wrapper">';
+    $form['#suffix'] = '</div>';
+    $form['package_set'] = array(
+      '#title' => t('Package Set'),
+      '#type' => 'select',
+      '#options' => $options,
+      '#default_value' => $current_set,
+      '#prefix' => '<div id="edit-package-set-wrapper">',
+      '#suffix' => '</div>',
+      '#ajax' => array(
+        'callback' => '::updatePreview',
+        'wrapper' => 'edit-features-preview-wrapper',
+      ),
+      '#attributes' => array(
+        'data-new-package-set' => 'status',
+      ),
+    );
+
+    $show_if_new_set_selected = array(
+      'visible' => array(
+        ':input[data-new-package-set="status"]' => array('value' => '_new_'),
+      ),
+    );
+
     // Offer a preview of the packages.
     $form['preview'] = array(
       '#type' => 'fieldset',
-      '#title' => $this->t('Preview packages'),
+      '#title' => $this->t('Preview packages for '.$profile['machine_name']),
+      '#prefix' => '<div id="edit-features-preview-wrapper">',
+      '#suffix' => '</div>',
     );
     foreach ($packages as $package) {
       // Bundle package configuration by type.
@@ -193,6 +239,20 @@ class FeaturesExportForm extends FormBase {
       '#type' => 'submit',
       '#value' => $this->t('Export'),
     );
+    return $form;
+  }
+
+  /**
+   * Handles switching the configuration type selector.
+   */
+  public function updatePreview($form, FormStateInterface $form_state) {
+    return $form['preview'];
+  }
+
+  /**
+   * Handles switching the configuration type selector.
+   */
+  public function updatePackageSet($form, FormStateInterface $form_state) {
     return $form;
   }
 
