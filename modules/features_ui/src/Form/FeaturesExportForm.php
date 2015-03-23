@@ -106,6 +106,7 @@ class FeaturesExportForm extends FormBase {
     $config_collection = $this->featuresManager->getConfigCollection();
     // Add in unpackaged configuration items.
     $this->addUnpackaged($packages, $config_collection);
+    $packages = $this->featuresManager->filterPackages($packages);
 
     $profile = $this->featuresManager->getProfile();
     $package_sets = $this->featuresManager->getPackageSets();

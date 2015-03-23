@@ -224,6 +224,21 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * {@inheritdoc}
    */
+  public function filterPackages(array $packages) {
+    $profile = $this->getProfile();
+    $namespace = $profile['machine_name'];
+    $result = array();
+    foreach ($packages as $key => $package) {
+      if (empty($namespace) || (strpos($package['machine_name'], $namespace) === 0) || ($package['machine_name'] == $package['machine_name_short'])) {
+        $result[$key] = $package;
+      }
+    }
+    return $result;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getPackageSets() {
     if (!isset($this->package_sets)) {
       $this->refreshPackageNames();
@@ -450,14 +465,7 @@ class FeaturesManager implements FeaturesManagerInterface {
     // Detect modules by namespace.
     // If namespace is provided but is empty, then match all modules
     foreach ($modules as $module_name => $extension) {
-      if (!empty($namespace)) {
-        dsm($module_name);
-        dsm(strpos($module_name, $namespace));
-      }
       if (empty($namespace) || (strpos($module_name, $namespace) === 0)) {
-        if (!empty($namespace)) {
-          dsm('Added');
-        }
         $return[$module_name] = $extension;
       }
     }

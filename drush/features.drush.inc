@@ -188,6 +188,7 @@ function drush_features_list_packages($package = '') {
   $manager = \Drupal::service('features.manager');
   $packages = $manager->getPackages();
 
+  $packages = $manager->filterPackages($packages);
   $result = array();
 
   // If no package was specified, list all packages.

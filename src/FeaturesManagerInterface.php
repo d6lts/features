@@ -137,6 +137,13 @@ interface FeaturesManagerInterface {
   public function setPackages(array $packages);
 
   /**
+   * Filter the supplied package list by the current namespace.
+   * @param array $packages
+   * @return array of packages
+   */
+  public function filterPackages(array $packages);
+
+  /**
    * Gets a list of defined package sets
    * @return array
    *   An array of package sets (keyed by set machine_name), each with the following keys

@@ -31,6 +31,7 @@ class FeaturesAssignmentPackages extends FeaturesAssignmentMethodBase {
    * {@inheritdoc}
    */
   public function assignPackages() {
+    $profile = $this->featuresManager->getProfile();
     $existing = $this->featuresManager->getExistingPackages();
     foreach ($existing as $name => $info) {
       // The original machine_name_short was stored in the "features" key in the info file.
