@@ -324,12 +324,14 @@ class FeaturesExportForm extends FormBase {
 
     $this->assigner->assignConfigPackages();
 
+    $packages = array_filter($form_state->getValue('preview'));
     $method_id = $form_state->getValue('method_id');
+
     if ($profile_settings['add']) {
-      $this->generator->generateProfile($method_id);
+      $this->generator->generateProfile($method_id, $packages, FALSE);
     }
     else {
-      $this->generator->generatePackages($method_id);
+      $this->generator->generatePackages($method_id, $packages, FALSE);
     }
 
     $this->generator->applyExportFormSubmit($method_id, $form, $form_state);
