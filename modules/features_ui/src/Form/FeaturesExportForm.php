@@ -16,6 +16,7 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormState;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\Render\Element;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -100,17 +101,13 @@ class FeaturesExportForm extends FormBase {
       $this->assigner->assignConfigPackages();
     }
     $packages = $this->featuresManager->getPackages();
-    $profile = $this->featuresManager->getProfile();
-    $package_sets = $this->featuresManager->getPackageSets();
 
     $config_collection = $this->featuresManager->getConfigCollection();
     // Add in unpackaged configuration items.
     $this->addUnpackaged($packages, $config_collection);
-    $config_types = $this->featuresManager->listConfigTypes();
-    // Add dependencies.
-    $config_types['dependencies'] = $this->t('Dependencies');
-    uasort($config_types, 'strnatcasecmp');
-    $module_names = array();
+
+    $profile = $this->featuresManager->getProfile();
+    $package_sets = $this->featuresManager->getPackageSets();
 
     $current_set = !empty($profile['machine_name']) ? $profile['machine_name'] : '_';
     $options = array(
@@ -143,72 +140,8 @@ class FeaturesExportForm extends FormBase {
       ),
     );
 
-    // Offer a preview of the packages.
-    $form['preview'] = array(
-      '#type' => 'fieldset',
-      '#title' => $this->t('Preview packages for '.$profile['machine_name']),
-      '#prefix' => '<div id="edit-features-preview-wrapper">',
-      '#suffix' => '</div>',
-    );
-    foreach ($packages as $package) {
-      // Bundle package configuration by type.
-      $package_config = array();
-      foreach ($package['config'] as $item_name) {
-        $item = $config_collection[$item_name];
-        $package_config[$item['type']][] = array(
-          'name' => String::checkPlain($item_name),
-          'label' => String::checkPlain($item['label']),
-        );
-      }
-      // Add dependencies.
-      if (!empty($package['dependencies'])) {
-        $package_config['dependencies'] = array();
-        foreach ($package['dependencies'] as $dependency) {
-          if (!isset($module_names[$dependency])) {
-            $module_names[$dependency] = $this->moduleHandler->getName($dependency);
-          }
-          $package_config['dependencies'][] = array(
-            'name' => $dependency,
-            'label' => $module_names[$dependency],
-          );
-        }
-      }
-      $form['preview'][$package['machine_name']] = array(
-        '#type' => 'container',
-        '#attributes' => array('class' => array('features-items-wrapper')),
-      );
-      $rows = array();
-      // Use sorted array for order.
-      foreach ($config_types as $type => $label) {
-        // For each component type, offer alternating rows.
-        if (isset($package_config[$type])) {
-          // First, the component type label, as a header.
-          $rows[][] = array(
-            'data' => array(
-              '#type' => 'html_tag',
-              '#tag' => 'span',
-              '#value' => String::checkPlain($label),
-              '#attributes' => array('title' => String::checkPlain($type)),
-            ),
-            'header' => TRUE,
-          );
-          // Then the list of items of that type.
-          $rows[][] = array(
-            'data' => array(
-              '#theme' => 'features_items',
-              '#items' => $package_config[$type],
-            ),
-            'class' => 'item',
-          );
-        }
-      }
-      $form['preview'][$package['machine_name']]['items'] = array(
-        '#type' => 'table',
-        '#header' => array($this->t('@name: !description', array('@name' => $package['name'], '!description' => XSS::filterAdmin($package['description'])))),
-        '#attributes' => array('class' => array('features-items')),
-        '#rows' => $rows,
-      );
-    }
+    $form['preview'] = $this->buildListing($packages);
+
     $form['#attached'] = array(
       'library' => array(
         'features_ui/drupal.features_ui.admin',
@@ -250,10 +183,115 @@ class FeaturesExportForm extends FormBase {
   }
 
   /**
-   * Handles switching the configuration type selector.
+   * Build the portion of the form showing a listing of features.
+   * @param array $packages
+   * @return array render array of form element
    */
-  public function updatePackageSet($form, FormStateInterface $form_state) {
-    return $form;
+  protected function buildListing($packages) {
+    $element = array(
+      '#tree' => TRUE,
+      '#theme' => 'features_listing',
+      '#header' => array(
+        array('data' => ''),
+        array('data' => $this->t('Feature'), 'class' => array('name')),
+        array('data' => ''),
+        array('data' => $this->t('Description'), 'class' => array('description', RESPONSIVE_PRIORITY_LOW)),
+        array('data' => $this->t('Version'), 'class' => array('version', RESPONSIVE_PRIORITY_LOW)),
+        array('data' => $this->t('State'), 'class' => array('state', RESPONSIVE_PRIORITY_LOW)),
+      ),
+      '#attributes' => array('class' => array('features-listing')),
+    );
+    foreach ($packages as $package) {
+      $element[$package['machine_name']] = $this->buildPackageDetail($package);
+    }
+
+    return $element;
+  }
+
+  /**
+   * Build the details of a package.
+   * @param array $package
+   * @return array render array of form element
+   */
+  protected function buildPackageDetail($package) {
+    $config_collection = $this->featuresManager->getConfigCollection();
+
+    $element['name']['#markup'] = $package['name'];
+    $element['machine_name']['#markup'] = $package['machine_name'];
+    $element['description']['#markup'] = $package['description'];
+    $element['status']['#markup'] = $this->featuresManager->statusLabel($package['status']);
+    $element['version']['#markup'] = $package['version'];
+    $element['state']['#markup'] = ($package['state'] != FeaturesManagerInterface::STATE_DEFAULT) ? $this->featuresManager->stateLabel($package['state']) : '';
+
+    // Present a checkbox indicating the status of a module.
+    // Only enable the checkbox if not-exported so it can be selected for export.
+    $element['enable'] = array(
+      '#type' => 'checkbox',
+      '#title' => $this->t('Install'),
+      '#default_value' => ($package['status'] == FeaturesManagerInterface::STATUS_ENABLED),
+      '#disabled' => ($package['status'] != FeaturesManagerInterface::STATUS_NO_EXPORT),
+    );
+
+    // Bundle package configuration by type.
+    $package_config = array();
+    foreach ($package['config'] as $item_name) {
+      $item = $config_collection[$item_name];
+      $package_config[$item['type']][] = array(
+        'name' => String::checkPlain($item_name),
+        'label' => String::checkPlain($item['label']),
+      );
+    }
+    // Add dependencies.
+    $package_config['dependencies'] = array();
+    if (!empty($package['dependencies'])) {
+      foreach ($package['dependencies'] as $dependency) {
+        $package_config['dependencies'][] = array(
+          'name' => $dependency,
+          'label' => $this->moduleHandler->getName($dependency),
+        );
+      }
+    }
+
+    $config_types = $this->featuresManager->listConfigTypes();
+    // Add dependencies.
+    $config_types['dependencies'] = $this->t('Dependencies');
+    uasort($config_types, 'strnatcasecmp');
+
+    $rows = array();
+    // Use sorted array for order.
+    foreach ($config_types as $type => $label) {
+      // For each component type, offer alternating rows.
+      $row = array();
+      if (isset($package_config[$type])) {
+        $row[] = array(
+          'data' => array(
+            '#type' => 'html_tag',
+            '#tag' => 'span',
+            '#value' => String::checkPlain($label),
+            '#attributes' => array(
+              'title' => String::checkPlain($type),
+              'class' => 'features-item-label',
+            ),
+          ),
+        );
+        $row[] = array(
+          'data' => array(
+            '#theme' => 'features_items',
+            '#items' => $package_config[$type],
+            '#value' => String::checkPlain($label),
+            '#title' => String::checkPlain($type),
+          ),
+          'class' => 'item',
+        );
+      }
+      $rows[] = $row;
+    }
+    $element['details'] = array(
+      '#type' => 'table',
+      '#attributes' => array('class' => array('config-packager-items')),
+      '#rows' => $rows,
+    );
+    return $element;
   }
 
   /**

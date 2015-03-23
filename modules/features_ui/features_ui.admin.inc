@@ -9,6 +9,76 @@ use Drupal\Component\Utility\String;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Template\Attribute;
 use Drupal\Core\Url;
+use Drupal\Component\Utility\SafeMarkup;
+use Drupal\Component\Utility\Xss;
+use Drupal\Component\Utility\Html;
+
+/**
+ * Returns HTML for the features listing form.
+ *
+ * @param $variables
+ *   An associative array containing:
+ *   - form: A render element representing the form.
+ *
+ * @ingroup themeable
+ */
+function theme_features_listing($variables) {
+  $form = $variables['form'];
+
+  // Individual table headers.
+  $rows = array();
+  // Iterate through all the features, which are children of this element.
+  foreach (Element::children($form) as $key) {
+    // Stick the key into $module for easier access.
+    $element = $form[$key];
+    // Create the row for the table.
+    $row = array();
+    // Add the checkbox into the first cell.
+    unset($element['enable']['#title']);
+
+    $row[] = array('class' => array('checkbox'), 'data' => drupal_render($element['enable']));
+
+    // Add the module label and expand/collapse functionalty.
+    $id = Html::getUniqueId('feature-' . $key);
+    $col2 = '<label id="' . $id . '" for="' . $element['enable']['#id'] . '" class="module-name table-filter-text-source">' . drupal_render($element['name']) . '</label>';
+    $row[] = array('class' => array('module'), 'data' => SafeMarkup::set($col2));
+
+    $row[] = array('class' => array('machine_name'), 'data' => drupal_render($element['machine_name']));
+
+    $description = t('!details', array('!details' => drupal_render($element['details'])));
+    /*
+    $links = '';
+    foreach (array('help', 'permissions', 'configure') as $link_type) {
+      $links .= drupal_render($module['links'][$link_type]);
+    }
+    if ($links) {
+      $description .= '  <div class="links">';
+      $description .= $links;
+      $description .= '</div>';
+    }
+    */
+    $details = array(
+      '#type' => 'details',
+      '#title' => SafeMarkup::set('<span class="text"> ' . drupal_render($element['description']) . '</span>'),
+      '#attributes' => array('id' => $element['enable']['#id'] . '-description'),
+      '#description' => $description,
+    );
+    $row[] = array('class' => array('description', 'expand'), 'data' => drupal_render($details));
+    $row[] = array('class' => array('feature-version'), 'data' => drupal_render($element['version']));
+    $row[] = array('class' => array('feature-state'), 'data' => drupal_render($element['state']));
+
+    $rows[] = array('data' => $row);
+  }
+
+  $table = array(
+    '#type' => 'table',
+    '#header' => $form['#header'],
+    '#rows' => $rows,
+  );
+  return drupal_render($table);
+}
+
+
 
 /**
  * Prepares variables for package assignment configuration form.

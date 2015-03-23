@@ -1,13 +1,37 @@
-.features-items-wrapper {
-  float: left;
-  width: 48%;
-  padding: 5px;
-}
-
 span.features-item-list span {
   background: #eee;
   border-radius: 5px;
   margin-right: 5px;
   padding: 2px 5px;
   white-space: nowrap;
+}
+
+#edit-features-wrapper td {
+  vertical-align: top;
+}
+
+#edit-features-wrapper td.module {
+  font-size: 14px;
+}
+
+#edit-features-wrapper td details {
+  border: 0;
+  margin: 0;
+  height: 20px;
+}
+
+#edit-features-wrapper details[open] {
+  height: auto;
+  overflow: visible;
+  white-space: normal;
+}
+
+#edit-features-wrapper td summary {
+  padding: 0;
+  text-transform: none;
+  font-weight: normal;
+}
+
+#edit-features-wrapper td .features-item-label {
+  font-weight: bold;
 }

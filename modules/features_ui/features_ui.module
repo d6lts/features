@@ -12,6 +12,11 @@ use Drupal\Core\Routing\RouteMatchInterface;
  */
 function features_ui_theme() {
   return array(
+    'features_listing' => array(
+      'render element' => 'form',
+      'file' => 'features_ui.admin.inc',
+      'function' => 'theme_features_listing',
+    ),
     'features_assignment_configure_form' => array(
       'render element' => 'form',
       'file' => 'features_ui.admin.inc',
