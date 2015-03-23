@@ -194,15 +194,19 @@ function drush_features_list_packages($package = '') {
   if (empty($package)) {
     drush_hide_output_fields(array('object'));
     foreach ($packages as $item) {
-      _drush_features_detect_overrides($item);
+      $overrides = $manager->detectOverrides($item);
+      $state = $item['state'];
+      if (!empty($overrides) && ($item['status'] != FeaturesManagerInterface::STATUS_NO_EXPORT)) {
+        $state = FeaturesManagerInterface::STATE_OVERRIDDEN;
+      }
 
       $result[$item['machine_name']] = array(
         'name' => $item['name'],
         'machine_name' => $item['machine_name'],
         'status' => $manager->statusLabel($item['status']),
         'version' => $item['version'],
-        'state' => ($item['state'] != FeaturesManagerInterface::STATE_DEFAULT)
-          ? $manager->stateLabel($item['state'])
+        'state' => ($state != FeaturesManagerInterface::STATE_DEFAULT)
+          ? $manager->stateLabel($state)
           : '',
       );
     }
@@ -438,7 +442,7 @@ function drush_features_diff() {
     $green = "\033[0;32;40m\033[1m%s\033[0m";
   }
 
-  $overrides = _drush_features_detect_overrides($feature);
+  $overrides = $manager->detectOverrides($feature);
 
   if (empty($overrides)) {
     drush_print(dt('Active config matches stored config for @module.', array('@module' => $module)));
@@ -544,7 +548,7 @@ function drush_features_import() {
       }
       // Only revert components that are detected to be Overridden.
       else {
-        $components = _drush_features_detect_overrides($feature);
+        $components = $manager->detectOverrides($feature);
       }
 
       if (!empty($components_needed) && is_array($components_needed)) {
@@ -817,31 +821,4 @@ function _drush_features_component_print($filtered_components) {
   }
 
   drush_print_table($rows, TRUE);
-}
-
-/**
- * Determine which config is overridden in a package
- * @param array $feature
- *   the package array
- *   the 'state' property is updated if overrides are detected
- */
-function _drush_features_detect_overrides(&$feature) {
-  $config_diff = \Drupal::service('config_update.config_diff');
-  $active_storage = \Drupal::service('config.storage');
-  $extension_storage = new FeaturesInstallStorage($active_storage);
-
-  $different = array();
-  foreach ($feature['config'] as $name) {
-    $active = $active_storage->read($name);
-    $extension = $extension_storage->read($name);
-    $extension = !empty($extension) ? $extension : array();
-    if (!$config_diff->same($extension, $active)) {
-      $different[] = $name;
-    }
-  }
-
-  if (!empty($different)) {
-    $feature['state'] = FeaturesManagerInterface::STATE_OVERRIDDEN;
-  }
-  return $different;
 }

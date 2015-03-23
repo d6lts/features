@@ -465,6 +465,16 @@ interface FeaturesManagerInterface {
   public function isFeatureModule($module);
 
   /**
+   * Determine which config is overridden in a package
+   * @param array $feature
+   *   the package array
+   *   the 'state' property is updated if overrides are detected
+   * @result array $different
+   *   the array of config items that are overridden
+   */
+  public function detectOverrides($feature);
+
+  /**
    * Helper function to return a translatable label for the different status constants
    * @param int $status
    * @return string

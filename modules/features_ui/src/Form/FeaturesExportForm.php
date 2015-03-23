@@ -227,8 +227,13 @@ class FeaturesExportForm extends FormBase {
     $element['status'] = $this->featuresManager->statusLabel($package['status']);
     // Use 'data' instead of plain string value so a blank version doesn't remove column from table.
     $element['version'] = array('data' =>  String::checkPlain($package['version']));
-    $element['state'] = ($package['state'] != FeaturesManagerInterface::STATE_DEFAULT) ? $this->featuresManager->stateLabel($package['state']) : '';
-    $element['status'] = $this->featuresManager->statusLabel($package['status']);
+    $overrides = $this->featuresManager->detectOverrides($package);
+    if (!empty($overrides) && ($package['status'] != FeaturesManagerInterface::STATUS_NO_EXPORT)) {
+      $element['state'] = $this->featuresManager->stateLabel(FeaturesManagerInterface::STATE_OVERRIDDEN);
+    }
+    else {
+      $element['state'] = '';
+    }
 
     // Bundle package configuration by type.
     $package_config = array();

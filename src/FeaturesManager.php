@@ -1076,6 +1076,29 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * {@inheritdoc}
    */
+  public function detectOverrides($feature) {
+    $config_diff = \Drupal::service('config_update.config_diff');
+    $extension_storage = new FeaturesInstallStorage($this->configStorage);
+
+    $different = array();
+    foreach ($feature['config'] as $name) {
+      $active = $this->configStorage->read($name);
+      $extension = $extension_storage->read($name);
+      $extension = !empty($extension) ? $extension : array();
+      if (!$config_diff->same($extension, $active)) {
+        $different[] = $name;
+      }
+    }
+
+    if (!empty($different)) {
+      $feature['state'] = FeaturesManagerInterface::STATE_OVERRIDDEN;
+    }
+    return $different;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function statusLabel($status) {
     switch ($status) {
       case FeaturesManagerInterface::STATUS_NO_EXPORT:
