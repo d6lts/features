@@ -9,6 +9,7 @@ namespace Drupal\features_ui\Form;
 
 use Drupal\Component\Utility\String;
 use Drupal\Component\Utility\Xss;
+use Drupal\Component\Utility\SafeMarkup;
 use Drupal\features\FeaturesAssignerInterface;
 use Drupal\features\FeaturesGeneratorInterface;
 use Drupal\features\FeaturesManagerInterface;
@@ -188,22 +189,27 @@ class FeaturesExportForm extends FormBase {
    * @return array render array of form element
    */
   protected function buildListing($packages) {
+
+    $header = array(
+      'name' => array('data' => $this->t('Feature')),
+      'machine_name' => array('data' => $this->t('')),
+      'details' => array('data' => $this->t('Description'), 'class' => array(RESPONSIVE_PRIORITY_LOW)),
+      'version' => array('data' => $this->t('Version'), 'class' => array(RESPONSIVE_PRIORITY_LOW)),
+      'status' => array('data' => $this->t('Status'), 'class' => array(RESPONSIVE_PRIORITY_LOW)),
+      'state' => array('data' => $this->t('State'), 'class' => array(RESPONSIVE_PRIORITY_LOW)),
+    );
+
+    $options = array();
+    foreach ($packages as $package) {
+      $options[$package['machine_name']] = $this->buildPackageDetail($package);
+    }
+
     $element = array(
-      '#tree' => TRUE,
-      '#theme' => 'features_listing',
-      '#header' => array(
-        array('data' => ''),
-        array('data' => $this->t('Feature'), 'class' => array('name')),
-        array('data' => ''),
-        array('data' => $this->t('Description'), 'class' => array('description', RESPONSIVE_PRIORITY_LOW)),
-        array('data' => $this->t('Version'), 'class' => array('version', RESPONSIVE_PRIORITY_LOW)),
-        array('data' => $this->t('State'), 'class' => array('state', RESPONSIVE_PRIORITY_LOW)),
-      ),
+      '#type' => 'tableselect',
+      '#header' => $header,
+      '#options' => $options,
       '#attributes' => array('class' => array('features-listing')),
     );
-    foreach ($packages as $package) {
-      $element[$package['machine_name']] = $this->buildPackageDetail($package);
-    }
 
     return $element;
   }
@@ -216,21 +222,13 @@ class FeaturesExportForm extends FormBase {
   protected function buildPackageDetail($package) {
     $config_collection = $this->featuresManager->getConfigCollection();
 
-    $element['name']['#markup'] = $package['name'];
-    $element['machine_name']['#markup'] = $package['machine_name'];
-    $element['description']['#markup'] = $package['description'];
-    $element['status']['#markup'] = $this->featuresManager->statusLabel($package['status']);
-    $element['version']['#markup'] = $package['version'];
-    $element['state']['#markup'] = ($package['state'] != FeaturesManagerInterface::STATE_DEFAULT) ? $this->featuresManager->stateLabel($package['state']) : '';
-
-    // Present a checkbox indicating the status of a module.
-    // Only enable the checkbox if not-exported so it can be selected for export.
-    $element['enable'] = array(
-      '#type' => 'checkbox',
-      '#title' => $this->t('Install'),
-      '#default_value' => ($package['status'] == FeaturesManagerInterface::STATUS_ENABLED),
-      '#disabled' => ($package['status'] != FeaturesManagerInterface::STATUS_NO_EXPORT),
-    );
+    $element['name'] = $package['name'];
+    $element['machine_name'] = $package['machine_name'];
+    $element['status'] = $this->featuresManager->statusLabel($package['status']);
+    // Use 'data' instead of plain string value so a blank version doesn't remove column from table.
+    $element['version'] = array('data' =>  String::checkPlain($package['version']));
+    $element['state'] = ($package['state'] != FeaturesManagerInterface::STATE_DEFAULT) ? $this->featuresManager->stateLabel($package['state']) : '';
+    $element['status'] = $this->featuresManager->statusLabel($package['status']);
 
     // Bundle package configuration by type.
     $package_config = array();
@@ -288,9 +286,16 @@ class FeaturesExportForm extends FormBase {
     }
     $element['details'] = array(
       '#type' => 'table',
-      '#attributes' => array('class' => array('config-packager-items')),
       '#rows' => $rows,
     );
+
+    $details = array(
+      '#type' => 'details',
+      '#title' => XSS::filterAdmin($package['description']),
+      '#description' => array('data' => $element['details']),
+    );
+    $element['details'] = array('class' => array('description', 'expand'), 'data' => $details);
+
     return $element;
   }
 

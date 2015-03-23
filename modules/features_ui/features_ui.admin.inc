@@ -71,9 +71,10 @@ function theme_features_listing($variables) {
   }
 
   $table = array(
-    '#type' => 'table',
+    '#type' => 'tableselect',
     '#header' => $form['#header'],
-    '#rows' => $rows,
+    '#options' => $rows,
+    '#empty' => t('No Features packages available.'),
   );
   return drupal_render($table);
 }
