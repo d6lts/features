@@ -136,12 +136,6 @@ class FeaturesExportForm extends FormBase {
       ),
     );
 
-    $show_if_new_set_selected = array(
-      'visible' => array(
-        ':input[data-new-package-set="status"]' => array('value' => '_new_'),
-      ),
-    );
-
     $form['preview'] = $this->buildListing($packages);
 
     $form['#attached'] = array(
@@ -210,6 +204,8 @@ class FeaturesExportForm extends FormBase {
       '#header' => $header,
       '#options' => $options,
       '#attributes' => array('class' => array('features-listing')),
+      '#prefix' => '<div id="edit-features-preview-wrapper">',
+      '#suffix' => '</div>',
     );
 
     return $element;
