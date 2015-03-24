@@ -224,6 +224,16 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * {@inheritdoc}
    */
+  public function savePackage(array &$package) {
+    if (!empty($package['machine_name_short'])) {
+      $this->addPackageFiles($package);
+      $this->packages[$package['machine_name_short']] = $package;
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function filterPackages(array $packages) {
     $profile = $this->getProfile();
     $namespace = $profile['machine_name'];
@@ -731,7 +741,8 @@ class FeaturesManager implements FeaturesManagerInterface {
       'type',
       'core',
       'dependencies',
-      'themes'
+      'themes',
+      'version'
     ];
     $info = array_intersect_key($package, array_fill_keys($info_keys, NULL));
 
@@ -777,7 +788,7 @@ class FeaturesManager implements FeaturesManagerInterface {
   protected function addPackagesFiles() {
     $packages = $this->getPackages();
     foreach ($packages as &$package) {
-      $this->addPackageFiles($package) ;
+      $this->addPackageFiles($package);
     }
     // Clean up the $package pass by reference.
     unset($package);

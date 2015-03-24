@@ -137,6 +137,13 @@ interface FeaturesManagerInterface {
   public function setPackages(array $packages);
 
   /**
+   * Updates a package definition in the package list.
+   * NOTE: This does not "export" the package, it simply updates the internal data.
+   * @param array $package
+   */
+  public function savePackage(array &$package);
+
+  /**
    * Filter the supplied package list by the current namespace.
    * @param array $packages
    * @return array of packages
