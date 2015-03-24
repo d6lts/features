@@ -145,25 +145,27 @@ class FeaturesExportForm extends FormBase {
       ),
     );
 
-    // Offer available generation methods.
-    $generation_info = $this->generator->getGenerationMethods();
-    // Sort generation methods by weight.
-    uasort($generation_info, '\Drupal\Component\Utility\SortArray::sortByWeightElement');
+    if (\Drupal::currentUser()->hasPermission('export configuration')) {
+      // Offer available generation methods.
+      $generation_info = $this->generator->getGenerationMethods();
+      // Sort generation methods by weight.
+      uasort($generation_info, '\Drupal\Component\Utility\SortArray::sortByWeightElement');
 
-    $form['description'] = array(
-      '#markup' => '<p>' . $this->t('Use an export method button below to generate the selected configuration modules.') . '</p>',
-    );
-
-    $form['actions'] = array('#type' => 'actions', '#tree' => TRUE);
-    foreach ($generation_info as $method_id => $method) {
-      $form['actions'][$method_id] = array(
-        '#type' => 'submit',
-        '#name' => $method_id,
-        '#value' => $this->t('!name', array('!name' => $method['name'])),
-        '#attributes' => array(
-          'title' => String::checkPlain($method['description']),
-        ),
+      $form['description'] = array(
+        '#markup' => '<p>' . $this->t('Use an export method button below to generate the selected configuration modules.') . '</p>',
       );
+
+      $form['actions'] = array('#type' => 'actions', '#tree' => TRUE);
+      foreach ($generation_info as $method_id => $method) {
+        $form['actions'][$method_id] = array(
+          '#type' => 'submit',
+          '#name' => $method_id,
+          '#value' => $this->t('!name', array('!name' => $method['name'])),
+          '#attributes' => array(
+            'title' => String::checkPlain($method['description']),
+          ),
+        );
+      }
     }
 
     return $form;
