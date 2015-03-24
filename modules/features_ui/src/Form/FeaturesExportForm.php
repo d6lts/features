@@ -19,6 +19,7 @@ use Drupal\Core\Form\FormState;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
 use Symfony\Component\DependencyInjection\ContainerInterface;
+use Drupal\Core\Url;
 
 /**
  * Defines the configuration export form.
@@ -216,7 +217,12 @@ class FeaturesExportForm extends FormBase {
   protected function buildPackageDetail($package) {
     $config_collection = $this->featuresManager->getConfigCollection();
 
-    $element['name'] = array('data' => String::checkPlain($package['name']), 'class' => array('feature-name'));
+    $url = Url::fromRoute('features.edit', array('name' => $package['machine_name_short']));
+
+    $element['name'] = array(
+      'data' => \Drupal::l($package['name'], $url),
+      'class' => array('feature-name'),
+    );
     $element['machine_name'] = $package['machine_name'];
     $element['status'] = $this->featuresManager->statusLabel($package['status']);
     // Use 'data' instead of plain string value so a blank version doesn't remove column from table.
