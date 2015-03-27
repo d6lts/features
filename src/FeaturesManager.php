@@ -751,15 +751,12 @@ class FeaturesManager implements FeaturesManagerInterface {
     if (!empty($package['config'])) {
       // Save the current machine_name_short in the info file so the package
       // can be reloaded later by the AssignmentPackages plugin.
-      $info['features'] = $package['machine_name_short'];
-      /*
-      array(
-        'name' => $package['machine_name_short']);
+      $info['features'] = array(
+        'name' => $package['machine_name_short']
+      );
       if (!empty($package['excluded'])) {
         $info['features']['excluded'] = $package['excluded'];
       }
-      dsm($info);
-      */
     }
 
     // Add profile-specific info data.
@@ -855,7 +852,7 @@ class FeaturesManager implements FeaturesManagerInterface {
             $value
           )
         );
-        sort($array1[$key]);
+        asort($array1[$key]);
       }
       // Otherwise, accept the incoming values.
       else {
