@@ -163,8 +163,10 @@ class FeaturesGenerationArchive extends FeaturesGenerationMethodBase {
    *   The package or profile.
    * @param Exception $exception
    *   The exception object.
+   * @param string $message
+   *   Error message when there isn't an Exception object
    */
-  protected function failure(&$return, array $package, Exception $exception) {
+  protected function failure(&$return, array $package, Exception $exception, $message = '') {
     $type = $package['type'] == 'package' ? $this->t('Package') : $this->t('Profile');
     $return[] = [
       'success' => FALSE,
@@ -175,7 +177,7 @@ class FeaturesGenerationArchive extends FeaturesGenerationMethodBase {
       'variables' => [
         '!type' => $type,
         '@package' => $package['name'],
-        '@error' => $exception->getMessage()
+        '@error' => isset($exception) ? $exception->getMessage() : $message,
       ],
     ];
   }

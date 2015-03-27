@@ -87,6 +87,10 @@ class FeaturesGenerationWrite extends FeaturesGenerationMethodBase {
    *   The package or profile.
    */
   protected function generatePackage(array &$return, array $package) {
+    if (empty($package['files'])) {
+      $this->failure($return, $package, NULL, t('No configuration was selected to be exported.'));
+      return;
+    }
     $success = TRUE;
     foreach ($package['files'] as $file) {
       try {
@@ -134,8 +138,10 @@ class FeaturesGenerationWrite extends FeaturesGenerationMethodBase {
    *   The package or profile.
    * @param Exception $exception
    *   The exception object.
+   * @param string $message
+   *   Error message when there isn't an Exception object
    */
-  protected function failure(&$return, $package, Exception $exception) {
+  protected function failure(&$return, $package, Exception $exception, $message = '') {
     $type = $package['type'] == 'package' ? $this->t('Package') : $this->t('Profile');
     $return[] = [
       'success' => FALSE,
@@ -145,7 +151,7 @@ class FeaturesGenerationWrite extends FeaturesGenerationMethodBase {
         '!type' => $type,
         '@package' => $package['name'],
         '@directory' => $package['directory'],
-        '@error' => $exception->getMessage()
+        '@error' => isset($exception) ? $exception->getMessage() : $message,
       ],
     ];
   }

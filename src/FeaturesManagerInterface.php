@@ -252,7 +252,14 @@ interface FeaturesManagerInterface {
   public function getExportSettings();
 
   /**
+   * Return the current general features settings
+   * @return \Drupal\Core\Config\Config
+   */
+  public function getSettings();
+
+  /**
    * Return the current assignment settings
+   * @return \Drupal\Core\Config\Config
    */
   public function getAssignmentSettings();
 

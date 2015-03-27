@@ -60,18 +60,11 @@ class FeaturesManager implements FeaturesManagerInterface {
   protected $moduleHandler;
 
   /**
-   * The Features profile settings.
+   * The Features settings.
    *
    * @var array
    */
-  protected $profileSettings;
-
-  /**
-   * The Features export settings.
-   *
-   * @var array
-   */
-  protected $exportSettings;
+  protected $settings;
 
   /**
    * The Features assignment settings.
@@ -135,8 +128,7 @@ class FeaturesManager implements FeaturesManagerInterface {
     $this->configStorage = $config_storage;
     $this->configManager = $config_manager;
     $this->moduleHandler = $module_handler;
-    $this->profileSettings = $config_factory->get('features.settings')->get('profile');
-    $this->exportSettings = $config_factory->get('features.settings')->get('export');
+    $this->settings = $config_factory->getEditable('features.settings');
     $this->assignmentSettings = $config_factory->getEditable('features.assignment');
     $this->packages = [];
     $this->package_sets = NULL;
@@ -305,7 +297,14 @@ class FeaturesManager implements FeaturesManagerInterface {
    * {@inheritdoc}
    */
   public function getExportSettings() {
-    return $this->exportSettings;
+    return $this->settings->get('export');
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getSettings() {
+    return $this->settings;
   }
 
   /**
@@ -320,10 +319,11 @@ class FeaturesManager implements FeaturesManagerInterface {
    */
   protected function initProfile() {
     if (empty($this->profile)) {
+      $profileSettings = $this->settings->get('profile');
       $this->assignProfile(
-        $this->profileSettings['machine_name'],
-        $this->profileSettings['name'],
-        $this->profileSettings['description']
+        $profileSettings['machine_name'],
+        $profileSettings['name'],
+        $profileSettings['description']
       );
     }
   }
@@ -420,7 +420,6 @@ class FeaturesManager implements FeaturesManagerInterface {
     }
 
     $modules = $this->getAllModules($add_profile);
-
     // Filter to include only the requested packages.
     $modules = array_intersect_key($modules, array_fill_keys($machine_names, NULL));
     $directories = array();
@@ -753,6 +752,14 @@ class FeaturesManager implements FeaturesManagerInterface {
       // Save the current machine_name_short in the info file so the package
       // can be reloaded later by the AssignmentPackages plugin.
       $info['features'] = $package['machine_name_short'];
+      /*
+      array(
+        'name' => $package['machine_name_short']);
+      if (!empty($package['excluded'])) {
+        $info['features']['excluded'] = $package['excluded'];
+      }
+      dsm($info);
+      */
     }
 
     // Add profile-specific info data.

@@ -61,15 +61,20 @@ class FeaturesSettingsForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
 
-    $features_config = \Drupal::config('features.settings');
+    $settings = $this->featuresManager->getSettings();
+    $profile_settings = $settings->get('profile');
 
-    $form['profile'] = array(
+    $form['settings'] = array(
       '#type' => 'container',
       '#tree' => TRUE,
     );
 
-    $profile_settings = $features_config->get('profile');
-    $form['profile']['machine_name'] = array(
+    $form['settings']['profile'] = array(
+      '#type' => 'container',
+      '#tree' => TRUE,
+    );
+
+    $form['settings']['profile']['machine_name'] = array(
       '#title' => $this->t('Namespace'),
       '#type' => 'machine_name',
       '#size' => 30,
@@ -79,13 +84,20 @@ class FeaturesSettingsForm extends FormBase {
       '#description' => $this->t('A unique machine-readable name of packages namespace.  Used to prefix exported packages. It must only contain lowercase letters, numbers, and underscores.'),
     );
 
-    $form['profile']['install_profile'] = array(
+    $form['settings']['conflicts'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Allow conflicts'),
+      '#default_value' => $settings->get('conflicts'),
+      '#description' => $this->t('Allow configuration to be exported to more than one feature.'),
+    );
+
+    $form['settings']['profile']['install_profile'] = array(
       '#title' => t('Installation Profile'),
       '#type' => 'fieldset',
       '#tree' => FALSE,
     );
 
-    $form['profile']['install_profile']['add'] = array(
+    $form['settings']['profile']['install_profile']['add'] = array(
       '#type' => 'checkbox',
       '#title' => t('Include install profile'),
       '#default_value' => $profile_settings['add'],
@@ -101,7 +113,7 @@ class FeaturesSettingsForm extends FormBase {
       ),
     );
 
-    $form['profile']['install_profile']['name'] = array(
+    $form['settings']['profile']['install_profile']['name'] = array(
       '#title' => $this->t('Distribution name'),
       '#type' => 'textfield',
       '#default_value' => $profile_settings['name'],
@@ -111,7 +123,7 @@ class FeaturesSettingsForm extends FormBase {
       '#states' => $show_if_profile_add_checked,
     );
 
-    $form['profile']['install_profile']['description'] = array(
+    $form['settings']['profile']['install_profile']['description'] = array(
       '#title' => $this->t('Distribution description'),
       '#type' => 'textfield',
       '#default_value' => $profile_settings['description'],
@@ -134,10 +146,12 @@ class FeaturesSettingsForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $profile_settings = $form_state->getValue('profile');
-    \Drupal::configFactory()->getEditable('features.settings')
-      ->set('profile', $profile_settings)
-      ->save();
+    $settings = $this->featuresManager->getSettings();
+    $values = $form_state->getValue('settings');
+    foreach ($values as $key => $value) {
+      $settings->set($key, $value);
+    }
+    $settings->save();
   }
 
 }

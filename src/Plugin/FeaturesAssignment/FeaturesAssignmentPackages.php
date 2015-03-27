@@ -35,10 +35,17 @@ class FeaturesAssignmentPackages extends FeaturesAssignmentMethodBase {
     $existing = $this->featuresManager->getExistingPackages();
     foreach ($existing as $name => $info) {
       // The original machine_name_short was stored in the "features" key in the info file.
-      $this->featuresManager->initPackage($info['features'], $info['name'], !empty($info['description']) ? $info['description'] : '');
+      $feature_name = $info['features'];
+      if (is_array($feature_name)) {
+        $feature_name = $feature_name['name'];
+      }
+      $this->featuresManager->initPackage($feature_name, $info['name'], !empty($info['description']) ? $info['description'] : '');
       // Set the *actual* full machine name from the module.
       $packages = $this->featuresManager->getPackages();
-      $packages[$info['features']]['machine_name'] = $name;
+      $packages[$feature_name]['machine_name'] = $name;
+      $packages[$feature_name]['info'] = $info;
+      $config = $this->featuresManager->listExtensionConfig($name);
+      $packages[$feature_name]['config_orig'] = $config;
       $this->featuresManager->setPackages($packages);
     }
   }

@@ -52,6 +52,24 @@ class FeaturesEditForm extends FormBase {
   protected $moduleHandler;
 
   /**
+   * Current package array being edited
+   * @var array
+   */
+  protected $package;
+
+  /**
+   * Config to be specifically excluded
+   * @var array
+   */
+  protected $excluded;
+
+  /**
+   * Config referenced by other packages
+   * @var array
+   */
+  protected $conflicts;
+
+  /**
    * Constructs a FeaturesSettingsForm object.
    *
    * @param \Drupal\features\FeaturesManagerInterface $features_manager
@@ -62,6 +80,8 @@ class FeaturesEditForm extends FormBase {
     $this->assigner = $assigner;
     $this->generator = $generator;
     $this->moduleHandler = $module_handler;
+    $this->excluded = [];
+    $this->conflicts = [];
   }
 
   /**
@@ -93,16 +113,13 @@ class FeaturesEditForm extends FormBase {
       drupal_set_message(t('Feature !name does not exist.', array('!name' => $name)), 'error');
       return array();
     }
-    $package = $packages[$name];
+    $this->package = $packages[$name];
 
-    $form['#feature'] = $package;
     $form['info'] = array(
       '#type' => 'fieldset',
       '#title' => t('General Information'),
       '#tree' => FALSE,
       '#weight' => 2,
-      '#collapsible' => FALSE,
-      '#collapsed' => FALSE,
       '#prefix' => "<div id='features-export-info'>",
       '#suffix' => '</div>',
     );
@@ -110,7 +127,7 @@ class FeaturesEditForm extends FormBase {
       '#title' => t('Name'),
       '#description' => t('Example: Image gallery') . ' (' . t('Do not begin name with numbers.') . ')',
       '#type' => 'textfield',
-      '#default_value' => $package['name'],
+      '#default_value' => $this->package['name'],
     );
     $form['info']['machine_name'] = array(
       '#type' => 'machine_name',
@@ -118,7 +135,7 @@ class FeaturesEditForm extends FormBase {
       '#description' => t('Example: image_gallery') . '<br/>' .
         t('NOTE: Do NOT include the namespace prefix; it will be added automatically. ') . t('May only contain lowercase letters, numbers and underscores.'),
       '#required' => TRUE,
-      '#default_value' => $package['machine_name_short'],
+      '#default_value' => $this->package['machine_name_short'],
       '#machine_name' => array(
         'source' => array('info', 'name'),
       ),
@@ -128,20 +145,20 @@ class FeaturesEditForm extends FormBase {
       '#description' => t('Provide a short description of what users should expect when they enable your feature.'),
       '#type' => 'textarea',
       '#rows' => 3,
-      '#default_value' => $package['description'],
+      '#default_value' => $this->package['description'],
     );
     $form['info']['package'] = array(
       '#title' => t('Package'),
       '#description' => t('Organize your features in groups.'),
       '#type' => 'textfield',
-      '#default_value' => $package['package'],
+      '#default_value' => $this->package['package'],
     );
     $form['info']['version'] = array(
       '#title' => t('Version'),
       '#description' => t('Examples: 7.x-1.0, 7.x-1.0-beta1'),
       '#type' => 'textfield',
       '#required' => FALSE,
-      '#default_value' => $package['version'],
+      '#default_value' => $this->package['version'],
       '#size' => 30,
     );
 
@@ -152,9 +169,6 @@ class FeaturesEditForm extends FormBase {
       // Sort generation methods by weight.
       uasort($generation_info, '\Drupal\Component\Utility\SortArray::sortByWeightElement');
     }
-
-    // build the Component Listing panel on the right
-    //_features_export_form_components($form, $form_state);
 
     $form['actions'] = array('#type' => 'actions', '#tree' => TRUE);
     foreach ($generation_info as $method_id => $method) {
@@ -167,7 +181,427 @@ class FeaturesEditForm extends FormBase {
         ),
       );
     }
+
+    // build the Component Listing panel on the right
+    $form['export'] = $this->buildComponentList($form_state);
+
+    $form['#attached'] = array(
+      'library' => array(
+        'features_ui/drupal.features_ui.admin',
+      ),
+      'drupalSettings' => array(
+        'features' => array(
+          'excluded' => $this->excluded,
+          'conflicts' => $this->conflicts,
+        ),
+      ),
+    );
+
     return $form;
+  }
+
+  /**
+   * Return the render array elements for the Components selection on the Edit form
+   */
+  protected function buildComponentList(FormStateInterface $form_state) {
+    $element = array(
+      '#type' => 'fieldset',
+      '#title' => t('Components'),
+      '#description' => t('Expand each component section and select which items should be included in this feature export.'),
+      '#tree' => FALSE,
+      '#prefix' => "<div id='features-export-wrapper'>",
+      '#suffix' => '</div>',
+      '#weight' => 1,
+    );
+
+    // filter field used in javascript, so javascript will unhide it
+    $element['features_filter_wrapper'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Filters'),
+      '#tree' => FALSE,
+      '#prefix' => "<div id='features-filter' class='element-invisible'>",
+      '#suffix' => '</div>',
+      '#weight' => -10,
+    );
+    $element['features_filter_wrapper']['features_filter'] = array(
+      '#type' => 'textfield',
+      '#title' => t('Search'),
+      '#hidden' => TRUE,
+      '#default_value' => '',
+      '#suffix' => "<span class='features-filter-clear'>". t('Clear') ."</span>",
+    );
+    $element['features_filter_wrapper']['checkall'] = array(
+      '#type' => 'checkbox',
+      '#default_value' => FALSE,
+      '#hidden' => TRUE,
+      '#title' => t('Select all'),
+      '#attributes' => array(
+        'class' => array('features-checkall'),
+      )
+    );
+
+    $sections = array('included', 'detected', 'added');
+    $config_types = $this->featuresManager->listConfigTypes();
+
+    // generate the export array for the current feature and user selections
+    $export = $this->getComponentList($form_state);
+
+    foreach ($export['components'] as $component => $component_info) {
+
+      $component_items_count = count($component_info['options']['sources']);
+      $label = t('@name (<span class = "component-count">@count</span>)', array(
+        '@name' => $config_types[$component],
+        '@count' => $component_items_count,
+        ));
+
+      $count = 0;
+      foreach ($sections as $section) {
+        $count += count($component_info['options'][$section]);
+      }
+      $extra_class = ($count == 0) ? 'features-export-empty' : '';
+      $component_name = str_replace('_', '-', String::checkPlain($component));
+
+      if ($count + $component_items_count > 0) {
+        $element[$component] = array(
+          '#markup' => '',
+          '#tree' => TRUE,
+        );
+
+        $element[$component]['sources'] = array(
+          '#type' => 'details',
+          '#title' => $label,
+          '#tree' => TRUE,
+          '#open' => FALSE,
+          '#attributes' => array('class' => array('features-export-component')),
+          '#prefix' => "<div class='features-export-parent component-$component'>",
+        );
+        $element[$component]['sources']['selected'] = array(
+          '#type' => 'checkboxes',
+          '#id' => "edit-sources-$component_name",
+          '#options' => $this->domDecodeOptions($component_info['options']['sources']),
+          '#default_value' => $this->domDecodeOptions($component_info['selected']['sources'], FALSE),
+          '#attributes' => array('class' => array('component-select')),
+          '#prefix' => "<span class='component-select'>",
+          '#suffix' => '</span>',
+        );
+
+        $element[$component]['before-list'] = array(
+          '#markup' => "<div class='component-list features-export-list $extra_class'>",
+        );
+
+        foreach ($sections as $section) {
+          $element[$component][$section] = array(
+            '#type' => 'checkboxes',
+            '#options' => !empty($component_info['options'][$section]) ?
+              $this->domDecodeOptions($component_info['options'][$section]) : array(),
+            '#default_value' => !empty($component_info['selected'][$section]) ?
+              $this->domDecodeOptions($component_info['selected'][$section], FALSE) : array(),
+            '#attributes' => array('class' => array('component-' . $section)),
+            '#prefix' => "<span class='component-$section'>",
+            '#suffix' => '</span>',
+          );
+        }
+
+        // Close both the before-list as well as the sources div.
+        $element[$component]['after-list'] = array(
+          '#markup' => "</div></div>",
+        );
+      }
+    }
+    $element['features_legend'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Legend'),
+      '#tree' => FALSE,
+      '#prefix' => "<div id='features-legend'>",
+      '#suffix' => '</div>',
+    );
+    $element['features_legend']['legend'] = array(
+      '#markup' =>
+        "<span class='component-included'>" . t('Normal'). "</span> " .
+        "<span class='component-added'>" . t('Added') . "</span> " .
+        "<span class='component-detected'>" . t('Auto detected') . "</span> " .
+        "<span class='component-conflict'>" . t('Conflict') . "</span> ",
+    );
+
+    return $element;
+  }
+
+  /**
+   * Return the full feature export array based upon user selections in form_state
+   * @param  array $package    Package array to be exported
+   * @param  array $form_state Optional form_state information for user selections
+   *   can be updated to reflect new selection status
+   * @return array             New export array to be exported
+   *   array['components'][$component_name] = $component_info
+   *     $component_info['options'][$section] is list of available options
+   *     $component_info['selected'][$section] is option state TRUE/FALSE
+   *   $section = array('sources', included', 'detected', 'added')
+   *     sources - options that are available to be added to the feature
+   *     included - options that have been previously exported to the feature
+   *     detected - options that have been auto-detected
+   *     added - newly added options to the feature
+   *
+   * NOTE: This routine gets a bit complex to handle all of the different possible
+   * user checkbox selections and de-selections.
+   * Cases to test:
+   *   1a) uncheck Included item -> mark as Added but unchecked
+   *   1b) re-check unchecked Added item -> return it to Included check item
+   *   2a) check Sources item -> mark as Added and checked
+   *   2b) uncheck Added item -> return it to Sources as unchecked
+   *   3a) uncheck Included item that still exists as auto-detect -> mark as Detected but unchecked
+   *   3b) re-check Detected item -> return it to Included and checked
+   *   4a) check Sources item should also add any auto-detect items as Detected and checked
+   *   4b) uncheck Sources item with auto-detect and auto-detect items should return to Sources and unchecked
+   *   5a) uncheck a Detected item -> refreshing page should keep it as unchecked Detected
+   *   6)  when nothing changes, refresh should not change any state
+   *   7)  should never see an unchecked Included item
+   */
+  protected function getComponentList(FormStateInterface $form_state) {
+    $config = $this->featuresManager->getConfigCollection();
+    $settings = $this->featuresManager->getSettings();
+    $allow_conflicts = $settings->get('conflicts');
+
+    // Make a map of all config data.
+    $packages = $this->featuresManager->getPackages();
+    $components = array();
+    $this->conflicts = array();
+    foreach ($config as $item_name => $item) {
+      if (!empty($item['package']) && ($item['package'] != $this->package['machine_name_short']) &&
+        !empty($packages[$item['package']]) && ($packages[$item['package']]['status'] != FeaturesManagerInterface::STATUS_NO_EXPORT)) {
+        $this->conflicts[$item['type']][$item['name_short']] = $item;
+      }
+      if ($allow_conflicts || !isset($this->conflicts[$item['type']][$item['name_short']])) {
+        $components[$item['type']][$item['name_short']] = $item;
+      }
+    }
+
+    // Make a map of the config data already exported to the Feature.
+    $exported_features_info = array();
+    foreach ($this->package['config_orig'] as $item_name) {
+      $item = $config[$item_name];
+      // Remove any conflicts if those are not being allowed.
+      if ($allow_conflicts || !isset($this->conflicts[$item['type']][$item['name_short']])) {
+        $exported_features_info[$item['type']][$item['name_short']] = $item;
+      }
+    }
+    $exported_features_info['dependencies'] = !empty($this->package['info']['dependencies']) ? $this->package['info']['dependencies'] : array();
+
+    // Make a map of any config specifically excluded
+    $this->excluded = array();
+    $excluded_info = !empty($this->package['info']['features']['excluded']) ? $this->package['info']['features']['excluded'] : array();
+    foreach ($excluded_info as $item_name) {
+      $item = $config[$item_name];
+      $this->excluded[$item['type']][$item['name_short']] = $item;
+    }
+
+    // Make a map of the config data to be exported within the Feature.
+    $new_features_info = array();
+    foreach ($this->package['config'] as $item_name) {
+      $item = $config[$item_name];
+      $new_features_info[$item['type']][$item['name_short']] = $item;
+    }
+    $new_features_info['dependencies'] = !empty($this->package['dependencies']) ? $this->package['dependencies'] : array();
+
+    // Assemble the combined component list
+    $config_new = array();
+    $sections = array('sources', 'included', 'detected', 'added');
+
+    // Generate list of config to be exported.
+
+    $config_count = array();
+    foreach ($components as $component => $component_info) {
+      // User-selected components take precedence.
+      $config_new[$component] = array();
+      $config_count[$component] = 0;
+      // add selected items from Sources checkboxes
+      if (!$form_state->isValueEmpty(array($component, 'sources', 'selected'))) {
+        $config_new[$component] = array_merge($config_new[$component], $this->domDecodeOptions(array_filter($form_state->getValue(array($component, 'sources', 'selected')))));
+        $config_count[$component]++;
+      }
+      // add selected items from already Included, newly Added, auto-detected checkboxes
+      foreach (array('included', 'added', 'detected') as $section) {
+        if (!$form_state->isValueEmpty(array($component, $section))) {
+          $config_new[$component] = array_merge($config_new[$component], $this->domDecodeOptions(array_filter($form_state->getValue(array($component, $section)))));
+          $config_count[$component]++;
+        }
+      }
+      // Only fallback to an existing feature's values if there are no export options for the component.
+      if ($component == 'dependencies') {
+        if (($config_count[$component] == 0) && !empty($exported_features_info['dependencies'])) {
+          $config_new[$component] = array_combine($exported_features_info['dependencies'], $exported_features_info['dependencies']);
+        }
+      }
+      elseif (($config_count[$component] == 0) && !empty($exported_features_info[$component])) {
+        $config_new[$component] = array_combine($exported_features_info[$component], $exported_features_info[$component]);
+      }
+    }
+
+    // Generate new populated feature
+    $export = $this->package;
+    $export['config_new'] = $config_new;
+
+    // now fill the $export with categorized sections of component options
+    // based upon user selections and de-selections
+
+    foreach ($components as $component => $component_info) {
+      $component_export = $component_info;
+      foreach ($sections as $section) {
+        $component_export['options'][$section] = array();
+        $component_export['selected'][$section] = array();
+      }
+      if (!empty($component_info)) {
+        $exported_components = !empty($exported_features_info[$component]) ? $exported_features_info[$component] : array();
+        $new_components = !empty($new_features_info[$component]) ? $new_features_info[$component] : array();
+
+        foreach ($component_info as $key => $value) {
+          // use the $clean_key when accessing $form_state
+          $clean_key = $this->domEncode($key);
+          // if checkbox in Sources is checked, move it to Added section
+          if (!$form_state->isValueEmpty(array($component, 'sources', 'selected', $clean_key))) {
+            $form_state->setValue(array($component, 'sources', 'selected', $clean_key), FALSE);
+            $form_state->setValue(array($component, 'added', $clean_key), 1);
+            $component_export['options']['added'][$key] = $this->configLabel($component, $key, $value['label']);
+            $component_export['selected']['added'][$key] = $key;
+          }
+          elseif (isset($new_components[$key])) {
+            // option is in the New exported array
+            if (isset($exported_components[$key])) {
+              // option was already previously exported
+              // so it's part of the Included checkboxes
+              $section = 'included';
+              $default_value = $key;
+              // if Included item was un-selected (removed from export $config_new)
+              // but was re-detected in the $new_components
+              // means it was an auto-detect that was previously part of the export
+              // and is now de-selected in UI
+              if ($form_state->isSubmitted() &&
+                  ($form_state->hasValue(array($component, 'included', $clean_key)) ||
+                  ($form_state->isValueEmpty(array($component, 'detected', $clean_key)))) &&
+                  empty($config_new[$component][$key])) {
+                $section = 'detected';
+                $default_value = FALSE;
+              }
+              // unless it's unchecked in the form, then move it to Newly disabled item
+              elseif ($form_state->isSubmitted() &&
+                  $form_state->isValueEmpty(array($component, 'added', $clean_key)) &&
+                  $form_state->isValueEmpty(array($component, 'detected', $clean_key)) &&
+                  $form_state->isValueEmpty(array($component, 'included', $clean_key))) {
+                $section = 'added';
+                $default_value = FALSE;
+              }
+            }
+            else {
+              // option was in New exported array, but NOT in already exported
+              // so it's a user-selected or an auto-detect item
+              $section = 'detected';
+              // check for item explicitly excluded
+              if (isset($this->excluded[$component][$key]) && !$form_state->hasValue(array($component, 'detected', $clean_key))) {
+                $default_value = FALSE;
+              }
+              else {
+                $default_value = $key;
+              }
+              // if it's already checked in Added or Sources, leave it in Added as checked
+              if ($form_state->isSubmitted() &&
+                  (!$form_state->isValueEmpty(array($component, 'added', $clean_key)) ||
+                   !$form_state->isValueEmpty(array($component, 'sources', 'selected', $clean_key)))) {
+                $section = 'added';
+                $default_value = $key;
+              }
+              // if it's already been unchecked, leave it unchecked
+              elseif ($form_state->isSubmitted() &&
+                  $form_state->isValueEmpty(array($component, 'sources', 'selected', $clean_key)) &&
+                  $form_state->isValueEmpty(array($component, 'detected', $clean_key)) &&
+                  !$form_state->hasValue(array($component, 'added', $clean_key))) {
+                $section = 'detected';
+                $default_value = FALSE;
+              }
+            }
+            $component_export['options'][$section][$key] = $this->configLabel($component, $key, $value['label']);
+            $component_export['selected'][$section][$key] = $default_value;
+            // save which dependencies are specifically excluded from auto-detection
+            if (($section == 'detected') && ($default_value === FALSE)) {
+              $this->excluded[$component][$key] = $key;
+              // remove excluded item from export
+              if ($component == 'dependencies') {
+                unset($export['dependencies'][$key]);
+              }
+              else {
+                $config_name = $this->featuresManager->getFullName($component, $key);
+                unset($export['config'][$config_name]);
+              }
+            }
+            else {
+              unset($this->excluded[$component][$key]);
+            }
+            // remove the 'input' and set the 'values' so Drupal stops looking at 'input'
+            if ($form_state->isSubmitted()) {
+              if (!$default_value) {
+                $form_state->setValue(array($component, $section, $clean_key), FALSE);
+              }
+              else {
+                $form_state->setValue(array($component, $section, $clean_key), 1);
+              }
+            }
+          }
+          elseif (!$form_state->isSubmitted() && isset($exported_components[$key])) {
+            // Component is not part of new export, but was in original export
+            // Mark component as Added when creating initial form
+            $component_export['options']['added'][$key] = $this->configLabel($component, $key, $value['label']);
+            $component_export['selected']['added'][$key] = $key;
+          }
+          else {
+            // option was not part of the new export
+            $added = FALSE;
+            foreach (array('included', 'added') as $section) {
+              // restore any user-selected checkboxes
+              if (!$form_state->isValueEmpty(array($component, $section, $clean_key))) {
+                $component_export['options'][$section][$key] = $this->configLabel($component, $key, $value['label']);
+                $component_export['selected'][$section][$key] = $key;
+                $added = TRUE;
+              }
+            }
+            if (!$added) {
+              // if not Included or Added, then put it back in the unchecked Sources checkboxes
+              $component_export['options']['sources'][$key] = $this->configLabel($component, $key, $value['label']);
+              $component_export['selected']['sources'][$key] = FALSE;
+            }
+          }
+        }
+      }
+      $export['components'][$component] = $component_export;
+    }
+    $export['features_exclude'] = $this->excluded;
+    $export['conflicts'] = $this->conflicts;
+
+    return $export;
+  }
+
+  /**
+   * Return a formatted and sanitized label for a config item
+   * @param string $type
+   *   the config type
+   * @param string $key
+   *   the short machine name of the item
+   * @param $label
+   *   the human label for the item
+   */
+  protected function configLabel($type, $key, $label) {
+    $value = String::checkPlain($label);
+    if ($key != $label) {
+      $value .= '  <span class="config-name">(' . String::checkPlain($key) . ')</span>';
+    }
+    if (isset($this->conflicts[$type][$key])) {
+      // Show what package the conflict is stored in.
+      // Get the full machine name instead of the short name
+      $packages = $this->featuresManager->getPackages();
+      $package_name = $this->conflicts[$type][$key]['package'];
+      if (isset($packages[$package_name])) {
+        $package_name = $packages[$package_name]['machine_name'];
+      }
+      $value .= '  <span class="config-name">[' . t('in') . ' ' . String::checkPlain($package_name) . ']</span>';
+    }
+    return $value;
   }
 
   /**
@@ -176,17 +610,16 @@ class FeaturesEditForm extends FormBase {
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $this->assigner->assignConfigPackages();
 
-    $package = $form['#feature'];
     $profile = $this->featuresManager->getProfile();
-    $package['name'] = $form_state->getValue('name');
-    $package['machine_name_short'] = $form_state->getValue('machine_name');
+    $this->package['name'] = $form_state->getValue('name');
+    $this->package['machine_name_short'] = $form_state->getValue('machine_name');
     $prefix = !empty($profile['machine_name']) ? $profile['machine_name'] . '_' : '';
-    $package['machine_name'] = $prefix . $package['machine_name_short'];
-    $package['description'] = $form_state->getValue('description');
-    $package['version'] = $form_state->getValue('version');
-    $this->featuresManager->savePackage($package);
-    dsm($profile);
-    dsm($package);
+    $this->package['machine_name'] = $prefix . $this->package['machine_name_short'];
+    $this->package['description'] = $form_state->getValue('description');
+    $this->package['version'] = $form_state->getValue('version');
+
+    $this->package['config'] = $this->updatePackageConfig($form_state);
+    $this->featuresManager->savePackage($this->package);
 
     $method_id = NULL;
     $trigger = $form_state->getTriggeringElement();
@@ -196,8 +629,8 @@ class FeaturesEditForm extends FormBase {
     }
 
     if (!empty($method_id)) {
-      $packages = array($package['machine_name']);
-      $profile_settings = \Drupal::config('features.settings')->get('profile');
+      $packages = array($this->package['machine_name']);
+      $profile_settings = $this->featuresManager->getSettings()->get('profile');
       if ($profile_settings['add']) {
         $this->generator->generateProfile($method_id, $packages, FALSE);
       }
@@ -208,5 +641,61 @@ class FeaturesEditForm extends FormBase {
       $this->generator->applyExportFormSubmit($method_id, $form, $form_state);
     }
   }
+
+  /**
+   * Update the config stored in the package from the current edit form
+   * @return array config array to be exported
+   */
+  protected function updatePackageConfig(FormStateInterface $form_state) {
+    $config = array();
+    $components = $this->getComponentList($form_state);
+    foreach ($components['config_new'] as $config_type => $items) {
+      foreach ($items as $name) {
+        $config[] = $this->featuresManager->getFullName($config_type, $name);
+      }
+    }
+    return $config;
+  }
+
+  protected function domEncode($key) {
+    $replacements = $this->domEncodeMap();
+    return strtr($key, $replacements);
+  }
+
+  protected function domDecode($key) {
+    $replacements = array_flip($this->domEncodeMap());
+    return strtr($key, $replacements);
+  }
+
+  /**
+   * Decode an array of option values that have been encoded by
+   * features_dom_encode_options().
+   */
+  protected function domDecodeOptions($options, $keys_only = FALSE) {
+    $replacements = array_flip($this->domEncodeMap());
+    $encoded = array();
+    foreach ($options as $key => $value) {
+      $encoded[strtr($key, $replacements)] = $keys_only ? $value : strtr($value, $replacements);
+    }
+    return $encoded;
+  }
+
+  /**
+   * Returns encoding map for decode and encode options.
+   */
+  protected function domEncodeMap() {
+    return array(
+      ':' => '__' . ord(':') . '__',
+      '/' => '__' . ord('/') . '__',
+      ',' => '__' . ord(',') . '__',
+      '.' => '__' . ord('.') . '__',
+      '<' => '__' . ord('<') . '__',
+      '>' => '__' . ord('>') . '__',
+      '%' => '__' . ord('%') . '__',
+      ')' => '__' . ord(')') . '__',
+      '(' => '__' . ord('(') . '__',
+    );
+  }
+
 
 }
