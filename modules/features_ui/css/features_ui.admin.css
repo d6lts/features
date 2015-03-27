@@ -108,14 +108,14 @@ span.features-component-list .features-dependency {
 #features-export-wrapper .config-name {
   color: #777;
 }
-#features-export-wrapper .component-detected .form-type-checkbox label,
+#features-export-wrapper .component-detected .form-type-checkbox,
 #features-legend .fieldset-wrapper .component-detected {
   font-style: italic;
   color:#68a;
   background:#def;
   border-width: 0;
 }
-#features-export-wrapper .component-added .form-type-checkbox label,
+#features-export-wrapper .component-added .form-type-checkbox,
 #features-legend .fieldset-wrapper .component-added {
   font-weight: bold;
   background: #EEE;
@@ -124,6 +124,11 @@ span.features-component-list .features-dependency {
 #features-export-wrapper .component-conflict.form-type-checkbox,
 #features-legend .fieldset-wrapper .component-conflict {
   color: #c30 !important;
+  font-weight: bold !important;
+}
+
+#features-export-wrapper .component-conflict.form-type-checkbox label,
+#features-export-wrapper .component-added .form-type-checkbox label {
   font-weight: bold !important;
 }
 

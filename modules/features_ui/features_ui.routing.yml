@@ -54,3 +54,9 @@ features.edit:
   requirements:
     _permission: 'administer site configuration'
 
+features.detect:
+  path: '/features/api/detect/{name}'
+  defaults:
+    _controller: '\Drupal\features_ui\Controller\FeaturesUIController::detect'
+  requirements:
+    _permission: 'administer site configuration'

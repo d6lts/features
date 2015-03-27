@@ -525,7 +525,7 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function assignConfigPackage($package_name, array $item_names) {
+  public function assignConfigPackage($package_name, array $item_names, $force = FALSE) {
     $config_collection = $this->getConfigCollection();
 
     // Determine whether the profile is requested.
@@ -548,7 +548,7 @@ class FeaturesManager implements FeaturesManagerInterface {
       if (!isset($config_collection[$item_name])) {
         throw new \Exception($this->t('Failed to assign @item_name to package @package_name. Configuration item not found.', ['@item_name' => $item_name, '@package_name' => $package_name]));
       }
-      if (empty($config_collection[$item_name]['package']) && !in_array($item_name, $package['config'])) {
+      if (($force || empty($config_collection[$item_name]['package'])) && !in_array($item_name, $package['config'])) {
         // Add the item to the package's config array.
         $package['config'][] = $item_name;
         // Mark the item as already assigned.
@@ -593,7 +593,7 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function assignConfigDependents(array $item_names = NULL) {
+  public function assignConfigDependents(array $item_names = NULL, $package = NULL) {
     $config_collection = $this->getConfigCollection();
     if (empty($item_names)) {
       $item_names = array_keys($config_collection);
@@ -601,9 +601,11 @@ class FeaturesManager implements FeaturesManagerInterface {
     foreach ($item_names as $item_name) {
       if (!empty($config_collection[$item_name]['package'])) {
         foreach ($config_collection[$item_name]['dependents'] as $dependent_item_name) {
-          if (isset($config_collection[$dependent_item_name]) && empty($config_collection[$dependent_item_name]['package'])) {
+          if (isset($config_collection[$dependent_item_name]) && (!empty($package) || empty($config_collection[$dependent_item_name]['package']))) {
             try {
-              $this->assignConfigPackage($config_collection[$item_name]['package'], [$dependent_item_name]);
+              $package_name = !empty($package) ? $package : $config_collection[$item_name]['package'];
+              // If a Package is specified, force assign it to the given package.
+              $this->assignConfigPackage($package_name, [$dependent_item_name], !empty($package));
             }
             catch(\Exception $exception) {
               \Drupal::logger('features')->error($exception->getMessage());

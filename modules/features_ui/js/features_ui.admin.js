@@ -180,8 +180,7 @@ jQuery.fn.sortElements = (function(){
       }
 
       function _updateDetected() {
-        var autodetect = $('#features-autodetect input[type=checkbox]');
-        if ((autodetect.length > 0) && (!autodetect.is(':checked'))) return;
+        if (!drupalSettings.features.autodetect) return;
         // query the server for a list of components/items in the feature and update
         // the auto-detected items
         var items = [];  // will contain a list of selected items exported to feature
@@ -196,14 +195,13 @@ jQuery.fn.sortElements = (function(){
             }
           }
         });
-        var featureName = $('#edit-module-name').val();
+        var featureName = $('#edit-machine-name').val();
         if (featureName == '') {
           featureName = '*';
         }
 
-        /*
-        var url = Drupal.settings.basePath + 'features/ajaxcallback/' + featureName;
-        var excluded = Drupal.settings.features.excluded;
+        var url = Drupal.url('features/api/detect/' + featureName);
+        var excluded = drupalSettings.features.excluded;
         var postData = {'items': items, 'excluded': excluded};
         jQuery.post(url, postData, function(data) {
           if (inTimeout > 0) inTimeout--;
@@ -239,7 +237,6 @@ jQuery.fn.sortElements = (function(){
             }
           }
         }, "json");
-        */
       }
 
       // Handle component selection UI

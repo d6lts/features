@@ -327,10 +327,12 @@ interface FeaturesManagerInterface {
    *   Machine name of a package or the profile.
    * @param string[] $item_names
    *   Configuration item names.
+   * @param bool $force
+   *   If TRUE, assign config even if already assigned to a package
    *
    * @throws Exception
    */
-  public function assignConfigPackage($package_name, array $item_names);
+  public function assignConfigPackage($package_name, array $item_names, $force = FALSE);
 
   /**
    * Assigns configuration items with names matching given strings to given
@@ -347,8 +349,11 @@ interface FeaturesManagerInterface {
    *
    * @param string[] $item_names
    *   Configuration item names.
+   * @param string $package
+   *   Short machine name of package to assign dependent config to.  If NULL,
+   *   use the current package of the parent config items.
    */
-  public function assignConfigDependents(array $item_names = NULL);
+  public function assignConfigDependents(array $item_names = NULL, $package = NULL);
 
   /**
    * Merges two arrays and processes the resulting array, ensuring values are

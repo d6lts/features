@@ -193,6 +193,7 @@ class FeaturesEditForm extends FormBase {
         'features' => array(
           'excluded' => $this->excluded,
           'conflicts' => $this->conflicts,
+          'autodetect' => TRUE,
         ),
       ),
     );
@@ -361,16 +362,24 @@ class FeaturesEditForm extends FormBase {
     $settings = $this->featuresManager->getSettings();
     $allow_conflicts = $settings->get('conflicts');
 
-    // Make a map of all config data.
+    $package_name = $this->package['machine_name_short'];
+    // Auto-detect dependencies for included config.
+    $this->featuresManager->assignConfigDependents(
+      array_unique(array_merge($this->package['config'], $this->package['config_orig'])), $package_name);
+
     $packages = $this->featuresManager->getPackages();
+    // Re-fetch the package in case config was updated with Dependents above.
+    $this->package = $packages[$package_name];
+
+    // Make a map of all config data.
     $components = array();
     $this->conflicts = array();
     foreach ($config as $item_name => $item) {
-      if (!empty($item['package']) && ($item['package'] != $this->package['machine_name_short']) &&
+      if (!empty($item['package']) && ($item['package'] != $package_name) &&
         !empty($packages[$item['package']]) && ($packages[$item['package']]['status'] != FeaturesManagerInterface::STATUS_NO_EXPORT)) {
         $this->conflicts[$item['type']][$item['name_short']] = $item;
       }
-      if ($allow_conflicts || !isset($this->conflicts[$item['type']][$item['name_short']])) {
+      if ($allow_conflicts || !isset($this->conflicts[$item['type']][$item['name_short']]) || in_array($item_name, $this->package['config_orig'])) {
         $components[$item['type']][$item['name_short']] = $item;
       }
     }
@@ -380,9 +389,9 @@ class FeaturesEditForm extends FormBase {
     foreach ($this->package['config_orig'] as $item_name) {
       $item = $config[$item_name];
       // Remove any conflicts if those are not being allowed.
-      if ($allow_conflicts || !isset($this->conflicts[$item['type']][$item['name_short']])) {
+      //if ($allow_conflicts || !isset($this->conflicts[$item['type']][$item['name_short']])) {
         $exported_features_info[$item['type']][$item['name_short']] = $item;
-      }
+      //}
     }
     $exported_features_info['dependencies'] = !empty($this->package['info']['dependencies']) ? $this->package['info']['dependencies'] : array();
 
