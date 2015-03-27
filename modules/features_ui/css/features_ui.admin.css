@@ -62,7 +62,7 @@ div.features-export-list  {
   border: 1px solid #CCC;
   border-top-width: 0;
   overflow: hidden;
-  padding: 0 20px;
+  padding: 0 10px 0 30px;
 }
 
 span.features-component-list span {
@@ -176,7 +176,7 @@ span.features-component-list .features-dependency {
 details.features-export-component  {
   background: #F3F8FB;
   margin: 0;
-  padding: 0 15px 0 15px;
+  padding: 0 5px;
 }
 details.features-export-component summary {
   white-space: nowrap;
@@ -188,5 +188,6 @@ details.features-export-component summary .component-count {
   font-size: 11px;
 }
 details.features-export-component .details-wrapper {
-  padding-left: 5px;
+  padding-left: 25px;
+  padding-top: 0;
 }

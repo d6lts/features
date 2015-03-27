@@ -382,6 +382,19 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * {@inheritdoc}
    */
+  public function getFeatureName($info) {
+    // The original machine_name_short was stored in the "features" key in the info file.
+    // Also support having the name stored as a subkey of the "features" config section.
+    $feature_name = $info['features'];
+    if (is_array($feature_name)) {
+      $feature_name = $feature_name['name'];
+    }
+    return $feature_name;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getExistingPackages($enabled = FALSE, $namespace = NULL) {
     $result = array();
     if ($enabled) {

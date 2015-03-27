@@ -496,6 +496,13 @@ interface FeaturesManagerInterface {
   public function isFeatureModule($module);
 
   /**
+   * Return the short-machine-name of a Feature from it's info file
+   * @param array $info
+   * @return string
+   */
+  public function getFeatureName($info);
+
+  /**
    * Determine which config is overridden in a package
    * @param array $feature
    *   the package array
