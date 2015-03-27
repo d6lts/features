@@ -619,6 +619,7 @@ class FeaturesEditForm extends FormBase {
     $this->package['version'] = $form_state->getValue('version');
 
     $this->package['config'] = $this->updatePackageConfig($form_state);
+    $this->package['excluded'] = $this->updateExcluded();
     $this->featuresManager->savePackage($this->package);
 
     $method_id = NULL;
@@ -655,6 +656,22 @@ class FeaturesEditForm extends FormBase {
       }
     }
     return $config;
+  }
+
+  /**
+   * Update the list of excluded config.
+   * @return array
+   *   The list of excluded config in a simple array of full config names
+   *   suitable for storing in the info.yml file
+   */
+  protected function updateExcluded() {
+    $excluded = array();
+    foreach ($this->excluded as $type => $item) {
+      foreach ($item as $name => $value) {
+        $excluded[] = $this->featuresManager->getFullName($type, $name);
+      }
+    }
+    return $excluded;
   }
 
   protected function domEncode($key) {

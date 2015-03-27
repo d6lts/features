@@ -65,6 +65,8 @@ abstract class FeaturesGenerationMethodBase implements FeaturesGenerationMethodI
   protected function mergeInfoFile($package_info, $info_file_uri) {
     $package_info = Yaml::decode($package_info);
     $existing_info = \Drupal::service('info_parser')->parse($info_file_uri);
+    // Ensure the entire 'features' data is replaced by new data.
+    unset($existing_info['features']);
     return Yaml::encode($this->featuresManager->arrayMergeUnique($existing_info, $package_info));
   }
 

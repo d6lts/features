@@ -770,6 +770,9 @@ class FeaturesManager implements FeaturesManagerInterface {
       if (!empty($package['excluded'])) {
         $info['features']['excluded'] = $package['excluded'];
       }
+      else {
+        unset($info['features']['excluded']);
+      }
     }
 
     // Add profile-specific info data.
@@ -858,7 +861,7 @@ class FeaturesManager implements FeaturesManagerInterface {
     // Iterate through the incoming array.
     foreach ($array2 as $key => $value) {
       // If its values are arrays, merge them in and sort them.
-      if (is_array($value)) {
+      if (is_array($value) && isset($array1[$key]) && is_array($array1[$key])) {
         $array1[$key] = array_unique(
           array_merge(
             $array1[$key],
