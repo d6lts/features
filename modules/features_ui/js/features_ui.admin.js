@@ -212,6 +212,7 @@ jQuery.fn.sortElements = (function(){
               var itemList = data[component];
               $('#features-export-wrapper .component-' + component + ' input[type=checkbox]', context).each(function() {
                 var key = $(this).attr('value');
+                $(this).prop('checked', true);
                 // first remove any auto-detected items that are no longer in component
                 if ($(this).hasClass('component-detected')) {
                   if (!(key in itemList)) {
