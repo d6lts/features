@@ -12,8 +12,8 @@ assignment:
     base-type: -2
     core-type: 0
     dependency: 10
-    exclude: -10
-    existing: 8
+    exclude: -8
+    existing: -10
     namespace: 5
     packages: -20
     profile: -5
