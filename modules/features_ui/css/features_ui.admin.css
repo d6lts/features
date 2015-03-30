@@ -6,6 +6,10 @@ span.features-item-list span {
   white-space: nowrap;
 }
 
+#features-assignment-methods tr.draggable > td:nth-child(1) {
+  white-space: nowrap;
+}
+
 /** Styles for Features Export/Listing page **/
 .features-listing td {
   vertical-align: top;

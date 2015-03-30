@@ -91,6 +91,11 @@ class AssignmentConfigureForm extends FormBase {
       '#tree' => TRUE,
       '#show_operations' => FALSE,
       'weight' => array('#tree' => TRUE),
+      '#attached' => array(
+        'library' => array(
+          'features_ui/drupal.features_ui.admin',
+        ),
+      ),
     );
 
     foreach ($methods_weight as $method_id => $weight) {
