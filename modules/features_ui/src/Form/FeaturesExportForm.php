@@ -148,7 +148,7 @@ class FeaturesExportForm extends FormBase {
     $form['header']['new'] = array(
       '#type' => 'button',
       '#name' => 'newfeature',
-      '#value' => t('New feature'),
+      '#value' => t('Create new feature'),
     );
 
     $form['preview'] = $this->buildListing($packages);
