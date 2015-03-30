@@ -452,7 +452,6 @@ function drush_features_diff() {
     $config_diff = \Drupal::service('config_update.config_diff');
     $active_storage = \Drupal::service('config.storage');
     $extension_storage = new FeaturesInstallStorage($active_storage);
-    $install_list = $extension_storage->getAllFolders();
 
     // Print key for colors
     drush_print(dt('Legend: '));

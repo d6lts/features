@@ -45,13 +45,6 @@ class FeaturesEditForm extends FormBase {
   protected $generator;
 
   /**
-   * The module handler service.
-   *
-   * @var \Drupal\Core\Extension\ModuleHandlerInterface
-   */
-  protected $moduleHandler;
-
-  /**
    * Current package array being edited
    * @var array
    */
@@ -70,16 +63,15 @@ class FeaturesEditForm extends FormBase {
   protected $conflicts;
 
   /**
-   * Constructs a FeaturesSettingsForm object.
+   * Constructs a FeaturesEditForm object.
    *
    * @param \Drupal\features\FeaturesManagerInterface $features_manager
    *   The features manager.
    */
-  public function __construct(FeaturesManagerInterface $features_manager, FeaturesAssignerInterface $assigner, FeaturesGeneratorInterface $generator, ModuleHandlerInterface $module_handler) {
+  public function __construct(FeaturesManagerInterface $features_manager, FeaturesAssignerInterface $assigner, FeaturesGeneratorInterface $generator) {
     $this->featuresManager = $features_manager;
     $this->assigner = $assigner;
     $this->generator = $generator;
-    $this->moduleHandler = $module_handler;
     $this->excluded = [];
     $this->conflicts = [];
   }
@@ -91,8 +83,7 @@ class FeaturesEditForm extends FormBase {
     return new static(
       $container->get('features.manager'),
       $container->get('features_assigner'),
-      $container->get('features_generator'),
-      $container->get('module_handler')
+      $container->get('features_generator')
     );
   }
 
@@ -106,15 +97,15 @@ class FeaturesEditForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state, $name = '') {
+  public function buildForm(array $form, FormStateInterface $form_state, $featurename = '') {
     $this->assigner->assignConfigPackages();
     $packages = $this->featuresManager->getPackages();
-    if (empty($packages[$name])) {
-      $name = str_replace(array('-', ' '), '_', $name);
-      $this->package = $this->featuresManager->initPackage($name, str_replace(array('_', '-'), ' ', $name));
+    if (empty($packages[$featurename])) {
+      $featurename = str_replace(array('-', ' '), '_', $featurename);
+      $this->package = $this->featuresManager->initPackage($featurename, str_replace(array('_', '-'), ' ', $featurename));
     }
     else {
-      $this->package = $packages[$name];
+      $this->package = $packages[$featurename];
     }
 
     $form['info'] = array(
