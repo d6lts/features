@@ -110,10 +110,12 @@ class FeaturesEditForm extends FormBase {
     $this->assigner->assignConfigPackages();
     $packages = $this->featuresManager->getPackages();
     if (empty($packages[$name])) {
-      drupal_set_message(t('Feature !name does not exist.', array('!name' => $name)), 'error');
-      return array();
+      $name = str_replace(array('-', ' '), '_', $name);
+      $this->package = $this->featuresManager->initPackage($name, str_replace(array('_', '-'), ' ', $name));
     }
-    $this->package = $packages[$name];
+    else {
+      $this->package = $packages[$name];
+    }
 
     $form['info'] = array(
       '#type' => 'fieldset',
@@ -364,8 +366,13 @@ class FeaturesEditForm extends FormBase {
 
     $package_name = $this->package['machine_name_short'];
     // Auto-detect dependencies for included config.
-    $this->featuresManager->assignConfigDependents(
-      array_unique(array_merge($this->package['config'], $this->package['config_orig'])), $package_name);
+    $package_config = !empty($this->package['config']) ? $this->package['config'] : array();
+    if (!empty($this->package['config_orig'])) {
+      $package_config = array_unique(array_merge($package_config, $this->package['config_orig']));
+    }
+    if (!empty($package_config)) {
+      $this->featuresManager->assignConfigDependents($package_config, $package_name);
+    }
 
     $packages = $this->featuresManager->getPackages();
     // Re-fetch the package in case config was updated with Dependents above.
@@ -626,9 +633,12 @@ class FeaturesEditForm extends FormBase {
     $this->package['machine_name'] = $prefix . $this->package['machine_name_short'];
     $this->package['description'] = $form_state->getValue('description');
     $this->package['version'] = $form_state->getValue('version');
+    // Save it first just to create it in case it's a new package.
+    $this->featuresManager->savePackage($this->package);
 
     $this->package['config'] = $this->updatePackageConfig($form_state);
     $this->package['excluded'] = $this->updateExcluded();
+    // Now save it with the selected config data.
     $this->featuresManager->savePackage($this->package);
 
     $method_id = NULL;
@@ -650,6 +660,7 @@ class FeaturesEditForm extends FormBase {
 
       $this->generator->applyExportFormSubmit($method_id, $form, $form_state);
     }
+    $form_state->setRedirect('features.edit', array('name' => $this->package['machine_name_short']));
   }
 
   /**

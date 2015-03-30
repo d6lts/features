@@ -38,6 +38,11 @@ span.features-item-list span {
   font-weight: bold;
 }
 
+.features-header > div,
+.features-header > input {
+  display: inline-block;
+}
+
 /** Styles for Features Edit page **/
 
 .fieldset-legend {

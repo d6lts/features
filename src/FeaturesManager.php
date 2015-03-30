@@ -648,7 +648,6 @@ class FeaturesManager implements FeaturesManagerInterface {
    *      - 'string': the contents of the file.
    */
   protected function getProject($machine_name_short, $name_short = NULL, $description = '', $type = 'module') {
-    $description = $description ?: $this->t('@name configuration.', ['@name' => $name_short]);
     $name_short = $this->getName($machine_name_short, $name_short);
     $project = [
       'machine_name' => $machine_name_short,

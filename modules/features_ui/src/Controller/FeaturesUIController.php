@@ -79,7 +79,7 @@ class FeaturesUIController implements ContainerInjectionInterface {
           }
         }
       }
-      $detected = $this->getConfigDependents($selected);
+      $detected = !empty($selected) ? $this->getConfigDependents($selected) : array();
     }
 
     $result = [];

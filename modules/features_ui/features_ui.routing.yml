@@ -2,7 +2,7 @@ features.export:
   path: '/admin/config/development/configuration/features'
   defaults:
     _form: '\Drupal\features_ui\Form\FeaturesExportForm'
-    _title: 'Export'
+    _title: 'Features'
   requirements:
     _permission: 'export configuration'
 
@@ -51,6 +51,7 @@ features.edit:
   defaults:
     _form: '\Drupal\features_ui\Form\FeaturesEditForm'
     _title: 'Edit'
+    name: ''
   requirements:
     _permission: 'administer site configuration'
 

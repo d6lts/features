@@ -5,7 +5,7 @@ features.package:
 
 features.export:
   route_name: features.export
-  title: Export
+  title: 'Features'
   parent_id: features.package
   weight: -1
 

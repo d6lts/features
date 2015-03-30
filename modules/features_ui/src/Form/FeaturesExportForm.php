@@ -99,6 +99,9 @@ class FeaturesExportForm extends FormBase {
       }
       $this->featuresManager->applyNamespace($package_set);
     }
+    else if ($trigger['#name'] == 'newfeature') {
+      return $this->redirect('features.edit');
+    }
     else {
       $this->assigner->assignConfigPackages();
     }
@@ -112,6 +115,11 @@ class FeaturesExportForm extends FormBase {
     $profile = $this->featuresManager->getProfile();
     $package_sets = $this->featuresManager->getPackageSets();
 
+    $form['header'] = array(
+      '#type' => 'container',
+      '#attributes' => array('class' => 'features-header'),
+    );
+
     $current_set = !empty($profile['machine_name']) ? $profile['machine_name'] : '_';
     $options = array(
       '_' => t('--All--'),
@@ -121,7 +129,7 @@ class FeaturesExportForm extends FormBase {
     }
     $form['#prefix'] = '<div id="edit-features-wrapper">';
     $form['#suffix'] = '</div>';
-    $form['package_set'] = array(
+    $form['header']['package_set'] = array(
       '#title' => t('Package Set'),
       '#type' => 'select',
       '#options' => $options,
@@ -135,6 +143,12 @@ class FeaturesExportForm extends FormBase {
       '#attributes' => array(
         'data-new-package-set' => 'status',
       ),
+    );
+
+    $form['header']['new'] = array(
+      '#type' => 'button',
+      '#name' => 'newfeature',
+      '#value' => t('New feature'),
     );
 
     $form['preview'] = $this->buildListing($packages);
