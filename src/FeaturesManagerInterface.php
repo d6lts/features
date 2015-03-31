@@ -70,6 +70,20 @@ interface FeaturesManagerInterface {
   public function applyNamespace($namespace = NULL);
 
   /**
+   * Sets the current namespace and saves it in session
+   * @param string $namespace
+   *   if not specified, save the current profile data in the session
+   */
+  public function setNameSpace($namespace = NULL, $name = NULL, $description = NULL);
+
+  /**
+   * Gets the current namespace from the session
+   * @return string $namespace
+   */
+  public function getNameSpace();
+
+
+  /**
    * Sets an array of site configuration.
    *
    * @param array $config_collection

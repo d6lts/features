@@ -177,8 +177,15 @@ class FeaturesManager implements FeaturesManagerInterface {
    */
   public function applyNamespace($namespace = NULL) {
     if (isset($namespace)) {
+      if (!isset($this->packages_sets)) {
+        $this->assigner->assignConfigPackages();
+        $this->refreshPackageNames();
+      }
       $this->profile['machine_name'] = $namespace;
-      $this->refreshPackageNames();
+      if (isset($this->package_sets[$namespace])) {
+        $this->profile['name'] = $this->package_sets[$namespace]['name'];
+        $this->profile['description'] = $this->package_sets[$namespace]['description'];
+      }
     }
     if (isset($this->configCollection)) {
       // force recalculation of config if already created
@@ -190,6 +197,45 @@ class FeaturesManager implements FeaturesManagerInterface {
       $this->assigner = \Drupal::service('features_assigner');
     }
     $this->assigner->assignConfigPackages();
+    $this->refreshPackageNames();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setNameSpace($namespace = NULL, $name = '', $description = '') {
+    if (isset($namespace)) {
+      $this->profile['name'] = !empty($name) ? $name : $namespace;
+      $this->profile['machine_name'] = $namespace;
+      $this->profile['description'] = '';
+      if (isset($this->package_sets[$namespace])) {
+        if (empty($name)) {
+          $this->profile['name'] = $this->package_sets[$namespace]['name'];
+        }
+        if (empty($description)) {
+          $this->profile['description'] = $this->package_sets[$namespace]['description'];
+        }
+      }
+      $this->profile['machine_name_short'] = $this->profile['machine_name'];
+      $this->profile['name_short'] = $this->profile['name'];
+    }
+    $session = \Drupal::request()->getSession();
+    $session->set('features_namespace_name', $this->profile['name']);
+    $session->set('features_namespace_machine_name', $this->profile['machine_name']);
+    $session->set('features_namespace_description', $this->profile['description']);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getNameSpace() {
+    $session = \Drupal::request()->getSession();
+    $this->profile['name'] = $session->get('features_namespace_name');
+    $this->profile['name_short'] = $session->get('features_namespace_name');
+    $this->profile['machine_name'] = $session->get('features_namespace_machine_name');
+    $this->profile['machine_name_short'] = $session->get('features_namespace_machine_name');
+    $this->profile['description'] = $session->get('features_namespace_description');
+    return $this->profile['machine_name'];
   }
 
   /**

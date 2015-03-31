@@ -74,14 +74,22 @@ class FeaturesSettingsForm extends FormBase {
       '#tree' => TRUE,
     );
 
-    $form['settings']['profile']['machine_name'] = array(
+    $form['settings']['profile']['name'] = array(
       '#title' => $this->t('Namespace'),
+      '#type' => 'textfield',
+      '#description' => $this->t('A unique human-readable name of packages namespace.'),
+      '#default_value' => $profile_settings['name'],
+    );
+
+    $form['settings']['profile']['machine_name'] = array(
+      '#title' => $this->t('Machine name'),
       '#type' => 'machine_name',
-      '#size' => 30,
-      '#maxlength' => 64,
       '#required' => FALSE,
       '#default_value' => $profile_settings['machine_name'],
       '#description' => $this->t('A unique machine-readable name of packages namespace.  Used to prefix exported packages. It must only contain lowercase letters, numbers, and underscores.'),
+      '#machine_name' => array(
+        'source' => array('settings', 'profile', 'name'),
+      ),
     );
 
     $form['settings']['conflicts'] = array(
@@ -152,6 +160,11 @@ class FeaturesSettingsForm extends FormBase {
       $settings->set($key, $value);
     }
     $settings->save();
+    $this->featuresManager->setNameSpace(
+      $form_state->getValue(array('settings', 'profile', 'machine_name')),
+      $form_state->getValue(array('settings', 'profile', 'name')),
+      ''
+    );
   }
 
 }
