@@ -230,12 +230,15 @@ class FeaturesManager implements FeaturesManagerInterface {
    */
   public function getNameSpace() {
     $session = \Drupal::request()->getSession();
-    $this->profile['name'] = $session->get('features_namespace_name');
-    $this->profile['name_short'] = $session->get('features_namespace_name');
-    $this->profile['machine_name'] = $session->get('features_namespace_machine_name');
-    $this->profile['machine_name_short'] = $session->get('features_namespace_machine_name');
-    $this->profile['description'] = $session->get('features_namespace_description');
-    return $this->profile['machine_name'];
+    $machine_name = $session->get('features_namespace_machine_name');
+    if (!empty($machine_name)) {
+      $this->profile['name'] = $session->get('features_namespace_name');
+      $this->profile['name_short'] = $session->get('features_namespace_name');
+      $this->profile['machine_name'] = $machine_name;
+      $this->profile['machine_name_short'] = $machine_name;
+      $this->profile['description'] = $session->get('features_namespace_description');
+    }
+    return $machine_name;
   }
 
   /**
@@ -1219,7 +1222,7 @@ class FeaturesManager implements FeaturesManagerInterface {
       case FeaturesManagerInterface::STATE_DEFAULT:
         return t('Default');
       case FeaturesManagerInterface::STATE_OVERRIDDEN:
-        return t('Overridden');
+        return t('Changed');
     }
   }
 

@@ -94,9 +94,6 @@ class FeaturesExportForm extends FormBase {
     $trigger = $form_state->getTriggeringElement();
     if ($trigger['#name'] == 'package_set') {
       $package_set = $form_state->getValue('package_set', '');
-      if ($package_set == '_') {
-        $package_set = '';
-      }
       $this->featuresManager->applyNamespace($package_set);
       $this->featuresManager->setNamespace($package_set);
     }
@@ -117,7 +114,9 @@ class FeaturesExportForm extends FormBase {
     $config_collection = $this->featuresManager->getConfigCollection();
     // Add in unpackaged configuration items.
     $this->addUnpackaged($packages, $config_collection);
-    $packages = $this->featuresManager->filterPackages($packages);
+    if (!empty($package_set)) {
+      $packages = $this->featuresManager->filterPackages($packages);
+    }
 
     $profile = $this->featuresManager->getProfile();
     $package_sets = $this->featuresManager->getPackageSets();
@@ -127,9 +126,9 @@ class FeaturesExportForm extends FormBase {
       '#attributes' => array('class' => 'features-header'),
     );
 
-    $current_set = !empty($profile['machine_name']) ? $profile['machine_name'] : '_';
+    $current_set = isset($package_set) ? $package_set : (!empty($profile['machine_name']) ? $profile['machine_name'] : '');
     $options = array(
-      '_' => t('--All--'),
+      '' => t('--All--'),
     );
     foreach ($package_sets as $name => $set) {
       $options[$name] = $set['name'];

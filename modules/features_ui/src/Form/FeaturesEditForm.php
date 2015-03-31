@@ -98,6 +98,7 @@ class FeaturesEditForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, $featurename = '') {
+    $feature_set = $this->featuresManager->getNamespace();
     $this->assigner->assignConfigPackages();
     $packages = $this->featuresManager->getPackages();
     if (empty($packages[$featurename])) {
@@ -118,7 +119,8 @@ class FeaturesEditForm extends FormBase {
     );
     $form['info']['name'] = array(
       '#title' => t('Name'),
-      '#description' => t('Example: Image gallery') . ' (' . t('Do not begin name with numbers.') . ')',
+      '#description' => t('Example: Image gallery') . ' (' . t('Do not begin name with numbers.') . ')' . '<br/>' .
+        t('The namespace "!name_" will be prepended to the machine name', array('!name' => $feature_set)),
       '#type' => 'textfield',
       '#default_value' => $this->package['name'],
     );
@@ -126,7 +128,8 @@ class FeaturesEditForm extends FormBase {
       '#type' => 'machine_name',
       '#title' => t('Machine-readable name'),
       '#description' => t('Example: image_gallery') . '<br/>' .
-        t('NOTE: Do NOT include the namespace prefix; it will be added automatically. ') . t('May only contain lowercase letters, numbers and underscores.'),
+        t('NOTE: Do NOT include the namespace prefix "!name_"; it will be added automatically. ', array('!name' => $feature_set)) .
+        t('May only contain lowercase letters, numbers and underscores.'),
       '#required' => TRUE,
       '#default_value' => $this->package['machine_name_short'],
       '#machine_name' => array(
@@ -651,7 +654,7 @@ class FeaturesEditForm extends FormBase {
 
       $this->generator->applyExportFormSubmit($method_id, $form, $form_state);
     }
-    $form_state->setRedirect('features.edit', array('name' => $this->package['machine_name_short']));
+    $form_state->setRedirect('features.edit', array('featurename' => $this->package['machine_name_short']));
   }
 
   /**
