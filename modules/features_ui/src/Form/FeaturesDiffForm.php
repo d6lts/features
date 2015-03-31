@@ -123,20 +123,28 @@ class FeaturesDiffForm extends FormBase {
     $packages = $this->featuresManager->getPackages();
     $form = array();
 
+    $machine_name = '';
     if (!empty($featurename) && empty($packages[$featurename])) {
       drupal_set_message(t('Feature !name does not exist.', array('!name' => $featurename)), 'error');
       return array();
     }
     elseif (!empty($featurename)) {
+      $machine_name = $packages[$featurename]['machine_name'];
       $packages = array($packages[$featurename]);
     }
     else {
-      $featurename = $this->featuresManager->getNameSpace();
+      $this->featuresManager->getNameSpace();
       $packages = $this->featuresManager->filterPackages($packages);
+      if (count($packages) == 1) {
+        $machine_name = current($packages)['machine_name'];
+      }
     }
 
     $header = array(
-      'row' => array('data' => t('Differences in !name', array('!name' => $featurename))),
+      'row' => array('data' => !empty($machine_name)
+        ? t('Differences in !name', array('!name' => $machine_name))
+        : t('All differences')
+      ),
     );
 
     $options = array();

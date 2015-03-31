@@ -102,12 +102,7 @@ class FeaturesExportForm extends FormBase {
     }
     else {
       $package_set = $this->featuresManager->getNamespace();
-      if (!empty($package_set)) {
-        $this->featuresManager->applyNamespace($package_set);
-      }
-      else {
-        $this->assigner->assignConfigPackages();
-      }
+      $this->featuresManager->applyNamespace($package_set);
     }
     $packages = $this->featuresManager->getPackages();
 
