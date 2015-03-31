@@ -343,6 +343,36 @@ jQuery.fn.sortElements = (function(){
 
       // show the filter bar
       $('#features-filter', context).removeClass('element-invisible');
+
+      // handle Package selection checkboxes in the Differences page
+      $('.features-diff-listing .features-diff-header input.form-checkbox', context).click(function () {
+        var value = $(this).prop('checked');
+        $('.features-diff-listing .diff-'+$(this).prop('value')+' input.form-checkbox', context).each(function () {
+          $(this).prop('checked', value);
+          if (value) {
+            $(this).parents('tr').addClass('selected');
+          }
+          else {
+            $(this).parents('tr').removeClass('selected');
+          }
+        });
+      });
+
+      // handle clicking anywhere in row on Differences page
+      $('.features-diff-listing tr td:nth-child(2)', context).click(function () {
+        var checkbox = $(this).parent().find('td input:checkbox');
+        checkbox.prop('checked', !checkbox.prop('checked')).triggerHandler('click');
+        if (checkbox.prop('checked')) {
+          $(this).parents('tr').addClass('selected');
+        }
+        else {
+          $(this).parents('tr').removeClass('selected');
+        }
+      });
+      $('.features-diff-listing thead th:nth-child(2)', context).click(function () {
+        var checkbox = $(this).parent().find('th input:checkbox');
+        checkbox.click();
+      });
     }
   }
 

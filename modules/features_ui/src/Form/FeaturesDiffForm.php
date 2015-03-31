@@ -62,6 +62,13 @@ class FeaturesDiffForm extends FormBase {
   protected $diffFormatter;
 
   /**
+   * The config reverter.
+   *
+   * @var \Drupal\config_update\ConfigRevertInterface
+   */
+  protected $configRevert;
+
+  /**
    * The extension storage
    * @var \Drupal\Core\Config\StorageInterface
    */
@@ -74,12 +81,14 @@ class FeaturesDiffForm extends FormBase {
    *   The features manager.
    */
   public function __construct(FeaturesManagerInterface $features_manager, FeaturesAssignerInterface $assigner,
-                              StorageInterface $config_storage, ConfigDiffInterface $config_diff, DiffFormatter $diff_formatter) {
+                              StorageInterface $config_storage, ConfigDiffInterface $config_diff, DiffFormatter $diff_formatter,
+                              ConfigRevertInterface $config_revert) {
     $this->featuresManager = $features_manager;
     $this->assigner = $assigner;
     $this->configStorage = $config_storage;
     $this->configDiff = $config_diff;
     $this->diffFormatter = $diff_formatter;
+    $this->configRevert = $config_revert;
     $this->diffFormatter->show_header = FALSE;
     $this->extension_storage = new FeaturesInstallStorage($this->configStorage);
   }
@@ -93,7 +102,8 @@ class FeaturesDiffForm extends FormBase {
       $container->get('features_assigner'),
       $container->get('config.storage'),
       $container->get('config_update.config_diff'),
-      $container->get('diff.formatter')
+      $container->get('diff.formatter'),
+      $container->get('config_update.config_update')
     );
   }
 
@@ -119,27 +129,58 @@ class FeaturesDiffForm extends FormBase {
     elseif (!empty($featurename)) {
       $packages = array($packages[$featurename]);
     }
+    else {
+      $featurename = $this->featuresManager->getNameSpace();
+      $packages = $this->featuresManager->filterPackages($packages);
+    }
 
-    $form['diff'] = array();
+    $header = array(
+      'row' => array('data' => t('Differences in !name', array('!name' => $featurename))),
+    );
+
+    $options = array();
     foreach ($packages as $package_name => $package) {
       if ($package['status'] != FeaturesManagerInterface::STATUS_NO_EXPORT) {
         $overrides = $this->featuresManager->detectOverrides($package);
         if (!empty($overrides)) {
-          $form['diff'][$package_name]['title'] = array(
-            '#markup' => String::checkPlain($package['name']),
-            '#prefix' => '<h2>',
-            '#suffix' => '</h2>',
+          $options += array(
+            $package['machine_name_short'] => array(
+              'row' => array(
+                'data' => array(
+                  '#type' => 'html_tag',
+                  '#tag' => 'h2',
+                  '#value' => String::checkPlain($package['name']),
+                ),
+              ),
+              '#attributes' => array(
+                'class' => 'features-diff-header',
+              )
+            ),
           );
-          $form['diff'][$package_name]['diffs'] = $this->diffOutput($overrides);
+          $options += $this->diffOutput($package, $overrides);
         }
       }
     }
 
-    if (empty($form['diff'])) {
-      drupal_set_message(t('No differences exist in exported features.'));
-    }
+    $form['diff'] = array(
+      '#type' => 'tableselect',
+      '#header' => $header,
+      '#options' => $options,
+      '#attributes' => array('class' => array('features-diff-listing')),
+      '#empty' => t('No differences exist in exported features.'),
+    );
+
+    $form['actions'] = array('#type' => 'actions', '#tree' => TRUE);
+    $form['actions']['revert'] = array(
+      '#type' => 'submit',
+      '#value' => t('Import changes'),
+    );
+    $form['actions']['help'] = array(
+      '#markup' =>  t('Import the selected changes above into the active configuration.'),
+    );
 
     $form['#attached']['library'][] = 'system/diff';
+    $form['#attached']['library'][] = 'features_ui/drupal.features_ui.admin';
 
     return $form;
   }
@@ -148,10 +189,33 @@ class FeaturesDiffForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
+    $this->assigner->assignConfigPackages();
+    $config = $this->featuresManager->getConfigCollection();
+    $items = array_filter($form_state->getValue('diff'));
+    foreach ($items as $item) {
+      if (isset($config[$item])) {
+        $this->configRevert->revert($config[$item]['type'], $config[$item]['name_short']);
+        drupal_set_message(t('Imported !name', array('!name' => $item)));
+      }
+    }
   }
 
-  protected function diffOutput($overrides) {
-    $rows = array();
+  /**
+   * Return a form element for the given overrides
+   * @param $package
+   * @param $overrides
+   * @return array
+   */
+  protected function diffOutput($package, $overrides) {
+    $element = array();
+
+    $header = array(
+      array('data' => '', 'class' => 'diff-marker'),
+      array('data' => t('Active site config'), 'class' => 'diff-context'),
+      array('data' => '', 'class' => 'diff-marker'),
+      array('data' => t('Feature code config'), 'class' => 'diff-context'),
+    );
+
     foreach ($overrides as $name) {
       $rows[] = array(array('data' => $name, 'colspan' => 4, 'header' => TRUE));
 
@@ -161,24 +225,30 @@ class FeaturesDiffForm extends FormBase {
         $extension = array();
       }
       $diff = $this->configDiff->diff($extension, $active);
-      $rows += $this->diffFormatter->format($diff);
+      $details = array(
+        '#type' => 'table',
+        '#header' => $header,
+        '#rows' => $this->diffFormatter->format($diff),
+        '#attributes' => array('class' => array('diff', 'features-diff')),
+      );
+      $element[$name] = array(
+        'row' => array(
+          'data' => array(
+            '#type' => 'details',
+            '#title' => String::checkPlain($name),
+            '#open' => TRUE,
+            '#description' => array(
+              'data' => $details,
+            ),
+          ),
+        ),
+        '#attributes' => array(
+          'class' => 'diff-' . $package['machine_name_short'],
+        )
+      );
     }
 
-    $header = array(
-      array('data' => '', 'class' => 'diff-marker'),
-      array('data' => t('Active site config'), 'class' => 'diff-context'),
-      array('data' => '', 'class' => 'diff-marker'),
-      array('data' => t('Feature code config'), 'class' => 'diff-context'),
-    );
-
-    $output = array(
-      '#type' => 'table',
-      '#header' => $header,
-      '#rows' => $rows,
-      '#attributes' => array('class' => array('diff', 'features-diff')),
-    );
-
-    return $output;
+    return $element;
   }
 
 }
