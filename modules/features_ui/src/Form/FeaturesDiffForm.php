@@ -118,7 +118,8 @@ class FeaturesDiffForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, $featurename = '') {
-    $this->assigner->assignConfigPackages();
+    // Ensure all packages are available
+    $this->featuresManager->applyNamespace('');
     $packages = $this->featuresManager->getPackages();
     $form = array();
 

@@ -408,12 +408,13 @@ function drush_features_components() {
  */
 function drush_features_diff() {
   if (!$args = func_get_args()) {
-    drush_features_list();
+    drush_features_list_packages();
     return;
   }
-  _drush_features_options();
 
   $manager = \Drupal::service('features.manager');
+  // Ensure all packages are available for listing
+  $manager->applyNamespace('');
 
   $module = $args[0];
   $filter_ctypes = drush_get_option("ctypes");
