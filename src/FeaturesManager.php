@@ -178,8 +178,16 @@ class FeaturesManager implements FeaturesManagerInterface {
   public function applyNamespace($namespace = NULL) {
     if (isset($namespace)) {
       if (!isset($this->packages_sets)) {
+        // Need to compute the list of package sets from existing config modules
+        if (!isset($this->assigner)) {
+          $this->assigner = \Drupal::service('features_assigner');
+        }
         $this->assigner->assignConfigPackages();
         $this->refreshPackageNames();
+      }
+      if ($namespace == $this->profile['machine_name']) {
+        // return if no namespace change is needed
+        return;
       }
       $this->profile['machine_name'] = $namespace;
       if (isset($this->package_sets[$namespace])) {
@@ -192,7 +200,7 @@ class FeaturesManager implements FeaturesManagerInterface {
       $this->reset();
       $this->getConfigCollection(TRUE);
     }
-    // call the assignment plugins
+    // Now recompute the packages based on the namespace
     if (!isset($this->assigner)) {
       $this->assigner = \Drupal::service('features_assigner');
     }
