@@ -748,6 +748,15 @@ class FeaturesManager implements FeaturesManagerInterface {
       );
       $this->package_sets[$this->profile['machine_name']] = $set;
     }
+    $profile = $this->settings->get('profile');
+    if (!empty($profile['machine_name']) && ($profile['machine_name'] != $this->profile['machine_name'])) {
+      // Ensure profile stored in settings is also in package sets
+      $set = array(
+        'name' => $profile['name'],
+        'description' => $profile['description']
+      );
+      $this->package_sets[$profile['machine_name']] = $set;
+    }
     foreach ($packages as &$package) {
       $this->setPackageNames($package);
     }
