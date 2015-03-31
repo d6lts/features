@@ -248,10 +248,13 @@ class FeaturesExportForm extends FormBase {
     if (!empty($overrides) && ($package['status'] != FeaturesManagerInterface::STATUS_NO_EXPORT)) {
       $url = Url::fromRoute('features.diff', array('featurename' => $package['machine_name_short']));
       $element['state'] = array(
-        'data' => \Drupal::l($this->featuresManager->stateLabel(FeaturesManagerInterface::STATE_OVERRIDDEN), $url));
+        'data' => \Drupal::l($this->featuresManager->stateLabel(FeaturesManagerInterface::STATE_OVERRIDDEN), $url),
+        'class' => array('features-override'),
+      );
     }
     else {
       $element['state'] = '';
+      $overrides = array();
     }
 
     // Bundle package configuration by type.
@@ -261,6 +264,7 @@ class FeaturesExportForm extends FormBase {
       $package_config[$item['type']][] = array(
         'name' => String::checkPlain($item_name),
         'label' => String::checkPlain($item['label']),
+        'override' => in_array($item_name, $overrides),
       );
     }
     // Add dependencies.
@@ -270,6 +274,7 @@ class FeaturesExportForm extends FormBase {
         $package_config['dependencies'][] = array(
           'name' => $dependency,
           'label' => $this->moduleHandler->getName($dependency),
+          'override' => FALSE,
         );
       }
     }
