@@ -53,6 +53,13 @@ class FeaturesManager implements FeaturesManagerInterface {
   protected $configManager;
 
   /**
+   * The configuration factory.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   */
+  protected $configFactory;
+
+  /**
    * The module handler.
    *
    * @var \Drupal\Core\Extension\ModuleHandlerInterface
@@ -118,6 +125,8 @@ class FeaturesManager implements FeaturesManagerInterface {
    *   The target storage.
    * @param \Drupal\Core\Config\ConfigManagerInterface $config_manager
    *   The configuration manager.
+   * @param \Drupal\features\FeaturesAssignerInterface $assigner
+   *   The features assigner.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler.
    */
@@ -128,6 +137,7 @@ class FeaturesManager implements FeaturesManagerInterface {
     $this->configStorage = $config_storage;
     $this->configManager = $config_manager;
     $this->moduleHandler = $module_handler;
+    $this->configFactory = $config_factory;
     $this->settings = $config_factory->getEditable('features.settings');
     $this->assignmentSettings = $config_factory->getEditable('features.assignment');
     $this->packages = [];
@@ -179,9 +189,6 @@ class FeaturesManager implements FeaturesManagerInterface {
     if (isset($namespace)) {
       if (!isset($this->packages_sets)) {
         // Need to compute the list of package sets from existing config modules
-        if (!isset($this->assigner)) {
-          $this->assigner = \Drupal::service('features_assigner');
-        }
         $this->assigner->assignConfigPackages();
         $this->refreshPackageNames();
       }
@@ -201,9 +208,6 @@ class FeaturesManager implements FeaturesManagerInterface {
       $this->getConfigCollection(TRUE);
     }
     // Now recompute the packages based on the namespace
-    if (!isset($this->assigner)) {
-      $this->assigner = \Drupal::service('features_assigner');
-    }
     $this->assigner->assignConfigPackages();
     $this->refreshPackageNames();
   }

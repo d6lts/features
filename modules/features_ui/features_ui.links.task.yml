@@ -11,7 +11,7 @@ features.export:
 
 features.assignment:
   route_name: features.assignment
-  title: 'Configure Package Assigners'
+  title: 'Configure Bundles'
   parent_id: features.package
 
 features.settings:

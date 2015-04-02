@@ -214,3 +214,13 @@ details.features-export-component .details-wrapper {
   padding-left: 25px;
   padding-top: 0;
 }
+
+/** Styles for Bundle assignment config form **/
+#edit-bundles-wrapper .form-item-bundle-bundle-select {
+  display: inline-block;
+}
+
+#edit-bundles-wrapper #edit-bundle-remove {
+  display: inline-block;
+  font-size: 10px;
+}

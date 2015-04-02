@@ -105,6 +105,7 @@ function template_preprocess_features_assignment_configure_form(&$variables) {
 
   $table = array(
     '#type' => 'table',
+    '#weight' => 5,
     '#header' => $header,
     '#attributes' => array('id' => 'features-assignment-methods'),
     '#tabledrag' => array(
@@ -142,11 +143,12 @@ function template_preprocess_features_assignment_configure_form(&$variables) {
     }
   }
 
-  $variables += array(
-    'table' => $table,
-    'children' => $form,
-    'attributes' => new Attribute(),
-  );
+  // For some reason, the #weight is not being handled by drupal_render.
+  // So we remove the actions and then put them back into the form after the table.
+  $actions = $form['actions'];
+  unset($form['actions']);
+  $form['table'] = $table;
+  $form['actions'] = $actions;
 }
 
 /**
@@ -162,4 +164,8 @@ function theme_features_items(array $variables) {
   }
 
   return '<span class="features-item-list">' . implode(' ', $list) . '</span>';
+}
+
+function theme_assignment_form(array $variables) {
+  return drupal_render($variables['form']);
 }

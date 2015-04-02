@@ -201,6 +201,10 @@ class FeaturesDiffForm extends FormBase {
     $this->assigner->assignConfigPackages();
     $config = $this->featuresManager->getConfigCollection();
     $items = array_filter($form_state->getValue('diff'));
+    if (empty($items)) {
+      drupal_set_message('No configuration was selected for import.', 'warning');
+      return;
+    }
     foreach ($items as $item) {
       if (isset($config[$item])) {
         $this->configRevert->revert($config[$item]['type'], $config[$item]['name_short']);

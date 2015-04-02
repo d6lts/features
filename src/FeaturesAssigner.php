@@ -9,6 +9,7 @@ namespace Drupal\features;
 
 use Drupal\Component\Plugin\PluginManagerInterface;
 use Drupal\features\FeaturesManagerInterface;
+use Drupal\features\FeaturesBundle;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\StorageInterface;
 
@@ -16,6 +17,8 @@ use Drupal\Core\Config\StorageInterface;
  * Class responsible for performing package assignment.
  */
 class FeaturesAssigner implements FeaturesAssignerInterface {
+
+  const DEFAULTBUNDLE = '_default_';
 
   /**
    * The package assignment method plugin manager.
@@ -53,6 +56,17 @@ class FeaturesAssigner implements FeaturesAssignerInterface {
   protected $methods;
 
   /**
+   * @var array of \Drupal\features\FeaturesBundleInterface
+   */
+  protected $bundles;
+
+  /**
+   * Currently active bundle.
+   * @var \Drupal\features\FeaturesBundleInterface
+   */
+  protected $currentBundle;
+
+  /**
    * Constructs a new FeaturesAssigner object.
    *
    * @param \Drupal\features\FeaturesManagerInterface $features_manager
@@ -69,6 +83,8 @@ class FeaturesAssigner implements FeaturesAssignerInterface {
     $this->assignerManager = $assigner_manager;
     $this->configFactory = $config_factory;
     $this->configStorage = $config_storage;
+    $this->bundles = $this->getBundleList();
+    $this->currentBundle = $this->getBundle(self::DEFAULTBUNDLE);
   }
 
   /**
@@ -97,8 +113,8 @@ class FeaturesAssigner implements FeaturesAssignerInterface {
    *   An array of enabled assignment methods, sorted by weight.
    */
   public function getEnabledAssigners() {
-    $enabled = $this->configFactory->get('features.settings')->get('assignment.enabled');
-    $weights = $this->configFactory->get('features.settings')->get('assignment.method_weights');
+    $enabled = $this->currentBundle->getEnabledAssignments();
+    $weights = $this->currentBundle->getAssignmentWeights();
     foreach ($enabled as $key => $value) {
       $enabled[$key] = $weights[$key];
     }
@@ -156,20 +172,6 @@ class FeaturesAssigner implements FeaturesAssignerInterface {
   /**
    * {@inheritdoc}
    */
-  public function saveConfiguration($enabled_methods) {
-    $definitions = $this->getAssignmentMethods();
-
-    foreach ($enabled_methods as $method_id) {
-      if (!isset($definitions[$method_id])) {
-        unset($enabled_methods[$method_id]);
-      }
-    }
-    $this->configFactory->getEditable('features.settings')->set('assignment.enabled', $enabled_methods)->save();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function purgeConfiguration() {
     // Ensure that we are getting the defined package assignment information.
     // An invocation of \Drupal\Core\Extension\ModuleHandler::install() or
@@ -177,7 +179,126 @@ class FeaturesAssigner implements FeaturesAssignerInterface {
     // cached information.
     $this->assignerManager->clearCachedDefinitions();
     $this->featuresManager->reset();
-    $this->saveConfiguration($this->getEnabledAssigners());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getBundle($name = NULL) {
+    if (empty($name)) {
+      return $this->currentBundle;
+    }
+    elseif (isset($this->bundles[$name])) {
+      return $this->bundles[$name];
+    }
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setBundle(FeaturesBundleInterface $bundle, $current = TRUE) {
+    $this->bundles[$bundle->getMachineName()] = $bundle;
+    if (isset($this->currentBundle) && ($current || ($bundle->getMachineName() == $this->currentBundle->getMachineName()))) {
+      $this->setCurrent($bundle);
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setCurrent(FeaturesBundleInterface $bundle) {
+    $this->currentBundle = $bundle;
+    $session = \Drupal::request()->getSession();
+    $session->set('features_current_bundle', $bundle->getMachineName());
+    return $bundle;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getBundleList() {
+    if (empty($this->bundles)) {
+      $this->bundles = array();
+      $this->bundles[self::DEFAULTBUNDLE] = new FeaturesBundle('', $this->featuresManager, $this, $this->configFactory);
+      $this->bundles[self::DEFAULTBUNDLE]->load();
+      $bundles = array_keys($this->configFactory->get('features.bundles')->get());
+      foreach ($bundles as $machine_name) {
+        $bundle = new FeaturesBundle($machine_name, $this->featuresManager, $this, $this->configFactory);
+        $bundle->load();
+        $this->bundles[$machine_name] = $bundle;
+      }
+    }
+    return $this->bundles;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getBundleOptions($default_name = NULL) {
+    $list = $this->getBundleList();
+    $result = array();
+    foreach ($list as $machine_name => $bundle) {
+      $result[$machine_name] = (isset($default_name) && $bundle->isDefault()) ? $default_name : $bundle->getName();
+    }
+    return $result;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function applyBundle($machine_name) {
+    $this->reset();
+    $this->setCurrent($this->getBundle($machine_name));
+    $this->assignConfigPackages();
+    return $this->currentBundle;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function renameBundle($old_machine, $new_machine) {
+    $is_current = (isset($this->currentBundle) && ($old_machine == $this->currentBundle->getMachineName()));
+    $bundle = $this->getBundle($old_machine);
+    if ($bundle->getMachineName() != '') {
+      // remove old bundle from the list if it's not the Default bundle
+      unset($this->bundles[$old_machine]);
+    }
+    $bundle->setMachineName($new_machine);
+    $this->setBundle($bundle);
+    // put the bundle into the list with the correct name
+    $this->bundles[$bundle->getMachineName()] = $bundle;
+    if ($is_current) {
+      $this->setCurrent($bundle);
+    }
+    return $bundle;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function loadBundle($machine_name = NULL) {
+    if (!isset($machine_name)) {
+      $session = \Drupal::request()->getSession();
+      $machine_name = $session->get('features_current_bundle', '');
+    }
+    $bundle = $this->getBundle($machine_name);
+    if (!isset($bundle)) {
+      // If bundle no longer exists then return default
+      $bundle = $this->bundles[self::DEFAULTBUNDLE];
+    }
+    return $this->setCurrent($bundle->load());
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function removeBundle($machine_name) {
+    $bundle = $this->getBundle($machine_name);
+    if (isset($bundle) && !$bundle->isDefault()) {
+      unset($this->bundles[$machine_name]);
+      $bundle->remove();
+    }
   }
 
 }

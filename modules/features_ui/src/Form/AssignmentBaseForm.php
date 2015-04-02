@@ -15,6 +15,8 @@ use Drupal\Core\Form\FormStateInterface;
  */
 class AssignmentBaseForm extends AssignmentFormBase {
 
+  CONST METHODID = 'base';
+
   /**
    * {@inheritdoc}
    */
@@ -25,10 +27,11 @@ class AssignmentBaseForm extends AssignmentFormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state) {
+  public function buildForm(array $form, FormStateInterface $form_state, $bundle_name = NULL) {
+    $this->current_bundle = $this->assigner->loadBundle($bundle_name);
+    $settings = $this->current_bundle->getAssignmentSettings(self::METHODID);
 
-    $defaults = $this->configFactory->get('features.assignment')->get('base.types');
-    $this->setTypeSelect($form, $defaults, $this->t('base'));
+    $this->setTypeSelect($form, $settings['types'], $this->t('base'));
     $this->setActions($form);
 
     return $form;
@@ -38,11 +41,12 @@ class AssignmentBaseForm extends AssignmentFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $types = array_filter($form_state->getValue('types'));
+    $settings = array(
+      'types' => array_filter($form_state->getValue('types')),
+    );
+    $this->current_bundle->getAssignmentSettings(self::METHODID, $settings)->save();
+    $this->setRedirect($form_state);
 
-    $this->configFactory->getEditable('features.assignment')->set('base.types', $types)->save();
-
-    $form_state->setRedirect('features.assignment');
     drupal_set_message($this->t('Package assignment configuration saved.'));
   }
 

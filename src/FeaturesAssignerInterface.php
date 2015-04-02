@@ -68,16 +68,71 @@ interface FeaturesAssignerInterface {
   public function getAssignmentMethods();
 
   /**
-   * Saves a list of package assignment methods.
-   *
-   * @param array $enabled_methods
-   *   An array of package assignment method IDs.
-   */
-  public function saveConfiguration($enabled_methods);
-
-  /**
    * Resave the configuration to purge missing assignment methods.
    */
   public function purgeConfiguration();
+
+  /**
+   * Return a FeaturesBundle object
+   * @param $name
+   *   machine name of package set.  If omitted, return the current bundle.
+   * @return \Drupal\features\FeaturesBundleInterface
+   */
+  public function getBundle($name = NULL);
+
+  /**
+   * Stores a features bundle.  Added to list if machine_name is new
+   * @param \Drupal\features\FeaturesBundleInterface $bundle
+   * @param bool $current
+   *   Determine if the current bundle is set to $bundle
+   *   If False, the current bundle is only updated if it already has the same machine
+   *   name as the $bundle
+   */
+  public function setBundle(FeaturesBundleInterface $bundle, $current = TRUE);
+
+  /**
+   * Sets the currently active bundle
+   * Updates value in current SESSION
+   * @param \Drupal\features\FeaturesBundleInterface $bundle
+   */
+  public function setCurrent(FeaturesBundleInterface $bundle);
+
+  /**
+   * Returns an array of all existing features bundles
+   * @return array
+   *   keyed by machine_name with value of /Drupal/features/FeaturesBundleInterface
+   */
+  public function getBundleList();
+
+  /**
+   * Return an array of bundle names suitable for a select option list.
+   * @param string $default_text
+   *   The optional label for the default bundle in the list.
+   * @return array of bundles, keyed by machine_name, value is human name.
+   */
+  public function getBundleOptions($default_text = NULL);
+
+  /**
+   * Make the named bundle the current bundle.
+   * @param string $machine_name
+   * @return \Drupal\features\FeaturesBundleInterface
+   */
+  public function applyBundle($machine_name);
+
+  /**
+   * Rename a bundle
+   * @param $old_machine
+   * @param $new_machine
+   * @return \Drupal\features\FeaturesBundleInterface
+   */
+  public function renameBundle($old_machine, $new_machine);
+
+  /**
+   * Load a named bundle.
+   * @param string $bundle_name
+   *   If omitted, get the last bundle from the Session
+   * @return \Drupal\features\FeaturesBundleInterface
+   */
+  public function loadBundle($machine_name = NULL);
 
 }

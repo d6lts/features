@@ -20,25 +20,23 @@ use Symfony\Component\DependencyInjection\ContainerInterface;
 abstract class AssignmentFormBase extends FormBase {
 
   /**
-   * Stores the configuration object for features.
-   *
-   * @var \Drupal\Core\Config\ConfigFactoryInterface
-   */
-  protected $configFactory;
-
-  /**
-   * Stores the configuration storage object for features.
-   *
-   * @var \Drupal\Core\Config\StorageInterface
-   */
-  protected $configStorage;
-
-  /**
    * The features manager.
    *
    * @var \Drupal\features\FeaturesManagerInterface
    */
   protected $featuresManager;
+
+  /**
+   * The package assigner.
+   *
+   * @var \Drupal\features\FeaturesAssignerInterface
+   */
+  protected $assigner;
+
+  /**
+   * @var \Drupal\features\FeaturesBundleInterface
+   */
+  protected $current_bundle;
 
   /**
    * Constructs a AssignmentBaseForm object.
@@ -48,9 +46,9 @@ abstract class AssignmentFormBase extends FormBase {
    * @param \Drupal\features\FeaturesManagerInterface $features_manager
    *   The features manager.
    */
-  public function __construct(ConfigFactoryInterface $config_factory, FeaturesManagerInterface $features_manager) {
-    $this->configFactory = $config_factory;
+  public function __construct(FeaturesManagerInterface $features_manager, FeaturesAssignerInterface $assigner) {
     $this->featuresManager = $features_manager;
+    $this->assigner = $assigner;
   }
 
   /**
@@ -58,8 +56,8 @@ abstract class AssignmentFormBase extends FormBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('config.factory'),
-      $container->get('features.manager')
+      $container->get('features.manager'),
+      $container->get('features_assigner')
     );
   }
 
@@ -88,6 +86,14 @@ abstract class AssignmentFormBase extends FormBase {
       '#button_type' => 'primary',
       '#value' => $this->t('Save settings'),
     );
+  }
+
+  /**
+   * Redirect back to the Bundle config form
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   */
+  protected function setRedirect(FormStateInterface $form_state) {
+    $form_state->setRedirect('features.assignment', array('bundle_name' => $this->current_bundle->getMachineName()));
   }
 
 }

@@ -21,7 +21,7 @@ function features_help($route_name, RouteMatchInterface $route_match) {
       return $output;
     case 'features.assignment':
       $output = '';
-      $output .= '<p>' . t('Enable package assignment methods and select the order in which they will be run.') . '</p>';
+      $output .= '<p>' . t('Manage bundles and assignment methods and select the order in which they will be run.') . '</p>';
       return $output;
     case 'features.export':
       $output = '';

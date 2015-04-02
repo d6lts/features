@@ -20,6 +20,7 @@ function features_ui_theme() {
     'features_assignment_configure_form' => array(
       'render element' => 'form',
       'file' => 'features_ui.admin.inc',
+      'function' => 'theme_assignment_form',
     ),
     'features_items' => array(
       'variables' => array(

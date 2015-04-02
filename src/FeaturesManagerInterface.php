@@ -82,7 +82,6 @@ interface FeaturesManagerInterface {
    */
   public function getNameSpace();
 
-
   /**
    * Sets an array of site configuration.
    *

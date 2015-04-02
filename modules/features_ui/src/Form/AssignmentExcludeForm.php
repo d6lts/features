@@ -9,11 +9,15 @@ namespace Drupal\features_ui\Form;
 
 use Drupal\features_ui\Form\AssignmentFormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\features\FeaturesBundleInterface;
+
 
 /**
  * Configures the selected configuration assignment method for this site.
  */
 class AssignmentExcludeForm extends AssignmentFormBase {
+
+  CONST METHODID = 'exclude';
 
   /**
    * {@inheritdoc}
@@ -25,17 +29,19 @@ class AssignmentExcludeForm extends AssignmentFormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state) {
+  public function buildForm(array $form, FormStateInterface $form_state, $bundle_name = NULL) {
+    $this->current_bundle = $this->assigner->loadBundle($bundle_name);
 
-    $settings = $this->configFactory->get('features.assignment');
-    $this->setTypeSelect($form, $settings->get('exclude.types'), $this->t('exclude'));
+    $settings = $this->current_bundle->getAssignmentSettings(self::METHODID);
+    $this->setTypeSelect($form, $settings['types'], $this->t('exclude'));
 
-    $module_settings = $settings->get('exclude.module');
+    $module_settings = $settings['module'];
+    $curated_settings = $settings['curated'];
 
     $form['curated'] = array(
       '#type' => 'checkbox',
       '#title' => t('Exclude designated site-specific configuration'),
-      '#default_value' => $settings->get('exclude.curated'),
+      '#default_value' => $curated_settings,
       '#description' => $this->t('Select this option to exclude from packaging items on a curated list of site-specific configuration.'),
     );
 
@@ -68,7 +74,7 @@ class AssignmentExcludeForm extends AssignmentFormBase {
       '#states' => $show_if_module_enabled_checked,
     );
 
-    $machine_name = $this->configFactory->get('features.settings')->get('profile.machine_name');
+    $machine_name = $this->current_bundle->getMachineName();
     $form['module']['namespace'] = array(
       '#type' => 'checkbox',
       '#title' => t("Don't exclude configuration by namespace"),
@@ -89,14 +95,15 @@ class AssignmentExcludeForm extends AssignmentFormBase {
     $types = array_filter($form_state->getValue('types'));
     $curated = $form_state->getValue('curated');
     $module = $form_state->getValue('module');
+    $settings = array(
+      'types' => $types,
+      'curated' => $curated,
+      'module' => $module,
+    );
 
-    $this->configFactory->getEditable('features.assignment')
-      ->set('exclude.types', $types)
-      ->set('exclude.curated', $curated)
-      ->set('exclude.module', $module)
-      ->save();
+    $this->current_bundle->setAssignmentSettings(self::METHODID, $settings)->save();
 
-    $form_state->setRedirect('features.assignment');
+    $this->setRedirect($form_state);
     drupal_set_message($this->t('Package assignment configuration saved.'));
   }
 

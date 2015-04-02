@@ -36,7 +36,12 @@ class FeaturesAssignmentExisting extends FeaturesAssignmentMethodBase {
     foreach ($existing as $name => $info) {
       $feature_name = $this->featuresManager->getFeatureName($info);
       $config = $this->featuresManager->listExtensionConfig($name);
-      $this->featuresManager->assignConfigPackage($feature_name, $config);
+      try {
+        $this->featuresManager->assignConfigPackage($feature_name, $config);
+      }
+      catch(\Exception $exception) {
+        \Drupal::logger('features')->error($exception->getMessage());
+      }
     }
   }
 

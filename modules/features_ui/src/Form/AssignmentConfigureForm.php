@@ -70,33 +70,106 @@ class AssignmentConfigureForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function buildForm(array $form, FormStateInterface $form_state) {
-    $assignment_info = $this->assigner->getAssignmentMethods();
+  public function buildForm(array $form, FormStateInterface $form_state, $bundle_name = NULL) {
+    $trigger = $form_state->getTriggeringElement();
+    if ($trigger['#name'] == 'bundle[bundle_select]') {
+      $bundle_name = $form_state->getValue(array('bundle', 'bundle_select'));
+      $this->assigner->setCurrent($this->assigner->getBundle($bundle_name));
+      // Setting the form values to the newly selected Bundle via Ajax is hard.
+      // #default_values is ignored after form is submitted
+      // Can set #value in the Ajax callback, but doesn't work for checkboxes.
+      // So let's just reload the page.
+      return $this->redirect('features.assignment', array($bundle_name));
+    }
+    else if ($trigger['#name'] == 'removebundle') {
+      $current_bundle = $this->assigner->loadBundle($bundle_name);
+      $bundle_name = $current_bundle->getMachineName();
+      $this->assigner->removeBundle($bundle_name);
+      return $this->redirect('features.assignment', array(''));
+    }
+    $current_bundle = $this->assigner->loadBundle($bundle_name);
 
-    $settings = \Drupal::config('features.settings');
-    $enabled_methods = $settings->get('assignment.enabled') ?: array();
-    $methods_weight = $settings->get('assignment.method_weights') ?: array();
+    $settings = $current_bundle->getSettings();
+    $enabled_methods = $current_bundle->getEnabledAssignments();
+    $methods_weight = $current_bundle->getAssignmentWeights();
 
     // Add missing data to the methods lists.
+    $assignment_info = $this->assigner->getAssignmentMethods();
     foreach ($assignment_info as $method_id => $method) {
       if (!isset($methods_weight[$method_id])) {
         $methods_weight[$method_id] = isset($method['weight']) ? $method['weight'] : 0;
       }
     }
 
-    // Order methods list by weight.
-    asort($methods_weight);
-
     $form = array(
-      '#tree' => TRUE,
-      '#show_operations' => FALSE,
-      'weight' => array('#tree' => TRUE),
       '#attached' => array(
         'library' => array(
           'features_ui/drupal.features_ui.admin',
         ),
       ),
+      //'#attributes' => array('class' => 'edit-bundles-wrapper'),
+      '#tree' => TRUE,
+      '#show_operations' => FALSE,
+      'weight' => array('#tree' => TRUE),
+      '#prefix' => '<div id="edit-bundles-wrapper">',
+      '#suffix' => '</div>',
     );
+
+    $form['bundle'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Bundle'),
+      '#tree' => TRUE,
+      '#weight' => -9,
+    );
+
+    $form['bundle']['bundle_select'] = array(
+      '#title' => t('Bundle'),
+      '#title_display' => 'invisible',
+      '#type' => 'select',
+      '#options' => $this->assigner->getBundleOptions(t('--New--')),
+      '#default_value' => $current_bundle->getMachineName(),
+      '#ajax' => array(
+        'callback' => '::updateForm',
+        'wrapper' => 'edit-bundles-wrapper',
+      ),
+    );
+
+    if (!$current_bundle->isDefault()) {
+      $form['bundle']['remove'] = array(
+        '#type' => 'button',
+        '#name' => 'removebundle',
+        '#value' => t('Remove bundle'),
+      );
+    }
+
+    $form['bundle']['name'] = array(
+      '#title' => $this->t('Bundle name'),
+      '#type' => 'textfield',
+      '#description' => $this->t('A unique human-readable name of this bundle.'),
+      '#default_value' => $current_bundle->isDefault() ? '' : $current_bundle->getName(),
+    );
+
+    $form['bundle']['machine_name'] = array(
+      '#title' => $this->t('Machine name'),
+      '#type' => 'machine_name',
+      '#required' => FALSE,
+      '#default_value' => $current_bundle->getMachineName(),
+      '#description' => $this->t('A unique machine-readable name of this bundle.  Used to prefix exported packages. It must only contain lowercase letters, numbers, and underscores.'),
+      '#machine_name' => array(
+        'source' => array('bundle', 'name'),
+      ),
+    );
+
+    $form['bundle']['description'] = array(
+      '#title' => $this->t('Distribution description'),
+      '#type' => 'textfield',
+      '#default_value' => $current_bundle->isDefault() ? '' : $current_bundle->getDescription(),
+      '#description' => $this->t('A description of the bundle.'),
+      '#size' => 80,
+    );
+
+    // Order methods list by weight.
+    asort($methods_weight);
 
     foreach ($methods_weight as $method_id => $weight) {
 
@@ -135,7 +208,7 @@ class AssignmentConfigureForm extends FormBase {
       if (isset($method['config_route_name'])) {
         $config_op['configure'] = array(
           'title' => $this->t('Configure'),
-          'url' => Url::fromRoute($method['config_route_name']),
+          'url' => Url::fromRoute($method['config_route_name'], array('bundle_name' => $current_bundle->getMachineName())),
         );
         // If there is at least one operation enabled show the operation
         // column.
@@ -147,13 +220,20 @@ class AssignmentConfigureForm extends FormBase {
       );
     }
 
-    $form['actions'] = array('#type' => 'actions');
+    $form['actions'] = array('#type' => 'actions', '#weight' => 9);
     $form['actions']['submit'] = array(
       '#type' => 'submit',
       '#button_type' => 'primary',
       '#value' => $this->t('Save settings'),
     );
 
+    return $form;
+  }
+
+  /**
+   * Ajax callback for handling switching the bundle selector.
+   */
+  public function updateForm($form, FormStateInterface $form_state) {
     return $form;
   }
 
@@ -167,9 +247,18 @@ class AssignmentConfigureForm extends FormBase {
     $method_weights = $form_state->getValue('weight');
     ksort($method_weights);
 
-    $settings = \Drupal::configFactory()->getEditable('features.settings');
-    $settings->set('assignment.method_weights', $method_weights)->save();
-    $this->assigner->saveConfiguration($enabled_methods);
+    $current_bundle = $this->assigner->getBundle();
+    $old_name = $current_bundle->getMachineName();
+    $new_name = $form_state->getValue(array('bundle', 'machine_name'));
+    if ($old_name != $new_name) {
+      $current_bundle = $this->assigner->renameBundle($old_name, $new_name);
+    }
+    $current_bundle->setName($form_state->getValue(array('bundle', 'name')));
+    $current_bundle->setDescription($form_state->getValue(array('bundle', 'description')));
+    $current_bundle->setEnabledAssignments(array_keys($enabled_methods));
+    $current_bundle->setAssignmentWeights($method_weights);
+    $current_bundle->save();
+    $this->assigner->setBundle($current_bundle);
 
     $form_state->setRedirect('features.assignment');
     drupal_set_message($this->t('Package assignment configuration saved.'));
