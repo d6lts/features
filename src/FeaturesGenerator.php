@@ -9,7 +9,7 @@ namespace Drupal\features;
 
 use Drupal\Component\Plugin\PluginManagerInterface;
 use Drupal\features\FeaturesManagerInterface;
-use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\features\FeaturesAssignerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 
@@ -34,11 +34,11 @@ class FeaturesGenerator implements FeaturesGeneratorInterface {
   protected $featuresManager;
 
   /**
-   * The configuration factory.
+   * The features assigner.
    *
-   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   * @var \Drupal\features\FeaturesAssignerInterface
    */
-  protected $configFactory;
+  protected $assigner;
 
   /**
    * Local cache for package generation method instances.
@@ -55,10 +55,10 @@ class FeaturesGenerator implements FeaturesGeneratorInterface {
    * @param \Drupal\Component\Plugin\PluginManagerInterface $generator_manager
    *   The package generation methods plugin manager.
    */
-  public function __construct(FeaturesManagerInterface $features_manager, PluginManagerInterface $generator_manager, ConfigFactoryInterface $config_factory) {
+  public function __construct(FeaturesManagerInterface $features_manager, PluginManagerInterface $generator_manager, FeaturesAssignerInterface $assigner) {
     $this->featuresManager = $features_manager;
     $this->generatorManager = $generator_manager;
-    $this->configFactory = $config_factory;
+    $this->assginer = $assigner;
   }
 
   /**
@@ -82,11 +82,10 @@ class FeaturesGenerator implements FeaturesGeneratorInterface {
   /**
    * {@inheritdoc}
    */
-  public function applyGenerationMethod($method_id, $add_profile = FALSE, array $packages = array()) {
+  public function applyGenerationMethod($method_id, array $packages = array(), FeaturesBundleInterface $bundle = NULL) {
     $method = $this->getGenerationMethodInstance($method_id);
-    $profile = $add_profile ? $this->featuresManager->getProfile() : array();
-    $method->prepare($add_profile, $profile, $packages);
-    return $method->generate($add_profile, $profile, $packages);
+    $method->prepare($packages, $bundle);
+    return $method->generate($packages, $bundle);
   }
 
   /**
@@ -117,7 +116,7 @@ class FeaturesGenerator implements FeaturesGeneratorInterface {
     if (!isset($this->methods[$method_id])) {
       $instance = $this->generatorManager->createInstance($method_id, array());
       $instance->setFeaturesManager($this->featuresManager);
-      $instance->setConfigFactory($this->configFactory);
+      $instance->setAssigner($this->assigner);
       $this->methods[$method_id] = $instance;
     }
     return $this->methods[$method_id];
@@ -126,27 +125,8 @@ class FeaturesGenerator implements FeaturesGeneratorInterface {
   /**
    * {@inheritdoc}
    */
-  public function generatePackages($method_id, array $package_names = array(), $short_names = TRUE) {
-    // If we have specific package names requested not in the short format,
-    // convert them to the short format.
-    if (!empty($package_names) && !$short_names) {
-      $package_names = $this->featuresManager->listPackageMachineNamesShort($package_names);
-    }
-
-    return $this->generate($method_id, FALSE, $package_names);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function generateProfile($method_id, array $package_names = array(), $short_names = TRUE) {
-    // If we have specific package names requested not in the short format,
-    // convert them to the short format.
-    if (!empty($package_names) && !$short_names) {
-      $package_names = $this->featuresManager->listPackageMachineNamesShort($package_names);
-    }
-
-    return $this->generate($method_id, TRUE, $package_names);
+  public function generatePackages($method_id, array $package_names = array(), FeaturesBundleInterface $bundle = NULL) {
+    return $this->generate($method_id, $package_names, $bundle);
   }
 
   /**
@@ -155,11 +135,11 @@ class FeaturesGenerator implements FeaturesGeneratorInterface {
    *
    * @param string $method_id
    *   The ID of the generation method to use.
-   * @param boolean $add_profile
-   *   Whether to add an install profile. Defaults to FALSE.
    * @param string[] $package_names
    *   Names of packages to be generated. If none are specified, all
    *   available packages will be added.
+   * @param \Drupal\features\FeaturesBundleInterface $bundle
+   *   The optional bundle used for the generation.  Used to generate profiles.
    *
    * @return array
    *   Array of results for profile and/or packages, each result including the
@@ -170,10 +150,9 @@ class FeaturesGenerator implements FeaturesGeneratorInterface {
    *   - 'message': a message about the result of the operation.
    *   - 'variables': an array of substitutions to be used in the message.
    */
-  protected function generate($method_id, $add_profile = FALSE, array $package_names = array()) {
+  protected function generate($method_id, array $package_names = array(), FeaturesBundleInterface $bundle = NULL) {
     // Prepare the files.
-    $this->featuresManager->prepareFiles($add_profile);
-  
+    $this->featuresManager->prepareFiles();
     $packages = $this->featuresManager->getPackages();
 
     // Filter out the packages that weren't requested.
@@ -181,7 +160,7 @@ class FeaturesGenerator implements FeaturesGeneratorInterface {
       $packages = array_intersect_key($packages, array_fill_keys($package_names, NULL));
     }
 
-    $return = $this->applyGenerationMethod($method_id, $add_profile, $packages);
+    $return = $this->applyGenerationMethod($method_id, $packages, $bundle);
 
     foreach ($return as $message) {
       if ($message['display']) {

@@ -46,6 +46,13 @@ class FeaturesManager implements FeaturesManagerInterface {
   protected $configStorage;
 
   /**
+   * The extension storage.
+   *
+   * @var \Drupal\Core\Config\StorageInterface
+   */
+  protected $extensionStorage;
+
+  /**
    * The configuration manager.
    *
    * @var \Drupal\Core\Config\ConfigManagerInterface
@@ -95,19 +102,6 @@ class FeaturesManager implements FeaturesManagerInterface {
   protected $packages;
 
   /**
-   * The list of defined package sets
-   * @var array
-   */
-  protected $package_sets;
-
-  /**
-   * The install profile, also used as the "package" value in info files.
-   *
-   * @var array
-   */
-  protected $profile;
-
-  /**
    * The package assigner.
    *
    * @var \Drupal\features\FeaturesAssigner
@@ -140,10 +134,23 @@ class FeaturesManager implements FeaturesManagerInterface {
     $this->configFactory = $config_factory;
     $this->settings = $config_factory->getEditable('features.settings');
     $this->assignmentSettings = $config_factory->getEditable('features.assignment');
+    $this->extensionStorage = new FeaturesInstallStorage($this->configStorage);
     $this->packages = [];
-    $this->package_sets = NULL;
-    $this->initProfile();
     $this->configCollection = [];
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getActiveStorage() {
+    return $this->configStorage;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getExtensionStorage() {
+    return $this->extensionStorage;
   }
 
   /**
@@ -164,7 +171,6 @@ class FeaturesManager implements FeaturesManagerInterface {
    */
   public function reset() {
     $this->packages = [];
-    $this->package_sets = NULL;
     // Don't use getConfigCollection because reset() may be called in
     // cases where we don't need to load config.
     foreach ($this->configCollection as &$config) {
@@ -180,77 +186,6 @@ class FeaturesManager implements FeaturesManagerInterface {
   public function getConfigCollection($reset = FALSE) {
     $this->initConfigCollection($reset);
     return $this->configCollection;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function applyNamespace($namespace = NULL) {
-    if (isset($namespace)) {
-      if (!isset($this->packages_sets)) {
-        // Need to compute the list of package sets from existing config modules
-        $this->assigner->assignConfigPackages();
-        $this->refreshPackageNames();
-      }
-      if ($namespace == $this->profile['machine_name']) {
-        // return if no namespace change is needed
-        return;
-      }
-      $this->profile['machine_name'] = $namespace;
-      if (isset($this->package_sets[$namespace])) {
-        $this->profile['name'] = $this->package_sets[$namespace]['name'];
-        $this->profile['description'] = $this->package_sets[$namespace]['description'];
-      }
-    }
-    if (isset($this->configCollection)) {
-      // force recalculation of config if already created
-      $this->reset();
-      $this->getConfigCollection(TRUE);
-    }
-    // Now recompute the packages based on the namespace
-    $this->assigner->assignConfigPackages();
-    $this->refreshPackageNames();
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setNameSpace($namespace = NULL, $name = '', $description = '') {
-    if (isset($namespace)) {
-      $this->profile['name'] = !empty($name) ? $name : $namespace;
-      $this->profile['machine_name'] = $namespace;
-      $this->profile['description'] = '';
-      if (isset($this->package_sets[$namespace])) {
-        if (empty($name)) {
-          $this->profile['name'] = $this->package_sets[$namespace]['name'];
-        }
-        if (empty($description)) {
-          $this->profile['description'] = $this->package_sets[$namespace]['description'];
-        }
-      }
-      $this->profile['machine_name_short'] = $this->profile['machine_name'];
-      $this->profile['name_short'] = $this->profile['name'];
-    }
-    $session = \Drupal::request()->getSession();
-    $session->set('features_namespace_name', $this->profile['name']);
-    $session->set('features_namespace_machine_name', $this->profile['machine_name']);
-    $session->set('features_namespace_description', $this->profile['description']);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getNameSpace() {
-    $session = \Drupal::request()->getSession();
-    $machine_name = $session->get('features_namespace_machine_name');
-    if (!empty($machine_name)) {
-      $this->profile['name'] = $session->get('features_namespace_name');
-      $this->profile['name_short'] = $session->get('features_namespace_name');
-      $this->profile['machine_name'] = $machine_name;
-      $this->profile['machine_name_short'] = $machine_name;
-      $this->profile['description'] = $session->get('features_namespace_description');
-    }
-    return $machine_name;
   }
 
   /**
@@ -277,19 +212,30 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * {@inheritdoc}
    */
+  public function getPackage($machine_name) {
+    if (isset($this->packages[$machine_name])) {
+      return $this->packages[$machine_name];
+    }
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function savePackage(array &$package) {
-    if (!empty($package['machine_name_short'])) {
+    if (!empty($package['machine_name'])) {
       $this->addPackageFiles($package);
-      $this->packages[$package['machine_name_short']] = $package;
+      $this->packages[$package['machine_name']] = $package;
     }
   }
 
   /**
    * {@inheritdoc}
    */
-  public function filterPackages(array $packages) {
-    $profile = $this->getProfile();
-    $namespace = $profile['machine_name'];
+  public function filterPackages(array $packages, $namespace = '') {
+    if (!empty($namespace)) {
+      $namespace .= '_';
+    }
     $result = array();
     foreach ($packages as $key => $package) {
       if (empty($namespace) || (strpos($package['machine_name'], $namespace) === 0) || ($package['machine_name'] == $package['machine_name_short'])) {
@@ -300,31 +246,6 @@ class FeaturesManager implements FeaturesManagerInterface {
   }
 
   /**
-   * {@inheritdoc}
-   */
-  public function getPackageSets() {
-    if (!isset($this->package_sets)) {
-      $this->refreshPackageNames();
-    }
-    return $this->package_sets;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getProfile() {
-    return $this->profile;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setProfile(array $profile) {
-    $this->profile = $profile;
-    // Ensure package names are current.
-    $this->refreshPackageNames();
-  }
-
   /**
    * {@inheritdoc}
    */
@@ -366,27 +287,6 @@ class FeaturesManager implements FeaturesManagerInterface {
    */
   public function getSettings() {
     return $this->settings;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getAssignmentSettings() {
-    return $this->assignmentSettings;
-  }
-
-  /**
-   * Initializes the profile based on stored settings.
-   */
-  protected function initProfile() {
-    if (empty($this->profile)) {
-      $profileSettings = $this->settings->get('profile');
-      $this->assignProfile(
-        $profileSettings['machine_name'],
-        $profileSettings['name'],
-        $profileSettings['description']
-      );
-    }
   }
 
   /**
@@ -443,20 +343,7 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function getFeatureName($info) {
-    // The original machine_name_short was stored in the "features" key in the info file.
-    // Also support having the name stored as a subkey of the "features" config section.
-    $feature_name = $info['features'];
-    if (is_array($feature_name)) {
-      $feature_name = $feature_name['name'];
-    }
-    return $feature_name;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function getExistingPackages($enabled = FALSE, $namespace = NULL) {
+  public function getExistingPackages($enabled = FALSE) {
     $result = array();
     if ($enabled) {
       $modules = $this->moduleHandler->getModuleList();
@@ -468,10 +355,8 @@ class FeaturesManager implements FeaturesManagerInterface {
       $modules = $listing->scan('module');
     }
     foreach ($modules as $name => $module) {
-      if (empty($namespace) || (strpos($name, $namespace) === 0)) {
-        if ($this->isFeatureModule($module)) {
-          $result[$name] = $this->getExtensionInfo($module);
-        }
+      if ($this->isFeatureModule($module)) {
+        $result[$name] = $this->getExtensionInfo($module);
       }
     }
     return $result;
@@ -480,20 +365,17 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function listPackageDirectories(array $machine_names = array(), $add_profile = FALSE) {
+  public function listPackageDirectories(array $machine_names = array(), FeaturesBundleInterface $bundle = NULL) {
     if (empty($machine_names)) {
-      $machine_names = $this->listPackageMachineNames();
+      $machine_names = array_keys($this->getPackages());
     }
 
-    // If the add_profile argument was set, add the profile's machine name.
-    if ($add_profile) {
-      $profile = $this->getProfile();
-      if (!empty($profile['machine_name'])) {
-        $machine_names[] = $profile['machine_name'];
-      }
+    // If the bundle is a profile, then add the profile's machine name.
+    if (isset($bundle) && $bundle->isProfile() && !in_array($bundle->getProfileName(), $machine_names)) {
+      $machine_names[] = $bundle->getProfileName();
     }
 
-    $modules = $this->getAllModules($add_profile);
+    $modules = $this->getAllModules($bundle);
     // Filter to include only the requested packages.
     $modules = array_intersect_key($modules, array_fill_keys($machine_names, NULL));
     $directories = array();
@@ -505,11 +387,9 @@ class FeaturesManager implements FeaturesManagerInterface {
   }
 
   /**
-   * Return a list of modules regardless of if they are enabled
-   * @param bool $add_profile
-   *   determine if custom profile is also included
+   * {@inheritdoc}
    */
-  public function getAllModules($add_profile = FALSE, $namespace = NULL) {
+  public function getAllModules(FeaturesBundleInterface $bundle = NULL) {
     // ModuleHandler::getModuleDirectories() returns data only for installed
     // modules. system_rebuild_module_data() includes only the site's install
     // profile directory, while we may need to include a custom profile.
@@ -522,14 +402,10 @@ class FeaturesManager implements FeaturesManagerInterface {
     if ($installed_profile) {
       $profile_directories[] = drupal_get_path('profile', $installed_profile);
     }
-    if ($add_profile) {
-      $profile = $this->getProfile();
-      if (!empty($profile['machine_name'])) {
-        // Register the profile directory.
-        $profile_directory = 'profiles/' . $profile['machine_name'];
-        if (is_dir($profile_directory)) {
-          $profile_directories[] = $profile_directory;
-        }
+    if (isset($bundle) && $bundle->isProfile()) {
+      $profile_directory = 'profiles/' . $bundle->getProfileName();
+      if (($bundle->getProfileName() != $installed_profile) && is_dir($profile_directory)) {
+        $profile_directories[] = $profile_directory;
       }
     }
     $listing->setProfileDirectories($profile_directories);
@@ -548,19 +424,11 @@ class FeaturesManager implements FeaturesManagerInterface {
     // Detect modules by namespace.
     // If namespace is provided but is empty, then match all modules
     foreach ($modules as $module_name => $extension) {
-      if (empty($namespace) || (strpos($module_name, $namespace) === 0)) {
+      if (!isset($bundle) || $bundle->inBundle($module_name)) {
         $return[$module_name] = $extension;
       }
     }
     return $return;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function assignProfile($machine_name, $name = NULL, $description = '') {
-    $profile = $this->getProject($machine_name, $name, $description, 'profile');
-    $this->setProfile($profile);
   }
 
   /**
@@ -735,44 +603,7 @@ class FeaturesManager implements FeaturesManagerInterface {
   }
 
   /**
-   * Refreshes names for all packages to ensure they reflect current profile
-   * naming.
-   *
-   * The profile data (machine_name, name) may have changed since the package
-   * was generated.
-   */
-  protected function refreshPackageNames() {
-    $packages = $this->getPackages();
-    $this->package_sets = [];
-    // Add current profile to package sets.
-    if (!empty($this->profile['machine_name'])) {
-      $set = array(
-        'name' => $this->profile['name'],
-        'description' => $this->profile['description']
-      );
-      $this->package_sets[$this->profile['machine_name']] = $set;
-    }
-    $profile = $this->settings->get('profile');
-    if (!empty($profile['machine_name']) && ($profile['machine_name'] != $this->profile['machine_name'])) {
-      // Ensure profile stored in settings is also in package sets
-      $set = array(
-        'name' => $profile['name'],
-        'description' => $profile['description']
-      );
-      $this->package_sets[$profile['machine_name']] = $set;
-    }
-    foreach ($packages as &$package) {
-      $this->setPackageNames($package);
-    }
-    // Clean up the $file pass by reference.
-    unset($package);
-    $this->setPackages($packages);
-  }
-
-  /**
-   * Prefixes a package's short machine name and name with those of the
-   * profile.
-   * Also fill in module-specific properties, such as status, version
+   * Fill in module-specific properties, such as status and version
    *
    * @param array &$package
    *   A package array, passed by reference.
@@ -783,29 +614,9 @@ class FeaturesManager implements FeaturesManagerInterface {
       $package['status'] = $this->moduleHandler->moduleExists($package['machine_name'])
         ? FeaturesManagerInterface::STATUS_ENABLED
         : FeaturesManagerInterface::STATUS_DISABLED;
-      //TODO: Determine module version
       $info = $this->getExtensionInfo($package['machine_name']);
       if (!empty($info)) {
         $package['version'] = $info['version'];
-        $package['package'] = $info['package'];
-      }
-    }
-    $this->updatePackageSet($package);
-  }
-
-  /**
-   * Update or create the $package_set entry for this package
-   * @param array $package
-   */
-  protected function updatePackageSet(array $package) {
-    if ($package['machine_name'] != $package['machine_name_short']) {
-      $set_name = substr($package['machine_name'], 0, strlen($package['machine_name']) - strlen($package['machine_name_short']) - 1);
-      if (empty($this->package_sets[$set_name])) {
-        $set = array(
-          'name' => $package['package'],
-          'description' => '',
-        );
-        $this->package_sets[$set_name] = $set;
       }
     }
   }
@@ -830,7 +641,10 @@ class FeaturesManager implements FeaturesManagerInterface {
     $info = array_intersect_key($package, array_fill_keys($info_keys, NULL));
 
     // Assign to a "package" named for the profile.
-    $info['package'] = $this->profile['name'];
+    $bundle = $this->assigner->getBundle($package['bundle']);
+    if (isset($bundle)) {
+      $info['package'] = $bundle->getName();
+    }
 
     if (!empty($package['config'])) {
       // Save the current machine_name_short in the info file so the package
@@ -860,17 +674,6 @@ class FeaturesManager implements FeaturesManagerInterface {
       // Filter to remove any empty keys, e.g., an empty themes array.
       'string' => Yaml::encode(array_filter($info))
     ];
-  }
-
-  /**
-   * Generates and adds files to the profile.
-   */
-  protected function addProfileFiles() {
-    // Add the profile's files.
-    $profile = $this->getProfile();
-    $this->addInfoFile($profile);
-    $this->addPackageFiles($profile) ;
-    $this->setProfile($profile);
   }
 
   /**
@@ -977,48 +780,6 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function listPackageMachineNames(array $machine_names_short = array(), $add_profile = FALSE) {
-    $packages = $this->getPackages();
-
-    // If specific names were requested, use only those.
-    if (!empty($machine_names_short)) {
-      $packages = array_intersect_key($packages, array_fill_keys($machine_names_short, NULL));
-    }
-
-    // Iterate through the packages for their machine names.
-    $machine_names = [];
-    foreach ($packages as $package) {
-      $machine_names[] = $package['machine_name'];
-    }
-
-    return $machine_names;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function listPackageMachineNamesShort(array $machine_names = array()) {
-    $packages = $this->getPackages();
-
-    // If no specific machine names were requested, return all.
-    if (empty($machine_names)) {
-      return array_keys($this->packages);
-    }
-
-    // Iterate through the packages for their short machine names.
-    $machine_names_short = [];
-    foreach ($packages as $package) {
-      if (in_array($package['machine_name'], $machine_names)) {
-        $machine_names_short[] = $package['machine_name_short'];
-      }
-    }
-
-    return $machine_names_short;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function listConfigTypes() {
     $definitions = [];
     foreach ($this->entityManager->getDefinitions() as $entity_type => $definition) {
@@ -1070,9 +831,8 @@ class FeaturesManager implements FeaturesManagerInterface {
    * {@inheritdoc}
    */
   public function listExtensionConfig($extension) {
-    $extension_storage = new FeaturesInstallStorage($this->configStorage);
     $name = $this->getExtensionName($extension);
-    return array_keys($extension_storage->getComponentNames('module', array($name)));
+    return array_keys($this->extensionStorage->getComponentNames('module', array($name)));
   }
 
   /**
@@ -1159,40 +919,28 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function prepareFiles($add_profile = FALSE) {
-    // Add package files first so their filename values can be altered to nest
-    // them in a profile.
+  public function prepareFiles() {
     $this->addPackagesFiles();
-    if ($add_profile) {
-      $this->addProfileFiles();
-    }
   }
 
   /**
    * {@inheritdoc}
    */
-  public function getExportInfo($package, $add_profile = FALSE, $profile = NULL) {
-    if (empty($profile)) {
-      $profile = $this->getProfile();
-    }
-    $exportSettings = $this->getExportSettings();
+  public function getExportInfo($package, FeaturesBundleInterface $bundle = NULL) {
 
-    $full_name = $package['machine_name'];
+    $full_name = isset($bundle) ? $bundle->getFullName($package['machine_name_short']) : $package['machine_name'];
 
-    if ($add_profile) {
+    if (isset($bundle) && $bundle->isProfile()) {
       // adjust export directory to be in profile
-      $path = 'profiles/' . $profile['directory'] . '/modules';
+      $path = 'profiles/' . $bundle->getProfileName() . '/modules';
     }
     else {
       $path = 'modules';
     }
+
+    $exportSettings = $this->getExportSettings();
     if (!empty($exportSettings['folder'])) {
       $path .= '/' . $exportSettings['folder'];
-    }
-
-    // prepend the namespace of the current profile
-    if (!empty($profile['machine_name'])) {
-      $full_name = $profile['machine_name'] . '_' . $package['machine_name_short'];
     }
 
     return array($full_name, $path);
@@ -1203,12 +951,11 @@ class FeaturesManager implements FeaturesManagerInterface {
    */
   public function detectOverrides($feature) {
     $config_diff = \Drupal::service('config_update.config_diff');
-    $extension_storage = new FeaturesInstallStorage($this->configStorage);
 
     $different = array();
     foreach ($feature['config'] as $name) {
       $active = $this->configStorage->read($name);
-      $extension = $extension_storage->read($name);
+      $extension = $this->extensionStorage->read($name);
       $extension = !empty($extension) ? $extension : array();
       if (!$config_diff->same($extension, $active)) {
         $different[] = $name;

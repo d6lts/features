@@ -44,6 +44,12 @@ class FeaturesBundle implements FeaturesBundleInterface {
   protected $settings;
 
   /**
+   * The Profile data associated with this bundle
+   */
+  protected $profile_name;
+  protected $is_profile;
+
+  /**
    * @var array
    *   list of assignments.  Keyed by assignment id
    *   'enabled': whether method is enabled
@@ -132,6 +138,25 @@ class FeaturesBundle implements FeaturesBundleInterface {
   /**
    * {@inheritdoc}
    */
+  public function getFullName($short_name) {
+    if ($this->isDefault() || $this->inBundle($short_name)) {
+      return $short_name;
+    }
+    else {
+      return $this->machine_name . '_' . $short_name;
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function inBundle($machine_name) {
+    return (strpos($machine_name, $this->machine_name . '_') === 0);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function getDescription() {
     return $this->description;
   }
@@ -141,6 +166,35 @@ class FeaturesBundle implements FeaturesBundleInterface {
    */
   public function setDescription($description) {
     $this->description = $description;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isProfile() {
+    return $this->is_profile;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setIsProfile($value) {
+    $this->is_profile = $value;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getProfileName() {
+    $name = $this->isProfile() ? $this->profile_name : '';
+    return !empty($name) ? $name : drupal_get_profile();
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setProfileName($machine_name) {
+    $this->profile_name = $machine_name;
   }
 
   /**
@@ -256,6 +310,8 @@ class FeaturesBundle implements FeaturesBundleInterface {
         );
       }
       $this->setMachineName('');
+      $this->setProfileName('');
+      $this->setIsProfile(FALSE);
       $this->setName(t('--None--'));
       $this->setDescription(t('Default bundle with no namespace.'));
       $this->setSettings($settings);
@@ -269,6 +325,8 @@ class FeaturesBundle implements FeaturesBundleInterface {
       $this->setAssignmentWeights($bundle['weights']);
       $this->setAssignmentSettings(NULL, $bundle['assignment_settings']);
       $this->setSettings($bundle['settings']);
+      $this->setProfileName($bundle['profile_name']);
+      $this->setIsProfile($bundle['is_profile']);
     }
     return $this;
   }
@@ -284,6 +342,8 @@ class FeaturesBundle implements FeaturesBundleInterface {
       'weights' => $this->getAssignmentWeights(),
       'assignment_settings' => $this->getAssignmentSettings(NULL),
       'settings' => $this->getSettings(),
+      'profile_name' => $this->isProfile() ? $this->getProfileName() : '',
+      'is_profile' => $this->isProfile(),
     );
     if ($this->getMachineName() == '') {
       // save new default settings into config.

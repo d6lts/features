@@ -92,49 +92,42 @@ class FeaturesExportForm extends FormBase {
   public function buildForm(array $form, FormStateInterface $form_state) {
 
     $trigger = $form_state->getTriggeringElement();
-    if ($trigger['#name'] == 'package_set') {
-      $package_set = $form_state->getValue('package_set', '');
-      $this->featuresManager->applyNamespace($package_set);
-      $this->featuresManager->setNamespace($package_set);
+    if ($trigger['#name'] == 'bundle') {
+      $bundle_name = $form_state->getValue('bundle', '');
+      $this->assigner->setCurrent($this->assigner->getBundle($bundle_name));
     }
     else if ($trigger['#name'] == 'newfeature') {
       return $this->redirect('features.edit');
     }
     else {
-      $package_set = $this->featuresManager->getNamespace();
-      $this->featuresManager->applyNamespace($package_set);
+      $this->assigner->loadBundle();
     }
+    $current_bundle = $this->assigner->getBundle();
+    $this->assigner->assignConfigPackages();
+
     $packages = $this->featuresManager->getPackages();
-
     $config_collection = $this->featuresManager->getConfigCollection();
-    // Add in unpackaged configuration items.
-    $this->addUnpackaged($packages, $config_collection);
-    if (!empty($package_set)) {
-      $packages = $this->featuresManager->filterPackages($packages);
-    }
 
-    $profile = $this->featuresManager->getProfile();
-    $package_sets = $this->featuresManager->getPackageSets();
+    // Add in un-packaged configuration items.
+    $this->addUnpackaged($packages, $config_collection);
+
+    // Filter packages on bundle if selected.
+    if (!$current_bundle->isDefault()) {
+      $packages = $this->featuresManager->filterPackages($packages, $current_bundle->getMachineName());
+    }
 
     $form['header'] = array(
       '#type' => 'container',
       '#attributes' => array('class' => 'features-header'),
     );
 
-    $current_set = isset($package_set) ? $package_set : (!empty($profile['machine_name']) ? $profile['machine_name'] : '');
-    $options = array(
-      '' => t('--All--'),
-    );
-    foreach ($package_sets as $name => $set) {
-      $options[$name] = $set['name'];
-    }
     $form['#prefix'] = '<div id="edit-features-wrapper">';
     $form['#suffix'] = '</div>';
-    $form['header']['package_set'] = array(
-      '#title' => t('Package Set'),
+    $form['header']['bundle'] = array(
+      '#title' => t('Bundle'),
       '#type' => 'select',
-      '#options' => $options,
-      '#default_value' => $current_set,
+      '#options' => $this->assigner->getBundleOptions(t('--None--')),
+      '#default_value' => $current_bundle->getMachineName(),
       '#prefix' => '<div id="edit-package-set-wrapper">',
       '#suffix' => '</div>',
       '#ajax' => array(
@@ -349,7 +342,7 @@ class FeaturesExportForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-
+    $current_bundle = $this->assigner->loadBundle();
     $this->assigner->assignConfigPackages();
 
     $packages = array_filter($form_state->getValue('preview'));
@@ -367,14 +360,7 @@ class FeaturesExportForm extends FormBase {
     }
 
     if (!empty($method_id)) {
-      $profile_settings = \Drupal::config('features.settings')->get('profile');
-      if ($profile_settings['add']) {
-        $this->generator->generateProfile($method_id, $packages, FALSE);
-      }
-      else {
-        $this->generator->generatePackages($method_id, $packages, FALSE);
-      }
-
+      $this->generator->generatePackages($method_id, $packages, $current_bundle);
       $this->generator->applyExportFormSubmit($method_id, $form, $form_state);
     }
   }

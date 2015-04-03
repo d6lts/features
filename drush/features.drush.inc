@@ -6,7 +6,6 @@
  */
 
 use Drupal\features\FeaturesManagerInterface;
-use Drupal\features\FeaturesInstallStorage;
 use Drupal\Component\Diff\DiffFormatter;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\config_update\ConfigReverter;
@@ -129,17 +128,17 @@ function features_drush_command() {
 
 /**
  * Applies global options for Features drush commands
- *   --all  clears the namespace
- *   --name="namespace"  set the namespace
+ *   --name="bundle_name"  set the bundle namespace
  */
 function _drush_features_options() {
-  $namespace = drush_get_option('name');
-  if (drush_get_option('all')) {
-    $namespace = '';
+  $bundle_name = drush_get_option('name');
+  if (!empty($bundle_name)) {
+    $assigner = \Drupal::service('features_assigner');
+    $bundle = $assigner->getBundle($bundle_name);
+    if (isset($bundle)) {
+      $assigner->setCurrent($bundle);
+    }
   }
-
-  $manager = \Drupal::service('features.manager');
-  $manager->applyNamespace($namespace);
 }
 
 /**
@@ -151,17 +150,17 @@ function drush_features_status() {
 
   $manager = \Drupal::service('features.manager');
   $assigner = \Drupal::service('features_assigner');
-  $profile = $manager->getProfile();
+  $current_bundle = $assigner->getBundle();
   $exportSettings = $manager->getExportSettings();
   $methods = $assigner->getEnabledAssigners();
-  if (empty($profile['machine_name'])) {
-    drush_print(dt('Export namespace: none'));
+  if ($current_bundle->isDefault()) {
+    drush_print(dt('Current bundle: none'));
   }
   else {
-    drush_print(dt('Export namespace: !name (!machine_name)',
+    drush_print(dt('Current bundle: !name (!machine_name)',
       array(
-        '!name' => $profile['name'],
-        '!machine_name' => $profile['machine_name']
+        '!name' => $current_bundle->getName(),
+        '!machine_name' => $current_bundle->getMachineName()
       )));
   }
   drush_print(dt('Export folder: !folder', array('!folder' => $exportSettings['folder'])));
@@ -243,12 +242,20 @@ function drush_features_export($packages = NULL) {
 
   $manager = \Drupal::service('features.manager');
   $generator = \Drupal::service('features_generator');
+  $assigner = \Drupal::service('features_assigner');
 
-  $add_profile = drush_get_option('add-profile');
+  $current_bundle = $assigner->getBundle();
 
-  $all_packages = $manager->listPackageMachineNames();
+  if (drush_get_option('add-profile')) {
+    if ($current_bundle->isDefault) {
+      return drush_set_error('', dt("Must specify a profile name with --name"));
+    }
+    $current_bundle->setIsProfile(TRUE);
+  }
+
+  $all_packages = $manager->getPackages();
   foreach ($packages as $name) {
-    if (!in_array($name, $all_packages)) {
+    if (!isset($all_packages[$name])) {
       return drush_set_error('', dt("The package @name does not exist.", array('@name' => $name)));
     }
   }
@@ -263,7 +270,7 @@ function drush_features_export($packages = NULL) {
   }
 
   // If any packages exist, confirm before overwriting.
-  if ($existing_packages = $manager->listPackageDirectories($packages, $add_profile)) {
+  if ($existing_packages = $manager->listPackageDirectories($packages, $current_bundle)) {
     foreach ($existing_packages as $name => $directory) {
       drush_print(dt("The extension @name already exists at !directory.", array('@name' => $name, '!directory' => $directory)));
     }
@@ -281,13 +288,8 @@ function drush_features_export($packages = NULL) {
 
   // Use the write generation method.
   $method_id = \Drupal\features\Plugin\FeaturesGeneration\FeaturesGenerationWrite::METHOD_ID;
+  $result = $generator->generatePackages($method_id, $packages, $current_bundle);
 
-  if ($add_profile) {
-    $result = $generator->generateProfile($method_id, $packages, FALSE);
-  }
-  else {
-    $result = $generator->generatePackages($method_id, $packages, FALSE);
-  }
   foreach ($result as $message) {
     $type = $message['success'] ? 'success' : 'error';
     drush_log($message['message'], $message['variables'], $type);
@@ -340,7 +342,7 @@ function drush_features_add() {
     }
     else {
       $package = $manager->initPackage($module, $module, '');
-      list($full_name, $path) = $manager->getExportInfo($package);
+      list($full_name, $path) = $manager->getExportInfo($package, $current_bundle);
       drush_print(dt('Will create a new extension @name in !directory', array('@name' => $full_name, '!directory' => $path)));
       if (!drush_confirm(dt('Do you really want to continue?'))) {
         drush_die('Aborting.');
@@ -353,8 +355,8 @@ function drush_features_add() {
 
     // Use the write generation method.
     $method_id = \Drupal\features\Plugin\FeaturesGeneration\FeaturesGenerationWrite::METHOD_ID;
+    $result = $generator->generatePackages($method_id, $packages, $current_bundle);
 
-    $result = $generator->generatePackages($method_id, $packages, FALSE);
     foreach ($result as $message) {
       $type = $message['success'] ? 'success' : 'error';
       drush_log($message['message'], $message['variables'], $type);
@@ -452,7 +454,6 @@ function drush_features_diff() {
   else {
     $config_diff = \Drupal::service('config_update.config_diff');
     $active_storage = \Drupal::service('config.storage');
-    $extension_storage = new FeaturesInstallStorage($active_storage);
 
     // Print key for colors
     drush_print(dt('Legend: '));
@@ -461,8 +462,8 @@ function drush_features_diff() {
 
     foreach ($overrides as $name) {
       $message = '';
-      $active = $active_storage->read($name);
-      $extension = $extension_storage->read($name);
+      $active = $manager->getActiveStorage()->read($name);
+      $extension = $manager->getExtensionStorage()->read($name);
       if (empty($extension)) {
         $extension = array();
         $message = sprintf($green, t('(not exported)'));
@@ -503,9 +504,7 @@ function drush_features_import() {
     $skip_confirmation = drush_get_context('DRUSH_AFFIRMATIVE');
 
     $manager = \Drupal::service('features.manager');
-    $active_storage = \Drupal::service('config.storage');
-    $extension_storage = new FeaturesInstallStorage($active_storage);
-    $config_revert = new ConfigReverter(\Drupal::service('entity.manager'), $active_storage, $extension_storage, \Drupal::service('config.factory'));
+    $config_revert = new ConfigReverter(\Drupal::service('entity.manager'), $manager->getActiveStorage(), $manager->getExtensionStorage(), \Drupal::service('config.factory'));
 
     // Parse list of arguments.
     $modules = array();
@@ -592,9 +591,8 @@ function drush_features_import() {
 function _drush_features_load_feature($module, $any = FALSE) {
   $manager = \Drupal::service('features.manager');
   $packages = $manager->getPackages();
-  $package_names = $manager->listPackageMachineNamesShort(array($module));
-  $feature = NULL;
-  if ($any && empty($package_names)) {
+  $feature = $manager->getPackage($module);
+  if ($any && !isset($feature)) {
     // see if this is a non-features module
     $module_handler = \Drupal::service('module_handler');
     $modules = $module_handler->getModuleList();
@@ -606,9 +604,6 @@ function _drush_features_load_feature($module, $any = FALSE) {
       $feature['config'] = $config;
       $feature['status'] = FeaturesManagerInterface::STATUS_ENABLED;
     }
-  }
-  elseif (!empty($package_names)) {
-    $feature = $packages[$package_names[0]];
   }
   return $feature;
 }

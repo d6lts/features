@@ -26,35 +26,33 @@ interface FeaturesGenerationMethodInterface {
   public function setFeaturesManager(FeaturesManagerInterface $features_manager);
 
   /**
-   * Injects the configuration factory.
+   * Injects the features assigner.
    *
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
-   *   The configuration factory.
+   * @param \Drupal\features\FeaturesAssignerInterface $assigner
+   *   The features assigner to be used to retrieve the bundle configuration.
    */
-  public function setConfigFactory(ConfigFactoryInterface $config_factory);
+  public function setAssigner(FeaturesAssignerInterface $assigner);
   
   /**
    * Prepares packages for generation.
    *
-   * @param boolean $add_profile
-   *   Whether to add an install profile. Defaults to FALSE.
-   * @param array $profile
-   *   Array of profile data.
    * @param array $packages
    *   Array of package data.
+   * @param \Drupal\features\FeaturesBundleInterface $bundle
+   *   The optional bundle used for the generation.  Used to generate profiles.
    *
    * @return array
    *   An array of packages data.
    */
-  public function prepare($add_profile = FALSE, array &$profile = array(), array &$packages = array());
+  public function prepare(array &$packages = array(), FeaturesBundleInterface $bundle = NULL);
 
   /**
    * Performs package generation.
    *
-   * @param boolean $add_profile
-   *   Whether to add an install profile. Defaults to FALSE.
    * @param array $packages
    *   Array of package data.
+   * @param \Drupal\features\FeaturesBundleInterface $bundle
+   *   The optional bundle used for the generation.  Used to generate profiles.
    *
    * @return array
    *   Array of results for profile and/or packages, each result including the
@@ -65,7 +63,7 @@ interface FeaturesGenerationMethodInterface {
    *   - 'message': a message about the result of the operation.
    *   - 'variables': an array of substitutions to be used in the message.
    */
-  public function generate($add_profile = FALSE, array $packages = array());
+  public function generate(array $packages = array(), FeaturesBundleInterface $bundle = NULL);
 
   /**
    * Responds to the submission of

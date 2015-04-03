@@ -100,9 +100,29 @@ interface FeaturesAssignerInterface {
   /**
    * Returns an array of all existing features bundles
    * @return array
-   *   keyed by machine_name with value of /Drupal/features/FeaturesBundleInterface
+   *   keyed by machine_name with value of \Drupal\features\FeaturesBundleInterface
    */
   public function getBundleList();
+
+  /**
+   * Return a named bundle.
+   * First searches by Human name, then by machine_name.
+   * @param string $name
+   * @return \Drupal\features\FeaturesBundleInterface
+   */
+  public function findBundleByName($name);
+
+  /**
+   * Create a new bundle
+   * @param string $name
+   *   Human name of the bundle
+   * @param string $machine_name
+   *   Machine name.  If omitted, auto-generated from Name
+   * @param string $description
+   *   Optional description
+   * @return \Drupal\features\FeaturesBundleInterface
+   */
+  public function createBundle($name, $machine_name = '', $description = '');
 
   /**
    * Return an array of bundle names suitable for a select option list.

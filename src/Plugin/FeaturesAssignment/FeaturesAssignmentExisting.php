@@ -31,13 +31,11 @@ class FeaturesAssignmentExisting extends FeaturesAssignmentMethodBase {
    * {@inheritdoc}
    */
   public function assignPackages() {
-    $profile = $this->featuresManager->getProfile();
-    $existing = $this->featuresManager->getExistingPackages(FALSE, $profile['machine_name']);
+    $existing = $this->featuresManager->getExistingPackages();
     foreach ($existing as $name => $info) {
-      $feature_name = $this->featuresManager->getFeatureName($info);
       $config = $this->featuresManager->listExtensionConfig($name);
       try {
-        $this->featuresManager->assignConfigPackage($feature_name, $config);
+        $this->featuresManager->assignConfigPackage($name, $config);
       }
       catch(\Exception $exception) {
         \Drupal::logger('features')->error($exception->getMessage());

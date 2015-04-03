@@ -31,8 +31,10 @@ class FeaturesAssignmentCoreType extends FeaturesAssignmentMethodBase {
    * {@inheritdoc}
    */
   public function assignPackages() {
-    $config_types = $this->featuresManager->listConfigTypes();
-    $core_types = $this->configFactory->get('features.assignment')->get('core.types');
+    $current_bundle = $this->assigner->getBundle();
+    $settings = $current_bundle->getAssignmentSettings(self::METHOD_ID);
+    $core_types = $settings['types'];
+
     $config_collection = $this->featuresManager->getConfigCollection();
 
     $initialized = FALSE;

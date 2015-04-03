@@ -168,6 +168,32 @@ class AssignmentConfigureForm extends FormBase {
       '#size' => 80,
     );
 
+    $form['bundle']['is_profile'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Include install profile'),
+      '#default_value' => $current_bundle->isProfile(),
+      '#description' => $this->t('Select this option to have your configuration modules packaged into an install profile.'),
+      '#attributes' => array(
+        'data-add-profile' => 'status',
+      ),
+    );
+
+    $show_if_profile_checked = array(
+      'visible' => array(
+        ':input[data-add-profile="status"]' => array('checked' => TRUE),
+      ),
+    );
+
+    $form['bundle']['profile_name'] = array(
+      '#title' => $this->t('Profile name'),
+      '#type' => 'textfield',
+      '#default_value' => $current_bundle->isProfile() ? $current_bundle->getProfileName() : '',
+      '#description' => $this->t('The machine name (directory name) of your profile.'),
+      '#size' => 30,
+      // Show only if the profile.add option is selected.
+      '#states' => $show_if_profile_checked,
+    );
+
     // Order methods list by weight.
     asort($methods_weight);
 
@@ -257,6 +283,8 @@ class AssignmentConfigureForm extends FormBase {
     $current_bundle->setDescription($form_state->getValue(array('bundle', 'description')));
     $current_bundle->setEnabledAssignments(array_keys($enabled_methods));
     $current_bundle->setAssignmentWeights($method_weights);
+    $current_bundle->setIsProfile($form_state->getValue(array('bundle', 'is_profile')));
+    $current_bundle->setProfileName($form_state->getValue(array('bundle', 'profile_name')));
     $current_bundle->save();
     $this->assigner->setBundle($current_bundle);
 

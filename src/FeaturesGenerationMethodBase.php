@@ -8,8 +8,9 @@
 namespace Drupal\features;
 
 use Drupal\Component\Serialization\Yaml;
-use Drupal\features\FeaturesManager;
-use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\features\FeaturesManagerInterface;
+use Drupal\features\FeaturesAssignerInterface;
+use Drupal\features\FeaturesBundleInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 
@@ -27,11 +28,11 @@ abstract class FeaturesGenerationMethodBase implements FeaturesGenerationMethodI
   protected $featuresManager;
 
   /**
-   * The configuration factory.
+   * The features assigner.
    *
-   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   * @var \Drupal\features\FeaturesAssignerInterface
    */
-  protected $configFactory;
+  protected $assigner;
 
   /**
    * {@inheritdoc}
@@ -43,8 +44,8 @@ abstract class FeaturesGenerationMethodBase implements FeaturesGenerationMethodI
   /**
    * {@inheritdoc}
    */
-  public function setConfigFactory(ConfigFactoryInterface $config_factory) {
-    $this->configFactory = $config_factory;
+  public function setAssigner(FeaturesAssignerInterface $assigner) {
+    $this->assigner = $assigner;
   }
 
   /**
@@ -73,46 +74,44 @@ abstract class FeaturesGenerationMethodBase implements FeaturesGenerationMethodI
   /**
    * {@inheritdoc}
    */
-  public function prepare($add_profile = FALSE, array &$profile = array(), array &$packages = array()) {
+  public function prepare(array &$packages = array(), FeaturesBundleInterface $bundle = NULL) {
     // If no packages were specified, get all packages.
     if (empty($packages)) {
       $packages = $this->featuresManager->getPackages();
     }
 
     // If any packages exist, read in their files.
-    $machine_names = $this->featuresManager->listPackageMachineNames(array_keys($packages));
-    $existing_packages = $this->featuresManager->listPackageDirectories($machine_names, $add_profile);
+    $existing_packages = $this->featuresManager->listPackageDirectories(array_keys($packages), $bundle);
 
-    // Packages are keyed by short machine names while the existing packages
-    // array is keyed by full machine names.
-    if (empty($profile)) {
-      $profile = $this->featuresManager->getProfile();
-    }
     foreach ($packages as &$package) {
-      list($full_name, $path) = $this->featuresManager->getExportInfo($package, $add_profile, $profile);
+      list($full_name, $path) = $this->featuresManager->getExportInfo($package, $bundle);
       $package['directory'] = $path . '/' . $full_name;
-      $this->preparePackage($add_profile, $package, $existing_packages);
+      $this->preparePackage($package, $existing_packages, $bundle);
     }
     // Clean up the $package pass by reference
     unset($package);
 
-    if ($add_profile) {
-      $profile['directory'] = 'profiles/' . $profile['directory'];
-      $this->preparePackage($add_profile, $profile, $existing_packages);
+    if (isset($bundle) && $bundle->isProfile()) {
+      $profile_name = $bundle->getProfileName();
+      $profile_package = $this->featuresManager->getPackage($profile_name);
+      if (isset($profile_package)) {
+        $package['directory'] = 'profiles/' . $profile_name;
+        $this->preparePackage($profile_package, $existing_packages, $bundle);
+      }
     }
   }
 
   /**
-   * Performs any required changes on a package or profile prior to generation.
+   * Performs any required changes on a package prior to generation.
    *
-   * @param boolean $add_profile
-   *   Whether to add an install profile. Defaults to FALSE.
    * @param array $package
    *   The package to be prepared.
    * @param $existing_packages
    *   An array of existing packages with machine names as keys and paths as
    *   values.
+   * @param \Drupal\features\FeaturesBundleInterface $bundle
+   *   Optional bundle used for export
    */
-  abstract protected function preparePackage($add_profile, &$package, $existing_packages);
+  abstract protected function preparePackage(&$package, $existing_packages, FeaturesBundleInterface $bundle = NULL);
 
 }

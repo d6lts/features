@@ -162,8 +162,7 @@ class FeaturesAssigner implements FeaturesAssignerInterface {
     if (!isset($this->methods[$method_id])) {
       $instance = $this->assignerManager->createInstance($method_id, array());
       $instance->setFeaturesManager($this->featuresManager);
-      $instance->setConfigFactory($this->configFactory);
-      $instance->setConfigStorage($this->configStorage);
+      $instance->setAssigner($this);
       $this->methods[$method_id] = $instance;
     }
     return $this->methods[$method_id];
@@ -230,6 +229,45 @@ class FeaturesAssigner implements FeaturesAssignerInterface {
       }
     }
     return $this->bundles;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function findBundleByName($name, $create = FALSE) {
+    $bundles = $this->getBundleList();
+    foreach ($bundles as $machine_name => $bundle) {
+      if ($name == $bundle->getName()) {
+        return $bundle;
+      }
+    }
+    $machine_name = strtolower(str_replace(array(' ', '-'), '_', $name));
+    if (isset($bundles[$machine_name])) {
+      return $bundles[$machine_name];
+    }
+    return NULL;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function createBundle($name, $machine_name = NULL, $description = NULL) {
+    $bundle = new FeaturesBundle('', $this->featuresManager, $this, $this->configFactory);
+    $bundle->load();
+    if (empty($machine_name)) {
+      $machine_name = strtolower(str_replace(array(' ', '-'), '_', $name));
+    }
+    $bundle->setMachineName($machine_name);
+    $bundle->setName($name);
+    if (isset($description)) {
+      $bundle->setDescription($description);
+    }
+    else {
+      $bundle->setDescription(t('Auto-generated bundle from package !name', array('!name' => $name)));
+    }
+    $bundle->save();
+    $this->setBundle($bundle);
+    return $bundle;
   }
 
   /**

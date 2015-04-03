@@ -31,11 +31,13 @@ class FeaturesAssignmentProfile extends FeaturesAssignmentMethodBase {
    * {@inheritdoc}
    */
   public function assignPackages() {
-    $profile = $this->featuresManager->getProfile();
-    $package_directories = $this->featuresManager->listPackageDirectories(array(), TRUE);
+    $current_bundle = $this->assigner->getBundle();
+    $profile_package = $this->featuresManager->getPackage($current_bundle->getProfileName());
+
+    $package_directories = $this->featuresManager->listPackageDirectories(array(), $current_bundle);
     // Only read in from the Standard profile if this profile doesn't already
     // exist.
-    if (!isset($package_directories[$profile['machine_name']])) {
+    if ($current_bundle->isProfile() && !isset($package_directories[$current_bundle->getProfileName()])) {
       // Add configuration from the Standard profile.
       $config_collection = $this->featuresManager->getConfigCollection();
       $standard_directory = 'core/profiles/standard';
@@ -44,14 +46,14 @@ class FeaturesAssignmentProfile extends FeaturesAssignmentMethodBase {
       foreach ($item_names as $item_name) {
         // If the configuration is present on the site, assign it.
         if (isset($config_collection[$item_name])) {
-          $this->featuresManager->assignConfigPackage($profile['machine_name'], [$item_name]);
+          $this->featuresManager->assignConfigPackage($current_bundle->getProfileName(), [$item_name]);
           // Reload the profile to refresh the config array after the addition.
-          $profile = $this->featuresManager->getProfile();
+          $profile_package = $this->featuresManager->getPackage($current_bundle->getProfileName());
         }
         // Otherwise, copy it over from Standard.
         else {
           $filename = $item_name . '.yml';
-          $profile['files'][] = [
+          $profile_package['files'][] = [
             'filename' => $filename,
             'subdirectory' => $subdirectory,
             'string' => file_get_contents($standard_directory . '/' . $subdirectory . '/' . $filename)
@@ -74,12 +76,12 @@ class FeaturesAssignmentProfile extends FeaturesAssignmentMethodBase {
           // profile's equivalents.
           $string = str_replace(
             ['standard', 'Standard'],
-            [$profile['machine_name'], $profile['name']],
+            [$current_bundle->getProfileName(), $current_bundle->getName()],
             $string
           );
           // Add the files to those to be output.
-          $profile['files'][$extension] = [
-            'filename' => $profile['machine_name'] . '.' . $extension,
+          $profile_package['files'][$extension] = [
+            'filename' => $current_bundle->getProfileName() . '.' . $extension,
             'subdirectory' => NULL,
             'string' => $string
           ];
@@ -91,10 +93,11 @@ class FeaturesAssignmentProfile extends FeaturesAssignmentMethodBase {
       if (file_exists($info_file_uri)) {
         $profile_info = \Drupal::service('info_parser')->parse($info_file_uri);
         // Merge in dependencies and themes data.
-        $profile = $this->featuresManager->arrayMergeUnique($profile, $profile_info, ['dependencies', 'themes']);
+        $profile_package = $this->featuresManager->arrayMergeUnique($profile_package, $profile_info, ['dependencies', 'themes']);
       }
+
+      $this->featuresManager->savePackage($profile_package);
     }
-    $this->featuresManager->setProfile($profile);
   }
 
   /**

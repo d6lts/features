@@ -63,10 +63,10 @@ interface FeaturesGeneratorInterface {
    * @param string $method_id
    *   The string identifier of the package generation method to use to package
    *   configuration.
-   * @param boolean $add_profile
-   *   Whether to add an install profile. Defaults to FALSE.
    * @param array $packages
    *   Array of package data.
+   * @param \Drupal\features\FeaturesBundleInterface $bundle
+   *   The optional bundle used for the generation.  Used to generate profiles.
    *
    * @return array
    *   Array of results for profile and/or packages, each result including the
@@ -77,7 +77,7 @@ interface FeaturesGeneratorInterface {
    *   - 'message': a message about the result of the operation.
    *   - 'variables': an array of substitutions to be used in the message.
    */
-  public function applyGenerationMethod($method_id, $add_profile = FALSE, array $packages = array());
+  public function applyGenerationMethod($method_id, array $packages = array(), FeaturesBundleInterface $bundle = NULL);
 
   /**
    * Responds to the submission of
@@ -101,25 +101,9 @@ interface FeaturesGeneratorInterface {
    * @param array $package_names
    *   Array of names of packages to be generated. If none are specified, all
    *   available packages will be added.
-   * @param boolean $short_names
-   *   Boolean TRUE is any package names given in the $package_names argument
-   *   are in the short machine name format, FALSE if they are not.
+   * @param \Drupal\features\FeaturesBundleInterface $bundle
+   *   The optional bundle used for the generation.  Used to generate profiles.
    */
-  public function generatePackages($method_id, array $package_names = array(), $short_names = TRUE);
-
-  /**
-   * Generates file representations of an install profile and configuration
-   * packages.
-   *
-   * @param string $method_id
-   *   The ID of the generation method to use.
-   * @param array $package_names
-   *   Array of names of packages to be generated. If none are specified, all
-   *   available packages will be added.
-   * @param boolean $short_names
-   *   Boolean TRUE is any package names given in the $package_names argument
-   *   are in the short machine name format, FALSE if they are not.
-   */
-  public function generateProfile($method_id, array $package_names = array(), $short_names = FALSE);
+  public function generatePackages($method_id, array $package_names = array(), FeaturesBundleInterface $bundle = NULL);
 
 }

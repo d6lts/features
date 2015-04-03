@@ -41,10 +41,8 @@ class FeaturesInstallStorage extends ExtensionInstallStorage {
 
   /**
    * Return a list of modules regardless of if they are enabled
-   * @param bool $add_profile
-   *   determine if custom profile is also included
    */
-  protected function getAllModules($add_profile = FALSE) {
+  protected function getAllModules() {
     // ModuleHandler::getModuleDirectories() returns data only for installed
     // modules. system_rebuild_module_data() includes only the site's install
     // profile directory, while we may need to include a custom profile.
@@ -57,13 +55,17 @@ class FeaturesInstallStorage extends ExtensionInstallStorage {
     if ($installed_profile) {
       $profile_directories[] = drupal_get_path('profile', $installed_profile);
     }
-    if ($add_profile) {
-      $profile = $this->getProfile();
-      if (!empty($profile['machine_name'])) {
-        // Register the profile directory.
-        $profile_directory = 'profiles/' . $profile['machine_name'];
-        if (is_dir($profile_directory)) {
-          $profile_directories[] = $profile_directory;
+    if ($this->includeProfile) {
+      // Add any profiles used in bundles.
+      $assigner = \Drupal::service('features_assigner');
+      $bundles = $assigner->getBundleList();
+      foreach ($bundles as $bundle_name => $bundle) {
+        if ($bundle->isProfile()) {
+          // Register the profile directory.
+          $profile_directory = 'profiles/' . $bundle->getProfileName();
+          if (is_dir($profile_directory)) {
+            $profile_directories[] = $profile_directory;
+          }
         }
       }
     }
@@ -101,7 +103,7 @@ class FeaturesInstallStorage extends ExtensionInstallStorage {
 
       $extensions = $this->configStorage->read('core.extension');
       // override the module list to include uninstalled modules (exported but not enabled)
-      $extensions['module'] = $this->getAllModules($this->includeProfile);
+      $extensions['module'] = $this->getAllModules();
       if (!empty($extensions['module'])) {
         $modules = $extensions['module'];
         if (!$this->includeProfile) {

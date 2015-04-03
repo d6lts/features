@@ -32,8 +32,11 @@ class FeaturesAssignmentBaseType extends FeaturesAssignmentMethodBase {
    * {@inheritdoc}
    */
   public function assignPackages() {
+    $current_bundle = $this->assigner->getBundle();
+    $settings = $current_bundle->getAssignmentSettings(self::METHOD_ID);
+    $base_types = $settings['types'];
+
     $config_types = $this->featuresManager->listConfigTypes();
-    $base_types = $this->configFactory->get('features.assignment')->get('base.types');
     $config_collection = $this->featuresManager->getConfigCollection();
 
     foreach ($config_collection as $item_name => $item) {

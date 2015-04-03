@@ -40,6 +40,18 @@ interface FeaturesManagerInterface {
   const STATE_OVERRIDDEN = 1;
 
   /**
+   * Return the active config store.
+   * @return \Drupal\Core\Config\StorageInterface
+   */
+  public function getActiveStorage();
+
+  /**
+   * Return the extension config store.
+   * @return \Drupal\Core\Config\StorageInterface
+   */
+  public function getExtensionStorage();
+
+  /**
    * Resets packages and configuration assignment.
    */
   public function reset();
@@ -59,28 +71,6 @@ interface FeaturesManagerInterface {
    *   - 'dependents': array of names of dependent configuration items.
    */
   public function getConfigCollection($reset = FALSE);
-
-  /**
-   * Apply a namespace to the current config.
-   * Causes Assignment plugins to be executed based on the new namespace
-   * @param string $namespace
-   *   if NULL, use the current namespace
-   *   if empty, clears the namespace
-   */
-  public function applyNamespace($namespace = NULL);
-
-  /**
-   * Sets the current namespace and saves it in session
-   * @param string $namespace
-   *   if not specified, save the current profile data in the session
-   */
-  public function setNameSpace($namespace = NULL, $name = NULL, $description = NULL);
-
-  /**
-   * Gets the current namespace from the session
-   * @return string $namespace
-   */
-  public function getNameSpace();
 
   /**
    * Sets an array of site configuration.
@@ -150,6 +140,14 @@ interface FeaturesManagerInterface {
   public function setPackages(array $packages);
 
   /**
+   * Get a specific package
+   * @param string $machine_name
+   *   Full machine name of package
+   * @return array package data see @getPackages.
+   */
+  public function getPackage($machine_name);
+
+  /**
    * Updates a package definition in the package list.
    * NOTE: This does not "export" the package, it simply updates the internal data.
    * @param array $package
@@ -157,72 +155,12 @@ interface FeaturesManagerInterface {
   public function savePackage(array &$package);
 
   /**
-   * Filter the supplied package list by the current namespace.
+   * Filter the supplied package list by the given namespace.
    * @param array $packages
+   * @param string $namespace
    * @return array of packages
    */
-  public function filterPackages(array $packages);
-
-  /**
-   * Gets a list of defined package sets
-   * @return array
-   *   An array of package sets (keyed by set machine_name), each with the following keys
-   *   - 'name': human readable name of the set
-   *   - 'description': description of the package set
-   */
-  public function getPackageSets();
-
-  /**
-   * Gets a representation of an install profile.
-   *
-   * @return array
-   *   An array with the following keys:
-   *   - 'machine_name': machine name of the profile such as 'example'.
-   *   - 'machine_name_short': short machine name. For a profile, this is the
-   *     same as the machine_name.
-   *   - 'name': human readable name of the package such as 'Example'.
-   *   - 'name_short': short human readable name. For a profile, this is the
-   *     same as the name.
-   *   - 'description': description of the profile.
-   *   - 'type': type of Drupal project ('profile').
-   *   - 'core': Drupal core compatibility ('8.x'),
-   *   - 'dependencies': array of module dependencies.
-   *   - 'themes': array of names of themes to enable.
-   *   - 'config': array of names of configuration items.
-   *   - 'directory': the extension's directory.
-   *   - 'files' array of files, each having the following keys:
-   *      - 'filename': the name of the file.
-   *      - 'subdirectory': any subdirectory of the file within the extension
-   *         directory.
-   *      - 'string': the contents of the file.
-   */
-  public function getProfile();
-
-  /**
-   * Sets a representation of an install profile.
-   *
-   * @param array $profile
-   *   An array with the following keys:
-   *   - 'machine_name': machine name of the profile such as 'example'.
-   *   - 'machine_name_short': short machine name. For a profile, this is the
-   *     same as the machine_name.
-   *   - 'name': human readable name of the package such as 'Example'.
-   *   - 'name_short': short human readable name. For a profile, this is the
-   *     same as the name.
-   *   - 'description': description of the profile.
-   *   - 'type': type of Drupal project ('profile').
-   *   - 'core': Drupal core compatibility ('8.x'),
-   *   - 'dependencies': array of module dependencies.
-   *   - 'themes': array of names of themes to enable.
-   *   - 'config': array of names of configuration items.
-   *   - 'directory': the extension's directory.
-   *   - 'files' array of files, each having the following keys:
-   *      - 'filename': the name of the file.
-   *      - 'subdirectory': any subdirectory of the file within the extension
-   *         directory.
-   *      - 'string': the contents of the file.
-   */
-  public function setProfile(array $profile);
+  public function filterPackages(array $packages, $namespace = '');
 
   /**
    * Gets a reference to a package assigner.
@@ -271,12 +209,6 @@ interface FeaturesManagerInterface {
   public function getSettings();
 
   /**
-   * Return the current assignment settings
-   * @return \Drupal\Core\Config\Config
-   */
-  public function getAssignmentSettings();
-
-  /**
    * Initializes a configuration package.
    *
    * @param string $machine_name
@@ -291,20 +223,13 @@ interface FeaturesManagerInterface {
   public function initPackage($machine_name, $name = NULL, $description = '');
 
   /**
-   * Sets the profile to a given machine_name, name, and description.
-   */
-  public function assignProfile($machine_name, $name = NULL, $description = '');
-
-  /**
    * List modules that are existing exported Packages
    * @param bool $enabled
    *   Determine if only enabled modules are searched
-   * @param string $namespace
-   *   If set, only returns modules matching the namespace
    * @return array
    *   Module's info.yml config data
    */
-  public function getExistingPackages($enabled = FALSE, $namespace = NULL);
+  public function getExistingPackages($enabled = FALSE);
 
   /**
    * Lists directories in which packages are present.
@@ -313,20 +238,20 @@ interface FeaturesManagerInterface {
    * currently active (installed). As well as the directories that are
    * usually scanned for modules and profiles, a profile directory for the
    * current profile is scanned if it exists. For example, if the value
-   * for FeaturesManager::profile['machine_name'] is 'example', a
+   * for $bundle->getProfileName() is 'example', a
    * directory profiles/example will be scanned if it exists. Therefore, when
    * regenerating package modules, existing ones from a prior export will be
    * recognized.
    *
    * @param string[] $machine_names
-   *   Package machine names.
-   * @param boolean $add_profile
-   *   Whether to add an install profile. Defaults to FALSE.
+   *   Package machine names to return directories for.  If omitted, return all directories.
+   * @param \Drupal\features\FeaturesBundleInterface $bundle
+   *   Optional bundle to use to add profile directories to the scan
    *
    * @return array
    *   Array of package directories keyed by package machine name.
    */
-  public function listPackageDirectories(array $machine_names = array(), $add_profile = FALSE);
+  public function listPackageDirectories(array $machine_names = array(), FeaturesBundleInterface $bundle = NULL);
 
   /**
    * Initializes a "core" configuration package.
@@ -385,37 +310,6 @@ interface FeaturesManagerInterface {
   public function arrayMergeUnique(array $array1, array $array2, $keys = array());
 
   /**
-   * Lists package machine names.
-   *
-   * @param string[] $machine_names_short
-   *   Machine names. If empty, all availble package short names will be
-   *   returned.
-   * @param boolean $add_profile
-   *   Whether to add an install profile. Defaults to FALSE.
-   *
-   * @return array
-   *   Array of short names.
-   */
-  public function listPackageMachineNames(array $machine_names_short = array(), $add_profile = FALSE);
-
-  /**
-   * Lists short package names.
-   *
-   * The FeaturesManager::packages property is keyed by short package
-   * names while each package has a 'machine_name' key that is the short name
-   * prefixed by the profile machine name and an underscore. Here we remove
-   * this prefix and return short names.
-   *
-   * @param string[] $machine_names
-   *   Machine names. If empty, all availble package short names will be
-   *   returned.
-   *
-   * @return array
-   *   Array of short names.
-   */
-  public function listPackageMachineNamesShort(array $machine_names = array());
-
-  /**
    * Lists the types of configuration available on the site.
    *
    * @return array
@@ -452,13 +346,13 @@ interface FeaturesManagerInterface {
 
   /**
    * Return a list of modules regardless of if they are enabled
-   * @param bool $add_profile
-   *   determine if custom profile is also included
-   * @param string $namespace
-   *   A namespace prefix to match modules by.
+   * @param \Drupal\features\FeaturesBundleInterface $bundle
+   *   Optional bundle to filter module list.
+   *   If given, only modules matching the bundle namespace will be returned.
+   *   If the bundle uses a profile, only modules in the profile will be returned.
    *
    */
-  public function getAllModules($add_profile = FALSE, $namespace = NULL);
+  public function getAllModules(FeaturesBundleInterface $bundle = NULL);
 
   /**
    * Lists names of configuration objects provided by a given extension.
@@ -477,11 +371,8 @@ interface FeaturesManagerInterface {
   /**
    * Iterates through packages and profile and prepares file names and
    * contents.
-   *
-   * @param boolean $add_profile
-   *   Whether to add an install profile. Defaults to FALSE.
    */
-  public function prepareFiles($add_profile = FALSE);
+  public function prepareFiles();
 
   /**
    * Returns the full name of a config item.
@@ -499,11 +390,11 @@ interface FeaturesManagerInterface {
   /**
    * Return the full machine name and directory for exporting a package
    * @param string $package
-   * @param bool $add_profile
-   * @param array $profile
+   * @param \Drupal\features\FeaturesBundleInterface $bundle
+   *   Optional bundle being used for export.
    * @return array($full_name, $directory)
    */
-  public function getExportInfo($package, $add_profile = FALSE, $profile = NULL);
+  public function getExportInfo($package, FeaturesBundleInterface $bundle = NULL);
 
   /**
    * Determine if the module is a Features package
@@ -512,13 +403,6 @@ interface FeaturesManagerInterface {
    * @return bool
    */
   public function isFeatureModule($module);
-
-  /**
-   * Return the short-machine-name of a Feature from it's info file
-   * @param array $info
-   * @return string
-   */
-  public function getFeatureName($info);
 
   /**
    * Determine which config is overridden in a package

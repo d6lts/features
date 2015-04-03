@@ -17,7 +17,6 @@ use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormState;
 use Drupal\Core\Form\FormStateInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
-use Drupal\features\FeaturesInstallStorage;
 use Drupal\Component\Diff\DiffFormatter;
 use Drupal\config_update\ConfigReverter;
 
@@ -41,13 +40,6 @@ class FeaturesDiffForm extends FormBase {
   protected $assigner;
 
   /**
-   * The target storage.
-   *
-   * @var \Drupal\Core\Config\StorageInterface
-   */
-  protected $configStorage;
-
-  /**
    * The config differ.
    *
    * @var \Drupal\config_update\ConfigDiffInterface
@@ -69,28 +61,20 @@ class FeaturesDiffForm extends FormBase {
   protected $configRevert;
 
   /**
-   * The extension storage
-   * @var \Drupal\Core\Config\StorageInterface
-   */
-  protected $extension_storage;
-
-  /**
    * Constructs a FeaturesDiffForm object.
    *
    * @param \Drupal\features\FeaturesManagerInterface $features_manager
    *   The features manager.
    */
   public function __construct(FeaturesManagerInterface $features_manager, FeaturesAssignerInterface $assigner,
-                              StorageInterface $config_storage, ConfigDiffInterface $config_diff, DiffFormatter $diff_formatter,
+                              ConfigDiffInterface $config_diff, DiffFormatter $diff_formatter,
                               ConfigRevertInterface $config_revert) {
     $this->featuresManager = $features_manager;
     $this->assigner = $assigner;
-    $this->configStorage = $config_storage;
     $this->configDiff = $config_diff;
     $this->diffFormatter = $diff_formatter;
     $this->configRevert = $config_revert;
     $this->diffFormatter->show_header = FALSE;
-    $this->extension_storage = new FeaturesInstallStorage($this->configStorage);
   }
 
   /**
@@ -100,7 +84,6 @@ class FeaturesDiffForm extends FormBase {
     return new static(
       $container->get('features.manager'),
       $container->get('features_assigner'),
-      $container->get('config.storage'),
       $container->get('config_update.config_diff'),
       $container->get('diff.formatter'),
       $container->get('config_update.config_update')
@@ -118,8 +101,7 @@ class FeaturesDiffForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, $featurename = '') {
-    // Ensure all packages are available
-    $this->featuresManager->applyNamespace('');
+    $current_bundle = $this->assigner->loadBundle();
     $packages = $this->featuresManager->getPackages();
     $form = array();
 
@@ -133,8 +115,7 @@ class FeaturesDiffForm extends FormBase {
       $packages = array($packages[$featurename]);
     }
     else {
-      $this->featuresManager->getNameSpace();
-      $packages = $this->featuresManager->filterPackages($packages);
+      $packages = $this->featuresManager->filterPackages($packages, $current_bundle->getMachineName());
       if (count($packages) == 1) {
         $machine_name = current($packages)['machine_name'];
       }
@@ -232,8 +213,8 @@ class FeaturesDiffForm extends FormBase {
     foreach ($overrides as $name) {
       $rows[] = array(array('data' => $name, 'colspan' => 4, 'header' => TRUE));
 
-      $active = $this->configStorage->read($name);
-      $extension = $this->extension_storage->read($name);
+      $active = $this->featuresManager->getActiveStorage()->read($name);
+      $extension = $this->featuresManager->getExtensionStorage()->read($name);
       if (empty($extension)) {
         $extension = array();
       }

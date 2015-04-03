@@ -12,6 +12,7 @@ use Drupal\features\FeaturesGenerationMethodBase;
 use Drupal\Core\Archiver\ArchiveTar;
 use Drupal\Core\Config\InstallStorage;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\features\FeaturesBundleInterface;
 
 /**
  * Class for generating a compressed archive of packages.
@@ -33,7 +34,7 @@ class FeaturesGenerationArchive extends FeaturesGenerationMethodBase {
   /**
    * Reads and merges in existing files for a given package or profile.
    */
-  protected function preparePackage($add_profile, &$package, $existing_packages) {
+  protected function preparePackage(&$package, $existing_packages, FeaturesBundleInterface $bundle = NULL) {
     if (isset($existing_packages[$package['machine_name']])) {
       $existing_directory = $existing_packages[$package['machine_name']];
       // Scan for all files.
@@ -71,7 +72,7 @@ class FeaturesGenerationArchive extends FeaturesGenerationMethodBase {
   /**
    * {@inheritdoc}
    */
-  public function generate($add_profile = FALSE, array $profile = array(), array $packages = array()) {
+  public function generate(array $packages = array(), FeaturesBundleInterface $bundle = NULL) {
     // If no packages were specified, get all packages.
     if (empty($packages)) {
       $packages = $this->featuresManager->getPackages();
@@ -79,21 +80,21 @@ class FeaturesGenerationArchive extends FeaturesGenerationMethodBase {
 
     $return = [];
 
-    // Remove any previous version of the exported archive.
-    $machine_name = $this->configFactory->get('features.settings')->get('profile.machine_name');
-    $archive_name = file_directory_temp() . '/' . $machine_name . '.tar.gz';
+    $filename = (isset($bundle) && $bundle->isProfile()) ? $bundle->getProfileName() :
+      (isset($bundle) ? $bundle->getMachineName() : 'features_archive');
+    $archive_name = file_directory_temp() . '/' . $filename . '.tar.gz';
     if (file_exists($archive_name)) {
       file_unmanaged_delete($archive_name);
     }
 
     $archiver = new ArchiveTar($archive_name);
 
-    if ($add_profile) {
-      // If no profile was passed, load the profile.
-      if (empty($profile)) {
-        $profile = $this->featuresManager->getProfile();
+    // add the Profile
+    if (isset($bundle) && $bundle->isProfile()) {
+      $profile_package = $this->featuresManager->getPackage($bundle->getProfileName());
+      if (!empty($profile_package)) {
+        $this->generatePackage($return, $profile_package, $archiver);
       }
-      $this->generatePackage($return, $profile, $archiver);
     }
 
     // Add package files.

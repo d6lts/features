@@ -48,6 +48,20 @@ interface FeaturesBundleInterface {
   public function setName($name);
 
   /**
+   * Return a full machine name prefixed with the bundle name
+   * @param string $short_name short machine_name
+   * @return string full machine_name
+   */
+  public function getFullName($short_name);
+
+  /**
+   * Determine if the $machine_name is prefixed by the bundle
+   * @param string $machine_name
+   * @return bool
+   */
+  public function inBundle($machine_name);
+
+  /**
    * Get the description of a bundle.
    * @return string
    */
@@ -58,6 +72,31 @@ interface FeaturesBundleInterface {
    * @param string $description
    */
   public function setDescription($description);
+
+  /**
+   * Get option for using a profile with this bundle.
+   * @return bool
+   */
+  public function isProfile();
+
+  /**
+   * Set option for using a profile with this bundle.
+   * @param bool $value
+   */
+  public function setIsProfile($value);
+
+  /**
+   * Return the machine name of the profile.
+   * If the bundle doesn't use a profile, return the current site profile.
+   * @return string
+   */
+  public function getProfileName();
+
+  /**
+   * Set the name of the profile associated with this bundle
+   * @param string $machine_name
+   */
+  public function setProfileName($machine_name);
 
   /**
    * Get the list of enabled assignment methods.

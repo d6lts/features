@@ -10,7 +10,6 @@ namespace Drupal\features\Plugin\FeaturesAssignment;
 use Drupal\component\Utility\Unicode;
 use Drupal\features\FeaturesAssignmentMethodBase;
 use Drupal\features\FeaturesManagerInterface;
-use Drupal\features\FeaturesInstallStorage;
 
 /**
  * Class for excluding configuration from packages.
@@ -34,12 +33,13 @@ class FeaturesAssignmentExclude extends FeaturesAssignmentMethodBase {
    * {@inheritdoc}
    */
   public function assignPackages() {
-    $config_types = $this->featuresManager->listConfigTypes();
-    $settings = $this->featuresManager->getAssignmentSettings();
+    $current_bundle = $this->assigner->getBundle();
+    $settings = $current_bundle->getAssignmentSettings(self::METHOD_ID);
+
     $config_collection = $this->featuresManager->getConfigCollection();
 
     // Exclude by configuration type.
-    $exclude_types = $settings->get('exclude.types');
+    $exclude_types = $settings['types'];
     if (!empty($exclude_types)) {
       foreach ($config_collection as $item_name => $item) {
         if (in_array($item['type'], $exclude_types)) {
@@ -49,10 +49,9 @@ class FeaturesAssignmentExclude extends FeaturesAssignmentMethodBase {
     }
 
     // Exclude configuration already provided by modules.
-    $exclude_module = $settings->get('exclude.module');
+    $exclude_module = $settings['module'];
     if (!empty($exclude_module['enabled'])) {
-      $extension_config_storage = new FeaturesInstallStorage($this->configStorage);
-      $install_list = $extension_config_storage->listAll();
+      $install_list = $this->featuresManager->getExtensionStorage()->listAll();
       // There are two settings that can limit what's included.
       // First, we can skipped configuration provided by the install profile.
       $module_profile = !empty($exclude_module['profile']);
@@ -63,14 +62,12 @@ class FeaturesAssignmentExclude extends FeaturesAssignmentMethodBase {
         // Load the names of any configuration objects provided by the install
         // profile.
         if ($module_profile) {
-          $profile = drupal_get_profile();
-          $modules = array_merge($modules, $this->featuresManager->getModuleList([$profile]));
+          $modules = array_merge($modules, $this->featuresManager->getModuleList([$current_bundle->getProfileName()]));
         }
         // Load the names of any configuration objects provided by modules
         // having the namespace of the current package set.
         if ($module_namespace) {
-          $profile = $this->featuresManager->getProfile();
-          $modules = array_merge($modules, $this->featuresManager->getAllModules(FALSE, $profile['machine_name']));
+          $modules = array_merge($modules, $this->featuresManager->getAllModules($current_bundle));
         }
         // If any configuration was found, remove it from the list.
         foreach ($modules as $extension) {
@@ -87,7 +84,7 @@ class FeaturesAssignmentExclude extends FeaturesAssignmentMethodBase {
 
     // Exclude configuration items on a curated list of site-specific
     // configuration.
-    if ($settings->get('exclude.curated')) {
+    if ($settings['curated']) {
       $item_names = [
         'core.extension',
         'field.settings',

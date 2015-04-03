@@ -15,7 +15,7 @@ use Drupal\Core\Form\FormStateInterface;
  */
 class AssignmentCoreForm extends AssignmentFormBase {
 
-  CONST METHODID = 'core';
+  CONST METHOD_ID = 'core';
 
   /**
    * {@inheritdoc}
@@ -29,7 +29,7 @@ class AssignmentCoreForm extends AssignmentFormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, $bundle_name = NULL) {
     $this->current_bundle = $this->assigner->loadBundle($bundle_name);
-    $settings = $this->current_bundle->getAssignmentSettings(self::METHODID);
+    $settings = $this->current_bundle->getAssignmentSettings(self::METHOD_ID);
 
     $this->setTypeSelect($form, $settings['types'], $this->t('core'));
     $this->setActions($form);
@@ -44,7 +44,7 @@ class AssignmentCoreForm extends AssignmentFormBase {
     $settings = array(
       'types' => array_filter($form_state->getValue('types')),
     );
-    $this->current_bundle->getAssignmentSettings(self::METHODID, $settings)->save();
+    $this->current_bundle->getAssignmentSettings(self::METHOD_ID, $settings)->save();
     $this->setRedirect($form_state);
 
     drupal_set_message($this->t('Package assignment configuration saved.'));

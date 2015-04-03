@@ -8,8 +8,7 @@
 namespace Drupal\features;
 
 use Drupal\features\FeaturesManagerInterface;
-use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Config\StorageInterface;
+use Drupal\features\FeaturesAssignerInterface;
 
 /**
  * Interface for package assignment classes.
@@ -26,20 +25,12 @@ interface FeaturesAssignmentMethodInterface {
   public function setFeaturesManager(FeaturesManagerInterface $features_manager);
 
   /**
-   * Injects the configuration factory.
+   * Injects the features assigner.
    *
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
-   *   The configuration factory.
+   * @param \Drupal\features\FeaturesAssignerInterface $assigner
+   *   The features assigner to be used to retrieve the bundle configuration.
    */
-  public function setConfigFactory(ConfigFactoryInterface $config_factory);
-
-  /**
-   * Injects the configuration storage.
-   *
-   * @param \Drupal\Core\Config\StorageInterface $config_storage
-   *   The configuration storage.
-   */
-  public function setConfigStorage(StorageInterface $config_storage);
+  public function setAssigner(FeaturesAssignerInterface $assigner);
 
   /**
    * Performs package assignment.

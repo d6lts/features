@@ -17,7 +17,7 @@ use Drupal\features\FeaturesBundleInterface;
  */
 class AssignmentExcludeForm extends AssignmentFormBase {
 
-  CONST METHODID = 'exclude';
+  CONST METHOD_ID = 'exclude';
 
   /**
    * {@inheritdoc}
@@ -32,7 +32,7 @@ class AssignmentExcludeForm extends AssignmentFormBase {
   public function buildForm(array $form, FormStateInterface $form_state, $bundle_name = NULL) {
     $this->current_bundle = $this->assigner->loadBundle($bundle_name);
 
-    $settings = $this->current_bundle->getAssignmentSettings(self::METHODID);
+    $settings = $this->current_bundle->getAssignmentSettings(self::METHOD_ID);
     $this->setTypeSelect($form, $settings['types'], $this->t('exclude'));
 
     $module_settings = $settings['module'];
@@ -101,7 +101,7 @@ class AssignmentExcludeForm extends AssignmentFormBase {
       'module' => $module,
     );
 
-    $this->current_bundle->setAssignmentSettings(self::METHODID, $settings)->save();
+    $this->current_bundle->setAssignmentSettings(self::METHOD_ID, $settings)->save();
 
     $this->setRedirect($form_state);
     drupal_set_message($this->t('Package assignment configuration saved.'));

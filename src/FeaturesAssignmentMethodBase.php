@@ -7,9 +7,8 @@
 
 namespace Drupal\features;
 
-use Drupal\features\FeaturesManager;
-use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Config\StorageInterface;
+use Drupal\features\FeaturesManagerInterface;
+use Drupal\features\FeaturesAssignerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 
 /**
@@ -26,18 +25,11 @@ abstract class FeaturesAssignmentMethodBase implements FeaturesAssignmentMethodI
   protected $featuresManager;
 
   /**
-   * The configuration factory.
+   * The features assigner.
    *
-   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   * @var \Drupal\features\FeaturesAssignerInterface
    */
-  protected $configFactory;
-
-  /**
-   * The config storage.
-   *
-   * @var \Drupal\Core\Config\StorageInterface
-   */
-  protected $configStorage;
+  protected $assigner;
 
   /**
    * {@inheritdoc}
@@ -49,15 +41,8 @@ abstract class FeaturesAssignmentMethodBase implements FeaturesAssignmentMethodI
   /**
    * {@inheritdoc}
    */
-  public function setConfigFactory(ConfigFactoryInterface $config_factory) {
-    $this->configFactory = $config_factory;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setConfigStorage(StorageInterface $config_storage) {
-    $this->configStorage = $config_storage;
+  public function setAssigner(FeaturesAssignerInterface $assigner) {
+    $this->assigner = $assigner;
   }
 
 }

@@ -98,7 +98,7 @@ class FeaturesEditForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, $featurename = '') {
-    $feature_set = $this->featuresManager->getNamespace();
+    $current_bundle = $this->assigner->loadBundle();
     $this->assigner->assignConfigPackages();
     $packages = $this->featuresManager->getPackages();
     if (empty($packages[$featurename])) {
@@ -117,25 +117,33 @@ class FeaturesEditForm extends FormBase {
       '#prefix' => "<div id='features-export-info'>",
       '#suffix' => '</div>',
     );
+
     $form['info']['name'] = array(
       '#title' => t('Name'),
-      '#description' => t('Example: Image gallery') . ' (' . t('Do not begin name with numbers.') . ')' . '<br/>' .
-        t('The namespace "!name_" will be prepended to the machine name', array('!name' => $feature_set)),
+      '#description' => t('Example: Image gallery') . ' (' . t('Do not begin name with numbers.') . ')',
       '#type' => 'textfield',
       '#default_value' => $this->package['name'],
     );
+    if (!$current_bundle->isDefault()) {
+      $form['info']['name']['#description'] .= '<br/>' .
+        t('The namespace "!name_" will be prepended to the machine name', array('!name' => $current_bundle->getMachineName()));
+    }
+
     $form['info']['machine_name'] = array(
       '#type' => 'machine_name',
       '#title' => t('Machine-readable name'),
-      '#description' => t('Example: image_gallery') . '<br/>' .
-        t('NOTE: Do NOT include the namespace prefix "!name_"; it will be added automatically. ', array('!name' => $feature_set)) .
-        t('May only contain lowercase letters, numbers and underscores.'),
+      '#description' => t('Example: image_gallery') . ' ' . t('May only contain lowercase letters, numbers and underscores.'),
       '#required' => TRUE,
       '#default_value' => $this->package['machine_name_short'],
       '#machine_name' => array(
         'source' => array('info', 'name'),
       ),
     );
+    if (!$current_bundle->isDefault()) {
+      $form['info']['machine_name']['#description'] .= '<br/>' .
+        t('NOTE: Do NOT include the namespace prefix "!name_"; it will be added automatically. ', array('!name' => $current_bundle->getMachineName()));
+    }
+
     $form['info']['description'] = array(
       '#title' => t('Description'),
       '#description' => t('Provide a short description of what users should expect when they enable your feature.'),
@@ -143,12 +151,7 @@ class FeaturesEditForm extends FormBase {
       '#rows' => 3,
       '#default_value' => $this->package['description'],
     );
-    $form['info']['package'] = array(
-      '#title' => t('Package'),
-      '#description' => t('Organize your features in groups.'),
-      '#type' => 'textfield',
-      '#default_value' => $this->package['package'],
-    );
+
     $form['info']['version'] = array(
       '#title' => t('Version'),
       '#description' => t('Examples: 7.x-1.0, 7.x-1.0-beta1'),
@@ -618,13 +621,12 @@ class FeaturesEditForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
+    $current_bundle = $this->assigner->loadBundle();
     $this->assigner->assignConfigPackages();
 
-    $profile = $this->featuresManager->getProfile();
     $this->package['name'] = $form_state->getValue('name');
     $this->package['machine_name_short'] = $form_state->getValue('machine_name');
-    $prefix = !empty($profile['machine_name']) ? $profile['machine_name'] . '_' : '';
-    $this->package['machine_name'] = $prefix . $this->package['machine_name_short'];
+    $this->package['machine_name'] = $current_bundle->getFullName($this->package['machine_name_short']);
     $this->package['description'] = $form_state->getValue('description');
     $this->package['version'] = $form_state->getValue('version');
     // Save it first just to create it in case it's a new package.
@@ -644,16 +646,10 @@ class FeaturesEditForm extends FormBase {
 
     if (!empty($method_id)) {
       $packages = array($this->package['machine_name']);
-      $profile_settings = $this->featuresManager->getSettings()->get('profile');
-      if ($profile_settings['add']) {
-        $this->generator->generateProfile($method_id, $packages, FALSE);
-      }
-      else {
-        $this->generator->generatePackages($method_id, $packages, FALSE);
-      }
-
+      $this->generator->generatePackages($method_id, $packages, $current_bundle);
       $this->generator->applyExportFormSubmit($method_id, $form, $form_state);
     }
+
     $form_state->setRedirect('features.edit', array('featurename' => $this->package['machine_name_short']));
   }
 
