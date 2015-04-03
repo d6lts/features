@@ -26,7 +26,7 @@ class FeaturesAssignmentBaseType extends FeaturesAssignmentMethodBase {
   /**
    * The package assignment method id.
    */
-  const METHOD_ID = 'base-type';
+  const METHOD_ID = 'base';
 
   /**
    * {@inheritdoc}

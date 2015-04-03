@@ -25,7 +25,7 @@ class FeaturesAssignmentCoreType extends FeaturesAssignmentMethodBase {
   /**
    * The package assignment method id.
    */
-  const METHOD_ID = 'core-type';
+  const METHOD_ID = 'core';
 
   /**
    * {@inheritdoc}

@@ -1,15 +1,15 @@
 assignment:
   enabled:
-    - base-type
-    - core-type
+    - base
+    - core
     - dependency
     - exclude
     - existing
     - packages
     - profile
   method_weights:
-    base-type: -2
-    core-type: 0
+    base: -2
+    core: 0
     dependency: 10
     exclude: -8
     existing: -10

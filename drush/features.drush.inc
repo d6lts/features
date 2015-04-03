@@ -115,11 +115,8 @@ function features_drush_command() {
   );
 
   foreach ($items as $name => &$item) {
-    $item['options']['all'] = array(
-      'description' => 'Clear namespace to use all site config.'
-    );
     $item['options']['name'] = array(
-      'description' => 'Use a specific namespace.'
+      'description' => 'Use a specific bundle namespace.'
     );
   }
 
@@ -131,13 +128,13 @@ function features_drush_command() {
  *   --name="bundle_name"  set the bundle namespace
  */
 function _drush_features_options() {
+  $assigner = \Drupal::service('features_assigner');
   $bundle_name = drush_get_option('name');
   if (!empty($bundle_name)) {
-    $assigner = \Drupal::service('features_assigner');
-    $bundle = $assigner->getBundle($bundle_name);
-    if (isset($bundle)) {
-      $assigner->setCurrent($bundle);
-    }
+    $assigner->applyBundle($bundle_name);
+  }
+  else {
+    $assigner->assignConfigPackages();
   }
 }
 
@@ -415,8 +412,8 @@ function drush_features_diff() {
   }
 
   $manager = \Drupal::service('features.manager');
-  // Ensure all packages are available for listing
-  $manager->applyNamespace('');
+  $assigner = \Drupal::service('features_assigner');
+  $assigner->assignConfigPackages();
 
   $module = $args[0];
   $filter_ctypes = drush_get_option("ctypes");

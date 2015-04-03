@@ -223,9 +223,9 @@ class FeaturesManager implements FeaturesManagerInterface {
    * {@inheritdoc}
    */
   public function savePackage(array &$package) {
-    if (!empty($package['machine_name'])) {
+    if (!empty($package['machine_name_short'])) {
       $this->addPackageFiles($package);
-      $this->packages[$package['machine_name']] = $package;
+      $this->packages[$package['machine_name_short']] = $package;
     }
   }
 
