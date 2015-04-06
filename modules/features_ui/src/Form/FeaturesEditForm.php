@@ -51,6 +51,20 @@ class FeaturesEditForm extends FormBase {
   protected $package;
 
   /**
+   * Current bundle machine name
+   * NOTE: D8 cannot serialize objects within forms so you can't directly
+   * store the entire Bundle object here.
+   * @var string
+   */
+  protected $bundle;
+
+  /**
+   * Previous bundle name for ajax processing
+   * @var string
+   */
+  protected $old_bundle;
+
+  /**
    * Config to be specifically excluded
    * @var array
    */
@@ -98,8 +112,18 @@ class FeaturesEditForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, $featurename = '') {
-    $current_bundle = $this->assigner->loadBundle();
+    $trigger = $form_state->getTriggeringElement();
+    if ($trigger['#name'] == 'package') {
+      $this->old_bundle = $this->bundle;
+      $bundle_name = $form_state->getValue('package');
+      $bundle = $this->assigner->getBundle($bundle_name);
+    }
+    else {
+      $bundle = $this->assigner->loadBundle();
+    }
+    $this->bundle = $bundle->getMachineName();
     $this->assigner->assignConfigPackages();
+
     $packages = $this->featuresManager->getPackages();
     if (empty($packages[$featurename])) {
       $featurename = str_replace(array('-', ' '), '_', $featurename);
@@ -108,6 +132,17 @@ class FeaturesEditForm extends FormBase {
     else {
       $this->package = $packages[$featurename];
     }
+
+    $form['package'] = array(
+      '#title' => t('Bundle'),
+      '#type' => 'select',
+      '#options' => $this->assigner->getBundleOptions(t('--None--')),
+      '#default_value' => $bundle->getMachineName(),
+      '#ajax' => array(
+        'callback' => '::updateBundle',
+        'wrapper' => 'features-export-info',
+      ),
+    );
 
     $form['info'] = array(
       '#type' => 'fieldset',
@@ -124,9 +159,9 @@ class FeaturesEditForm extends FormBase {
       '#type' => 'textfield',
       '#default_value' => $this->package['name'],
     );
-    if (!$current_bundle->isDefault()) {
+    if (!$bundle->isDefault()) {
       $form['info']['name']['#description'] .= '<br/>' .
-        t('The namespace "!name_" will be prepended to the machine name', array('!name' => $current_bundle->getMachineName()));
+        t('The namespace "!name_" will be prepended to the machine name', array('!name' => $bundle->getMachineName()));
     }
 
     $form['info']['machine_name'] = array(
@@ -134,14 +169,14 @@ class FeaturesEditForm extends FormBase {
       '#title' => t('Machine-readable name'),
       '#description' => t('Example: image_gallery') . ' ' . t('May only contain lowercase letters, numbers and underscores.'),
       '#required' => TRUE,
-      '#default_value' => $current_bundle->getShortName($this->package['machine_name']),
+      '#default_value' => $bundle->getShortName($this->package['machine_name']),
       '#machine_name' => array(
         'source' => array('info', 'name'),
       ),
     );
-    if (!$current_bundle->isDefault()) {
+    if (!$bundle->isDefault()) {
       $form['info']['machine_name']['#description'] .= '<br/>' .
-        t('NOTE: Do NOT include the namespace prefix "!name_"; it will be added automatically. ', array('!name' => $current_bundle->getMachineName()));
+        t('NOTE: Do NOT include the namespace prefix "!name_"; it will be added automatically. ', array('!name' => $bundle->getMachineName()));
     }
 
     $form['info']['description'] = array(
@@ -198,6 +233,24 @@ class FeaturesEditForm extends FormBase {
     );
 
     return $form;
+  }
+
+  /**
+   * Ajax callback for handling switching the bundle selector.
+   */
+  public function updateBundle($form, FormStateInterface $form_state) {
+    $old_bundle = $this->assigner->getBundle($this->old_bundle);
+    $bundle_name = $form_state->getValue('package');
+    $bundle = $this->assigner->getBundle($bundle_name);
+    if (isset($bundle) && isset($old_bundle)) {
+      $short_name = $old_bundle->getShortName($this->package['machine_name']);
+      if ($bundle->isDefault()) {
+        $short_name = $old_bundle->getFullName($short_name);
+      }
+      $this->package['machine_name'] = $bundle->getFullName($short_name);
+      $form['info']['machine_name']['#value'] = $bundle->getShortName($this->package['machine_name']);
+    }
+    return $form['info'];
   }
 
   /**
@@ -621,11 +674,11 @@ class FeaturesEditForm extends FormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $current_bundle = $this->assigner->loadBundle();
+    $bundle = $this->assigner->getBundle($this->bundle);
     $this->assigner->assignConfigPackages();
 
     $this->package['name'] = $form_state->getValue('name');
-    $this->package['machine_name'] = $current_bundle->getFullName($form_state->getValue('machine_name'));
+    $this->package['machine_name'] = $bundle->getFullName($form_state->getValue('machine_name'));
     $this->package['description'] = $form_state->getValue('description');
     $this->package['version'] = $form_state->getValue('version');
     // Save it first just to create it in case it's a new package.
@@ -645,7 +698,7 @@ class FeaturesEditForm extends FormBase {
 
     if (!empty($method_id)) {
       $packages = array($this->package['machine_name']);
-      $this->generator->generatePackages($method_id, $packages, $current_bundle);
+      $this->generator->generatePackages($method_id, $packages, $bundle);
       $this->generator->applyExportFormSubmit($method_id, $form, $form_state);
     }
 
