@@ -133,17 +133,6 @@ class FeaturesEditForm extends FormBase {
       $this->package = $packages[$featurename];
     }
 
-    $form['package'] = array(
-      '#title' => t('Bundle'),
-      '#type' => 'select',
-      '#options' => $this->assigner->getBundleOptions(t('--None--')),
-      '#default_value' => $bundle->getMachineName(),
-      '#ajax' => array(
-        'callback' => '::updateBundle',
-        'wrapper' => 'features-export-info',
-      ),
-    );
-
     $form['info'] = array(
       '#type' => 'fieldset',
       '#title' => t('General Information'),
@@ -185,6 +174,17 @@ class FeaturesEditForm extends FormBase {
       '#type' => 'textarea',
       '#rows' => 3,
       '#default_value' => $this->package['description'],
+    );
+
+    $form['info']['package'] = array(
+      '#title' => t('Bundle'),
+      '#type' => 'select',
+      '#options' => $this->assigner->getBundleOptions(t('--None--')),
+      '#default_value' => $bundle->getMachineName(),
+      '#ajax' => array(
+        'callback' => '::updateBundle',
+        'wrapper' => 'features-export-info',
+      ),
     );
 
     $form['info']['version'] = array(
@@ -696,13 +696,15 @@ class FeaturesEditForm extends FormBase {
       $method_id = $trigger['#name'];
     }
 
+    // Set default redirect, but allow generators to change it later.
+    $form_state->setRedirect('features.edit', array('featurename' => $this->package['machine_name']));
     if (!empty($method_id)) {
       $packages = array($this->package['machine_name']);
       $this->generator->generatePackages($method_id, $packages, $bundle);
       $this->generator->applyExportFormSubmit($method_id, $form, $form_state);
     }
 
-    $form_state->setRedirect('features.edit', array('featurename' => $this->package['machine_name']));
+    $this->assigner->setCurrent($bundle);
   }
 
   /**

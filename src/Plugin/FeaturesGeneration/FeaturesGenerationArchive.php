@@ -32,6 +32,12 @@ class FeaturesGenerationArchive extends FeaturesGenerationMethodBase {
   const METHOD_ID = 'archive';
 
   /**
+   * The filename being written
+   * @var string
+   */
+  protected $archive_name;
+
+  /**
    * Reads and merges in existing files for a given package or profile.
    */
   protected function preparePackage(&$package, $existing_packages, FeaturesBundleInterface $bundle = NULL) {
@@ -73,16 +79,21 @@ class FeaturesGenerationArchive extends FeaturesGenerationMethodBase {
    * {@inheritdoc}
    */
   public function generate(array $packages = array(), FeaturesBundleInterface $bundle = NULL) {
+    $filename = isset($bundle) ? $bundle->getMachineName() : 'features_archive';
     // If no packages were specified, get all packages.
     if (empty($packages)) {
       $packages = $this->featuresManager->getPackages();
     }
+    elseif (count($packages) == 1) {
+      // Single package export, so name tar archive by package name.
+      $filename = current($packages)['machine_name'];
+    }
 
     $return = [];
 
-    $filename = (isset($bundle) && $bundle->isProfile()) ? $bundle->getProfileName() :
-      (isset($bundle) ? $bundle->getMachineName() : 'features_archive');
-    $archive_name = file_directory_temp() . '/' . $filename . '.tar.gz';
+    $filename = (isset($bundle) && $bundle->isProfile()) ? $bundle->getProfileName() : $filename;
+    $this->archive_name = $filename . '.tar.gz';
+    $archive_name = file_directory_temp() . '/' . $this->archive_name;
     if (file_exists($archive_name)) {
       file_unmanaged_delete($archive_name);
     }
@@ -99,6 +110,10 @@ class FeaturesGenerationArchive extends FeaturesGenerationMethodBase {
 
     // Add package files.
     foreach ($packages as $package) {
+      if (count($packages) == 1) {
+        // Single module export, so don't generate entire modules dir structure.
+        $package['directory'] = $package['machine_name'];
+      }
       $this->generatePackage($return, $package, $archiver);
     }
 
@@ -215,6 +230,10 @@ class FeaturesGenerationArchive extends FeaturesGenerationMethodBase {
    */
   public function exportFormSubmit(array &$form, FormStateInterface $form_state) {
     // Redirect to the archive file download.
+    $session = \Drupal::request()->getSession();
+    if (isset($session)) {
+      $session->set('features_download', $this->archive_name);
+    }
     $form_state->setRedirect('features.export_download');
   }
 

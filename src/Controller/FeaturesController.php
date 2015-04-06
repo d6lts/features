@@ -47,9 +47,12 @@ class FeaturesController implements ContainerInjectionInterface {
    * Downloads a tarball of the site configuration.
    */
   public function downloadExport() {
-    $archive_name = \Drupal::config('features.settings')->get('profile.machine_name') . '.tar.gz';
-    $request = new Request(array('file' => $archive_name));
-    return $this->fileDownloadController->download($request, 'temporary');
+    $session = \Drupal::request()->getSession();
+    if (isset($session)) {
+      $archive_name = $session->get('features_download');
+      $request = new Request(array('file' => $archive_name));
+      return $this->fileDownloadController->download($request, 'temporary');
+    }
   }
 
 }
