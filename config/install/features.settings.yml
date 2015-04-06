@@ -5,6 +5,7 @@ assignment:
     - dependency
     - exclude
     - existing
+    - namespace
     - packages
     - profile
   method_weights:
@@ -19,8 +20,3 @@ assignment:
 export:
   folder: 'custom'
 langcode: en
-profile:
-  add: 0
-  description: ''
-  name: ''
-  machine_name: ''
