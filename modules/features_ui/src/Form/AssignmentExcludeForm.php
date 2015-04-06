@@ -75,6 +75,7 @@ class AssignmentExcludeForm extends AssignmentFormBase {
     );
 
     $machine_name = $this->current_bundle->getMachineName();
+    $machine_name = !empty($machine_name) ? $machine_name : t('none');
     $form['module']['namespace'] = array(
       '#type' => 'checkbox',
       '#title' => t("Don't exclude configuration by namespace"),

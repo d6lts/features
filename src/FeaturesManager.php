@@ -424,7 +424,7 @@ class FeaturesManager implements FeaturesManagerInterface {
     // Detect modules by namespace.
     // If namespace is provided but is empty, then match all modules
     foreach ($modules as $module_name => $extension) {
-      if (!isset($bundle) || $bundle->inBundle($module_name)) {
+      if (!isset($bundle) || $bundle->isDefault() || $bundle->inBundle($module_name)) {
         $return[$module_name] = $extension;
       }
     }
