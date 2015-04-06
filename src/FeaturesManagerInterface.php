@@ -403,10 +403,22 @@ interface FeaturesManagerInterface {
    * @param array $feature
    *   the package array
    *   the 'state' property is updated if overrides are detected
+   * @param book $include_new
+   *   if set, include newly detected config not yet exported (see @detectNew)
    * @result array $different
    *   the array of config items that are overridden
    */
-  public function detectOverrides($feature);
+  public function detectOverrides($feature, $include_new = FALSE);
+
+  /**
+   * Determine which config has not been exported to the feature
+   * Typically added as an auto-detected dependency
+   * @param array $feature
+   *   the package array
+   * @result array $different
+   *   the array of config items that are overridden
+   */
+  public function detectNew($feature);
 
   /**
    * Helper function to return a translatable label for the different status constants

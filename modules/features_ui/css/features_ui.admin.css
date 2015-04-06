@@ -15,6 +15,16 @@ span.features-item-list span {
   white-space: nowrap;
 }
 
+.features-listing span.features-detected,
+.features-listing .features-detected a {
+  color:#68a;
+  background:#def;
+  border-radius: 5px;
+  margin-right: 5px;
+  padding: 2px 5px;
+  white-space: nowrap;
+}
+
 #features-assignment-methods tr.draggable > td:nth-child(1) {
   white-space: nowrap;
 }

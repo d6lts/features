@@ -643,9 +643,11 @@ class FeaturesManager implements FeaturesManagerInterface {
     if (!empty($package['config'])) {
       // Save the current bundle in the info file so the package
       // can be reloaded later by the AssignmentPackages plugin.
-      $info['features']['name'] = $package['machine_name'];
       if (isset($bundle)) {
         $info['features']['bundle'] = $bundle->getMachineName();
+      }
+      else {
+        unset($info['features']['bundle']);
       }
       if (!empty($package['excluded'])) {
         $info['features']['excluded'] = $package['excluded'];
@@ -920,7 +922,7 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function detectOverrides($feature) {
+  public function detectOverrides($feature, $include_new = FALSE) {
     $config_diff = \Drupal::service('config_update.config_diff');
 
     $different = array();
@@ -928,7 +930,7 @@ class FeaturesManager implements FeaturesManagerInterface {
       $active = $this->configStorage->read($name);
       $extension = $this->extensionStorage->read($name);
       $extension = !empty($extension) ? $extension : array();
-      if (!$config_diff->same($extension, $active)) {
+      if (($include_new || !empty($extension)) && !$config_diff->same($extension, $active)) {
         $different[] = $name;
       }
     }
@@ -937,6 +939,21 @@ class FeaturesManager implements FeaturesManagerInterface {
       $feature['state'] = FeaturesManagerInterface::STATE_OVERRIDDEN;
     }
     return $different;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function detectNew($feature) {
+    $result = array();
+    foreach ($feature['config'] as $name) {
+      $extension = $this->extensionStorage->read($name);
+      if (empty($extension)) {
+        $result[] = $name;
+      }
+    }
+
+    return $result;
   }
 
   /**

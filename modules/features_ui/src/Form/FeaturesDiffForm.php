@@ -131,7 +131,7 @@ class FeaturesDiffForm extends FormBase {
     $options = array();
     foreach ($packages as $package_name => $package) {
       if ($package['status'] != FeaturesManagerInterface::STATUS_NO_EXPORT) {
-        $overrides = $this->featuresManager->detectOverrides($package);
+        $overrides = $this->featuresManager->detectOverrides($package, TRUE);
         if (!empty($overrides)) {
           $options += array(
             $package['machine_name'] => array(

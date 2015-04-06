@@ -27,13 +27,25 @@ class FeaturesAssignmentPackages extends FeaturesAssignmentMethodBase {
    */
   const METHOD_ID = 'packages';
 
-  protected function getPrefix($name, $short_name) {
-    $pos = strpos($name, '_' . $short_name);
-    $expected_pos = strlen($name) - strlen($short_name) - 1;
-    if ($pos === $expected_pos) {
-      return substr($name, 0, $expected_pos);
+  /**
+   * Search for a bundle that matches the $info.yml export, or create a new
+   * bundle as needed.
+   * @param $info
+   * @return \Drupal\features\FeaturesBundleInterface
+   */
+  protected function findBundle($info) {
+    $bundle = NULL;
+    if (!empty($info['features']['bundle'])) {
+      $bundle = $this->assigner->getBundle($info['features']['bundle']);
     }
-    return '';
+    elseif (!empty($info['package'])) {
+      $bundle = $this->assigner->findBundleByName($info['package']);
+    }
+    if (!isset($bundle)) {
+      // Create the bundle if it doesn't exist yet.
+      $bundle = $this->assigner->createBundle($info['package'], $info['features']['bundle']);
+    }
+    return $bundle;
   }
 
   /**
@@ -45,25 +57,7 @@ class FeaturesAssignmentPackages extends FeaturesAssignmentMethodBase {
       $this->featuresManager->initPackage($name, $info['name'], !empty($info['description']) ? $info['description'] : '');
       // Set the *actual* full machine name from the module.
       $package = $this->featuresManager->getPackage($name);
-      $short_name = $info['features']['name'];
-      $bundle = NULL;
-      if (!empty($info['package'])) {
-        $bundle = $this->assigner->findBundleByName($info['package']);
-        if (!isset($bundle)) {
-          $bundle = $this->assigner->createBundle($info['package']);
-          $prefix = $this->getPrefix($package['machine_name'], $short_name);
-          if (!empty($prefix) && ($prefix != $bundle->getMachineName())) {
-            // Update newly created bundle with correct machine name.
-            $bundle->setMachineName($prefix);
-            $this->assigner->setBundle($bundle);
-            $bundle->save();
-          }
-        }
-      }
-      else if ($package['machine_name'] != $short_name) {
-        $bundle_name = $this->getPrefix($package['machine_name'], $short_name);
-        $bundle = $this->assigner->getBundle($bundle_name);
-      }
+      $bundle = $this->findBundle($info);
       if (isset($bundle)) {
         $package['bundle'] = $bundle->getMachineName();
       }

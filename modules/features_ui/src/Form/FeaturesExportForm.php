@@ -238,6 +238,7 @@ class FeaturesExportForm extends FormBase {
     // Use 'data' instead of plain string value so a blank version doesn't remove column from table.
     $element['version'] = array('data' => String::checkPlain($package['version']));
     $overrides = $this->featuresManager->detectOverrides($package);
+    $new_config = $this->featuresManager->detectNew($package);
     if (!empty($overrides) && ($package['status'] != FeaturesManagerInterface::STATUS_NO_EXPORT)) {
       $url = Url::fromRoute('features.diff', array('featurename' => $package['machine_name']));
       $element['state'] = array(
@@ -246,8 +247,18 @@ class FeaturesExportForm extends FormBase {
       );
     }
     else {
-      $element['state'] = '';
-      $overrides = array();
+      if (!empty($new_config) && ($package['status'] != FeaturesManagerInterface::STATUS_NO_EXPORT)) {
+        $url = Url::fromRoute('features.diff', array('featurename' => $package['machine_name']));
+        $element['state'] = array(
+          'data' => \Drupal::l(t('New detected'), $url),
+          'class' => array('features-detected'),
+        );
+      }
+      else {
+        $element['state'] = '';
+        $overrides = array();
+        $new_config = array();
+      }
     }
 
     // Bundle package configuration by type.
@@ -258,6 +269,7 @@ class FeaturesExportForm extends FormBase {
         'name' => String::checkPlain($item_name),
         'label' => String::checkPlain($item['label']),
         'override' => in_array($item_name, $overrides),
+        'detected' => in_array($item_name, $new_config),
       );
     }
     // Add dependencies.
@@ -268,6 +280,7 @@ class FeaturesExportForm extends FormBase {
           'name' => $dependency,
           'label' => $this->moduleHandler->getName($dependency),
           'override' => FALSE,
+          'detected' => FALSE,
         );
       }
     }
