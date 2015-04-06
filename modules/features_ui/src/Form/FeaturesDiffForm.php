@@ -134,7 +134,7 @@ class FeaturesDiffForm extends FormBase {
         $overrides = $this->featuresManager->detectOverrides($package);
         if (!empty($overrides)) {
           $options += array(
-            $package['machine_name_short'] => array(
+            $package['machine_name'] => array(
               'row' => array(
                 'data' => array(
                   '#type' => 'html_tag',
@@ -237,7 +237,7 @@ class FeaturesDiffForm extends FormBase {
           ),
         ),
         '#attributes' => array(
-          'class' => 'diff-' . $package['machine_name_short'],
+          'class' => 'diff-' . $package['machine_name'],
         )
       );
     }

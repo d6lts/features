@@ -45,13 +45,13 @@ class FeaturesAssignmentPackages extends FeaturesAssignmentMethodBase {
       $this->featuresManager->initPackage($name, $info['name'], !empty($info['description']) ? $info['description'] : '');
       // Set the *actual* full machine name from the module.
       $package = $this->featuresManager->getPackage($name);
-      $package['machine_name_short'] = $info['features']['name'];
+      $short_name = $info['features']['name'];
       $bundle = NULL;
       if (!empty($info['package'])) {
         $bundle = $this->assigner->findBundleByName($info['package']);
         if (!isset($bundle)) {
           $bundle = $this->assigner->createBundle($info['package']);
-          $prefix = $this->getPrefix($package['machine_name'], $package['machine_name_short']);
+          $prefix = $this->getPrefix($package['machine_name'], $short_name);
           if (!empty($prefix) && ($prefix != $bundle->getMachineName())) {
             // Update newly created bundle with correct machine name.
             $bundle->setMachineName($prefix);
@@ -60,8 +60,8 @@ class FeaturesAssignmentPackages extends FeaturesAssignmentMethodBase {
           }
         }
       }
-      else if ($package['machine_name'] != $package['machine_name_short']) {
-        $bundle_name = $this->getPrefix($package['machine_name'], $package['machine_name_short']);
+      else if ($package['machine_name'] != $short_name) {
+        $bundle_name = $this->getPrefix($package['machine_name'], $short_name);
         $bundle = $this->assigner->getBundle($bundle_name);
       }
       if (isset($bundle)) {

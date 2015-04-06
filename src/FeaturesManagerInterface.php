@@ -93,11 +93,8 @@ interface FeaturesManagerInterface {
    * @return array
    *   An array of items, each with the following keys:
    *   - 'machine_name': machine name of the package such as 'example_article'.
-   *   - 'machine_name_short': short machine name of the package such as
    *     'article'.
    *   - 'name': human readable name of the package such as 'Example Article'.
-   *   - 'name_short': short human readable name of the package such as
-   *     'Article'.
    *   - 'description': description of the package.
    *   - 'type': type of Drupal project ('module').
    *   - 'core': Drupal core compatibility ('8.x'),
@@ -119,11 +116,8 @@ interface FeaturesManagerInterface {
    * @param array $packages
    *   An array of packages, each with the following keys:
    *   - 'machine_name': machine name of the package such as 'example_article'.
-   *   - 'machine_name_short': short machine name of the package such as
    *     'article'.
    *   - 'name': human readable name of the package such as 'Example Article'.
-   *   - 'name_short': short human readable name of the package such as
-   *     'Article'.
    *   - 'description': description of the package.
    *   - 'type': type of Drupal project ('module').
    *   - 'core': Drupal core compatibility ('8.x'),

@@ -223,9 +223,9 @@ class FeaturesManager implements FeaturesManagerInterface {
    * {@inheritdoc}
    */
   public function savePackage(array &$package) {
-    if (!empty($package['machine_name_short'])) {
+    if (!empty($package['machine_name'])) {
       $this->addPackageFiles($package);
-      $this->packages[$package['machine_name_short']] = $package;
+      $this->packages[$package['machine_name']] = $package;
     }
   }
 
@@ -238,7 +238,7 @@ class FeaturesManager implements FeaturesManagerInterface {
     }
     $result = array();
     foreach ($packages as $key => $package) {
-      if (empty($namespace) || (strpos($package['machine_name'], $namespace) === 0) || ($package['machine_name'] == $package['machine_name_short'])) {
+      if (empty($namespace) || (strpos($package['machine_name'], $namespace) === 0)) {
         $result[$key] = $package;
       }
     }
@@ -434,9 +434,9 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function initPackage($machine_name_short, $name = NULL, $description = '') {
-    if (!isset($this->packages[$machine_name_short])) {
-      return $this->packages[$machine_name_short] = $this->getProject($machine_name_short, $name, $description);
+  public function initPackage($machine_name, $name = NULL, $description = '') {
+    if (!isset($this->packages[$machine_name])) {
+      return $this->packages[$machine_name] = $this->getProject($machine_name, $name, $description);
     }
     return NULL;
   }
@@ -445,10 +445,10 @@ class FeaturesManager implements FeaturesManagerInterface {
    * {@inheritdoc}
    */
   public function initCorePackage() {
-    $machine_name_short = 'core';
+    $machine_name = 'core';
     $name = $this->t('Core');
     $description = $this->t('Provide core components required by other configuration modules.');
-    $this->initPackage($machine_name_short, $name, $description);
+    $this->initPackage($machine_name, $name, $description);
   }
 
   /**
@@ -503,12 +503,12 @@ class FeaturesManager implements FeaturesManagerInterface {
     // Reverse sort by key so that child package will claim items before parent
     // package. E.g., event_registration will claim before event.
     krsort($config_collection);
-    foreach ($patterns as $pattern => $machine_name_short) {
-      if (isset($this->packages[$machine_name_short])) {
+    foreach ($patterns as $pattern => $machine_name) {
+      if (isset($this->packages[$machine_name])) {
         foreach ($config_collection as $item_name => $item) {
           if (empty($item['package']) && preg_match('/[_\-.]' . $pattern . '[_\-.]/', '.' . $item['name_short'] . '.')) {
             try {
-              $this->assignConfigPackage($machine_name_short, [$item_name]);
+              $this->assignConfigPackage($machine_name, [$item_name]);
             }
             catch(\Exception $exception) {
               \Drupal::logger('features')->error($exception->getMessage());
@@ -548,20 +548,17 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * Initializes and returns a package or profile array.
    *
-   * @param string $machine_name_short
-   *   Machine name of the package without a profile prefix.
+   * @param string $machine_name
+   *   Machine name of the package .
    * @param string $name_short
-   *   Human readable name of the package without a profile prefix.
+   *   Human readable name of the package.
    * @param string $description
    *   Description of the package.
    * @return array
    *   An array with the following keys:
    *   - 'machine_name': machine name of the project such as 'example_article'.
-   *   - 'machine_name_short': short machine name of the project such as
    *     'article'.
    *   - 'name': human readable name of the project such as 'Example Article'.
-   *   - 'name_short': short human readable name of the project such as
-   *     'Article'.
    *   - 'description': description of the project.
    *   - 'type': type of Drupal project ('profile' or 'module').
    *   - 'core': Drupal core compatibility ('8.x'),
@@ -576,13 +573,10 @@ class FeaturesManager implements FeaturesManagerInterface {
    *         directory.
    *      - 'string': the contents of the file.
    */
-  protected function getProject($machine_name_short, $name_short = NULL, $description = '', $type = 'module') {
-    $name_short = $this->getName($machine_name_short, $name_short);
+  protected function getProject($machine_name, $name = NULL, $description = '', $type = 'module') {
     $project = [
-      'machine_name' => $machine_name_short,
-      'machine_name_short' => $machine_name_short,
-      'name' => $name_short,
-      'name_short' => $name_short,
+      'machine_name' => $machine_name,
+      'name' => $name,
       'description' => $description,
       'type' => $type,
       'core' => '8.x',
@@ -592,7 +586,7 @@ class FeaturesManager implements FeaturesManagerInterface {
       'status' => FeaturesManagerInterface::STATUS_DEFAULT,
       'version' => '',
       'state' => FeaturesManagerInterface::STATE_DEFAULT,
-      'directory' => $machine_name_short,
+      'directory' => $machine_name,
       'files' => []
     ];
     if ($type == 'module') {
@@ -647,11 +641,12 @@ class FeaturesManager implements FeaturesManagerInterface {
     }
 
     if (!empty($package['config'])) {
-      // Save the current machine_name_short in the info file so the package
+      // Save the current bundle in the info file so the package
       // can be reloaded later by the AssignmentPackages plugin.
-      $info['features'] = array(
-        'name' => $package['machine_name_short']
-      );
+      $info['features']['name'] = $package['machine_name'];
+      if (isset($bundle)) {
+        $info['features']['bundle'] = $bundle->getMachineName();
+      }
       if (!empty($package['excluded'])) {
         $info['features']['excluded'] = $package['excluded'];
       }
@@ -751,30 +746,6 @@ class FeaturesManager implements FeaturesManagerInterface {
     }
 
     return $array1;
-  }
-
-  /**
-   * Returns a human readable name.
-   *
-   * If no human readable name is available, this method generates a default
-   * one based on the machine name.
-   *
-   * @param string $machine_name
-   *   Machine name of the package.
-   * @param string $name
-   *   Human readable name, if any, of the package.
-   *
-   * @return string
-   *   Human readable name of the package.
-   */
-  protected function getName($machine_name, $name = NULL) {
-    // Provide a default name based on the machine name.
-    if (empty($name)) {
-      $name = str_replace('_', ' ', $machine_name);
-    }
-    // Drupal extensions use title case.
-    // @see https://www.drupal.org/node/1346158
-    return ucwords($name);
   }
 
   /**
@@ -928,7 +899,7 @@ class FeaturesManager implements FeaturesManagerInterface {
    */
   public function getExportInfo($package, FeaturesBundleInterface $bundle = NULL) {
 
-    $full_name = isset($bundle) ? $bundle->getFullName($package['machine_name_short']) : $package['machine_name'];
+    $full_name = $package['machine_name'];
 
     if (isset($bundle) && $bundle->isProfile()) {
       // adjust export directory to be in profile

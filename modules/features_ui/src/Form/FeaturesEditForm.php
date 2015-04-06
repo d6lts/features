@@ -134,7 +134,7 @@ class FeaturesEditForm extends FormBase {
       '#title' => t('Machine-readable name'),
       '#description' => t('Example: image_gallery') . ' ' . t('May only contain lowercase letters, numbers and underscores.'),
       '#required' => TRUE,
-      '#default_value' => $this->package['machine_name_short'],
+      '#default_value' => $current_bundle->getShortName($this->package['machine_name']),
       '#machine_name' => array(
         'source' => array('info', 'name'),
       ),
@@ -361,7 +361,7 @@ class FeaturesEditForm extends FormBase {
     $settings = $this->featuresManager->getSettings();
     $allow_conflicts = $settings->get('conflicts');
 
-    $package_name = $this->package['machine_name_short'];
+    $package_name = $this->package['machine_name'];
     // Auto-detect dependencies for included config.
     $package_config = !empty($this->package['config']) ? $this->package['config'] : array();
     if (!empty($this->package['config_orig'])) {
@@ -625,8 +625,7 @@ class FeaturesEditForm extends FormBase {
     $this->assigner->assignConfigPackages();
 
     $this->package['name'] = $form_state->getValue('name');
-    $this->package['machine_name_short'] = $form_state->getValue('machine_name');
-    $this->package['machine_name'] = $current_bundle->getFullName($this->package['machine_name_short']);
+    $this->package['machine_name'] = $current_bundle->getFullName($form_state->getValue('machine_name'));
     $this->package['description'] = $form_state->getValue('description');
     $this->package['version'] = $form_state->getValue('version');
     // Save it first just to create it in case it's a new package.
@@ -650,7 +649,7 @@ class FeaturesEditForm extends FormBase {
       $this->generator->applyExportFormSubmit($method_id, $form, $form_state);
     }
 
-    $form_state->setRedirect('features.edit', array('featurename' => $this->package['machine_name_short']));
+    $form_state->setRedirect('features.edit', array('featurename' => $this->package['machine_name']));
   }
 
   /**

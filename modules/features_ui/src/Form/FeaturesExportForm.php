@@ -227,7 +227,7 @@ class FeaturesExportForm extends FormBase {
   protected function buildPackageDetail($package) {
     $config_collection = $this->featuresManager->getConfigCollection();
 
-    $url = Url::fromRoute('features.edit', array('featurename' => $package['machine_name_short']));
+    $url = Url::fromRoute('features.edit', array('featurename' => $package['machine_name']));
 
     $element['name'] = array(
       'data' => \Drupal::l($package['name'], $url),
@@ -239,7 +239,7 @@ class FeaturesExportForm extends FormBase {
     $element['version'] = array('data' => String::checkPlain($package['version']));
     $overrides = $this->featuresManager->detectOverrides($package);
     if (!empty($overrides) && ($package['status'] != FeaturesManagerInterface::STATUS_NO_EXPORT)) {
-      $url = Url::fromRoute('features.diff', array('featurename' => $package['machine_name_short']));
+      $url = Url::fromRoute('features.diff', array('featurename' => $package['machine_name']));
       $element['state'] = array(
         'data' => \Drupal::l($this->featuresManager->stateLabel(FeaturesManagerInterface::STATE_OVERRIDDEN), $url),
         'class' => array('features-override'),

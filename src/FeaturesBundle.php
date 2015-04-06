@@ -150,6 +150,16 @@ class FeaturesBundle implements FeaturesBundleInterface {
   /**
    * {@inheritdoc}
    */
+  public function getShortName($machine_name) {
+    if ($this->inBundle($machine_name)) {
+      return substr($machine_name, strlen($this->getMachineName())+1, strlen($machine_name) - strlen($this->getMachineName())-1);
+    }
+    return $machine_name;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function inBundle($machine_name) {
     return (strpos($machine_name, $this->machine_name . '_') === 0);
   }
