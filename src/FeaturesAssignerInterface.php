@@ -135,9 +135,10 @@ interface FeaturesAssignerInterface {
   /**
    * Make the named bundle the current bundle.
    * @param string $machine_name
+   *   If omitted, get the last bundle from the Session
    * @return \Drupal\features\FeaturesBundleInterface
    */
-  public function applyBundle($machine_name);
+  public function applyBundle($machine_name = NULL);
 
   /**
    * Rename a bundle

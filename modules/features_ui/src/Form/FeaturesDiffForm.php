@@ -101,7 +101,7 @@ class FeaturesDiffForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, $featurename = '') {
-    $current_bundle = $this->assigner->loadBundle();
+    $current_bundle = $this->assigner->applyBundle();
     $packages = $this->featuresManager->getPackages();
     $form = array();
 
@@ -216,15 +216,19 @@ class FeaturesDiffForm extends FormBase {
       $active = $this->featuresManager->getActiveStorage()->read($name);
       $extension = $this->featuresManager->getExtensionStorage()->read($name);
       if (empty($extension)) {
-        $extension = array();
+        $details = array(
+          '#markup' => t('Dependency detected in active config but not exported to the feature.'),
+        );
       }
-      $diff = $this->configDiff->diff($extension, $active);
-      $details = array(
-        '#type' => 'table',
-        '#header' => $header,
-        '#rows' => $this->diffFormatter->format($diff),
-        '#attributes' => array('class' => array('diff', 'features-diff')),
-      );
+      else {
+        $diff = $this->configDiff->diff($extension, $active);
+        $details = array(
+          '#type' => 'table',
+          '#header' => $header,
+          '#rows' => $this->diffFormatter->format($diff),
+          '#attributes' => array('class' => array('diff', 'features-diff')),
+        );
+      }
       $element[$name] = array(
         'row' => array(
           'data' => array(

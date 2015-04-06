@@ -287,9 +287,9 @@ class FeaturesAssigner implements FeaturesAssignerInterface {
   /**
    * {@inheritdoc}
    */
-  public function applyBundle($machine_name) {
+  public function applyBundle($machine_name = NULL) {
     $this->reset();
-    $bundle = $this->getBundle($machine_name);
+    $bundle = $this->loadBundle($machine_name);
     if (isset($bundle)) {
       $this->setCurrent($bundle);
       $this->assignConfigPackages();
@@ -324,7 +324,9 @@ class FeaturesAssigner implements FeaturesAssignerInterface {
   public function loadBundle($machine_name = NULL) {
     if (!isset($machine_name)) {
       $session = \Drupal::request()->getSession();
-      $machine_name = isset($session) ? $session->get('features_current_bundle', '') : '';
+      if (isset($session)) {
+        $machine_name = isset($session) ? $session->get('features_current_bundle', '') : '';
+      }
     }
     $bundle = $this->getBundle($machine_name);
     if (!isset($bundle)) {
