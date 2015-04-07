@@ -28,17 +28,34 @@ class FeaturesAssignmentExisting extends FeaturesAssignmentMethodBase {
   const METHOD_ID = 'existing';
 
   /**
+   * Call assignConfigPackage without allowing exceptions to abort us.
+   * @param $name
+   */
+  protected function safeAssignConfig($name) {
+    $config = $this->featuresManager->listExtensionConfig($name);
+    try {
+      $this->featuresManager->assignConfigPackage($name, $config);
+    }
+    catch(\Exception $exception) {
+      \Drupal::logger('features')->error($exception->getMessage());
+    }
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function assignPackages() {
     $existing = $this->featuresManager->getExistingPackages();
+    // Assign config to Enabled modules first.
     foreach ($existing as $name => $info) {
-      $config = $this->featuresManager->listExtensionConfig($name);
-      try {
-        $this->featuresManager->assignConfigPackage($name, $config);
+      if ($info['status'] == FeaturesManagerInterface::STATUS_ENABLED) {
+        $this->safeAssignConfig($name);
       }
-      catch(\Exception $exception) {
-        \Drupal::logger('features')->error($exception->getMessage());
+    }
+    // Now assign to disabled modules.
+    foreach ($existing as $name => $info) {
+      if ($info['status'] != FeaturesManagerInterface::STATUS_ENABLED) {
+        $this->safeAssignConfig($name);
       }
     }
   }

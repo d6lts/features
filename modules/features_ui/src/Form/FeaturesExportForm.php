@@ -239,38 +239,34 @@ class FeaturesExportForm extends FormBase {
     $element['version'] = array('data' => String::checkPlain($package['version']));
     $overrides = $this->featuresManager->detectOverrides($package);
     $new_config = $this->featuresManager->detectNew($package);
-    if (!empty($overrides) && ($package['status'] != FeaturesManagerInterface::STATUS_NO_EXPORT)) {
-      $url = Url::fromRoute('features.diff', array('featurename' => $package['machine_name']));
-      $element['state'] = array(
-        'data' => \Drupal::l($this->featuresManager->stateLabel(FeaturesManagerInterface::STATE_OVERRIDDEN), $url),
-        'class' => array('features-override'),
-      );
-    }
-    else {
-      if (!empty($new_config) && ($package['status'] != FeaturesManagerInterface::STATUS_NO_EXPORT)) {
-        $url = Url::fromRoute('features.diff', array('featurename' => $package['machine_name']));
-        $element['state'] = array(
-          'data' => \Drupal::l(t('New detected'), $url),
-          'class' => array('features-detected'),
-        );
-      }
-      else {
-        $element['state'] = '';
-        $overrides = array();
-        $new_config = array();
-      }
-    }
+    $conflicts = array();
 
-    // Bundle package configuration by type.
+    if ($package['status'] == FeaturesManagerInterface::STATUS_NO_EXPORT) {
+      $overrides = array();
+      $new_config = array();
+    }
+      // Bundle package configuration by type.
     $package_config = array();
     foreach ($package['config'] as $item_name) {
       $item = $config_collection[$item_name];
       $package_config[$item['type']][] = array(
         'name' => String::checkPlain($item_name),
         'label' => String::checkPlain($item['label']),
-        'override' => in_array($item_name, $overrides),
-        'detected' => in_array($item_name, $new_config),
+        'class' => in_array($item_name, $overrides) ? 'features-override' :
+          (in_array($item_name, $new_config) ? 'features-detected' : ''),
       );
+    }
+    // Conflict config from other modules.
+    foreach ($package['config_orig'] as $item_name) {
+      if (!in_array($item_name, $package['config'])) {
+        $item = $config_collection[$item_name];
+        $conflicts[] = $item_name;
+        $package_config[$item['type']][] = array(
+          'name' => String::checkPlain($item_name),
+          'label' => String::checkPlain($item['label']),
+          'class' => 'features-conflict',
+        );
+      }
     }
     // Add dependencies.
     $package_config['dependencies'] = array();
@@ -279,10 +275,36 @@ class FeaturesExportForm extends FormBase {
         $package_config['dependencies'][] = array(
           'name' => $dependency,
           'label' => $this->moduleHandler->getName($dependency),
-          'override' => FALSE,
-          'detected' => FALSE,
+          'class' => '',
         );
       }
+    }
+
+    $class = '';
+    $label = '';
+    if (!empty($conflicts)) {
+      $url = Url::fromRoute('features.edit', array('featurename' => $package['machine_name']));
+      $class = 'features-conflict';
+      $label = t('Conflicts');
+    }
+    elseif (!empty($overrides)) {
+      $url = Url::fromRoute('features.diff', array('featurename' => $package['machine_name']));
+      $class = 'features-override';
+      $label = $this->featuresManager->stateLabel(FeaturesManagerInterface::STATE_OVERRIDDEN);
+    }
+    elseif (!empty($new_config)) {
+      $url = Url::fromRoute('features.diff', array('featurename' => $package['machine_name']));
+      $class = 'features-detected';
+      $label = t('New detected');
+    }
+    if (!empty($class)) {
+      $element['state'] = array(
+        'data' => \Drupal::l($label, $url),
+        'class' => array($class),
+      );
+    }
+    else {
+      $element['state'] = '';
     }
 
     $config_types = $this->featuresManager->listConfigTypes();

@@ -357,6 +357,9 @@ class FeaturesManager implements FeaturesManagerInterface {
     foreach ($modules as $name => $module) {
       if ($this->isFeatureModule($module)) {
         $result[$name] = $this->getExtensionInfo($module);
+        $result[$name]['status'] = $this->moduleHandler->moduleExists($name)
+          ? FeaturesManagerInterface::STATUS_ENABLED
+          : FeaturesManagerInterface::STATUS_DISABLED;
       }
     }
     return $result;
@@ -636,14 +639,14 @@ class FeaturesManager implements FeaturesManagerInterface {
 
     // Assign to a "package" named for the profile.
     $bundle = $this->assigner->getBundle($package['bundle']);
-    if (isset($bundle)) {
+    if (isset($bundle) && !$bundle->isDefault()) {
       $info['package'] = $bundle->getName();
     }
 
     if (!empty($package['config'])) {
       // Save the current bundle in the info file so the package
       // can be reloaded later by the AssignmentPackages plugin.
-      if (isset($bundle)) {
+      if (isset($bundle) && !$bundle->isDefault()) {
         $info['features']['bundle'] = $bundle->getMachineName();
       }
       else {

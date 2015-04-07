@@ -159,13 +159,7 @@ function theme_features_items(array $variables) {
 
   $list = array();
   foreach ($items as $item) {
-    $class = '';
-    if ($item['override']) {
-      $class .= 'features-override ';
-    }
-    if ($item['detected']) {
-      $class .= 'features-detected ';
-    }
+    $class = !empty($item['class']) ? $item['class'] : '';
     $list[] = '<span class="features-item ' . $class . '" title="' . $item['name'] . '">' . $item['label'] . '</span>';
   }
 

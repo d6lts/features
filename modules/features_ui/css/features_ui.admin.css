@@ -25,6 +25,16 @@ span.features-item-list span {
   white-space: nowrap;
 }
 
+.features-listing span.features-conflict,
+.features-listing .features-conflict a {
+  color: #fff;
+  background-color: #c30 !important;
+  border-radius: 5px;
+  margin-right: 5px;
+  padding: 2px 5px;
+  white-space: nowrap;
+}
+
 #features-assignment-methods tr.draggable > td:nth-child(1) {
   white-space: nowrap;
 }
