@@ -35,6 +35,11 @@ span.features-item-list span {
   white-space: nowrap;
 }
 
+tr.features-export-header-row {
+  border-top: 30px solid white;
+  background: #eee;
+}
+
 #features-assignment-methods tr.draggable > td:nth-child(1) {
   white-space: nowrap;
 }

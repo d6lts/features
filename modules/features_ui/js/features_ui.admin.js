@@ -358,6 +358,16 @@ jQuery.fn.sortElements = (function(){
         });
       });
 
+      // handle special theming of headers in tableselect
+      $('td.features-export-header-row', context).each(function () {
+        var row = $(this).parent('tr');
+        row.addClass('features-export-header-row');
+        var checkbox = row.find('td input:checkbox');
+        if (checkbox.length) {
+          checkbox.hide();
+        }
+      });
+
       // handle clicking anywhere in row on Differences page
       $('.features-diff-listing tr td:nth-child(2)', context).click(function () {
         var checkbox = $(this).parent().find('td input:checkbox');

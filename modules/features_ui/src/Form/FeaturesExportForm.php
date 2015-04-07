@@ -203,7 +203,17 @@ class FeaturesExportForm extends FormBase {
     );
 
     $options = array();
+    $first = TRUE;
     foreach ($packages as $package) {
+      if ($first && $package['status'] == FeaturesManagerInterface::STATUS_NO_EXPORT) {
+        $first = FALSE;
+        $options[] = array(
+          'name' => array(
+            'data' => t('The following packages are not exported.'),
+            'class' => 'features-export-header-row',
+            'colspan' => 6),
+        );
+      }
       $options[$package['machine_name']] = $this->buildPackageDetail($package);
     }
 
