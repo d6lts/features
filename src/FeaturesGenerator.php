@@ -11,11 +11,13 @@ use Drupal\Component\Plugin\PluginManagerInterface;
 use Drupal\features\FeaturesManagerInterface;
 use Drupal\features\FeaturesAssignerInterface;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 
 /**
  * Class responsible for performing package generation.
  */
 class FeaturesGenerator implements FeaturesGeneratorInterface {
+  use StringTranslationTrait;
 
   /**
    * The package generation method plugin manager.
