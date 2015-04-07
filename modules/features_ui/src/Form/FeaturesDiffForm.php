@@ -18,7 +18,8 @@ use Drupal\Core\Form\FormState;
 use Drupal\Core\Form\FormStateInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Component\Diff\DiffFormatter;
-use Drupal\config_update\ConfigReverter;
+use Drupal\config_update\ConfigRevertInterface;
+use Drupal\config_update\ConfigDiffInterface;
 
 /**
  * Defines the features differences form.
