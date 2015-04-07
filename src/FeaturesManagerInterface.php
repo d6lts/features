@@ -363,6 +363,14 @@ interface FeaturesManagerInterface {
   public function listExtensionConfig($extension);
 
   /**
+   * List of configuration names provided by existing Features modules
+   * @param bool $enabled
+   *   Determine if only enabled Features are listed
+   * @return array of config names
+   */
+  public function listExistingConfig($enabled = FALSE);
+
+  /**
    * Iterates through packages and profile and prepares file names and
    * contents.
    */

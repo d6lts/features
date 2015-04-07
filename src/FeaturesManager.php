@@ -811,6 +811,18 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * {@inheritdoc}
    */
+  public function listExistingConfig($enabled = FALSE) {
+    $config = array();
+    $existing = $this->getExistingPackages($enabled);
+    foreach ($existing as $name => $info) {
+      $config += $this->listExtensionConfig($name);
+    }
+    return $config;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function listConfigByType($config_type) {
     // For a given entity type, load all entities.
     if ($config_type && $config_type !== FeaturesManagerInterface::SYSTEM_SIMPLE_CONFIG) {
