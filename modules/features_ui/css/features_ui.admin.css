@@ -94,6 +94,10 @@ span.features-item-list span {
   position: relative;
 }
 
+.form-type-checkbox.form-item-conflicts {
+  clear: left;
+}
+
 div.features-export-list  {
   font-weight: normal;
   font-size: 12px;

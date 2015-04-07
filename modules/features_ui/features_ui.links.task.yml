@@ -14,12 +14,6 @@ features.assignment:
   title: 'Configure Bundles'
   parent_id: features.package
 
-features.settings:
-  route_name: features.settings
-  title: 'Settings'
-  parent_id: features.package
-  weight: 9
-
 features.diff:
   route_name: features.diff
   title: 'Differences'

@@ -77,6 +77,12 @@ class FeaturesEditForm extends FormBase {
   protected $conflicts;
 
   /**
+   * Determine if conflicts are allowed to be added.
+   * @var bool
+   */
+  protected $allow_conflicts;
+
+  /**
    * Constructs a FeaturesEditForm object.
    *
    * @param \Drupal\features\FeaturesManagerInterface $features_manager
@@ -112,11 +118,23 @@ class FeaturesEditForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, $featurename = '') {
+    $session = \Drupal::request()->getSession();
+    $this->allow_conflicts = FALSE;
+    if (isset($session)) {
+      $this->allow_conflicts = $session->get('features_allow_conflicts', FALSE);
+    }
+
     $trigger = $form_state->getTriggeringElement();
     if ($trigger['#name'] == 'package') {
       $this->old_bundle = $this->bundle;
       $bundle_name = $form_state->getValue('package');
       $bundle = $this->assigner->getBundle($bundle_name);
+    }
+    elseif ($trigger['#name'] == 'conflicts') {
+      if (isset($session)) {
+        $session->set('features_allow_conflicts', $form_state->getValue('conflicts'));
+      }
+      return $this->redirect('features.edit', array($featurename));
     }
     else {
       $bundle = $this->assigner->loadBundle();
@@ -132,6 +150,12 @@ class FeaturesEditForm extends FormBase {
     else {
       $this->package = $packages[$featurename];
     }
+
+    $form = array(
+      '#show_operations' => FALSE,
+      '#prefix' => '<div id="features-edit-wrapper">',
+      '#suffix' => '</div>',
+    );
 
     $form['info'] = array(
       '#type' => 'fieldset',
@@ -196,6 +220,18 @@ class FeaturesEditForm extends FormBase {
       '#size' => 30,
     );
 
+    $form['conflicts'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Allow conflicts'),
+      '#default_value' => $this->allow_conflicts,
+      '#description' => $this->t('Allow configuration to be exported to more than one feature.'),
+      '#weight' => 8,
+      '#ajax' => array(
+        'callback' => '::updateForm',
+        'wrapper' => 'features-edit-wrapper',
+      ),
+    );
+
     $generation_info = array();
     if (\Drupal::currentUser()->hasPermission('export configuration')) {
       // Offer available generation methods.
@@ -232,6 +268,13 @@ class FeaturesEditForm extends FormBase {
       ),
     );
 
+    return $form;
+  }
+
+  /**
+   * Ajax callback for handling conflict checkbox.
+   */
+  public function updateForm($form, FormStateInterface $form_state) {
     return $form;
   }
 
@@ -411,8 +454,6 @@ class FeaturesEditForm extends FormBase {
    */
   protected function getComponentList(FormStateInterface $form_state) {
     $config = $this->featuresManager->getConfigCollection();
-    $settings = $this->featuresManager->getSettings();
-    $allow_conflicts = $settings->get('conflicts');
 
     $package_name = $this->package['machine_name'];
     // Auto-detect dependencies for included config.
@@ -436,7 +477,7 @@ class FeaturesEditForm extends FormBase {
         !empty($packages[$item['package']]) && ($packages[$item['package']]['status'] != FeaturesManagerInterface::STATUS_NO_EXPORT)) {
         $this->conflicts[$item['type']][$item['name_short']] = $item;
       }
-      if ($allow_conflicts || !isset($this->conflicts[$item['type']][$item['name_short']]) || in_array($item_name, $this->package['config_orig'])) {
+      if ($this->allow_conflicts || !isset($this->conflicts[$item['type']][$item['name_short']]) || in_array($item_name, $this->package['config_orig'])) {
         $components[$item['type']][$item['name_short']] = $item;
       }
     }
