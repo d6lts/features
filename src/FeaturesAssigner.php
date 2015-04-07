@@ -199,7 +199,7 @@ class FeaturesAssigner implements FeaturesAssignerInterface {
   public function setBundle(FeaturesBundleInterface $bundle, $current = TRUE) {
     $this->bundles[$bundle->getMachineName()] = $bundle;
     if (isset($this->currentBundle) && ($current || ($bundle->getMachineName() == $this->currentBundle->getMachineName()))) {
-      $this->setCurrent($bundle);
+      $this->currentBundle = $bundle;
     }
   }
 

@@ -41,9 +41,13 @@ class FeaturesAssignmentPackages extends FeaturesAssignmentMethodBase {
     elseif (!empty($info['package'])) {
       $bundle = $this->assigner->findBundleByName($info['package']);
     }
-    if (!isset($bundle)) {
+    if (!isset($bundle) && (!empty($info['package']) || !empty($info['features']['bundle']))) {
       // Create the bundle if it doesn't exist yet.
       $bundle = $this->assigner->createBundle($info['package'], $info['features']['bundle']);
+    }
+    else {
+      // Else, return default bundle.
+      $bundle = $this->assigner->getBundle('');
     }
     return $bundle;
   }

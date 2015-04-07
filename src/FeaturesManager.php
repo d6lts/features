@@ -658,6 +658,9 @@ class FeaturesManager implements FeaturesManagerInterface {
       else {
         unset($info['features']['excluded']);
       }
+      if (empty($info['features'])) {
+        $info['features'] = TRUE;
+      }
     }
 
     // Add profile-specific info data.
