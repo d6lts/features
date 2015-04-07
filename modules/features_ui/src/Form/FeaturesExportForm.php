@@ -203,7 +203,7 @@ class FeaturesExportForm extends FormBase {
     );
 
     $options = array();
-    $first = TRUE;
+    $first = current($packages)['status'] != FeaturesManagerInterface::STATUS_NO_EXPORT;
     foreach ($packages as $package) {
       if ($first && $package['status'] == FeaturesManagerInterface::STATUS_NO_EXPORT) {
         $first = FALSE;
