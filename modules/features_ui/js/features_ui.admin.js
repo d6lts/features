@@ -190,9 +190,9 @@ jQuery.fn.sortElements = (function(){
             var key = $(this).attr('name');
             var matches = key.match(/^([^\[]+)(\[.+\])?\[(.+)\]\[(.+)\]$/);
             components[matches[1]] = matches[1];
-            //if (!$(this).hasClass('component-detected')) {
+            if (!$(this).hasClass('component-detected')) {
               items.push(key);
-            //}
+            }
           }
         });
         var featureName = $('#edit-machine-name').val();
