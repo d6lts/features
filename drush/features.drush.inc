@@ -501,7 +501,7 @@ function drush_features_import() {
     $skip_confirmation = drush_get_context('DRUSH_AFFIRMATIVE');
 
     $manager = \Drupal::service('features.manager');
-    $config_revert = new ConfigReverter(\Drupal::service('entity.manager'), $manager->getActiveStorage(), $manager->getExtensionStorage(), \Drupal::service('config.factory'));
+    $config_revert = \Drupal::service('features.config_update');
 
     // Parse list of arguments.
     $modules = array();

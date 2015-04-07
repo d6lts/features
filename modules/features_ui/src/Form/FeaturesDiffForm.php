@@ -87,7 +87,7 @@ class FeaturesDiffForm extends FormBase {
       $container->get('features_assigner'),
       $container->get('config_update.config_diff'),
       $container->get('diff.formatter'),
-      $container->get('config_update.config_update')
+      $container->get('features.config_update')
     );
   }
 

@@ -18,3 +18,11 @@ services:
   features.manager:
     class: Drupal\features\FeaturesManager
     arguments: ['@entity.manager', '@config.factory', '@config.storage', '@config.manager', '@module_handler']
+
+  features.config_update:
+    class: Drupal\config_update\ConfigReverter
+    arguments: ['@entity.manager', '@config.storage', '@features.extension_storage', '@config.factory', '@event_dispatcher']
+
+  features.extension_storage:
+    class: Drupal\features\FeaturesInstallStorage
+    arguments: ['@config.storage']
