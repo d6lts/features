@@ -8,7 +8,7 @@
 namespace Drupal\features;
 
 use Drupal\Core\Config\ConfigInstaller;
-use Drupal\Core\Config\FileStorage;
+use Drupal\Core\Config\StorageInterface;
 use Drupal\features\FeaturesManagerInterface;
 
 /**
