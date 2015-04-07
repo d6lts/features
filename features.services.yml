@@ -12,7 +12,7 @@ services:
       - [initFeaturesManager]
   features_generator:
     class: Drupal\features\FeaturesGenerator
-    arguments: ['@features.manager', '@plugin.manager.features_generation_method', '@config.factory']
+    arguments: ['@features.manager', '@plugin.manager.features_generation_method', '@features_assigner']
     calls:
       - [initFeaturesManager]
   features.manager:
