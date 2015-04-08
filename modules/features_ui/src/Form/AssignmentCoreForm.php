@@ -44,7 +44,7 @@ class AssignmentCoreForm extends AssignmentFormBase {
     $settings = array(
       'types' => array_filter($form_state->getValue('types')),
     );
-    $this->current_bundle->getAssignmentSettings(self::METHOD_ID, $settings)->save();
+    $this->current_bundle->setAssignmentSettings(self::METHOD_ID, $settings)->save();
     $this->setRedirect($form_state);
 
     drupal_set_message($this->t('Package assignment configuration saved.'));

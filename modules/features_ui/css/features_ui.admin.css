@@ -35,6 +35,10 @@ span.features-item-list span {
   white-space: nowrap;
 }
 
+table.features-listing .column-nowrap {
+  white-space: nowrap;
+}
+
 tr.features-export-header-row {
   border-top: 30px solid white;
   background: #eee;

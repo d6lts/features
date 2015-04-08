@@ -244,9 +244,15 @@ class FeaturesExportForm extends FormBase {
       'class' => array('feature-name'),
     );
     $element['machine_name'] = $package['machine_name'];
-    $element['status'] = $this->featuresManager->statusLabel($package['status']);
+    $element['status'] = array(
+      'data' => $this->featuresManager->statusLabel($package['status']),
+      'class' => array('column-nowrap'),
+    );
     // Use 'data' instead of plain string value so a blank version doesn't remove column from table.
-    $element['version'] = array('data' => String::checkPlain($package['version']));
+    $element['version'] = array(
+      'data' => String::checkPlain($package['version']),
+      'class' => array('column-nowrap'),
+    );
     $overrides = $this->featuresManager->detectOverrides($package);
     $new_config = $this->featuresManager->detectNew($package);
     $conflicts = array();
@@ -310,7 +316,7 @@ class FeaturesExportForm extends FormBase {
     if (!empty($class)) {
       $element['state'] = array(
         'data' => \Drupal::l($label, $url),
-        'class' => array($class),
+        'class' => array($class, 'column-nowrap'),
       );
     }
     else {
