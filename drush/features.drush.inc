@@ -454,7 +454,7 @@ function drush_features_diff() {
 
     // Print key for colors
     drush_print(dt('Legend: '));
-    drush_print(sprintf($red,   dt('Code:    drush features-revert will replace the active config with the displayed code.')));
+    drush_print(sprintf($red,   dt('Code:    drush features-import will replace the active config with the displayed code.')));
     drush_print(sprintf($green, dt('Active:  drush features-export will update the exported feature with the displayed active config')));
 
     foreach ($overrides as $name) {
@@ -560,7 +560,7 @@ function drush_features_import() {
         foreach ($components as $component) {
           $item = $config[$component];
           $dt_args['@component'] = $component;
-          $confirmation_message = 'Do you really want to revert @module : @component?';
+          $confirmation_message = 'Do you really want to import @module : @component?';
           if ($skip_confirmation || drush_confirm(dt($confirmation_message, $dt_args))) {
             $config_revert->revert($item['type'], $item['name_short']);
             drush_log(dt('Reverted @module : @component.', $dt_args), 'ok');
