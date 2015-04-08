@@ -16,7 +16,7 @@ features.assignment:
     _permission: 'administer site configuration'
 
 features.assignment_base:
-  path: '/admin/config/development/configuration/features/assignment/base/{bundle_name}'
+  path: '/admin/config/development/configuration/features/bundle/_base/{bundle_name}'
   defaults:
     _form: '\Drupal\features_ui\Form\AssignmentBaseForm'
     _title: 'Configure base package assignment'
@@ -25,7 +25,7 @@ features.assignment_base:
     _permission: 'administer site configuration'
 
 features.assignment_core:
-  path: '/admin/config/development/configuration/features/assignment/core/{bundle_name}'
+  path: '/admin/config/development/configuration/features/bundle/_core/{bundle_name}'
   defaults:
     _form: '\Drupal\features_ui\Form\AssignmentCoreForm'
     _title: 'Configure core package assignment'
@@ -34,7 +34,7 @@ features.assignment_core:
     _permission: 'administer site configuration'
 
 features.assignment_exclude:
-  path: '/admin/config/development/configuration/features/assignment/exclude/{bundle_name}'
+  path: '/admin/config/development/configuration/features/bundle/_exclude/{bundle_name}'
   defaults:
     _form: '\Drupal\features_ui\Form\AssignmentExcludeForm'
     _title: 'Configure package exclusion'

@@ -8,8 +8,7 @@
 namespace Drupal\features_ui\Form;
 
 use Drupal\features\FeaturesManagerInterface;
-use Drupal\Core\Config\ConfigFactoryInterface;
-use Drupal\Core\Config\StorageInterface;
+use Drupal\features\FeaturesAssignerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;

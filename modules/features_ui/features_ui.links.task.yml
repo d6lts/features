@@ -1,6 +1,6 @@
 features.package:
   route_name: features.export
-  title: 'Export Features'
+  title: 'Features'
   base_route: config.sync
 
 features.export:

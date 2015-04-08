@@ -117,15 +117,12 @@ class FeaturesDiffForm extends FormBase {
     }
     else {
       $packages = $this->featuresManager->filterPackages($packages, $current_bundle->getMachineName());
-      if (count($packages) == 1) {
-        $machine_name = current($packages)['machine_name'];
-      }
     }
 
     $header = array(
       'row' => array('data' => !empty($machine_name)
         ? t('Differences in !name', array('!name' => $machine_name))
-        : t('All differences')
+        : ($current_bundle->isDefault() ? t('All differences') : t('All differences in bundle: !bundle', array('!bundle' => $current_bundle->getName()))),
       ),
     );
 
