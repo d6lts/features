@@ -182,7 +182,7 @@ class FeaturesGenerationArchive extends FeaturesGenerationMethodBase {
    * @param string $message
    *   Error message when there isn't an Exception object
    */
-  protected function failure(&$return, array $package, Exception $exception, $message = '') {
+  protected function failure(&$return, array $package, \Exception $exception, $message = '') {
     $type = $package['type'] == 'package' ? $this->t('Package') : $this->t('Profile');
     $return[] = [
       'success' => FALSE,

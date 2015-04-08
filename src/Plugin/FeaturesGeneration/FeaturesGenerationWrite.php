@@ -97,7 +97,7 @@ class FeaturesGenerationWrite extends FeaturesGenerationMethodBase {
       try {
         $this->generateFile($package['directory'], $file);
       }
-      catch(Exception $exception) {
+      catch(\Exception $exception) {
         $this->failure($return, $package, $exception);
         $success = FALSE;
         break;
@@ -142,7 +142,7 @@ class FeaturesGenerationWrite extends FeaturesGenerationMethodBase {
    * @param string $message
    *   Error message when there isn't an Exception object
    */
-  protected function failure(&$return, $package, Exception $exception, $message = '') {
+  protected function failure(&$return, $package, \Exception $exception, $message = '') {
     $type = $package['type'] == 'package' ? $this->t('Package') : $this->t('Profile');
     $return[] = [
       'success' => FALSE,
