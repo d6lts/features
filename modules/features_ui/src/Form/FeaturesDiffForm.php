@@ -76,6 +76,8 @@ class FeaturesDiffForm extends FormBase {
     $this->diffFormatter = $diff_formatter;
     $this->configRevert = $config_revert;
     $this->diffFormatter->show_header = FALSE;
+    $this->diffFormatter->leading_context_lines = 0;
+    $this->diffFormatter->trailing_context_lines = 0;
   }
 
   /**
@@ -219,7 +221,7 @@ class FeaturesDiffForm extends FormBase {
         );
       }
       else {
-        $diff = $this->configDiff->diff($extension, $active);
+        $diff = $this->configDiff->diff($active, $extension);
         $details = array(
           '#type' => 'table',
           '#header' => $header,

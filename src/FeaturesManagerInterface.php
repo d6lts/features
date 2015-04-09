@@ -339,7 +339,7 @@ interface FeaturesManagerInterface {
   public function getModuleList(array $names = array(), $namespace = NULL);
 
   /**
-   * Return a list of modules regardless of if they are enabled
+   * Return a list of Features modules regardless of if they are enabled
    * @param \Drupal\features\FeaturesBundleInterface $bundle
    *   Optional bundle to filter module list.
    *   If given, only modules matching the bundle namespace will be returned.
