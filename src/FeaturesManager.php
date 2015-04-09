@@ -699,6 +699,8 @@ class FeaturesManager implements FeaturesManagerInterface {
     $config_collection = $this->getConfigCollection();
     // Ensure the directory reflects the current full machine name.
     $package['directory'] = $package['machine_name'];
+    // Clean out previous files.
+    unset($package['files']);
     // Only add files if there is at least one piece of configuration
     // present.
     if (!empty($package['config'])) {

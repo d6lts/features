@@ -722,6 +722,7 @@ class FeaturesEditForm extends FormBase {
     $this->package['machine_name'] = $bundle->getFullName($form_state->getValue('machine_name'));
     $this->package['description'] = $form_state->getValue('description');
     $this->package['version'] = $form_state->getValue('version');
+    $this->package['bundle'] = $bundle->getMachineName();
     // Save it first just to create it in case it's a new package.
     $this->featuresManager->savePackage($this->package);
 
