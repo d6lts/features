@@ -115,7 +115,7 @@ function features_drush_command() {
   );
 
   foreach ($items as $name => &$item) {
-    $item['options']['name'] = array(
+    $item['options']['bundle'] = array(
       'description' => 'Use a specific bundle namespace.'
     );
   }
@@ -129,7 +129,7 @@ function features_drush_command() {
  */
 function _drush_features_options() {
   $assigner = \Drupal::service('features_assigner');
-  $bundle_name = drush_get_option('name');
+  $bundle_name = drush_get_option('bundle');
   if (!empty($bundle_name)) {
     $assigner->applyBundle($bundle_name);
   }
