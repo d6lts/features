@@ -843,7 +843,7 @@ function _features_export_generate($export, $form_state, $feature = NULL) {
   }
   // If either update status-related keys are provided, add a project key
   // corresponding to the module name.
-  if (!empty($form_state['values']['version']) || !empty($form_state['values']['project_status_url'])) {
+  if (!empty($form_state['values']['version']) && !empty($form_state['values']['project_status_url'])) {
     $export['project'] = $form_state['values']['module_name'];
   }
   if (!empty($form_state['values']['version'])) {
