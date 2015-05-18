@@ -7,7 +7,7 @@
 
 namespace Drupal\features_ui\Form;
 
-use Drupal\Component\Utility\String;
+use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Component\Utility\Xss;
 use Drupal\features\FeaturesAssignerInterface;
 use Drupal\features\FeaturesGeneratorInterface;
@@ -139,7 +139,7 @@ class FeaturesDiffForm extends FormBase {
                 'data' => array(
                   '#type' => 'html_tag',
                   '#tag' => 'h2',
-                  '#value' => String::checkPlain($package['name']),
+                  '#value' => SafeMarkup::checkPlain($package['name']),
                 ),
               ),
               '#attributes' => array(
@@ -233,7 +233,7 @@ class FeaturesDiffForm extends FormBase {
         'row' => array(
           'data' => array(
             '#type' => 'details',
-            '#title' => String::checkPlain($name),
+            '#title' => SafeMarkup::checkPlain($name),
             '#open' => TRUE,
             '#description' => array(
               'data' => $details,

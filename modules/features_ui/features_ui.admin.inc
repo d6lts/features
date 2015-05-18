@@ -5,7 +5,6 @@
  * Administration functions for features.module.
  */
 
-use Drupal\Component\Utility\String;
 use Drupal\Core\Render\Element;
 use Drupal\Core\Template\Attribute;
 use Drupal\Core\Url;

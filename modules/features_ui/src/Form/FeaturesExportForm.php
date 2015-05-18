@@ -7,7 +7,6 @@
 
 namespace Drupal\features_ui\Form;
 
-use Drupal\Component\Utility\String;
 use Drupal\Component\Utility\Xss;
 use Drupal\Component\Utility\SafeMarkup;
 use Drupal\features\FeaturesAssignerInterface;
@@ -170,7 +169,7 @@ class FeaturesExportForm extends FormBase {
           '#name' => $method_id,
           '#value' => $this->t('!name', array('!name' => $method['name'])),
           '#attributes' => array(
-            'title' => String::checkPlain($method['description']),
+            'title' => SafeMarkup::checkPlain($method['description']),
           ),
         );
       }
@@ -250,7 +249,7 @@ class FeaturesExportForm extends FormBase {
     );
     // Use 'data' instead of plain string value so a blank version doesn't remove column from table.
     $element['version'] = array(
-      'data' => String::checkPlain($package['version']),
+      'data' => SafeMarkup::checkPlain($package['version']),
       'class' => array('column-nowrap'),
     );
     $overrides = $this->featuresManager->detectOverrides($package);
@@ -266,8 +265,8 @@ class FeaturesExportForm extends FormBase {
     foreach ($package['config'] as $item_name) {
       $item = $config_collection[$item_name];
       $package_config[$item['type']][] = array(
-        'name' => String::checkPlain($item_name),
-        'label' => String::checkPlain($item['label']),
+        'name' => SafeMarkup::checkPlain($item_name),
+        'label' => SafeMarkup::checkPlain($item['label']),
         'class' => in_array($item_name, $overrides) ? 'features-override' :
           (in_array($item_name, $new_config) ? 'features-detected' : ''),
       );
@@ -279,8 +278,8 @@ class FeaturesExportForm extends FormBase {
           $item = $config_collection[$item_name];
           $conflicts[] = $item_name;
           $package_config[$item['type']][] = array(
-            'name' => String::checkPlain($item_name),
-            'label' => String::checkPlain($item['label']),
+            'name' => SafeMarkup::checkPlain($item_name),
+            'label' => SafeMarkup::checkPlain($item['label']),
             'class' => 'features-conflict',
           );
         }
@@ -340,9 +339,9 @@ class FeaturesExportForm extends FormBase {
           'data' => array(
             '#type' => 'html_tag',
             '#tag' => 'span',
-            '#value' => String::checkPlain($label),
+            '#value' => SafeMarkup::checkPlain($label),
             '#attributes' => array(
-              'title' => String::checkPlain($type),
+              'title' => SafeMarkup::checkPlain($type),
               'class' => 'features-item-label',
             ),
           ),
@@ -351,8 +350,8 @@ class FeaturesExportForm extends FormBase {
           'data' => array(
             '#theme' => 'features_items',
             '#items' => $package_config[$type],
-            '#value' => String::checkPlain($label),
-            '#title' => String::checkPlain($type),
+            '#value' => SafeMarkup::checkPlain($label),
+            '#title' => SafeMarkup::checkPlain($type),
           ),
           'class' => 'item',
         );

@@ -7,7 +7,7 @@
 
 namespace Drupal\features_ui\Form;
 
-use Drupal\Component\Utility\String;
+use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Component\Utility\Xss;
 use Drupal\features\FeaturesAssignerInterface;
 use Drupal\features\FeaturesGeneratorInterface;
@@ -247,7 +247,7 @@ class FeaturesEditForm extends FormBase {
         '#name' => $method_id,
         '#value' => $this->t('!name', array('!name' => $method['name'])),
         '#attributes' => array(
-          'title' => String::checkPlain($method['description']),
+          'title' => SafeMarkup::checkPlain($method['description']),
         ),
       );
     }
@@ -355,7 +355,7 @@ class FeaturesEditForm extends FormBase {
         $count += count($component_info['options'][$section]);
       }
       $extra_class = ($count == 0) ? 'features-export-empty' : '';
-      $component_name = str_replace('_', '-', String::checkPlain($component));
+      $component_name = str_replace('_', '-', SafeMarkup::checkPlain($component));
 
       if ($count + $component_items_count > 0) {
         $element[$component] = array(
@@ -694,9 +694,9 @@ class FeaturesEditForm extends FormBase {
    *   the human label for the item
    */
   protected function configLabel($type, $key, $label) {
-    $value = String::checkPlain($label);
+    $value = SafeMarkup::checkPlain($label);
     if ($key != $label) {
-      $value .= '  <span class="config-name">(' . String::checkPlain($key) . ')</span>';
+      $value .= '  <span class="config-name">(' . SafeMarkup::checkPlain($key) . ')</span>';
     }
     if (isset($this->conflicts[$type][$key])) {
       // Show what package the conflict is stored in.
@@ -706,7 +706,7 @@ class FeaturesEditForm extends FormBase {
       if (isset($packages[$package_name])) {
         $package_name = $packages[$package_name]['machine_name'];
       }
-      $value .= '  <span class="config-name">[' . t('in') . ' ' . String::checkPlain($package_name) . ']</span>';
+      $value .= '  <span class="config-name">[' . t('in') . ' ' . SafeMarkup::checkPlain($package_name) . ']</span>';
     }
     return $value;
   }
