@@ -273,15 +273,17 @@ class FeaturesExportForm extends FormBase {
       );
     }
     // Conflict config from other modules.
-    foreach ($package['config_orig'] as $item_name) {
-      if (!in_array($item_name, $package['config'])) {
-        $item = $config_collection[$item_name];
-        $conflicts[] = $item_name;
-        $package_config[$item['type']][] = array(
-          'name' => String::checkPlain($item_name),
-          'label' => String::checkPlain($item['label']),
-          'class' => 'features-conflict',
-        );
+    if (!empty($package['config_orig'])) {
+      foreach ($package['config_orig'] as $item_name) {
+        if (!in_array($item_name, $package['config'])) {
+          $item = $config_collection[$item_name];
+          $conflicts[] = $item_name;
+          $package_config[$item['type']][] = array(
+            'name' => String::checkPlain($item_name),
+            'label' => String::checkPlain($item['label']),
+            'class' => 'features-conflict',
+          );
+        }
       }
     }
     // Add dependencies.
