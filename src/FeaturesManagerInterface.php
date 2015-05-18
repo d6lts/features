@@ -31,7 +31,7 @@ interface FeaturesManagerInterface {
   const STATUS_NO_EXPORT = 0;
   const STATUS_DISABLED = 1;
   const STATUS_ENABLED = 2;
-  const STATUS_DEFAULT = STATUS_NO_EXPORT;
+  const STATUS_DEFAULT = self::STATUS_NO_EXPORT;
 
   /**
    * Constants for package/module state
