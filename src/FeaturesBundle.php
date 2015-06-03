@@ -185,7 +185,7 @@ class FeaturesBundle implements FeaturesBundleInterface {
    */
   public function getShortName($machine_name) {
     if ($this->inBundle($machine_name)) {
-      return substr($machine_name, strlen($this->getMachineName())+1, strlen($machine_name) - strlen($this->getMachineName())-1);
+      return substr($machine_name, strlen($this->getMachineName()) + 1, strlen($machine_name) - strlen($this->getMachineName()) - 1);
     }
     return $machine_name;
   }
@@ -389,7 +389,7 @@ class FeaturesBundle implements FeaturesBundleInterface {
       'is_profile' => $this->isProfile(),
     );
     if ($this->getMachineName() == '') {
-      // save new default settings into config.
+      // Save new default settings into config.
       $this->configFactory->getEditable('features.settings')->set('assignment.enabled', $bundle['assignments'])->save();
       $this->configFactory->getEditable('features.settings')->set('assignment.method_weights', $bundle['weights'])->save();
       $this->configFactory->getEditable('features.settings')->set('bundle.settings', $bundle['settings'])->save();
@@ -410,4 +410,5 @@ class FeaturesBundle implements FeaturesBundleInterface {
   public function remove() {
     $this->configFactory->getEditable('features.bundles')->clear($this->getMachineName())->save();
   }
+
 }

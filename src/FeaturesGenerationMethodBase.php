@@ -88,7 +88,7 @@ abstract class FeaturesGenerationMethodBase implements FeaturesGenerationMethodI
       $package['directory'] = $path . '/' . $full_name;
       $this->preparePackage($package, $existing_packages, $bundle);
     }
-    // Clean up the $package pass by reference
+    // Clean up the $package pass by reference.
     unset($package);
 
     if (isset($bundle) && $bundle->isProfile()) {

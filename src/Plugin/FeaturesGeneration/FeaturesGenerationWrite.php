@@ -103,7 +103,7 @@ class FeaturesGenerationWrite extends FeaturesGenerationMethodBase {
       try {
         $this->generateFile($package['directory'], $file);
       }
-      catch(\Exception $exception) {
+      catch (\Exception $exception) {
         $this->failure($return, $package, $exception);
         $success = FALSE;
         break;

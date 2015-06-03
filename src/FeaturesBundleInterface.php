@@ -192,6 +192,7 @@ interface FeaturesBundleInterface {
    * @param string $method_id
    *   The ID of an assignment method. If NULL, return all assignment settings
    *   keyed by method_id
+   *
    * @return array
    *   An array of settings. Format specific to assignment method.
    *
@@ -229,7 +230,7 @@ interface FeaturesBundleInterface {
    *
    * @param array $settings
    *   An array of setting values.
-   *   
+   *
    * @see \Drupal\features\FeaturesBundleInterface::getSettings()
    */
   public function setSettings($settings);

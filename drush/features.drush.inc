@@ -116,7 +116,7 @@ function features_drush_command() {
 
   foreach ($items as $name => &$item) {
     $item['options']['bundle'] = array(
-      'description' => 'Use a specific bundle namespace.'
+      'description' => 'Use a specific bundle namespace.',
     );
   }
 
@@ -158,7 +158,7 @@ function drush_features_status() {
     drush_print(dt('Current bundle: !name (!machine_name)',
       array(
         '!name' => $current_bundle->getName(),
-        '!machine_name' => $current_bundle->getMachineName()
+        '!machine_name' => $current_bundle->getMachineName(),
       )));
   }
   drush_print(dt('Export folder: !folder', array('!folder' => $exportSettings['folder'])));
@@ -398,7 +398,7 @@ function drush_features_components() {
   }
 
   $filtered_components = _drush_features_component_filter($components, $args, $options);
-  if ($filtered_components){
+  if ($filtered_components) {
     _drush_features_component_print($filtered_components);
   }
 }
@@ -458,7 +458,7 @@ function drush_features_diff() {
 
     // Print key for colors.
     drush_print(dt('Legend: '));
-    drush_print(sprintf($red,   dt('Code:    drush features-import will replace the active config with the displayed code.')));
+    drush_print(sprintf($red, dt('Code:    drush features-import will replace the active config with the displayed code.')));
     drush_print(sprintf($green, dt('Active:  drush features-export will update the exported feature with the displayed active config')));
 
     foreach ($overrides as $name) {
@@ -598,7 +598,7 @@ function _drush_features_load_feature($module, $any = FALSE) {
   $packages = $manager->getPackages();
   $feature = $manager->getPackage($module);
   if ($any && !isset($feature)) {
-    // see if this is a non-features module
+    // See if this is a non-features module.
     $module_handler = \Drupal::service('module_handler');
     $modules = $module_handler->getModuleList();
     if (!empty($modules[$module])) {
@@ -766,7 +766,7 @@ function _drush_features_component_filter($all_components, $patterns = array(), 
   // Lastly, provide feature module information on the selected components, if
   // requested.
   $provided_by = array();
-  if ($options['provided by'] && $options['exported'] ) {
+  if ($options['provided by'] && $options['exported']) {
     foreach ($selected as $source => $components) {
       foreach ($components as $name => $title) {
         $exported = sizeof($components_map[$source][$name]) > 0;
@@ -789,7 +789,7 @@ function _drush_features_component_filter($all_components, $patterns = array(), 
 function _drush_features_get_component_map() {
   $result = array();
   $manager = \Drupal::service('features.manager');
-  // recalc full config list without running assignments
+  // Recalc full config list without running assignments.
   $config = $manager->getConfigCollection();
   $packages = $manager->getPackages();
 
@@ -813,9 +813,9 @@ function _drush_features_component_print($filtered_components) {
   $rows = array(array(dt('Available sources')));
   foreach ($filtered_components['components'] as $source => $components) {
     foreach ($components as $name => $value) {
-      $row = array($source .':'. $name);
-      if (isset($filtered_components['sources'][$source .':'. $name])) {
-        $row[] = dt('Provided by') . ': ' . $filtered_components['sources'][$source .':'. $name];
+      $row = array($source . ':' . $name);
+      if (isset($filtered_components['sources'][$source . ':' . $name])) {
+        $row[] = dt('Provided by') . ': ' . $filtered_components['sources'][$source . ':' . $name];
       }
       $rows[] = $row;
     }

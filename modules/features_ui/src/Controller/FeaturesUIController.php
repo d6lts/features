@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\features_ui\Controller\FeaturesUIController
+ * Contains \Drupal\features_ui\Controller\FeaturesUIController.
  */
 
 namespace Drupal\features_ui\Controller;

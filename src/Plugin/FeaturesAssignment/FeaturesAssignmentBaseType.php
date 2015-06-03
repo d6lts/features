@@ -50,7 +50,7 @@ class FeaturesAssignmentBaseType extends FeaturesAssignmentMethodBase {
           try {
             $this->featuresManager->assignConfigPackage($item['name_short'], [$item_name]);
           }
-          catch(\Exception $exception) {
+          catch (\Exception $exception) {
             \Drupal::logger('features')->error($exception->getMessage());
           }
           $this->featuresManager->assignConfigDependents([$item_name]);

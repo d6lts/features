@@ -122,7 +122,8 @@ class FeaturesDiffForm extends FormBase {
     }
 
     $header = array(
-      'row' => array('data' => !empty($machine_name)
+      'row' => array(
+        'data' => !empty($machine_name)
         ? t('Differences in !name', array('!name' => $machine_name))
         : ($current_bundle->isDefault() ? t('All differences') : t('All differences in bundle: !bundle', array('!bundle' => $current_bundle->getName()))),
       ),
@@ -144,7 +145,7 @@ class FeaturesDiffForm extends FormBase {
               ),
               '#attributes' => array(
                 'class' => 'features-diff-header',
-              )
+              ),
             ),
           );
           $options += $this->diffOutput($package, $overrides);
@@ -166,7 +167,7 @@ class FeaturesDiffForm extends FormBase {
       '#value' => t('Import changes'),
     );
     $form['actions']['help'] = array(
-      '#markup' =>  t('Import the selected changes above into the active configuration.'),
+      '#markup' => t('Import the selected changes above into the active configuration.'),
     );
 
     $form['#attached']['library'][] = 'system/diff';
@@ -195,9 +196,11 @@ class FeaturesDiffForm extends FormBase {
   }
 
   /**
-   * Return a form element for the given overrides
+   * Returns a form element for the given overrides.
+   *
    * @param $package
    * @param $overrides
+   *
    * @return array
    */
   protected function diffOutput($package, $overrides) {
@@ -242,7 +245,7 @@ class FeaturesDiffForm extends FormBase {
         ),
         '#attributes' => array(
           'class' => 'diff-' . $package['machine_name'],
-        )
+        ),
       );
     }
 

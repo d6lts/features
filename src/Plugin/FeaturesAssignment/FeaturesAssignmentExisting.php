@@ -38,7 +38,7 @@ class FeaturesAssignmentExisting extends FeaturesAssignmentMethodBase {
     try {
       $this->featuresManager->assignConfigPackage($name, $config);
     }
-    catch(\Exception $exception) {
+    catch (\Exception $exception) {
       \Drupal::logger('features')->error($exception->getMessage());
     }
   }

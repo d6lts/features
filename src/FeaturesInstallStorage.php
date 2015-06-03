@@ -16,7 +16,7 @@ use Drupal\Core\Extension\ExtensionDiscovery;
  * Storage to access configuration and schema in enabled extensions.
  *
  * Overrides the normal ExtensionInstallStorage to prevent profile from overriding
- * Also supports modules that are not installed yet
+ * Also supports modules that are not installed yet.
  *
  * @see \Drupal\Core\Config\ExtensionInstallStorage
  */
@@ -24,7 +24,7 @@ class FeaturesInstallStorage extends ExtensionInstallStorage {
 
   /**
    * Overrides \Drupal\Core\Config\ExtensionInstallStorage::__construct().
-   * Sets includeProfile to FALSE
+   * Sets includeProfile to FALSE.
    *
    * @param \Drupal\Core\Config\StorageInterface $config_storage
    *   The active configuration store where the list of enabled modules and
@@ -41,7 +41,7 @@ class FeaturesInstallStorage extends ExtensionInstallStorage {
   }
 
   /**
-   * Return a list of modules regardless of if they are enabled
+   * Returns a list of modules regardless of if they are enabled.
    */
   protected function getAllModules() {
     // ModuleHandler::getModuleDirectories() returns data only for installed
@@ -103,7 +103,7 @@ class FeaturesInstallStorage extends ExtensionInstallStorage {
       $this->folders += $this->getComponentNames('core', array('core'));
 
       $extensions = $this->configStorage->read('core.extension');
-      // override the module list to include uninstalled modules (exported but not enabled)
+      // Override the module list to include uninstalled modules (exported but not enabled).
       $extensions['module'] = $this->getAllModules();
       if (!empty($extensions['module'])) {
         $modules = $extensions['module'];
@@ -116,7 +116,7 @@ class FeaturesInstallStorage extends ExtensionInstallStorage {
       }
 
       // DO NOT OVERRIDE PROFILE if includeProfile is false
-      // (which is the default in FeaturesInstallStorage)
+      // (which is the default in FeaturesInstallStorage).
       if ($this->includeProfile) {
         // The install profile can override module default configuration. We do
         // this by replacing the config file path from the module/theme with the
@@ -130,5 +130,5 @@ class FeaturesInstallStorage extends ExtensionInstallStorage {
     }
     return $this->folders;
   }
-}
 
+}

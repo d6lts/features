@@ -15,7 +15,7 @@ use Drupal\Core\Form\FormStateInterface;
  */
 class AssignmentCoreForm extends AssignmentFormBase {
 
-  CONST METHOD_ID = 'core';
+  const METHOD_ID = 'core';
 
   /**
    * {@inheritdoc}

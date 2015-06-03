@@ -12,7 +12,7 @@ use Drupal\Core\Config\StorageInterface;
 use Drupal\features\FeaturesManagerInterface;
 
 /**
- * Class for customizing the test for pre existing configuration. 
+ * Class for customizing the test for pre existing configuration.
  *
  * Copy of ConfigInstaller with findPreExistingConfiguration() modified to
  * allow Feature modules to be enabled.
@@ -31,8 +31,7 @@ class FeaturesConfigInstaller extends ConfigInstaller {
     $features_config = $manager->listExistingConfig();
     // Map array so we can use isset instead of in_array for faster access.
     $features_config = array_combine($features_config, $features_config);
-    // CHANGE END
-
+    // CHANGE END.
     $existing_configuration = array();
     // Gather information about all the supported collections.
     $collection_info = $this->configManager->getConfigCollectionInfo();
@@ -45,7 +44,7 @@ class FeaturesConfigInstaller extends ConfigInstaller {
           // CHANGE START
           // Test if config is part of a Feature package.
           if (!isset($features_config[$config_name])) {
-            // CHANGE END
+            // CHANGE END.
             $existing_configuration[$collection][] = $config_name;
           }
         }

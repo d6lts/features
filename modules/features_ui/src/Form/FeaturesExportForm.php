@@ -95,7 +95,7 @@ class FeaturesExportForm extends FormBase {
       $bundle_name = $form_state->getValue('bundle', '');
       $this->assigner->setCurrent($this->assigner->getBundle($bundle_name));
     }
-    else if ($trigger['#name'] == 'newfeature') {
+    elseif ($trigger['#name'] == 'newfeature') {
       return $this->redirect('features.edit');
     }
     else {
@@ -214,7 +214,8 @@ class FeaturesExportForm extends FormBase {
           'name' => array(
             'data' => t('The following packages are not exported.'),
             'class' => 'features-export-header-row',
-            'colspan' => 6),
+            'colspan' => 6,
+          ),
         );
       }
       $options[$package['machine_name']] = $this->buildPackageDetail($package);
@@ -237,6 +238,7 @@ class FeaturesExportForm extends FormBase {
    *
    * @param array $package
    *   The package name.
+   *
    * @return array
    *   A render array of a form element.
    */
@@ -268,7 +270,7 @@ class FeaturesExportForm extends FormBase {
       $overrides = array();
       $new_config = array();
     }
-      // Bundle package configuration by type.
+    // Bundle package configuration by type.
     $package_config = array();
     foreach ($package['config'] as $item_name) {
       $item = $config_collection[$item_name];

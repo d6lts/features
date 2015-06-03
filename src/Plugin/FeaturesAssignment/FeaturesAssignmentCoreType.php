@@ -47,7 +47,7 @@ class FeaturesAssignmentCoreType extends FeaturesAssignmentMethodBase {
         try {
           $this->featuresManager->assignConfigPackage('core', [$item_name]);
         }
-        catch(\Exception $exception) {
+        catch (\Exception $exception) {
           \Drupal::logger('features')->error($exception->getMessage());
         }
       }

@@ -308,12 +308,12 @@ class FeaturesAssigner implements FeaturesAssignerInterface {
     $is_current = (isset($this->currentBundle) && ($old_machine == $this->currentBundle->getMachineName()));
     $bundle = $this->getBundle($old_machine);
     if ($bundle->getMachineName() != '') {
-      // remove old bundle from the list if it's not the Default bundle
+      // Remove old bundle from the list if it's not the Default bundle.
       unset($this->bundles[$old_machine]);
     }
     $bundle->setMachineName($new_machine);
     $this->setBundle($bundle);
-    // put the bundle into the list with the correct name
+    // Put the bundle into the list with the correct name.
     $this->bundles[$bundle->getMachineName()] = $bundle;
     if ($is_current) {
       $this->setCurrent($bundle);
@@ -333,7 +333,7 @@ class FeaturesAssigner implements FeaturesAssignerInterface {
     }
     $bundle = $this->getBundle($machine_name);
     if (!isset($bundle)) {
-      // If bundle no longer exists then return default
+      // If bundle no longer exists then return default.
       $bundle = $this->bundles[self::DEFAULTBUNDLE];
     }
     return $this->setCurrent($bundle->load());

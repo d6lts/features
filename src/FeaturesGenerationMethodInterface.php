@@ -32,7 +32,7 @@ interface FeaturesGenerationMethodInterface {
    *   The features assigner to be used to retrieve the bundle configuration.
    */
   public function setAssigner(FeaturesAssignerInterface $assigner);
-  
+
   /**
    * Prepares packages for generation.
    *

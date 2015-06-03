@@ -21,12 +21,13 @@ interface FeaturesManagerInterface {
    *
    * Core uses system.simple, but since we're using this key in configuration
    * arrays we can't include a period.
+   *
    * @see https://www.drupal.org/node/2297311
    */
   const SYSTEM_SIMPLE_CONFIG = 'system_simple';
 
   /**
-   * Constants for package/module status
+   * Constants for package/module status.
    */
   const STATUS_NO_EXPORT = 0;
   const STATUS_DISABLED = 1;
@@ -34,7 +35,7 @@ interface FeaturesManagerInterface {
   const STATUS_DEFAULT = self::STATUS_NO_EXPORT;
 
   /**
-   * Constants for package/module state
+   * Constants for package/module state.
    */
   const STATE_DEFAULT = 0;
   const STATE_OVERRIDDEN = 1;
@@ -142,6 +143,7 @@ interface FeaturesManagerInterface {
    *
    * @param string $machine_name
    *   Full machine name of package.
+   *
    * @return array
    *   Package data.
    *
@@ -369,7 +371,6 @@ interface FeaturesManagerInterface {
    *   Optional bundle to filter module list.
    *   If given, only modules matching the bundle namespace will be returned.
    *   If the bundle uses a profile, only modules in the profile will be returned.
-   *
    */
   public function getAllModules(FeaturesBundleInterface $bundle = NULL);
 
@@ -392,6 +393,7 @@ interface FeaturesManagerInterface {
    *
    * @param bool $enabled
    *   List only enabled Features.
+   *
    * @return array
    *   An array of config names.
    */
@@ -423,6 +425,7 @@ interface FeaturesManagerInterface {
    *   The name of a package.
    * @param \Drupal\features\FeaturesBundleInterface $bundle
    *   Optional bundle being used for export.
+   *
    * @return array
    *   An array with the full name as the first item and directory as second
    *   item.
@@ -434,6 +437,7 @@ interface FeaturesManagerInterface {
    *
    * @param mixed $name
    *   Either the name of an module or a full module extension object
+   *
    * @return bool
    *   TRUE if the given module is a Features package.
    */
@@ -447,6 +451,7 @@ interface FeaturesManagerInterface {
    *   The 'state' property is updated if overrides are detected.
    * @param bool $include_new
    *   If set, include newly detected config not yet exported.
+   *
    * @result array $different
    *   The array of config items that are overridden.
    *
@@ -473,6 +478,7 @@ interface FeaturesManagerInterface {
    *
    * @param int $status
    *   A status constant.
+   *
    * @return string
    *   A translatable label.
    */
@@ -484,8 +490,9 @@ interface FeaturesManagerInterface {
    *
    * @param int $state
    *   A state constant.
+   *
    * @return string
-  *   A translatable label.
+   *   A translatable label.
    */
   public function stateLabel($state);
 

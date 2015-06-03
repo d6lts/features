@@ -16,6 +16,7 @@ function features_ui_help($route_name, RouteMatchInterface $route_match) {
       $output = '';
       $output .= '<p>' . t('Manage bundles and assignment methods and select the order in which they will be run.') . '</p>';
       return $output;
+
     case 'features.export':
       $output = '';
       $output .= '<p>' . t('Export bundles of configuration into modules.') . '</p>';

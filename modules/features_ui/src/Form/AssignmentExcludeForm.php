@@ -16,7 +16,7 @@ use Drupal\features\FeaturesBundleInterface;
  */
 class AssignmentExcludeForm extends AssignmentFormBase {
 
-  CONST METHOD_ID = 'exclude';
+  const METHOD_ID = 'exclude';
 
   /**
    * {@inheritdoc}

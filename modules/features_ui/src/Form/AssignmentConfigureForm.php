@@ -81,7 +81,7 @@ class AssignmentConfigureForm extends FormBase {
       // So let's just reload the page.
       return $this->redirect('features.assignment', array($bundle_name));
     }
-    else if ($trigger['#name'] == 'removebundle') {
+    elseif ($trigger['#name'] == 'removebundle') {
       $current_bundle = $this->assigner->loadBundle($bundle_name);
       $bundle_name = $current_bundle->getMachineName();
       $this->assigner->removeBundle($bundle_name);
@@ -107,7 +107,7 @@ class AssignmentConfigureForm extends FormBase {
           'features_ui/drupal.features_ui.admin',
         ),
       ),
-      //'#attributes' => array('class' => 'edit-bundles-wrapper'),
+      // '#attributes' => array('class' => 'edit-bundles-wrapper'),
       '#tree' => TRUE,
       '#show_operations' => FALSE,
       'weight' => array('#tree' => TRUE),

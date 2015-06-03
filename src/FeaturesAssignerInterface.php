@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\features\FeaturesAssignerInterface
+ * Contains \Drupal\features\FeaturesAssignerInterface.
  */
 
 namespace Drupal\features;
@@ -187,6 +187,7 @@ interface FeaturesAssignerInterface {
    * @param string $bundle_name
    *   The name of a features bundle. If omitted, gets the last bundle from the
    *   Session.
+   *
    * @return \Drupal\features\FeaturesBundleInterface
    *   A features bundle object.
    */

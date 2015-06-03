@@ -32,7 +32,8 @@ class FeaturesGenerationArchive extends FeaturesGenerationMethodBase {
   const METHOD_ID = 'archive';
 
   /**
-   * The filename being written
+   * The filename being written.
+   *
    * @var string
    */
   protected $archive_name;
@@ -100,7 +101,7 @@ class FeaturesGenerationArchive extends FeaturesGenerationMethodBase {
 
     $archiver = new ArchiveTar($archive_name);
 
-    // add the Profile
+    // Add the Profile.
     if (isset($bundle) && $bundle->isProfile()) {
       $profile_package = $this->featuresManager->getPackage($bundle->getProfileName());
       if (!empty($profile_package)) {
@@ -136,7 +137,7 @@ class FeaturesGenerationArchive extends FeaturesGenerationMethodBase {
       try {
         $this->generateFile($package['directory'], $file, $archiver);
       }
-      catch(\Exception $exception) {
+      catch (\Exception $exception) {
         $this->failure($return, $package, $exception);
         $success = FALSE;
         break;

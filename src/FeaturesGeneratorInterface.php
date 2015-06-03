@@ -2,7 +2,7 @@
 
 /**
  * @file
- * Contains \Drupal\features\FeaturesGeneratorInterface
+ * Contains \Drupal\features\FeaturesGeneratorInterface.
  */
 
 namespace Drupal\features;
@@ -58,7 +58,6 @@ interface FeaturesGeneratorInterface {
 
   /**
    * Apply a given package generation method.
-   *
    *
    * @param string $method_id
    *   The string identifier of the package generation method to use to package

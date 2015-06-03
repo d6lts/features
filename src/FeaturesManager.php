@@ -246,8 +246,7 @@ class FeaturesManager implements FeaturesManagerInterface {
   }
 
   /**
-  /**
-   * {@inheritdoc}
+   * {@inheritdoc}.
    */
   public function getAssigner() {
     return $this->assigner;
@@ -523,7 +522,7 @@ class FeaturesManager implements FeaturesManagerInterface {
             try {
               $this->assignConfigPackage($machine_name, [$item_name]);
             }
-            catch(\Exception $exception) {
+            catch (\Exception $exception) {
               \Drupal::logger('features')->error($exception->getMessage());
             }
           }
@@ -549,7 +548,7 @@ class FeaturesManager implements FeaturesManagerInterface {
               // If a Package is specified, force assign it to the given package.
               $this->assignConfigPackage($package_name, [$dependent_item_name], !empty($package));
             }
-            catch(\Exception $exception) {
+            catch (\Exception $exception) {
               \Drupal::logger('features')->error($exception->getMessage());
             }
           }
@@ -567,6 +566,7 @@ class FeaturesManager implements FeaturesManagerInterface {
    *   Human readable name of the package.
    * @param string $description
    *   Description of the package.
+   *
    * @return array
    *   An array with the following keys:
    *   - 'machine_name': machine name of the project such as 'example_article'.
@@ -731,7 +731,7 @@ class FeaturesManager implements FeaturesManagerInterface {
           $config['data']['permissions'] = [];
         }
         $package['files'][$name] = [
-          'filename'=> $config['name'] . '.yml',
+          'filename' => $config['name'] . '.yml',
           'subdirectory' => InstallStorage::CONFIG_INSTALL_DIRECTORY,
           'string' => Yaml::encode($config['data'])
         ];
@@ -792,7 +792,7 @@ class FeaturesManager implements FeaturesManagerInterface {
    * {@inheritdoc}
    */
   public function getModuleList(array $names = array(), $namespace = NULL) {
-    // get all modules regardless of enabled/disabled
+    // Get all modules regardless of enabled/disabled status.
     $modules = $this->getAllModules();
     if (!empty($names) || !empty($namespace)) {
       $return = [];
@@ -805,7 +805,7 @@ class FeaturesManager implements FeaturesManagerInterface {
       }
 
       // Detect modules by namespace.
-      // If namespace is provided but is empty, then match all modules
+      // If namespace is provided but is empty, then match all modules.
       if (isset($namespace)) {
         foreach ($modules as $module_name => $extension) {
           if (empty($namespace) || (strpos($module_name, $namespace) === 0)) {
@@ -934,7 +934,7 @@ class FeaturesManager implements FeaturesManagerInterface {
     $full_name = $package['machine_name'];
 
     if (isset($bundle) && $bundle->isProfile()) {
-      // adjust export directory to be in profile
+      // Adjust export directory to be in profile.
       $path = 'profiles/' . $bundle->getProfileName() . '/modules';
     }
     else {
@@ -993,8 +993,10 @@ class FeaturesManager implements FeaturesManagerInterface {
     switch ($status) {
       case FeaturesManagerInterface::STATUS_NO_EXPORT:
         return t('Not exported');
+
       case FeaturesManagerInterface::STATUS_DISABLED:
         return t('Uninstalled');
+
       case FeaturesManagerInterface::STATUS_ENABLED:
         return t('Enabled');
     }
@@ -1007,6 +1009,7 @@ class FeaturesManager implements FeaturesManagerInterface {
     switch ($state) {
       case FeaturesManagerInterface::STATE_DEFAULT:
         return t('Default');
+
       case FeaturesManagerInterface::STATE_OVERRIDDEN:
         return t('Changed');
     }

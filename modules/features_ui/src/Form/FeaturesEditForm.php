@@ -332,7 +332,7 @@ class FeaturesEditForm extends FormBase {
       '#title' => t('Search'),
       '#hidden' => TRUE,
       '#default_value' => '',
-      '#suffix' => "<span class='features-filter-clear'>". t('Clear') ."</span>",
+      '#suffix' => "<span class='features-filter-clear'>" . t('Clear') . "</span>",
     );
     $element['features_filter_wrapper']['checkall'] = array(
       '#type' => 'checkbox',
@@ -341,7 +341,7 @@ class FeaturesEditForm extends FormBase {
       '#title' => t('Select all'),
       '#attributes' => array(
         'class' => array('features-checkall'),
-      )
+      ),
     );
 
     $sections = array('included', 'detected', 'added');
@@ -421,7 +421,7 @@ class FeaturesEditForm extends FormBase {
     );
     $element['features_legend']['legend'] = array(
       '#markup' =>
-        "<span class='component-included'>" . t('Normal'). "</span> " .
+        "<span class='component-included'>" . t('Normal') . "</span> " .
         "<span class='component-added'>" . t('Added') . "</span> " .
         "<span class='component-detected'>" . t('Auto detected') . "</span> " .
         "<span class='component-conflict'>" . t('Conflict') . "</span> ",
@@ -434,11 +434,11 @@ class FeaturesEditForm extends FormBase {
    * Returns the full feature export array based upon user selections in
    * form_state.
    *
-   * @param  array $package
+   * @param array $package
    *   Package array to be exported
-   * @param  array $form_state
-   *  Optional form_state information for user selections. Can be updated to
-   *  reflect new selection status.
+   * @param array $form_state
+   *   Optional form_state information for user selections. Can be updated to
+   *   reflect new selection status.
    *
    * @return array
    *   New export array to be exported
@@ -501,9 +501,9 @@ class FeaturesEditForm extends FormBase {
     foreach ($this->package['config_orig'] as $item_name) {
       $item = $config[$item_name];
       // Remove any conflicts if those are not being allowed.
-      //if ($allow_conflicts || !isset($this->conflicts[$item['type']][$item['name_short']])) {
-        $exported_features_info[$item['type']][$item['name_short']] = $item;
-      //}
+      // if ($allow_conflicts || !isset($this->conflicts[$item['type']][$item['name_short']])) {
+      $exported_features_info[$item['type']][$item['name_short']] = $item;
+      // }
     }
     $exported_features_info['dependencies'] = !empty($this->package['info']['dependencies']) ? $this->package['info']['dependencies'] : array();
 
@@ -528,7 +528,6 @@ class FeaturesEditForm extends FormBase {
     $sections = array('sources', 'included', 'detected', 'added');
 
     // Generate list of config to be exported.
-
     $config_count = array();
     foreach ($components as $component => $component_info) {
       // User-selected components take precedence.
@@ -565,7 +564,6 @@ class FeaturesEditForm extends FormBase {
 
     // Now fill the $export with categorized sections of component options
     // based upon user selections and de-selections.
-
     foreach ($components as $component => $component_info) {
       $component_export = $component_info;
       foreach ($sections as $section) {
