@@ -14,6 +14,7 @@ use Drupal\Core\Extension\ExtensionDiscovery;
 
 /**
  * Storage to access configuration and schema in enabled extensions.
+ *
  * Overrides the normal ExtensionInstallStorage to prevent profile from overriding
  * Also supports modules that are not installed yet
  *
@@ -46,7 +47,7 @@ class FeaturesInstallStorage extends ExtensionInstallStorage {
     // ModuleHandler::getModuleDirectories() returns data only for installed
     // modules. system_rebuild_module_data() includes only the site's install
     // profile directory, while we may need to include a custom profile.
-    // @see _system_rebuild_module_data().
+    // @see _system_rebuild_module_data()
     $listing = new ExtensionDiscovery(\Drupal::root());
 
     $profile_directories = [];

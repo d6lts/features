@@ -59,7 +59,7 @@ function features_drush_command() {
       "drush features-export example_article example_page" => "Export the example_article and example_page packages.",
       "drush features-export --add-profile" => "Export all available packages and add them to an install profile.",
     ),
-    // add previous "fu" alias for compatibility
+    // Add previous "fu" alias for compatibility.
     'aliases' => array('fex', 'fu', 'fua', 'fu-all'),
   );
 
@@ -124,8 +124,9 @@ function features_drush_command() {
 }
 
 /**
- * Applies global options for Features drush commands
- *   --name="bundle_name"  set the bundle namespace
+ * Applies global options for Features drush commands.
+ *
+ *   --name="bundle_name" sets the bundle namespace.
  */
 function _drush_features_options() {
   $assigner = \Drupal::service('features_assigner');
@@ -139,7 +140,7 @@ function _drush_features_options() {
 }
 
 /**
- * Drush command callback for features-status.
+ * Provides Drush command callback for features-status.
  */
 function drush_features_status() {
   $args = func_get_args();
@@ -231,7 +232,7 @@ function drush_features_list_packages($package = '') {
 }
 
 /**
- * Drush command callback for features-export.
+ * Provides Drush command callback for features-export.
  */
 function drush_features_export($packages = NULL) {
   $packages = func_get_args();
@@ -271,7 +272,7 @@ function drush_features_export($packages = NULL) {
     foreach ($existing_packages as $name => $directory) {
       drush_print(dt("The extension @name already exists at !directory.", array('@name' => $name, '!directory' => $directory)));
     }
-    // Apparently format_plural is not always available.
+    // Apparently, format_plural is not always available.
     if (count($existing_packages) == 1) {
       $message = dt('Would you like to overwrite it?');
     }
@@ -294,8 +295,10 @@ function drush_features_export($packages = NULL) {
 }
 
 /**
- * Add a component to a features module
- * the selected components.
+ * Adds a component to a features module.
+ *
+ * @param
+ *   The selected components.
  */
 function drush_features_add() {
   if ($args = func_get_args()) {
@@ -326,7 +329,7 @@ function drush_features_add() {
       foreach ($existing_packages as $name => $directory) {
         drush_print(dt("The extension @name already exists at !directory.", array('@name' => $name, '!directory' => $directory)));
       }
-      // Apparently format_plural is not always available.
+      // Apparently, format_plural is not always available.
       if (count($existing_packages) == 1) {
         $message = dt('Would you like to overwrite it?');
       }
@@ -364,9 +367,8 @@ function drush_features_add() {
   }
 }
 
-
 /**
- * List components, with pattern matching.
+ * Lists components, with pattern matching.
  */
 function drush_features_components() {
   $args = func_get_args();
@@ -402,8 +404,10 @@ function drush_features_components() {
 }
 
 /**
- * Lists the differences in the package config vs the active store
+ * Lists the differences in the package config vs the active store.
+ *
  * @param string $package
+ *   The machine name of a package.
  */
 function drush_features_diff() {
   if (!$args = func_get_args()) {
@@ -452,7 +456,7 @@ function drush_features_diff() {
     $config_diff = \Drupal::service('config_update.config_diff');
     $active_storage = \Drupal::service('config.storage');
 
-    // Print key for colors
+    // Print key for colors.
     drush_print(dt('Legend: '));
     drush_print(sprintf($red,   dt('Code:    drush features-import will replace the active config with the displayed code.')));
     drush_print(sprintf($green, dt('Active:  drush features-export will update the exported feature with the displayed active config')));
@@ -487,8 +491,9 @@ function drush_features_diff() {
 }
 
 /**
- * Import module config into the active store
- * Same as the old "revert" functionality
+ * Imports module config into the active store.
+ *
+ * Same as the old "revert" functionality.
  */
 function drush_features_import() {
   if ($args = func_get_args()) {
@@ -512,7 +517,7 @@ function drush_features_import() {
 
       if (isset($module)) {
         if (empty($component)) {
-          // If we received just a feature name, this means that we need all of it's components.
+          // If we received just a feature name, this means that we need all of its components.
           $modules[$module] = TRUE;
         }
         elseif ($modules[$module] !== TRUE) {
@@ -579,10 +584,13 @@ function drush_features_import() {
 }
 
 /**
- * Loads a Features package
- * @param string $module name
+ * Loads a Features package.
+ *
+ * @param string $module
+ *   The machine name of a module.
  * @param bool $any
- *   If TRUE then check for any module, not just a Features module
+ *   If TRUE then check for any module, not just a Features module.
+ *
  * @return array
  */
 function _drush_features_load_feature($module, $any = FALSE) {
@@ -606,8 +614,10 @@ function _drush_features_load_feature($module, $any = FALSE) {
 }
 
 /**
- * Returns an array of full config names given a array[$type][$component]
+ * Returns an array of full config names given a array[$type][$component].
+ *
  * @param $items
+ *   The items to return data for.
  */
 function _drush_features_build_config($items) {
   $manager = \Drupal::service('features.manager');
@@ -687,11 +697,9 @@ function _drush_features_component_filter($all_components, $patterns = array(), 
 
     $preg_source_pattern = strtr(preg_quote($source_pattern, '/'), array('%' => '.*'));
     $preg_component_pattern = strtr(preg_quote($component_pattern, '/'), array('%' => '.*'));
-    /*
-     * If it isn't a pattern, but a simple string, we don't anchor the
-     * pattern, this allows for abbreviating. Else, we do, as this seems more
-     * natural for patterns.
-     */
+    // If it isn't a pattern, but a simple string, we don't anchor the
+    // pattern. This allows for abbreviating. Otherwise, we do, as this seems
+    // more natural for patterns.
     if (strpos($source_pattern, '%') !== FALSE) {
       $preg_source_pattern = '^' . $preg_source_pattern . '$';
     }
@@ -776,7 +784,7 @@ function _drush_features_component_filter($all_components, $patterns = array(), 
 }
 
 /**
- * Provide a component to feature map (port of features_get_component_map).
+ * Provides a component to feature map (port of features_get_component_map).
  */
 function _drush_features_get_component_map() {
   $result = array();

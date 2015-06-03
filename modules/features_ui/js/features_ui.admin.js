@@ -387,5 +387,3 @@ jQuery.fn.sortElements = (function(){
   }
 
 })(jQuery);
-
-

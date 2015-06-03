@@ -19,8 +19,8 @@ interface FeaturesAssignmentMethodInterface {
    * Injects the features manager.
    *
    * @param \Drupal\features\FeaturesManagerInterface $features_manager
-   *   The features manager to be used to retrieve the configuration
-   *   list and the already assigned packages.
+   *   The features manager to be used to retrieve the configuration list and
+   *   the already assigned packages.
    */
   public function setFeaturesManager(FeaturesManagerInterface $features_manager);
 

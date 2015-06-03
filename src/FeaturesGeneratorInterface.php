@@ -18,9 +18,9 @@ use Drupal\Core\Form\FormStateInterface;
  *   which package to assign a given piece of configuration to.
  * Generation methods are customizable.
  *
- * Features defines several package generation methods, which are
- * simple plugin classes that implement a particular logic to assign pieces of
- * configuration to a given package (module).
+ * Features defines two package generation methods, which are simple plugin
+ * classes that implement a particular logic to assign pieces of configuration
+ * to a given package (module).
  *
  * Modules can define additional package generation methods by simply providing
  * the related plugins, and alter existing methods through
@@ -29,11 +29,11 @@ use Drupal\Core\Form\FormStateInterface;
  * @code
  * function mymodule_features_generation_method_info_alter(&$generation_info) {
  *   // Replace the original plugin with our own implementation.
- *   $method_id = \Drupal\features\Plugin\FeaturesGeneration\PackageGenerationArchive::METHOD_ID;
- *   $generation_info[$method_id]['class'] = 'Drupal\my_module\Plugin\FeaturesGeneration\MyPackageGenerationArchive';
+ *   $method_id = \Drupal\features\Plugin\FeaturesGeneration\FeaturesGenerationArchive::METHOD_ID;
+ *   $generation_info[$method_id]['class'] = 'Drupal\my_module\Plugin\FeaturesGeneration\MyFeaturesGenerationArchive';
  * }
  *
- * class MyPackageGenerationArchive extends PackageGenerationArchive {
+ * class MyFeaturesGenerationArchive extends FeaturesGenerationArchive {
  *   public function assignPackages() {
  *     // Insert customization here.
  *   }
@@ -42,7 +42,7 @@ use Drupal\Core\Form\FormStateInterface;
  * @endcode
  *
  * For more information, see
- * @link http://drupal.org/node/2404473 Developing for Configuration Packager @endlink
+ * @link http://drupal.org/node/2404473 Developing for Features 3.x @endlink
  */
 interface FeaturesGeneratorInterface {
 

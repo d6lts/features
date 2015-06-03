@@ -12,9 +12,10 @@ use Drupal\Core\Config\StorageInterface;
 use Drupal\features\FeaturesManagerInterface;
 
 /**
- * Class FeaturesConfigInstaller
- * Copy of ConfigInstaller with findPreExistingConfiguration() modified to allow
- * Feature modules to be enabled.
+ * Class for customizing the test for pre existing configuration. 
+ *
+ * Copy of ConfigInstaller with findPreExistingConfiguration() modified to
+ * allow Feature modules to be enabled.
  */
 class FeaturesConfigInstaller extends ConfigInstaller {
 
@@ -23,8 +24,9 @@ class FeaturesConfigInstaller extends ConfigInstaller {
    */
   protected function findPreExistingConfiguration(StorageInterface $storage) {
     // CHANGE START
-    // Override Drupal\Core\Config\ConfigInstaller::findPreExistingConfiguration
-    // Allow config that already exists coming from Features
+    // Override
+    // Drupal\Core\Config\ConfigInstaller::findPreExistingConfiguration().
+    // Allow config that already exists coming from Features.
     $manager = \Drupal::service('features.manager');
     $features_config = $manager->listExistingConfig();
     // Map array so we can use isset instead of in_array for faster access.

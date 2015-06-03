@@ -33,6 +33,8 @@ abstract class AssignmentFormBase extends FormBase {
   protected $assigner;
 
   /**
+   * The current bundle.
+   *
    * @var \Drupal\features\FeaturesBundleInterface
    */
   protected $current_bundle;
@@ -88,8 +90,10 @@ abstract class AssignmentFormBase extends FormBase {
   }
 
   /**
-   * Redirect back to the Bundle config form
+   * Redirects back to the Bundle config form.
+   *
    * @param \Drupal\Core\Form\FormStateInterface $form_state
+   *   The form state.
    */
   protected function setRedirect(FormStateInterface $form_state) {
     $form_state->setRedirect('features.assignment', array('bundle_name' => $this->current_bundle->getMachineName()));

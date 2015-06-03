@@ -56,12 +56,15 @@ class FeaturesAssigner implements FeaturesAssignerInterface {
   protected $methods;
 
   /**
+   * Bundles.
+   *
    * @var array of \Drupal\features\FeaturesBundleInterface
    */
   protected $bundles;
 
   /**
    * Currently active bundle.
+   *
    * @var \Drupal\features\FeaturesBundleInterface
    */
   protected $currentBundle;

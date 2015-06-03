@@ -76,7 +76,7 @@ class AssignmentConfigureForm extends FormBase {
       $bundle_name = $form_state->getValue(array('bundle', 'bundle_select'));
       $this->assigner->setCurrent($this->assigner->getBundle($bundle_name));
       // Setting the form values to the newly selected Bundle via Ajax is hard.
-      // #default_values is ignored after form is submitted
+      // #default_values is ignored after form is submitted.
       // Can set #value in the Ajax callback, but doesn't work for checkboxes.
       // So let's just reload the page.
       return $this->redirect('features.assignment', array($bundle_name));
@@ -236,7 +236,7 @@ class AssignmentConfigureForm extends FormBase {
           'title' => $this->t('Configure'),
           'url' => Url::fromRoute($method['config_route_name'], array('bundle_name' => $current_bundle->getMachineName())),
         );
-        // If there is at least one operation enabled show the operation
+        // If there is at least one operation enabled, show the operation
         // column.
         $form['#show_operations'] = TRUE;
       }

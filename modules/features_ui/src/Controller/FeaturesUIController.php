@@ -54,11 +54,13 @@ class FeaturesUIController implements ContainerInjectionInterface {
   }
 
   /**
-   * Return a list of auto-detected config items for a feature
+   * Returns a list of auto-detected config items for a feature.
+   *
    * @param string $name
-   *   short machine name of feature to process
+   *   Short machine name of feature to process.
+   *
    * @return array
-   *   list of auto-detected config items, keyed by type and short name
+   *   List of auto-detected config items, keyed by type and short name.
    */
   public function detect($name) {
     $detected = array();
@@ -91,6 +93,15 @@ class FeaturesUIController implements ContainerInjectionInterface {
     return new JsonResponse($result);
   }
 
+  /**
+   * Returns the configuration dependent on given items.
+   *
+   * @param array $item_names
+   *   An array of item names.
+   *
+   * @return array
+   *   An array of config items.
+   */
   protected function getConfigDependents(array $item_names = NULL) {
     $result = [];
     $config_collection = $this->featuresManager->getConfigCollection();
@@ -122,11 +133,29 @@ class FeaturesUIController implements ContainerInjectionInterface {
     return $result;
   }
 
+  /**
+   * Encodes a given key.
+   *
+   * @param string $key
+   *   The key to encode.
+   *
+   * @return string
+   *   The encoded key.
+   */
   protected function domEncode($key) {
     $replacements = $this->domEncodeMap();
     return strtr($key, $replacements);
   }
 
+  /**
+   * Decodes a given key.
+   *
+   * @param string $key
+   *   The key to decode.
+   *
+   * @return string
+   *   The decoded key.
+   */
   protected function domDecode($key) {
     $replacements = array_flip($this->domEncodeMap());
     return strtr($key, $replacements);
@@ -134,6 +163,9 @@ class FeaturesUIController implements ContainerInjectionInterface {
 
   /**
    * Returns encoding map for decode and encode options.
+   *
+   * @return array
+   *   An encoding map.
    */
   protected function domEncodeMap() {
     return array(

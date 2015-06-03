@@ -186,9 +186,13 @@ class FeaturesExportForm extends FormBase {
   }
 
   /**
-   * Build the portion of the form showing a listing of features.
+   * Builds the portion of the form showing a listing of features.
+   *
    * @param array $packages
-   * @return array render array of form element
+   *   The packages.
+   *
+   * @return array
+   *   A render array of a form element.
    */
   protected function buildListing($packages) {
 
@@ -229,9 +233,12 @@ class FeaturesExportForm extends FormBase {
   }
 
   /**
-   * Build the details of a package.
+   * Builds the details of a package.
+   *
    * @param array $package
-   * @return array render array of form element
+   *   The package name.
+   * @return array
+   *   A render array of a form element.
    */
   protected function buildPackageDetail($package) {
     $config_collection = $this->featuresManager->getConfigCollection();
@@ -247,7 +254,8 @@ class FeaturesExportForm extends FormBase {
       'data' => $this->featuresManager->statusLabel($package['status']),
       'class' => array('column-nowrap'),
     );
-    // Use 'data' instead of plain string value so a blank version doesn't remove column from table.
+    // Use 'data' instead of plain string value so a blank version doesn't
+    // remove column from table.
     $element['version'] = array(
       'data' => SafeMarkup::checkPlain($package['version']),
       'class' => array('column-nowrap'),
@@ -375,6 +383,11 @@ class FeaturesExportForm extends FormBase {
 
   /**
    * Adds a pseudo-package to display unpackaged configuration.
+   *
+   * @param array $packages
+   *   An array of package names.
+   * @param array $config_collection
+   *   A collection of configuration.
    */
   protected function addUnpackaged(array &$packages, array $config_collection) {
     $packages['unpackaged'] = array(

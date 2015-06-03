@@ -78,8 +78,6 @@ function theme_features_listing($variables) {
   return drupal_render($table);
 }
 
-
-
 /**
  * Prepares variables for package assignment configuration form.
  *
@@ -165,6 +163,9 @@ function theme_features_items(array $variables) {
   return '<span class="features-item-list">' . implode(' ', $list) . '</span>';
 }
 
+/**
+ * Themes the assignment form.
+ */
 function theme_assignment_form(array $variables) {
   return drupal_render($variables['form']);
 }

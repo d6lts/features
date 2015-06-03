@@ -28,8 +28,10 @@ class FeaturesAssignmentExisting extends FeaturesAssignmentMethodBase {
   const METHOD_ID = 'existing';
 
   /**
-   * Call assignConfigPackage without allowing exceptions to abort us.
+   * Calls assignConfigPackage without allowing exceptions to abort us.
+   *
    * @param $name
+   *   The name of a feature module.
    */
   protected function safeAssignConfig($name) {
     $config = $this->featuresManager->listExtensionConfig($name);

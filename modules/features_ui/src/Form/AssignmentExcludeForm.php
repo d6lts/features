@@ -11,7 +11,6 @@ use Drupal\features_ui\Form\AssignmentFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\features\FeaturesBundleInterface;
 
-
 /**
  * Configures the selected configuration assignment method for this site.
  */

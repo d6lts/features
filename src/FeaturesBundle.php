@@ -13,7 +13,7 @@ use Drupal\features\FeaturesBundleInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 
 /**
- * Defines the Features Bundle objects
+ * Defines the Features Bundle object.
  */
 class FeaturesBundle implements FeaturesBundleInterface {
 
@@ -38,23 +38,57 @@ class FeaturesBundle implements FeaturesBundleInterface {
    */
   protected $configFactory;
 
+  /**
+   * The machine name of the bundle.
+   *
+   * @var string
+   */
   protected $machine_name;
+
+  /**
+   * The human readable name of the bundle.
+   *
+   * @var string
+   */
   protected $name;
+
+  /**
+   * The description of the bundle.
+   *
+   * @var string
+   */
   protected $description;
+
+  /**
+   * Settings for the bundle.
+   *
+   * @var array
+   */
   protected $settings;
 
   /**
-   * The Profile data associated with this bundle
+   * The profile name associated with this bundle.
+   *
+   * @var string
    */
   protected $profile_name;
+
+  /**
+   * Whether this bundle is a profile.
+   *
+   * @var bool
+   */
   protected $is_profile;
 
   /**
+   * A list of assignments.
+   *
+   * Assignments are keyed by assignment ID.
+   *  - enabled: whether method is enabled.
+   *  - weight' weight (order it is applied).
+   *  - settings' method-specific settings.
+   *
    * @var array
-   *   list of assignments.  Keyed by assignment id
-   *   'enabled': whether method is enabled
-   *   'weight': weight (order it is applied)
-   *   'settings': method-specific settings
    */
   protected $assignments;
 
@@ -82,7 +116,7 @@ class FeaturesBundle implements FeaturesBundleInterface {
   }
 
   /**
-   * Initialize the $assignments array with defaults for a new bundle.
+   * Initializes the $assignments array with defaults for a new bundle.
    */
   protected function initAssignments() {
     $assignments = array();
@@ -105,7 +139,6 @@ class FeaturesBundle implements FeaturesBundleInterface {
   public function isDefault() {
     return $this->machine_name == '';
   }
-
 
   /**
    * {@inheritdoc}

@@ -11,7 +11,6 @@ use Drupal\features\FeaturesGenerationMethodBase;
 use Drupal\Core\Config\InstallStorage;
 use Drupal\features\FeaturesBundleInterface;
 
-
 /**
  * Class for writing packages to the local file system.
  *
@@ -31,6 +30,13 @@ class FeaturesGenerationWrite extends FeaturesGenerationMethodBase {
 
   /**
    * Reads and merges in existing files for a given package or profile.
+   *
+   * @param array &$package
+   *   The package.
+   * @param array $existing_packages
+   *   An array of existing packages.
+   * @param \Drupal\features\FeaturesBundleInterface $bundle
+   *   The bundle the package belongs to.
    */
   protected function preparePackage(&$package, $existing_packages, FeaturesBundleInterface $bundle = NULL) {
     // If this package is already present, prepare files.
@@ -140,7 +146,7 @@ class FeaturesGenerationWrite extends FeaturesGenerationMethodBase {
    * @param Exception $exception
    *   The exception object.
    * @param string $message
-   *   Error message when there isn't an Exception object
+   *   Error message when there isn't an Exception object.
    */
   protected function failure(&$return, $package, \Exception $exception, $message = '') {
     $type = $package['type'] == 'package' ? $this->t('Package') : $this->t('Profile');

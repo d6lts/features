@@ -290,10 +290,13 @@ class FeaturesManager implements FeaturesManagerInterface {
   }
 
   /**
-   * Return the name of an extension
+   * Returns the name of an extension.
+   *
    * @param mixed $extension
-   *   The string name of an extension, or a full Extension object
+   *   The string name of an extension, or a full Extension object.
+   *
    * @return string
+   *   The name of an extension.
    */
   protected function getExtensionName($extension) {
     if (is_string($extension)) {
@@ -305,12 +308,15 @@ class FeaturesManager implements FeaturesManagerInterface {
   }
 
   /**
-   * Return the path to an extension info.yml file
+   * Returns the path to an extension info.yml file.
+   *
    * @param mixed $extension
    *   The string name of an extension, or a full Extension object
    * @param string $type
    *   The type of extension
+   *
    * @return string
+   *   A file path.
    */
   protected function getExtensionPath($extension, $type = 'module') {
     if (is_string($extension)) {
@@ -322,10 +328,13 @@ class FeaturesManager implements FeaturesManagerInterface {
   }
 
   /**
-   * Return the contents of an extensions info.yml file
+   * Returns the contents of an extensions info.yml file.
+   *
    * @param mixed $extension
-   *   The string name of an extension, or a full Extension object
-   * @return array info.yml data
+   *   The string name of an extension, or a full Extension object.
+   *
+   * @return array
+   *   An array representing data in an info.yml file.
    */
   protected function getExtensionInfo($extension, $type = 'module') {
     $info_file_uri = $this->getExtensionPath($extension, $type);
@@ -349,8 +358,9 @@ class FeaturesManager implements FeaturesManagerInterface {
       $modules = $this->moduleHandler->getModuleList();
     }
     else {
-      // ModuleHandler::getModuleList() returns data only for installed modules.
-      // We want to search all possible exports for Features that might be disabled
+      // ModuleHandler::getModuleList() returns data only for installed
+      // modules. We want to search all possible exports for Features that
+      // might be disabled.
       $listing = new ExtensionDiscovery(\Drupal::root());
       $modules = $listing->scan('module');
     }
@@ -425,7 +435,7 @@ class FeaturesManager implements FeaturesManagerInterface {
 
     $return = array();
     // Detect modules by namespace.
-    // If namespace is provided but is empty, then match all modules
+    // If namespace is provided but is empty, then match all modules.
     foreach ($modules as $module_name => $extension) {
       if ($this->isFeatureModule($extension) && (!isset($bundle) || $bundle->isDefault() || $bundle->inBundle($module_name))) {
         $return[$module_name] = $extension;
@@ -600,7 +610,7 @@ class FeaturesManager implements FeaturesManagerInterface {
   }
 
   /**
-   * Fill in module-specific properties, such as status and version
+   * Fills in module-specific properties, such as status and version.
    *
    * @param array &$package
    *   A package array, passed by reference.

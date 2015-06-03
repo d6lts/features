@@ -40,13 +40,15 @@ interface FeaturesManagerInterface {
   const STATE_OVERRIDDEN = 1;
 
   /**
-   * Return the active config store.
+   * Returns the active config store.
+   *
    * @return \Drupal\Core\Config\StorageInterface
    */
   public function getActiveStorage();
 
   /**
-   * Return the extension config store.
+   * Returns the extension config store.
+   *
    * @return \Drupal\Core\Config\StorageInterface
    */
   public function getExtensionStorage();
@@ -57,9 +59,10 @@ interface FeaturesManagerInterface {
   public function reset();
 
   /**
-   * Get an array of site configuration.
+   * Gets an array of site configuration.
+   *
    * $param bool $reset
-   *   If True, recalculate the configuration (undo all assignment methods)
+   *   If TRUE, recalculate the configuration (undo all assignment methods).
    *
    * @return array
    *   An array of items, each with the following keys:
@@ -83,7 +86,6 @@ interface FeaturesManagerInterface {
    *   - 'type': type of configuration.
    *   - 'data': the contents of the configuration item in exported format.
    *   - 'dependents': array of names of dependent configuration items.
-
    */
   public function setConfigCollection(array $config_collection);
 
@@ -107,6 +109,8 @@ interface FeaturesManagerInterface {
    *      - 'subdirectory': any subdirectory of the file within the extension
    *         directory.
    *      - 'string': the contents of the file.
+   *
+   * @see \Drupal\features\FeaturesManagerInterface::setPackages()
    */
   public function getPackages();
 
@@ -134,25 +138,38 @@ interface FeaturesManagerInterface {
   public function setPackages(array $packages);
 
   /**
-   * Get a specific package
+   * Gets a specific package.
+   *
    * @param string $machine_name
-   *   Full machine name of package
-   * @return array package data see @getPackages.
+   *   Full machine name of package.
+   * @return array
+   *   Package data.
+   *
+   * @see \Drupal\features\FeaturesManagerInterface::getPackages()
    */
   public function getPackage($machine_name);
 
   /**
    * Updates a package definition in the package list.
-   * NOTE: This does not "export" the package, it simply updates the internal data.
+   *
+   * NOTE: This does not "export" the package; it simply updates the internal
+   * data.
+   *
    * @param array $package
+   *   The package.
    */
   public function savePackage(array &$package);
 
   /**
-   * Filter the supplied package list by the given namespace.
+   * Filters the supplied package list by the given namespace.
+   *
    * @param array $packages
+   *   An array of packages.
    * @param string $namespace
-   * @return array of packages
+   *   The namespace to use.
+   *
+   * @return
+   *   An array of packages.
    */
   public function filterPackages(array $packages, $namespace = '');
 
@@ -189,16 +206,20 @@ interface FeaturesManagerInterface {
   public function setGenerator(FeaturesGeneratorInterface $generator);
 
   /**
-   * Return the current export settings
+   * Returns the current export settings.
+   *
    * @return array
-   *   'folder' - subdirectory to export packages to
-   *   'namespace' - module namespace being being exported
+   *   An array with the following keys:
+   *   - 'folder' - subdirectory to export packages to.
+   *   - 'namespace' - module namespace being exported.
    */
   public function getExportSettings();
 
   /**
-   * Return the current general features settings
+   * Returns the current general features settings.
+   *
    * @return \Drupal\Core\Config\Config
+   *   A config object containing settings.
    */
   public function getSettings();
 
@@ -211,17 +232,20 @@ interface FeaturesManagerInterface {
    *   Human readable name of the package.
    * @param string $description
    *   Description of the package.
+   *
    * @return array
-   *   Returns the created package array
+   *   The created package array.
    */
   public function initPackage($machine_name, $name = NULL, $description = '');
 
   /**
-   * List modules that are existing exported Packages
+   * Lists modules that are existing exported Packages.
+   *
    * @param bool $enabled
-   *   Determine if only enabled modules are searched
+   *   List only enabled modules.
+   *
    * @return array
-   *   Module's info.yml config data
+   *   Module's info.yml config data.
    */
   public function getExistingPackages($enabled = FALSE);
 
@@ -260,7 +284,7 @@ interface FeaturesManagerInterface {
    * @param string[] $item_names
    *   Configuration item names.
    * @param bool $force
-   *   If TRUE, assign config even if already assigned to a package
+   *   If TRUE, assign config even if already assigned to a package.
    *
    * @throws Exception
    */
@@ -282,7 +306,7 @@ interface FeaturesManagerInterface {
    * @param string[] $item_names
    *   Configuration item names.
    * @param string $package
-   *   Short machine name of package to assign dependent config to.  If NULL,
+   *   Short machine name of package to assign dependent config to. If NULL,
    *   use the current package of the parent config items.
    */
   public function assignConfigDependents(array $item_names = NULL, $package = NULL);
@@ -320,10 +344,10 @@ interface FeaturesManagerInterface {
   public function listConfigByType($config_type);
 
   /**
-   * Return an array of installed modules.
+   * Returns an array of installed modules.
    *
    * If a $name and/or $namespace is specified, only matching modules will be
-   * returned. Otherwise, all install are returned.
+   * returned. Otherwise, all installed modules are returned.
    *
    * @param string[] $names
    *   Names of specific modules to return.
@@ -339,7 +363,8 @@ interface FeaturesManagerInterface {
   public function getModuleList(array $names = array(), $namespace = NULL);
 
   /**
-   * Return a list of Features modules regardless of if they are enabled
+   * Returns a list of Features modules regardless of if they are enabled.
+   *
    * @param \Drupal\features\FeaturesBundleInterface $bundle
    *   Optional bundle to filter module list.
    *   If given, only modules matching the bundle namespace will be returned.
@@ -363,10 +388,12 @@ interface FeaturesManagerInterface {
   public function listExtensionConfig($extension);
 
   /**
-   * List of configuration names provided by existing Features modules
+   * Lists names of configuration items provided by existing Features modules.
+   *
    * @param bool $enabled
-   *   Determine if only enabled Features are listed
-   * @return array of config names
+   *   List only enabled Features.
+   * @return array
+   *   An array of config names.
    */
   public function listExistingConfig($enabled = FALSE);
 
@@ -390,55 +417,75 @@ interface FeaturesManagerInterface {
   public function getFullName($type, $name);
 
   /**
-   * Return the full machine name and directory for exporting a package
+   * Returns the full machine name and directory for exporting a package.
+   *
    * @param string $package
+   *   The name of a package.
    * @param \Drupal\features\FeaturesBundleInterface $bundle
    *   Optional bundle being used for export.
-   * @return array($full_name, $directory)
+   * @return array
+   *   An array with the full name as the first item and directory as second
+   *   item.
    */
   public function getExportInfo($package, FeaturesBundleInterface $bundle = NULL);
 
   /**
-   * Determine if the module is a Features package
+   * Determines if the module is a Features package.
+   *
    * @param mixed $name
    *   Either the name of an module or a full module extension object
    * @return bool
+   *   TRUE if the given module is a Features package.
    */
   public function isFeatureModule($module);
 
   /**
-   * Determine which config is overridden in a package
+   * Determines which config is overridden in a package.
+   *
    * @param array $feature
-   *   the package array
-   *   the 'state' property is updated if overrides are detected
-   * @param book $include_new
-   *   if set, include newly detected config not yet exported (see @detectNew)
+   *   The package array.
+   *   The 'state' property is updated if overrides are detected.
+   * @param bool $include_new
+   *   If set, include newly detected config not yet exported.
    * @result array $different
-   *   the array of config items that are overridden
+   *   The array of config items that are overridden.
+   *
+   * @see \Drupal\features\FeaturesManagerInterface::detectNew()
    */
   public function detectOverrides($feature, $include_new = FALSE);
 
   /**
-   * Determine which config has not been exported to the feature
-   * Typically added as an auto-detected dependency
+   * Determines which config has not been exported to the feature.
+   *
+   * Typically added as an auto-detected dependency.
+   *
    * @param array $feature
-   *   the package array
+   *   The package array.
+   *
    * @result array $different
-   *   the array of config items that are overridden
+   *   The array of config items that are overridden.
    */
   public function detectNew($feature);
 
   /**
-   * Helper function to return a translatable label for the different status constants
+   * Helper function that returns a translatable label for the different status
+   * constants.
+   *
    * @param int $status
+   *   A status constant.
    * @return string
+   *   A translatable label.
    */
   public function statusLabel($status);
 
   /**
-   * Helper function to return a translatable label for the different state constants
+   * Helper function that returns a translatable label for the different state
+   * constants.
+   *
    * @param int $state
+   *   A state constant.
    * @return string
+  *   A translatable label.
    */
   public function stateLabel($state);
 
