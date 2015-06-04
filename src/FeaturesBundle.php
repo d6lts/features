@@ -43,7 +43,7 @@ class FeaturesBundle implements FeaturesBundleInterface {
    *
    * @var string
    */
-  protected $machine_name;
+  protected $machineName;
 
   /**
    * The human readable name of the bundle.
@@ -71,14 +71,14 @@ class FeaturesBundle implements FeaturesBundleInterface {
    *
    * @var string
    */
-  protected $profile_name;
+  protected $profileName;
 
   /**
    * Whether this bundle is a profile.
    *
    * @var bool
    */
-  protected $is_profile;
+  protected $isProfile;
 
   /**
    * A list of assignments.
@@ -96,7 +96,7 @@ class FeaturesBundle implements FeaturesBundleInterface {
    * Constructs a FeaturesBundle object.
    */
   public function __construct($machine_name, FeaturesManagerInterface $features_manager, FeaturesAssignerInterface $assigner, ConfigFactoryInterface $config_factory) {
-    $this->machine_name = $machine_name;
+    $this->machineName = $machine_name;
     $this->featuresManager = $features_manager;
     $this->assigner = $assigner;
     $this->configFactory = $config_factory;
@@ -137,21 +137,21 @@ class FeaturesBundle implements FeaturesBundleInterface {
    * {@inheritdoc}
    */
   public function isDefault() {
-    return $this->machine_name == '';
+    return $this->machineName == '';
   }
 
   /**
    * {@inheritdoc}
    */
   public function getMachineName() {
-    return $this->machine_name;
+    return $this->machineName;
   }
 
   /**
    * {@inheritdoc}
    */
   public function setMachineName($machine_name) {
-    $this->machine_name = $machine_name;
+    $this->machineName = $machine_name;
   }
 
   /**
@@ -176,7 +176,7 @@ class FeaturesBundle implements FeaturesBundleInterface {
       return $short_name;
     }
     else {
-      return $this->machine_name . '_' . $short_name;
+      return $this->machineName . '_' . $short_name;
     }
   }
 
@@ -194,7 +194,7 @@ class FeaturesBundle implements FeaturesBundleInterface {
    * {@inheritdoc}
    */
   public function inBundle($machine_name) {
-    return (strpos($machine_name, $this->machine_name . '_') === 0);
+    return (strpos($machine_name, $this->machineName . '_') === 0);
   }
 
   /**
@@ -215,21 +215,21 @@ class FeaturesBundle implements FeaturesBundleInterface {
    * {@inheritdoc}
    */
   public function isProfile() {
-    return $this->is_profile;
+    return $this->isProfile;
   }
 
   /**
    * {@inheritdoc}
    */
   public function setIsProfile($value) {
-    $this->is_profile = $value;
+    $this->isProfile = $value;
   }
 
   /**
    * {@inheritdoc}
    */
   public function getProfileName() {
-    $name = $this->isProfile() ? $this->profile_name : '';
+    $name = $this->isProfile() ? $this->profileName : '';
     return !empty($name) ? $name : drupal_get_profile();
   }
 
@@ -237,7 +237,7 @@ class FeaturesBundle implements FeaturesBundleInterface {
    * {@inheritdoc}
    */
   public function setProfileName($machine_name) {
-    $this->profile_name = $machine_name;
+    $this->profileName = $machine_name;
   }
 
   /**
@@ -256,7 +256,7 @@ class FeaturesBundle implements FeaturesBundleInterface {
   /**
    * {@inheritdoc}
    */
-  public function setEnabledAssignments($assignments) {
+  public function setEnabledAssignments(array $assignments) {
     foreach ($this->assignments as $method_id => &$method) {
       $method['enabled'] = in_array($method_id, $assignments);
     }
@@ -276,7 +276,7 @@ class FeaturesBundle implements FeaturesBundleInterface {
   /**
    * {@inheritdoc}
    */
-  public function setAssignmentWeights($assignments) {
+  public function setAssignmentWeights(array $assignments) {
     foreach ($this->assignments as $method_id => &$method) {
       if (isset($assignments[$method_id])) {
         $method['weight'] = $assignments[$method_id];
@@ -306,7 +306,7 @@ class FeaturesBundle implements FeaturesBundleInterface {
   /**
    * {@inheritdoc}
    */
-  public function setAssignmentSettings($method_id, $settings) {
+  public function setAssignmentSettings($method_id, array $settings) {
     if (isset($method_id)) {
       if (isset($this->assignments[$method_id])) {
         $this->assignments[$method_id]['settings'] = $settings;
@@ -330,7 +330,7 @@ class FeaturesBundle implements FeaturesBundleInterface {
   /**
    * {@inheritdoc}
    */
-  public function setSettings($settings) {
+  public function setSettings(array $settings) {
     $this->settings = $settings;
   }
 
@@ -338,7 +338,7 @@ class FeaturesBundle implements FeaturesBundleInterface {
    * {@inheritdoc}
    */
   public function load($machine_name = NULL) {
-    $machine_name = isset($machine_name) ? $machine_name : $this->machine_name;
+    $machine_name = isset($machine_name) ? $machine_name : $this->machineName;
     if ($machine_name == '') {
       // Return defaults set by module.
       $enabled = $this->configFactory->get('features.settings')->get('assignment.enabled');

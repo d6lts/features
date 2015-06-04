@@ -15,13 +15,13 @@ use Drupal\Component\Utility\Html;
 /**
  * Returns HTML for the features listing form.
  *
- * @param $variables
+ * @param array $variables
  *   An associative array containing:
  *   - form: A render element representing the form.
  *
  * @ingroup themeable
  */
-function theme_features_listing($variables) {
+function theme_features_listing(array $variables) {
   $form = $variables['form'];
 
   // Individual table headers.
@@ -62,9 +62,18 @@ function theme_features_listing($variables) {
       '#attributes' => array('id' => $element['enable']['#id'] . '-description'),
       '#description' => $description,
     );
-    $row[] = array('class' => array('description', 'expand'), 'data' => drupal_render($details));
-    $row[] = array('class' => array('feature-version'), 'data' => drupal_render($element['version']));
-    $row[] = array('class' => array('feature-state'), 'data' => drupal_render($element['state']));
+    $row[] = array(
+      'class' => array('description', 'expand'),
+      'data' => drupal_render($details),
+    );
+    $row[] = array(
+      'class' => array('feature-version'),
+      'data' => drupal_render($element['version']),
+    );
+    $row[] = array(
+      'class' => array('feature-state'),
+      'data' => drupal_render($element['state']),
+    );
 
     $rows[] = array('data' => $row);
   }
@@ -141,7 +150,8 @@ function template_preprocess_features_assignment_configure_form(&$variables) {
   }
 
   // For some reason, the #weight is not being handled by drupal_render.
-  // So we remove the actions and then put them back into the form after the table.
+  // So we remove the actions and then put them back into the form after the
+  // table.
   $actions = $form['actions'];
   unset($form['actions']);
   $form['table'] = $table;

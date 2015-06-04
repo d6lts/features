@@ -119,8 +119,6 @@ class FeaturesManager implements FeaturesManagerInterface {
    *   The target storage.
    * @param \Drupal\Core\Config\ConfigManagerInterface $config_manager
    *   The configuration manager.
-   * @param \Drupal\features\FeaturesAssignerInterface $assigner
-   *   The features assigner.
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler.
    */
@@ -246,7 +244,7 @@ class FeaturesManager implements FeaturesManagerInterface {
   }
 
   /**
-   * {@inheritdoc}.
+   * {@inheritdoc}
    */
   public function getAssigner() {
     return $this->assigner;
@@ -310,9 +308,9 @@ class FeaturesManager implements FeaturesManagerInterface {
    * Returns the path to an extension info.yml file.
    *
    * @param mixed $extension
-   *   The string name of an extension, or a full Extension object
+   *   The string name of an extension, or a full Extension object/
    * @param string $type
-   *   The type of extension
+   *   The type of extension/
    *
    * @return string
    *   A file path.
@@ -545,7 +543,8 @@ class FeaturesManager implements FeaturesManagerInterface {
           if (isset($config_collection[$dependent_item_name]) && (!empty($package) || empty($config_collection[$dependent_item_name]['package']))) {
             try {
               $package_name = !empty($package) ? $package : $config_collection[$item_name]['package'];
-              // If a Package is specified, force assign it to the given package.
+              // If a Package is specified, force assign it to the given
+              // package.
               $this->assignConfigPackage($package_name, [$dependent_item_name], !empty($package));
             }
             catch (\Exception $exception) {
@@ -562,10 +561,12 @@ class FeaturesManager implements FeaturesManagerInterface {
    *
    * @param string $machine_name
    *   Machine name of the package .
-   * @param string $name_short
+   * @param string $name
    *   Human readable name of the package.
    * @param string $description
    *   Description of the package.
+   * @param string $type
+   *   Type of project.
    *
    * @return array
    *   An array with the following keys:
@@ -941,9 +942,9 @@ class FeaturesManager implements FeaturesManagerInterface {
       $path = 'modules';
     }
 
-    $exportSettings = $this->getExportSettings();
-    if (!empty($exportSettings['folder'])) {
-      $path .= '/' . $exportSettings['folder'];
+    $export_settings = $this->getExportSettings();
+    if (!empty($export_settings['folder'])) {
+      $path .= '/' . $export_settings['folder'];
     }
 
     return array($full_name, $path);
@@ -952,7 +953,7 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function detectOverrides($feature, $include_new = FALSE) {
+  public function detectOverrides(array $feature, $include_new = FALSE) {
     $config_diff = \Drupal::service('config_update.config_diff');
 
     $different = array();
@@ -974,7 +975,7 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function detectNew($feature) {
+  public function detectNew(array $feature) {
     $result = array();
     foreach ($feature['config'] as $name) {
       $extension = $this->extensionStorage->read($name);

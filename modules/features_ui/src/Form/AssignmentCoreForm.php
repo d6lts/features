@@ -18,9 +18,16 @@ class AssignmentCoreForm extends AssignmentFormBase {
   const METHOD_ID = 'core';
 
   /**
+   * Currently active bundle.
+   *
+   * @var \Drupal\features\FeaturesBundleInterface
+   */
+  protected $currentBundle;
+
+  /**
    * {@inheritdoc}
    */
-  public function getFormID() {
+  public function getFormId() {
     return 'features_assignment_core_form';
   }
 
@@ -28,8 +35,8 @@ class AssignmentCoreForm extends AssignmentFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, $bundle_name = NULL) {
-    $this->current_bundle = $this->assigner->loadBundle($bundle_name);
-    $settings = $this->current_bundle->getAssignmentSettings(self::METHOD_ID);
+    $this->currentBundle = $this->assigner->loadBundle($bundle_name);
+    $settings = $this->currentBundle->getAssignmentSettings(self::METHOD_ID);
 
     $this->setTypeSelect($form, $settings['types'], $this->t('core'));
     $this->setActions($form);
@@ -44,7 +51,7 @@ class AssignmentCoreForm extends AssignmentFormBase {
     $settings = array(
       'types' => array_filter($form_state->getValue('types')),
     );
-    $this->current_bundle->setAssignmentSettings(self::METHOD_ID, $settings)->save();
+    $this->currentBundle->setAssignmentSettings(self::METHOD_ID, $settings)->save();
     $this->setRedirect($form_state);
 
     drupal_set_message($this->t('Package assignment configuration saved.'));

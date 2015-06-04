@@ -130,7 +130,7 @@ class FeaturesDiffForm extends FormBase {
     );
 
     $options = array();
-    foreach ($packages as $package_name => $package) {
+    foreach ($packages as $package) {
       if ($package['status'] != FeaturesManagerInterface::STATUS_NO_EXPORT) {
         $overrides = $this->featuresManager->detectOverrides($package, TRUE);
         if (!empty($overrides)) {
@@ -198,10 +198,13 @@ class FeaturesDiffForm extends FormBase {
   /**
    * Returns a form element for the given overrides.
    *
-   * @param $package
-   * @param $overrides
+   * @param array $package
+   *   A package array.
+   * @param array $overrides
+   *   An array of overrides.
    *
    * @return array
+   *   A form element.
    */
   protected function diffOutput($package, $overrides) {
     $element = array();

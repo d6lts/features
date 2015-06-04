@@ -15,7 +15,9 @@ use Drupal\Core\Extension\ExtensionDiscovery;
 /**
  * Storage to access configuration and schema in enabled extensions.
  *
- * Overrides the normal ExtensionInstallStorage to prevent profile from overriding
+ * Overrides the normal ExtensionInstallStorage to prevent profile from
+ * overriding.
+ *
  * Also supports modules that are not installed yet.
  *
  * @see \Drupal\Core\Config\ExtensionInstallStorage
@@ -24,6 +26,7 @@ class FeaturesInstallStorage extends ExtensionInstallStorage {
 
   /**
    * Overrides \Drupal\Core\Config\ExtensionInstallStorage::__construct().
+   *
    * Sets includeProfile to FALSE.
    *
    * @param \Drupal\Core\Config\StorageInterface $config_storage
@@ -103,7 +106,8 @@ class FeaturesInstallStorage extends ExtensionInstallStorage {
       $this->folders += $this->getComponentNames('core', array('core'));
 
       $extensions = $this->configStorage->read('core.extension');
-      // Override the module list to include uninstalled modules (exported but not enabled).
+      // Override the module list to include uninstalled modules (exported but
+      // not enabled).
       $extensions['module'] = $this->getAllModules();
       if (!empty($extensions['module'])) {
         $modules = $extensions['module'];

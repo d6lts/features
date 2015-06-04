@@ -30,7 +30,7 @@ class FeaturesAssignmentExisting extends FeaturesAssignmentMethodBase {
   /**
    * Calls assignConfigPackage without allowing exceptions to abort us.
    *
-   * @param $name
+   * @param string $name
    *   The name of a feature module.
    */
   protected function safeAssignConfig($name) {

@@ -28,16 +28,17 @@ class FeaturesAssignmentPackages extends FeaturesAssignmentMethodBase {
   const METHOD_ID = 'packages';
 
   /**
-   * Searches for a bundle that matches the $info.yml export, or creates a new
-   * bundle as needed.
+   * Searches for a bundle that matches the $info.yml export.
    *
-   * @param $info
+   * Creates a new bundle as needed.
+   *
+   * @param array $info
    *   The bundle info.
    *
    * @return \Drupal\features\FeaturesBundleInterface
    *   A bundle.
    */
-  protected function findBundle($info) {
+  protected function findBundle(array $info) {
     $bundle = NULL;
     if (!empty($info['features']['bundle'])) {
       $bundle = $this->assigner->getBundle($info['features']['bundle']);

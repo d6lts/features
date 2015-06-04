@@ -93,7 +93,7 @@ interface FeaturesAssignerInterface {
    * @param bool $current
    *   Determine if the current bundle is set to $bundle.
    *   If False, the current bundle is only updated if it already has the same
-   *   machine name as the $bundle
+   *   machine name as the $bundle.
    */
   public function setBundle(FeaturesBundleInterface $bundle, $current = TRUE);
 

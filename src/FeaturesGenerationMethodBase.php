@@ -60,10 +60,10 @@ abstract class FeaturesGenerationMethodBase implements FeaturesGenerationMethodI
    *
    * @param array $package_info
    *   The Yaml encoded package info.
-   * @param $info_file_uri
+   * @param string $info_file_uri
    *   The info file's URI.
    */
-  protected function mergeInfoFile($package_info, $info_file_uri) {
+  protected function mergeInfoFile(array $package_info, $info_file_uri) {
     $package_info = Yaml::decode($package_info);
     $existing_info = \Drupal::service('info_parser')->parse($info_file_uri);
     // Ensure the entire 'features' data is replaced by new data.
@@ -106,12 +106,12 @@ abstract class FeaturesGenerationMethodBase implements FeaturesGenerationMethodI
    *
    * @param array $package
    *   The package to be prepared.
-   * @param $existing_packages
+   * @param array $existing_packages
    *   An array of existing packages with machine names as keys and paths as
    *   values.
    * @param \Drupal\features\FeaturesBundleInterface $bundle
    *   Optional bundle used for export
    */
-  abstract protected function preparePackage(&$package, $existing_packages, FeaturesBundleInterface $bundle = NULL);
+  abstract protected function preparePackage(array &$package, array $existing_packages, FeaturesBundleInterface $bundle = NULL);
 
 }

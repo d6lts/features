@@ -38,7 +38,7 @@ class FeaturesGenerationWrite extends FeaturesGenerationMethodBase {
    * @param \Drupal\features\FeaturesBundleInterface $bundle
    *   The bundle the package belongs to.
    */
-  protected function preparePackage(&$package, $existing_packages, FeaturesBundleInterface $bundle = NULL) {
+  protected function preparePackage(array &$package, array $existing_packages, FeaturesBundleInterface $bundle = NULL) {
     // If this package is already present, prepare files.
     if (isset($existing_packages[$package['machine_name']])) {
       $existing_directory = $existing_packages[$package['machine_name']];
@@ -122,7 +122,7 @@ class FeaturesGenerationWrite extends FeaturesGenerationMethodBase {
    * @param array $package
    *   The package or profile.
    */
-  protected function success(&$return, $package) {
+  protected function success(array &$return, array $package) {
     $type = $package['type'] == 'module' ? $this->t('Package') : $this->t('Profile');
     $return[] = [
       'success' => TRUE,
@@ -148,7 +148,7 @@ class FeaturesGenerationWrite extends FeaturesGenerationMethodBase {
    * @param string $message
    *   Error message when there isn't an Exception object.
    */
-  protected function failure(&$return, $package, \Exception $exception, $message = '') {
+  protected function failure(array &$return, array $package, Exception $exception, $message = '') {
     $type = $package['type'] == 'package' ? $this->t('Package') : $this->t('Profile');
     $return[] = [
       'success' => FALSE,
@@ -166,7 +166,7 @@ class FeaturesGenerationWrite extends FeaturesGenerationMethodBase {
   /**
    * Writes a file to the file system, creating its directory as needed.
    *
-   * @param directory
+   * @param string $directory
    *   The extension's directory.
    * @param array $file
    *   Array with the following keys:
@@ -177,7 +177,7 @@ class FeaturesGenerationWrite extends FeaturesGenerationMethodBase {
    *
    * @throws Exception
    */
-  protected function generateFile($directory, $file) {
+  protected function generateFile($directory, array $file) {
     if (!empty($file['subdirectory'])) {
       $directory .= '/' . $file['subdirectory'];
     }

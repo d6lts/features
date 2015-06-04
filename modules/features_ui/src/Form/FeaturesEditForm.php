@@ -66,7 +66,7 @@ class FeaturesEditForm extends FormBase {
    *
    * @var string
    */
-  protected $old_bundle;
+  protected $oldBundle;
 
   /**
    * Config to be specifically excluded.
@@ -87,7 +87,7 @@ class FeaturesEditForm extends FormBase {
    *
    * @var bool
    */
-  protected $allow_conflicts;
+  protected $allowConflicts;
 
   /**
    * Constructs a FeaturesEditForm object.
@@ -126,14 +126,14 @@ class FeaturesEditForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, $featurename = '') {
     $session = \Drupal::request()->getSession();
-    $this->allow_conflicts = FALSE;
+    $this->allowConflicts = FALSE;
     if (isset($session)) {
-      $this->allow_conflicts = $session->get('features_allow_conflicts', FALSE);
+      $this->allowConflicts = $session->get('features_allow_conflicts', FALSE);
     }
 
     $trigger = $form_state->getTriggeringElement();
     if ($trigger['#name'] == 'package') {
-      $this->old_bundle = $this->bundle;
+      $this->oldBundle = $this->bundle;
       $bundle_name = $form_state->getValue('package');
       $bundle = $this->assigner->getBundle($bundle_name);
     }
@@ -196,7 +196,7 @@ class FeaturesEditForm extends FormBase {
     );
     if (!$bundle->isDefault()) {
       $form['info']['machine_name']['#description'] .= '<br/>' .
-        t('NOTE: Do NOT include the namespace prefix "!name_"; it will be added automatically. ', array('!name' => $bundle->getMachineName()));
+        t('NOTE: Do NOT include the namespace prefix "!name_"; it will be added automatically.', array('!name' => $bundle->getMachineName()));
     }
 
     $form['info']['description'] = array(
@@ -230,7 +230,7 @@ class FeaturesEditForm extends FormBase {
     $form['conflicts'] = array(
       '#type' => 'checkbox',
       '#title' => t('Allow conflicts'),
-      '#default_value' => $this->allow_conflicts,
+      '#default_value' => $this->allowConflicts,
       '#description' => $this->t('Allow configuration to be exported to more than one feature.'),
       '#weight' => 8,
       '#ajax' => array(
@@ -289,7 +289,7 @@ class FeaturesEditForm extends FormBase {
    * Provides an ajax callback for handling switching the bundle selector.
    */
   public function updateBundle($form, FormStateInterface $form_state) {
-    $old_bundle = $this->assigner->getBundle($this->old_bundle);
+    $old_bundle = $this->assigner->getBundle($this->oldBundle);
     $bundle_name = $form_state->getValue('package');
     $bundle = $this->assigner->getBundle($bundle_name);
     if (isset($bundle) && isset($old_bundle)) {
@@ -434,9 +434,7 @@ class FeaturesEditForm extends FormBase {
    * Returns the full feature export array based upon user selections in
    * form_state.
    *
-   * @param array $package
-   *   Package array to be exported
-   * @param array $form_state
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
    *   Optional form_state information for user selections. Can be updated to
    *   reflect new selection status.
    *
@@ -451,18 +449,22 @@ class FeaturesEditForm extends FormBase {
    *     detected - options that have been auto-detected
    *     added - newly added options to the feature
    *
-   * NOTE: This routine gets a bit complex to handle all of the different possible
-   * user checkbox selections and de-selections.
+   * NOTE: This routine gets a bit complex to handle all of the different
+   * possible user checkbox selections and de-selections.
    * Cases to test:
    *   1a) uncheck Included item -> mark as Added but unchecked
    *   1b) re-check unchecked Added item -> return it to Included check item
    *   2a) check Sources item -> mark as Added and checked
    *   2b) uncheck Added item -> return it to Sources as unchecked
-   *   3a) uncheck Included item that still exists as auto-detect -> mark as Detected but unchecked
+   *   3a) uncheck Included item that still exists as auto-detect -> mark as
+   *       Detected but unchecked
    *   3b) re-check Detected item -> return it to Included and checked
-   *   4a) check Sources item should also add any auto-detect items as Detected and checked
-   *   4b) uncheck Sources item with auto-detect and auto-detect items should return to Sources and unchecked
-   *   5a) uncheck a Detected item -> refreshing page should keep it as unchecked Detected
+   *   4a) check Sources item should also add any auto-detect items as Detected
+   *       and checked
+   *   4b) uncheck Sources item with auto-detect and auto-detect items should
+   *       return to Sources and unchecked
+   *   5a) uncheck a Detected item -> refreshing page should keep it as
+   *       unchecked Detected
    *   6)  when nothing changes, refresh should not change any state
    *   7)  should never see an unchecked Included item
    */
@@ -491,7 +493,7 @@ class FeaturesEditForm extends FormBase {
         !empty($packages[$item['package']]) && ($packages[$item['package']]['status'] != FeaturesManagerInterface::STATUS_NO_EXPORT)) {
         $this->conflicts[$item['type']][$item['name_short']] = $item;
       }
-      if ($this->allow_conflicts || !isset($this->conflicts[$item['type']][$item['name_short']]) || in_array($item_name, $this->package['config_orig'])) {
+      if ($this->allowConflicts || !isset($this->conflicts[$item['type']][$item['name_short']]) || in_array($item_name, $this->package['config_orig'])) {
         $components[$item['type']][$item['name_short']] = $item;
       }
     }
@@ -501,7 +503,7 @@ class FeaturesEditForm extends FormBase {
     foreach ($this->package['config_orig'] as $item_name) {
       $item = $config[$item_name];
       // Remove any conflicts if those are not being allowed.
-      // if ($allow_conflicts || !isset($this->conflicts[$item['type']][$item['name_short']])) {
+      // if ($this->allowConflicts || !isset($this->conflicts[$item['type']][$item['name_short']])) {
       $exported_features_info[$item['type']][$item['name_short']] = $item;
       // }
     }
@@ -535,7 +537,11 @@ class FeaturesEditForm extends FormBase {
       $config_count[$component] = 0;
       // Add selected items from Sources checkboxes.
       if (!$form_state->isValueEmpty(array($component, 'sources', 'selected'))) {
-        $config_new[$component] = array_merge($config_new[$component], $this->domDecodeOptions(array_filter($form_state->getValue(array($component, 'sources', 'selected')))));
+        $config_new[$component] = array_merge($config_new[$component], $this->domDecodeOptions(array_filter($form_state->getValue(array(
+          $component,
+          'sources',
+          'selected',
+        )))));
         $config_count[$component]++;
       }
       // Add selected items from already Included, newly Added, auto-detected
@@ -710,7 +716,7 @@ class FeaturesEditForm extends FormBase {
    *   The config type.
    * @param string $key
    *   The short machine name of the item.
-   * @param $label
+   * @param string $label
    *   The human label for the item.
    */
   protected function configLabel($type, $key, $label) {
@@ -843,7 +849,7 @@ class FeaturesEditForm extends FormBase {
    * @return array
    *   An array of encoded options.
    */
-  protected function domDecodeOptions($options, $keys_only = FALSE) {
+  protected function domDecodeOptions(array $options, $keys_only = FALSE) {
     $replacements = array_flip($this->domEncodeMap());
     $encoded = array();
     foreach ($options as $key => $value) {

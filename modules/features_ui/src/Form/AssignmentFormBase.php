@@ -37,15 +37,15 @@ abstract class AssignmentFormBase extends FormBase {
    *
    * @var \Drupal\features\FeaturesBundleInterface
    */
-  protected $current_bundle;
+  protected $currentBundle;
 
   /**
    * Constructs a AssignmentBaseForm object.
    *
-   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
-   *   The factory for configuration objects.
    * @param \Drupal\features\FeaturesManagerInterface $features_manager
    *   The features manager.
+   * @param \Drupal\features\FeaturesAssignerInterface $assigner
+   *   The assigner.
    */
   public function __construct(FeaturesManagerInterface $features_manager, FeaturesAssignerInterface $assigner) {
     $this->featuresManager = $features_manager;
@@ -96,7 +96,7 @@ abstract class AssignmentFormBase extends FormBase {
    *   The form state.
    */
   protected function setRedirect(FormStateInterface $form_state) {
-    $form_state->setRedirect('features.assignment', array('bundle_name' => $this->current_bundle->getMachineName()));
+    $form_state->setRedirect('features.assignment', array('bundle_name' => $this->currentBundle->getMachineName()));
   }
 
 }

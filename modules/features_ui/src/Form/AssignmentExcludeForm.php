@@ -19,9 +19,16 @@ class AssignmentExcludeForm extends AssignmentFormBase {
   const METHOD_ID = 'exclude';
 
   /**
+   * Currently active bundle.
+   *
+   * @var \Drupal\features\FeaturesBundleInterface
+   */
+  protected $currentBundle;
+
+  /**
    * {@inheritdoc}
    */
-  public function getFormID() {
+  public function getFormId() {
     return 'features_assignment_exclude_form';
   }
 
@@ -29,9 +36,9 @@ class AssignmentExcludeForm extends AssignmentFormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, $bundle_name = NULL) {
-    $this->current_bundle = $this->assigner->loadBundle($bundle_name);
+    $this->currentBundle = $this->assigner->loadBundle($bundle_name);
 
-    $settings = $this->current_bundle->getAssignmentSettings(self::METHOD_ID);
+    $settings = $this->currentBundle->getAssignmentSettings(self::METHOD_ID);
     $this->setTypeSelect($form, $settings['types'], $this->t('exclude'));
 
     $module_settings = $settings['module'];
@@ -73,7 +80,7 @@ class AssignmentExcludeForm extends AssignmentFormBase {
       '#states' => $show_if_module_enabled_checked,
     );
 
-    $machine_name = $this->current_bundle->getMachineName();
+    $machine_name = $this->currentBundle->getMachineName();
     $machine_name = !empty($machine_name) ? $machine_name : t('none');
     $form['module']['namespace'] = array(
       '#type' => 'checkbox',
@@ -101,7 +108,7 @@ class AssignmentExcludeForm extends AssignmentFormBase {
       'module' => $module,
     );
 
-    $this->current_bundle->setAssignmentSettings(self::METHOD_ID, $settings)->save();
+    $this->currentBundle->setAssignmentSettings(self::METHOD_ID, $settings)->save();
 
     $this->setRedirect($form_state);
     drupal_set_message($this->t('Package assignment configuration saved.'));

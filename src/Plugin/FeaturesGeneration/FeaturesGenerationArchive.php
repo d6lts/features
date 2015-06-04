@@ -2,7 +2,8 @@
 
 /**
  * @file
- * Contains \Drupal\features\Plugin\FeaturesGeneration\FeaturesGenerationArchive.
+ * Contains
+ * \Drupal\features\Plugin\FeaturesGeneration\FeaturesGenerationArchive.
  */
 
 namespace Drupal\features\Plugin\FeaturesGeneration;
@@ -36,12 +37,12 @@ class FeaturesGenerationArchive extends FeaturesGenerationMethodBase {
    *
    * @var string
    */
-  protected $archive_name;
+  protected $archiveName;
 
   /**
    * Reads and merges in existing files for a given package or profile.
    */
-  protected function preparePackage(&$package, $existing_packages, FeaturesBundleInterface $bundle = NULL) {
+  protected function preparePackage(array &$package, array $existing_packages, FeaturesBundleInterface $bundle = NULL) {
     if (isset($existing_packages[$package['machine_name']])) {
       $existing_directory = $existing_packages[$package['machine_name']];
       // Scan for all files.
@@ -93,8 +94,8 @@ class FeaturesGenerationArchive extends FeaturesGenerationMethodBase {
     $return = [];
 
     $filename = (isset($bundle) && $bundle->isProfile()) ? $bundle->getProfileName() : $filename;
-    $this->archive_name = $filename . '.tar.gz';
-    $archive_name = file_directory_temp() . '/' . $this->archive_name;
+    $this->archiveName = $filename . '.tar.gz';
+    $archive_name = file_directory_temp() . '/' . $this->archiveName;
     if (file_exists($archive_name)) {
       file_unmanaged_delete($archive_name);
     }
@@ -181,9 +182,9 @@ class FeaturesGenerationArchive extends FeaturesGenerationMethodBase {
    * @param Exception $exception
    *   The exception object.
    * @param string $message
-   *   Error message when there isn't an Exception object
+   *   Error message when there isn't an Exception object.
    */
-  protected function failure(&$return, array $package, \Exception $exception, $message = '') {
+  protected function failure(array &$return, array $package, Exception $exception, $message = '') {
     $type = $package['type'] == 'package' ? $this->t('Package') : $this->t('Profile');
     $return[] = [
       'success' => FALSE,
@@ -202,7 +203,7 @@ class FeaturesGenerationArchive extends FeaturesGenerationMethodBase {
   /**
    * Writes a file to the file system, creating its directory as needed.
    *
-   * @param directory
+   * @param string $directory
    *   The extension's directory.
    * @param array $file
    *   Array with the following keys:
@@ -233,7 +234,7 @@ class FeaturesGenerationArchive extends FeaturesGenerationMethodBase {
     // Redirect to the archive file download.
     $session = \Drupal::request()->getSession();
     if (isset($session)) {
-      $session->set('features_download', $this->archive_name);
+      $session->set('features_download', $this->archiveName);
     }
     $form_state->setRedirect('features.export_download');
   }

@@ -62,7 +62,7 @@ interface FeaturesManagerInterface {
   /**
    * Gets an array of site configuration.
    *
-   * $param bool $reset
+   * @param bool $reset
    *   If TRUE, recalculate the configuration (undo all assignment methods).
    *
    * @return array
@@ -170,7 +170,7 @@ interface FeaturesManagerInterface {
    * @param string $namespace
    *   The namespace to use.
    *
-   * @return
+   * @return array
    *   An array of packages.
    */
   public function filterPackages(array $packages, $namespace = '');
@@ -186,7 +186,7 @@ interface FeaturesManagerInterface {
   /**
    * Injects the package assigner.
    *
-   * @param \Drupal\features\FeaturesAssignerInterface @assigner
+   * @param \Drupal\features\FeaturesAssignerInterface $assigner
    *   The package assigner.
    */
   public function setAssigner(FeaturesAssignerInterface $assigner);
@@ -202,7 +202,7 @@ interface FeaturesManagerInterface {
   /**
    * Injects the package generator.
    *
-   * @param \Drupal\features\FeaturesGeneratorInterface @generator
+   * @param \Drupal\features\FeaturesGeneratorInterface $generator
    *   The package generator.
    */
   public function setGenerator(FeaturesGeneratorInterface $generator);
@@ -264,9 +264,10 @@ interface FeaturesManagerInterface {
    * recognized.
    *
    * @param string[] $machine_names
-   *   Package machine names to return directories for.  If omitted, return all directories.
+   *   Package machine names to return directories for. If omitted, return all
+   *   directories.
    * @param \Drupal\features\FeaturesBundleInterface $bundle
-   *   Optional bundle to use to add profile directories to the scan
+   *   Optional bundle to use to add profile directories to the scan.
    *
    * @return array
    *   Array of package directories keyed by package machine name.
@@ -281,7 +282,7 @@ interface FeaturesManagerInterface {
   /**
    * Assigns a set of configuration items to a given package or profile.
    *
-   * @param string $machine_name
+   * @param string $package_name
    *   Machine name of a package or the profile.
    * @param string[] $item_names
    *   Configuration item names.
@@ -370,7 +371,8 @@ interface FeaturesManagerInterface {
    * @param \Drupal\features\FeaturesBundleInterface $bundle
    *   Optional bundle to filter module list.
    *   If given, only modules matching the bundle namespace will be returned.
-   *   If the bundle uses a profile, only modules in the profile will be returned.
+   *   If the bundle uses a profile, only modules in the profile will be
+   *   returned.
    */
   public function getAllModules(FeaturesBundleInterface $bundle = NULL);
 
@@ -435,8 +437,8 @@ interface FeaturesManagerInterface {
   /**
    * Determines if the module is a Features package.
    *
-   * @param mixed $name
-   *   Either the name of an module or a full module extension object
+   * @param mixed $module
+   *   Either the name of an module or a full module extension object.
    *
    * @return bool
    *   TRUE if the given module is a Features package.
@@ -457,7 +459,7 @@ interface FeaturesManagerInterface {
    *
    * @see \Drupal\features\FeaturesManagerInterface::detectNew()
    */
-  public function detectOverrides($feature, $include_new = FALSE);
+  public function detectOverrides(array $feature, $include_new = FALSE);
 
   /**
    * Determines which config has not been exported to the feature.
@@ -467,10 +469,10 @@ interface FeaturesManagerInterface {
    * @param array $feature
    *   The package array.
    *
-   * @result array $different
+   * @return array
    *   The array of config items that are overridden.
    */
-  public function detectNew($feature);
+  public function detectNew(array $feature);
 
   /**
    * Helper function that returns a translatable label for the different status

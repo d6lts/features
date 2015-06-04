@@ -164,7 +164,7 @@ interface FeaturesBundleInterface {
    *
    * @see \Drupal\features\FeaturesBundleInterface::getEnabledAssignments()
    */
-  public function setEnabledAssignments($assignments);
+  public function setEnabledAssignments(array $assignments);
 
   /**
    * Gets the weights of the assignment methods.
@@ -184,14 +184,14 @@ interface FeaturesBundleInterface {
    *
    * @see \Drupal\features\FeaturesBundleInterface::getAssignmentWeights()
    */
-  public function setAssignmentWeights($assignments);
+  public function setAssignmentWeights(array $assignments);
 
   /**
    * Gets settings specific to an assignment method.
    *
    * @param string $method_id
    *   The ID of an assignment method. If NULL, return all assignment settings
-   *   keyed by method_id
+   *   keyed by method_id.
    *
    * @return array
    *   An array of settings. Format specific to assignment method.
@@ -211,7 +211,7 @@ interface FeaturesBundleInterface {
    *
    * @see \Drupal\features\FeaturesBundleInterface::getAssignmentSettings()
    */
-  public function setAssignmentSettings($method_id, $settings);
+  public function setAssignmentSettings($method_id, array $settings);
 
   /**
    * Gets global settings for a bundle.
@@ -233,7 +233,7 @@ interface FeaturesBundleInterface {
    *
    * @see \Drupal\features\FeaturesBundleInterface::getSettings()
    */
-  public function setSettings($settings);
+  public function setSettings(array $settings);
 
   /**
    * Loads a named bundle from the active config.

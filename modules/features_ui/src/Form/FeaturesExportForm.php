@@ -56,8 +56,14 @@ class FeaturesExportForm extends FormBase {
   /**
    * Constructs a FeaturesExportForm object.
    *
-   * @param \Drupal\Core\Config\StorageInterface $target_storage
-   *   The target storage.
+   * @param \Drupal\features\FeaturesManagerInterface $features_manager
+   *    The features manager.
+   * @param \Drupal\features\FeaturesAssignerInterface $features_assigner
+   *    The features assigner.
+   * @param \Drupal\features\FeaturesGeneratorInterface $features_generator
+   *    The features generator.
+   * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
+   *    The features generator.
    */
   public function __construct(FeaturesManagerInterface $features_manager, FeaturesAssignerInterface $assigner, FeaturesGeneratorInterface $generator, ModuleHandlerInterface $module_handler) {
     $this->featuresManager = $features_manager;
@@ -194,7 +200,7 @@ class FeaturesExportForm extends FormBase {
    * @return array
    *   A render array of a form element.
    */
-  protected function buildListing($packages) {
+  protected function buildListing(array $packages) {
 
     $header = array(
       'name' => array('data' => $this->t('Feature')),
@@ -242,7 +248,7 @@ class FeaturesExportForm extends FormBase {
    * @return array
    *   A render array of a form element.
    */
-  protected function buildPackageDetail($package) {
+  protected function buildPackageDetail(array $package) {
     $config_collection = $this->featuresManager->getConfigCollection();
 
     $url = Url::fromRoute('features.edit', array('featurename' => $package['machine_name']));
@@ -378,7 +384,10 @@ class FeaturesExportForm extends FormBase {
       '#title' => XSS::filterAdmin($package['description']),
       '#description' => array('data' => $element['details']),
     );
-    $element['details'] = array('class' => array('description', 'expand'), 'data' => $details);
+    $element['details'] = array(
+      'class' => array('description', 'expand'),
+      'data' => $details,
+    );
 
     return $element;
   }

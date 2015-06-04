@@ -63,7 +63,7 @@ class AssignmentConfigureForm extends FormBase {
   /**
    * {@inheritdoc}
    */
-  public function getFormID() {
+  public function getFormId() {
     return 'features_assignment_configure_form';
   }
 
@@ -199,8 +199,8 @@ class AssignmentConfigureForm extends FormBase {
 
     foreach ($methods_weight as $method_id => $weight) {
 
-      // A packaging method might no longer be available if the defining module has
-      // been disabled after the last configuration saving.
+      // A packaging method might no longer be available if the defining module
+      // has been disabled after the last configuration saving.
       if (!isset($assignment_info[$method_id])) {
         continue;
       }

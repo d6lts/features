@@ -126,7 +126,7 @@ function features_drush_command() {
 /**
  * Applies global options for Features drush commands.
  *
- *   --name="bundle_name" sets the bundle namespace.
+ * The option --name="bundle_name" sets the bundle namespace.
  */
 function _drush_features_options() {
   $assigner = \Drupal::service('features_assigner');
@@ -149,7 +149,7 @@ function drush_features_status() {
   $manager = \Drupal::service('features.manager');
   $assigner = \Drupal::service('features_assigner');
   $current_bundle = $assigner->getBundle();
-  $exportSettings = $manager->getExportSettings();
+  $export_settings = $manager->getExportSettings();
   $methods = $assigner->getEnabledAssigners();
   if ($current_bundle->isDefault()) {
     drush_print(dt('Current bundle: none'));
@@ -161,7 +161,7 @@ function drush_features_status() {
         '!machine_name' => $current_bundle->getMachineName(),
       )));
   }
-  drush_print(dt('Export folder: !folder', array('!folder' => $exportSettings['folder'])));
+  drush_print(dt('Export folder: !folder', array('!folder' => $export_settings['folder'])));
   $dt_args = array('!methods' => implode(', ', array_keys($methods)));
   drush_print(dt('The following assignment methods are enabled:'));
   drush_print(dt('  !methods', $dt_args));
@@ -214,7 +214,13 @@ function drush_features_list_packages($package = '') {
   else {
     foreach ($packages as $item) {
       if ($item['machine_name'] == $package) {
-        drush_hide_output_fields(array('machine_name', 'name', 'status', 'version', 'state'));
+        drush_hide_output_fields(array(
+          'machine_name',
+          'name',
+          'status',
+          'version',
+          'state',
+        ));
         foreach ($item['config'] as $item_name) {
           $result[$item_name] = array(
             'object' => $item_name,
@@ -517,7 +523,8 @@ function drush_features_import() {
 
       if (isset($module)) {
         if (empty($component)) {
-          // If we received just a feature name, this means that we need all of its components.
+          // If we received just a feature name, this means that we need all of
+          // its components.
           $modules[$module] = TRUE;
         }
         elseif ($modules[$module] !== TRUE) {
@@ -616,10 +623,10 @@ function _drush_features_load_feature($module, $any = FALSE) {
 /**
  * Returns an array of full config names given a array[$type][$component].
  *
- * @param $items
+ * @param array $items
  *   The items to return data for.
  */
-function _drush_features_build_config($items) {
+function _drush_features_build_config(array $items) {
   $manager = \Drupal::service('features.manager');
   $result = array();
   foreach ($items as $config_type => $item) {
@@ -658,7 +665,7 @@ function _drush_features_component_filter($all_components, $patterns = array(), 
   // First filter on exported state.
   foreach ($all_components as $source => $components) {
     foreach ($components as $name => $title) {
-      $exported = sizeof($components_map[$source][$name]) > 0;
+      $exported = count($components_map[$source][$name]) > 0;
       if ($exported) {
         if ($options['exported']) {
           $pool[$source][$name] = $title;
@@ -711,16 +718,19 @@ function _drush_features_component_filter($all_components, $patterns = array(), 
     // Find the sources.
     $all_sources = array_keys($pool);
     $matches = preg_grep('/' . $preg_source_pattern . '/', $all_sources);
-    if (sizeof($matches) > 0) {
+    if (count($matches) > 0) {
       // If we have multiple matches and the source string wasn't a
       // pattern, check if one of the matches is equal to the pattern, and
       // use that, or error out.
-      if (sizeof($matches) > 1 and $preg_source_pattern[0] != '^') {
+      if (count($matches) > 1 and $preg_source_pattern[0] != '^') {
         if (in_array($source_pattern, $matches)) {
           $matches = array($source_pattern);
         }
         else {
-          return drush_set_error('', dt('Ambiguous source "!source", matches !matches', array('!source' => $source_pattern, '!matches' => join(', ', $matches))));
+          return drush_set_error('', dt('Ambiguous source "!source", matches !matches', array(
+            '!source' => $source_pattern,
+            '!matches' => implode(', ', $matches),
+          )));
         }
       }
       // Loose the indexes preg_grep preserved.
@@ -736,16 +746,19 @@ function _drush_features_component_filter($all_components, $patterns = array(), 
       $all_components = array_keys($pool[$source]);
       // See if there's any matches.
       $matches = preg_grep('/' . $preg_component_pattern . '/', $all_components);
-      if (sizeof($matches) > 0) {
+      if (count($matches) > 0) {
         // If we have multiple matches and the components string wasn't a
         // pattern, check if one of the matches is equal to the pattern, and
         // use that, or error out.
-        if (sizeof($matches) > 1 and $preg_component_pattern[0] != '^') {
+        if (count($matches) > 1 and $preg_component_pattern[0] != '^') {
           if (in_array($component_pattern, $matches)) {
             $matches = array($component_pattern);
           }
           else {
-            return drush_set_error('', dt('Ambiguous component "!component", matches !matches', array('!component' => $component_pattern, '!matches' => join(', ', $matches))));
+            return drush_set_error('', dt('Ambiguous component "!component", matches !matches', array(
+              '!component' => $component_pattern,
+              '!matches' => implode(', ', $matches),
+            )));
           }
         }
         if (!is_array($selected[$source])) {
@@ -757,7 +770,11 @@ function _drush_features_component_filter($all_components, $patterns = array(), 
         // No matches. If the source was a pattern, just carry on, else
         // error out. Allows for patterns like :*field*
         if ($preg_source_pattern[0] != '^') {
-          return drush_set_error('', dt('No !state !source components match "!component"', array('!state' => $state_string, '!component' => $component_pattern, '!source' => $source)));
+          return drush_set_error('', dt('No !state !source components match "!component"', array(
+            '!state' => $state_string,
+            '!component' => $component_pattern,
+            '!source' => $source,
+          )));
         }
       }
     }
@@ -769,9 +786,9 @@ function _drush_features_component_filter($all_components, $patterns = array(), 
   if ($options['provided by'] && $options['exported']) {
     foreach ($selected as $source => $components) {
       foreach ($components as $name => $title) {
-        $exported = sizeof($components_map[$source][$name]) > 0;
+        $exported = count($components_map[$source][$name]) > 0;
         if ($exported) {
-          $provided_by[$source . ':' . $name] = join(', ', $components_map[$source][$name]);
+          $provided_by[$source . ':' . $name] = implode(', ', $components_map[$source][$name]);
         }
       }
     }

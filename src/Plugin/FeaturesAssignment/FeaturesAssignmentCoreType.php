@@ -2,7 +2,8 @@
 
 /**
  * @file
- * Contains \Drupal\features\Plugin\FeaturesAssignment\FeaturesAssignmentCoreType.
+ * Contains
+ * \Drupal\features\Plugin\FeaturesAssignment\FeaturesAssignmentCoreType.
  */
 
 namespace Drupal\features\Plugin\FeaturesAssignment;
