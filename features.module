@@ -1211,3 +1211,77 @@ function features_feature_unlock($feature, $component = NULL) {
   }
   variable_set('features_feature_locked', $locked);
 }
+
+/**
+ * Sets the current language to english to ensure a proper export.
+ */
+function _features_set_export_language() {
+  // Ensure this is only done if the language isn't already en.
+  // This can be called multiple times - ensure the handling is done just once.
+  if ($GLOBALS['language']->language != 'en' && !drupal_static(__FUNCTION__)) {
+    // Create the language object as language_default() does.
+    $GLOBALS['language'] = (object) array(
+      'language' => 'en',
+      'name' => 'English',
+      'native' => 'English',
+      'direction' => 0,
+      'enabled' => 1,
+      'plurals' => 0,
+      'formula' => '',
+      'domain' => '',
+      'prefix' => '',
+      'weight' => 0,
+      'javascript' => '',
+    );
+    // Ensure that static caches are cleared, as they might contain language
+    // specific information. But keep some important ones. The call below
+    // accesses a non existing key and requests to reset it. In such cases the
+    // whole caching data array is returned.
+    $static = drupal_static(uniqid('', TRUE), NULL, TRUE);
+    drupal_static_reset();
+    // Restore some of the language independent, runtime state information to
+    // keep everything working and avoid unnecessary double processing.
+    $static_caches_to_keep = array(
+      'conf_path',
+      'system_list',
+      'ip_address',
+      'drupal_page_is_cacheable',
+      'list_themes',
+      'drupal_page_header',
+      'drupal_send_headers',
+      'drupal_http_headers',
+      'language_list',
+      'module_implements',
+      'drupal_alter',
+      'path_is_admin',
+      'path_get_admin_paths',
+      'drupal_match_path',
+      'menu_get_custom_theme',
+      'menu_get_item',
+      'arg',
+      'drupal_system_listing',
+      'drupal_parse_info_file',
+      'libraries_get_path',
+      'module_hook_info',
+      'drupal_add_js',
+      'drupal_add_js:jquery_added',
+      'drupal_add_library',
+      'drupal_get_library',
+      'drupal_add_css',
+      'menu_set_active_trail',
+      'menu_link_get_preferred',
+      'menu_set_active_menu_names',
+      'theme_get_registry',
+      'features_get_components',
+      'features_get_components_by_key',
+    );
+    foreach ($static_caches_to_keep as $cid) {
+      if (isset($static[$cid])) {
+        $data = &drupal_static($cid);
+        $data = $static[$cid];
+      }
+    }
+    $called = &drupal_static(__FUNCTION__);
+    $called = TRUE;
+  }
+}

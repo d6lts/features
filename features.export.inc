@@ -45,6 +45,9 @@ function features_populate($info, $module_name) {
  * @return fully populated $export array.
  */
 function _features_populate($pipe, &$export, $module_name = '', $reset = FALSE) {
+  // Ensure that the export will be created in the english language.
+  _features_set_export_language();
+
   if ($reset) {
     drupal_static_reset(__FUNCTION__);
   }
