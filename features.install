@@ -33,7 +33,7 @@ function features_uninstall() {
     ->execute();
   db_delete('variable')
     ->condition('name', 'features_component_locked_%', 'LIKE')
-    ->execute();variable_del('features_component_locked_' . $component);
+    ->execute();
 
   if (db_table_exists('menu_custom')) {
     db_delete('menu_custom')
