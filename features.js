@@ -128,10 +128,12 @@ jQuery.fn.sortElements = (function(){
             if (!$(this).hasClass('features-checkall')) {
               var key = $(this).attr('name');
               var matches = key.match(/^([^\[]+)(\[.+\])?\[(.+)\]\[(.+)\]$/);
-              var component = matches[1];
-              var item = matches[4];
-              if ((component in moduleConflicts) && (moduleConflicts[component].indexOf(item) != -1)) {
-                $(this).parent().addClass('features-conflict');
+              if (matches != null) {
+                var component = matches[1];
+                var item = matches[4];
+                if ((component in moduleConflicts) && (moduleConflicts[component].indexOf(item) != -1)) {
+                  $(this).parent().addClass('features-conflict');
+                }
               }
             }
           });
