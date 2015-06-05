@@ -278,7 +278,7 @@ function features_flush_caches() {
       features_get_modules(NULL, TRUE);
     }
   }
-  return array();
+  return array('cache_features');
 }
 
 /**
@@ -541,13 +541,13 @@ function features_get_components($component = NULL, $key = NULL, $reset = FALSE)
 
   if ($reset || !isset($components) || !isset($component_by_key)) {
     $components = $component_by_key = array();
-    if (!$reset && ($cache = cache_get('features_api'))) {
+    if (!$reset && ($cache = cache_get('features_api', 'cache_features'))) {
       $components = $cache->data;
     }
     else {
       $components = module_invoke_all('features_api');
       drupal_alter('features_api', $components);
-      cache_set('features_api', $components);
+      cache_set('features_api', $components, 'cache_features');
     }
 
     foreach ($components as $component_type => $component_information) {
@@ -658,7 +658,7 @@ function features_get_features($name = NULL, $reset = FALSE) {
 function features_get_info($type = 'module', $name = NULL, $reset = FALSE) {
   static $cache;
   if (!isset($cache)) {
-    $cache = cache_get('features_module_info');
+    $cache = cache_get('features_module_info', 'cache_features');
   }
   if (empty($cache) || $reset) {
     $data = array(
@@ -746,7 +746,7 @@ function features_get_info($type = 'module', $name = NULL, $reset = FALSE) {
     $data['feature'] = $sorted;
 
     variable_set('features_ignored_orphans', $ignored);
-    cache_set("features_module_info", $data);
+    cache_set('features_module_info', $data, 'cache_features');
     $cache = new stdClass();
     $cache->data = $data;
   }
