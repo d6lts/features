@@ -597,6 +597,7 @@ function _features_export_build($feature, &$form_state) {
       $component_export['selected'][$section] = array();
     }
     $options = features_invoke($component, 'features_export_options');
+    drupal_alter('features_export_options', $options, $component);
     if (!empty($options)) {
       $exported_components = !empty($exported_features_info[$component]) ? $exported_features_info[$component] : array();
       $new_components = !empty($new_features_info[$component]) ? $new_features_info[$component] : array();

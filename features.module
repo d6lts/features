@@ -1075,6 +1075,7 @@ function features_hook_info() {
     'features_api',
     'features_pipe_alter',
     'features_export_alter',
+    'features_export_options_alter',
   );
   return array_fill_keys($hooks, array('group' => 'features'));
 }
