@@ -352,6 +352,12 @@ function features_modules_disabled($modules) {
  * Implements hook_modules_enabled().
  */
 function features_modules_enabled($modules) {
+  // Allow distributions to disable this behavior and rebuild the features
+  // manually inside a batch.
+  if (!variable_get('features_rebuild_on_module_install', TRUE)) {
+    return;
+  }
+
   // mark modules as being changed for test in features_flush_caches
   variable_set('features_modules_changed', TRUE);
 
