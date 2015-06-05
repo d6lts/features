@@ -298,6 +298,11 @@ function features_export_render($export, $module_name, $reset = FALSE) {
     }
 
     foreach ($hooks as $hook_name => $hook_info) {
+      // These are purely files that will be copied over.
+      if (is_array($hook_info) && (!empty($hook_info['file_path']) || !empty($hook_info['file_content']))) {
+        $code['_files'][$hook_name] = $hook_info;
+        continue;
+      }
       $hook_code = is_array($hook_info) ? $hook_info['code'] : $hook_info;
       $hook_args = is_array($hook_info) && !empty($hook_info['args']) ? $hook_info['args'] : '';
       $hook_file = is_array($hook_info) && !empty($hook_info['file']) ? $hook_info['file'] : $file['name'];
@@ -308,7 +313,17 @@ function features_export_render($export, $module_name, $reset = FALSE) {
   // Finalize strings to be written to files
   $code = array_filter($code);
   foreach ($code as $filename => $contents) {
-    $code[$filename] = "<?php\n/**\n * @file\n * {$module_name}.{$filename}.inc\n */\n\n". implode("\n\n", $contents) ."\n";
+    if ($filename != '_files') {
+      $code[$filename] = "<?php\n/**\n * @file\n * {$module_name}.{$filename}.inc\n */\n\n". implode("\n\n", $contents) ."\n";
+    }
+  }
+
+  // Allow extra files be added to feature.
+  if ($files =  module_invoke_all('features_export_files', $module_name, $export)) {
+    $code['_files'] = !empty($code['_files']) ? $code['_files'] + $files : $files;
+  }
+  if (!empty($code['_files'])) {
+    drupal_alter('features_export_files', $code['_files'], $module_name, $export);
   }
 
   // Generate info file output
