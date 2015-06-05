@@ -292,7 +292,7 @@ jQuery.fn.sortElements = (function(){
       }
 
       // Handle component selection UI
-      $('#features-export-wrapper input[type=checkbox]', context).click(function() {
+      $('#features-export-wrapper input[type=checkbox]:not(.processed)', context).addClass('processed').click(function() {
         _resetTimeout();
         if ($(this).hasClass('component-select')) {
           moveCheckbox(this, 'added', true);
