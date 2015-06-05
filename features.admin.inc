@@ -203,7 +203,7 @@ function features_export_form($form, $form_state, $feature = NULL) {
     $form['advanced']['generate'] = array(
       '#type' => 'submit',
       '#value' => t('Generate feature'),
-      '#submit' => array('features_export_build_form_submit'),
+      '#submit' => array('features_export_build_form_submit', 'features_form_rebuild'),
     );
   }
   // build the Component Listing panel on the right
@@ -239,7 +239,7 @@ function features_export_form($form, $form_state, $feature = NULL) {
     '#type' => 'submit',
     '#value' => t('Download feature'),
     '#weight' => 10,
-    '#submit' => array('features_export_build_form_submit'),
+    '#submit' => array('features_export_build_form_submit', 'features_form_rebuild'),
   );
 
   $form['#attached']['library'][] = array('system', 'ui.dialog');
@@ -973,28 +973,14 @@ function features_filter_hidden($module) {
  * Form constructor for the features configuration form.
  */
 function features_admin_form($form, $form_state) {
+  $features = _features_get_features_list();
+  $modules = array_filter(features_get_modules(), 'features_filter_hidden');
+  $conflicts = features_get_conflicts();
+
   // Load export functions to use in comparison.
   module_load_include('inc', 'features', 'features.export');
 
-  // Clear & rebuild key caches
-  features_get_info(NULL, NULL, TRUE);
-  features_rebuild();
-
-  $modules = array_filter(features_get_modules(), 'features_filter_hidden');
-  $features = array_filter(features_get_features(), 'features_filter_hidden');
-  $conflicts = features_get_conflicts();
-
-  foreach ($modules as $key => $module) {
-    if ($module->status && !empty($module->info['dependencies'])) {
-      foreach ($module->info['dependencies'] as $dependent) {
-        if (isset($features[$dependent])) {
-          $features[$dependent]->dependents[$key] = $module->info['name'];
-        }
-      }
-    }
-  }
-
-  if ( empty($features) ) {
+  if (empty($features) ) {
     $form['no_features'] = array(
       '#markup' => t('No Features were found. Please use the !create_link link to create
       a new Feature module, or upload an existing Feature to your modules directory.',
@@ -1329,6 +1315,13 @@ function features_form_submit(&$form, &$form_state) {
 }
 
 /**
+ * Submit handler for the 'manage features' form rebuild button.
+ */
+function features_form_rebuild() {
+  cache_clear_all('features:features_list', 'cache');
+}
+
+/**
  * Form for clearing cache after enabling a feature.
  */
 function features_cleanup_form($form, $form_state, $cache_clear = FALSE) {
@@ -1587,4 +1580,43 @@ function _features_get_used($module_name = NULL) {
   // restore previous value of global
   $features_ignore_conflicts = $old_value;
   return $conflicts;
+}
+
+/**
+ * Retrieves the array of features as expected on the Manage Features form.
+ * Uses caching for performance reasons if caching is enabled.
+ *
+ * @internal - This function might return cached result with outdated data,
+ * use with caution.
+ */
+function _features_get_features_list() {
+  $features = array();
+
+  $cache = cache_get('features:features_list');
+  if ($cache) {
+    $features = $cache->data;  
+  }
+  
+  if (empty($features)) {
+    // Clear & rebuild key caches
+    features_get_info(NULL, NULL, TRUE);
+    features_rebuild();
+
+    $modules = array_filter(features_get_modules(), 'features_filter_hidden');
+    $features = array_filter(features_get_features(), 'features_filter_hidden');
+
+    foreach ($modules as $key => $module) {
+      if ($module->status && !empty($module->info['dependencies'])) {
+        foreach ($module->info['dependencies'] as $dependent) {
+          if (isset($features[$dependent])) {
+            $features[$dependent]->dependents[$key] = $module->info['name'];
+          }
+        }
+      }
+    }
+
+    cache_set('features:features_list', $features);
+  }
+
+  return $features;
 }
