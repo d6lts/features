@@ -724,7 +724,7 @@ function features_get_normal($component, $module_name, $reset = FALSE) {
 
     // Special handling for dependencies component.
     if ($component === 'dependencies') {
-      $cache[$module_name][$component] = isset($module->info['dependencies']) ? array_filter($module->info['dependencies'], 'module_exists') : array();
+      $cache[$module_name][$component] = isset($module->info['dependencies']) ? array_filter($module->info['dependencies'], '_features_module_exists') : array();
     }
     // All other components.
     else {
@@ -740,6 +740,17 @@ function features_get_normal($component, $module_name, $reset = FALSE) {
     unset($module);
   }
   return isset($cache[$module_name][$component]) ? $cache[$module_name][$component] : FALSE;
+}
+
+/**
+ * Helper function to determine if a module is enabled
+ * @param $module
+ *   This module name comes from the .info file and can have version info in it.
+ */
+function _features_module_exists($module) {
+  $parsed_dependency = drupal_parse_dependency($module);
+  $name = $parsed_dependency['name'];
+  return module_exists($name);
 }
 
 /**
