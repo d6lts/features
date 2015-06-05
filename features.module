@@ -1198,7 +1198,6 @@ function features_feature_lock($feature, $component = NULL) {
   variable_set('features_feature_locked', $locked);
 }
 
-
 /**
  * Unlocks a feature or it's component.
  */
@@ -1285,4 +1284,42 @@ function _features_set_export_language() {
     $called = &drupal_static(__FUNCTION__);
     $called = TRUE;
   }
+}
+
+/**
+ * Implements hook_features_ignore().
+ */
+function features_features_ignore($component) {
+  // Determine which keys need to be ignored for override diff for various components.
+  // Value is how many levels deep the key is.
+  $ignores = array();
+  switch ($component) {
+    case 'views_view':
+      $ignores['current_display'] = 0;
+      $ignores['display_handler'] = 0;
+      $ignores['handler'] = 2;
+      $ignores['query'] = 0;
+      $ignores['localization_plugin'] = 0;
+      // Views automatically adds these two on export to set values.
+      $ignores['api_version'] = 0;
+      $ignores['disabled'] = 0;
+      break;
+    case 'image':
+      $ignores['module'] = 0;
+      $ignores['name'] = 0;
+      $ignores['storage'] = 0;
+      // Various properties are loaded into the effect in image_styles.
+      $ignores['summary theme'] = 2;
+      $ignores['module'] = 2;
+      $ignores['label'] = 2;
+      $ignores['help'] = 2;
+      $ignores['form callback'] = 2;
+      $ignores['effect callback'] = 2;
+      $ignores['dimensions callback'] = 2;
+      break;
+    case 'field':
+      $ignores['locked'] = 1;
+      break;
+  }
+  return $ignores;
 }

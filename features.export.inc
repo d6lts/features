@@ -412,8 +412,8 @@ function features_detect_overrides($module) {
     $overridden = array();
 
     // Compare feature info
-    _features_sanitize($module->info);
-    _features_sanitize($export);
+    features_sanitize($module->info);
+    features_sanitize($export);
 
     $compare = array('normal' => features_export_info($export), 'default' => features_export_info($module->info));
     if ($compare['normal'] !== $compare['default']) {
@@ -426,8 +426,8 @@ function features_detect_overrides($module) {
       if ($state != FEATURES_DEFAULT) {
         $normal = features_get_normal($component, $module->name);
         $default = features_get_default($component, $module->name);
-        _features_sanitize($normal);
-        _features_sanitize($default);
+        features_sanitize($normal, $component);
+        features_sanitize($default, $component);
 
         $compare = array('normal' => features_var_export($normal), 'default' => features_var_export($default));
         if (_features_linetrim($compare['normal']) !== _features_linetrim($compare['default'])) {
@@ -681,8 +681,7 @@ function features_get_signature($state = 'default', $module_name, $component, $r
       break;
   }
   if (!empty($objects)) {
-    $objects = (array) $objects;
-    _features_sanitize($objects);
+    features_sanitize($objects, $component);
     return md5(_features_linetrim(features_var_export($objects)));
   }
   return FALSE;
@@ -1000,24 +999,51 @@ function _features_linetrim($code) {
 }
 
 /**
+ * Helper function to "sanitize" an array or object.
+ * Converts everything to an array, sorts the keys, removes recursion.
+ * @param $array
+ * @param $component string name of component
+ * @param bool $remove_empty if set, remove null or empty values for assoc arrays.
+ */
+function features_sanitize(&$array, $component = NULL, $remove_empty = TRUE) {
+  // make a deep copy of data to prevent problems when removing recursion later.
+  $array = unserialize(serialize($array));
+  if (isset($component)) {
+    $ignore_keys = _features_get_ignore_keys($component);
+    // remove keys to be ignored
+    // doing this now allows us to better control which recursive parts are removed
+    if (count($ignore_keys)) {
+      _features_remove_ignores($array, $ignore_keys);
+    }
+  }
+  features_remove_recursion($array);
+  _features_sanitize($array, $remove_empty);
+}
+
+/**
  * "Sanitizes" an array recursively, performing two key operations:
  * - Sort an array by its keys (assoc) or values (non-assoc)
- * - Remove any null or empty values for associative arrays (array_filter()).
+ * @param bool $remove_empty if set, remove null or empty values for assoc arrays.
  */
-function _features_sanitize(&$array) {
+function _features_sanitize(&$array, $remove_empty = TRUE) {
+  if (is_object($array)) {
+    $array = (array) $array;
+  }
   if (is_array($array)) {
     $is_assoc = _features_is_assoc($array);
     if ($is_assoc) {
       ksort($array, SORT_STRING);
-      $array = array_filter($array);
+      if ($remove_empty) {
+        $array = array_filter($array);
+      }
     }
     else {
       sort($array);
     }
     foreach ($array as $k => $v) {
-      if (is_array($v)) {
+      if (is_array($v) or is_object($v)) {
         _features_sanitize($array[$k]);
-        if ($is_assoc && empty($array[$k])) {
+        if ($remove_empty && $is_assoc && empty($array[$k])) {
           unset($array[$k]);
         }
       }
@@ -1038,4 +1064,128 @@ function _features_sanitize(&$array) {
  */
 function _features_is_assoc($array) {
   return (is_array($array) && (0 !== count(array_diff_key($array, array_keys(array_keys($array)))) || count($array)==0));
+}
+
+/**
+ * Removes recursion from an object or array.
+ *
+ * @param $item
+ *   An object or array passed by reference.
+ */
+function features_remove_recursion(&$item) {
+  $uniqid = __FUNCTION__ . mt_rand(); // use of uniqid() here impacts performance
+  $stack = array();
+  return _features_remove_recursion($item, $stack, $uniqid);
+}
+
+/**
+ * Helper to removes recursion from an object/array.
+ *
+ * @param $item
+ *   An object or array passed by reference.
+ */
+function _features_remove_recursion(&$object, &$stack = array(), $uniqid) {
+  if ((is_object($object) || is_array($object)) && $object) {
+    $in_stack = FALSE;
+    foreach ($stack as &$item) {
+      if (_features_is_ref_to($object, $item, $uniqid)) {
+        $in_stack = TRUE;
+        break;
+      }
+    }
+    unset($item);
+
+    if (!$in_stack) {
+      $stack[] = $object;
+      foreach ($object as $key => &$subobject) {
+        if (_features_remove_recursion($subobject, $stack, $uniqid)) {
+          if (is_object($object)) {
+            unset($object->$key);
+          }
+          else {
+            unset($object[$key]);
+          }
+        }
+      }
+      unset($subobject);
+    }
+    else {
+      return TRUE;
+    }
+  }
+  return FALSE;
+}
+
+/**
+ * Helper function in determining equality of arrays. Credit to http://stackoverflow.com/a/4263181
+ *
+ * @see _features_remove_recursion()
+ *
+ * @param $a
+ *  object a
+ * @param $b
+ *  object b
+ * @return bool
+ *
+ */
+function _features_is_ref_to(&$a, &$b, $uniqid) {
+  if (is_object($a) && is_object($b)) {
+    return ($a === $b);
+  }
+
+  $temp_a = $a;
+  $temp_b = $b;
+
+  $b = $uniqid;
+
+  if ($a === $uniqid) $return = true;
+  else $return = false;
+
+  $a = $temp_a;
+  $b = $temp_b;
+  return $return;
+}
+
+/**
+ * Helper to removes a set of keys an object/array.
+ *
+ * @param $item
+ *   An object or array passed by reference.
+ * @param $ignore_keys
+ *   Array of keys to be ignored. Values are the level of the key.
+ * @param $level
+ *   Level of key to remove.  Up to 2 levels deep because $item can still be
+ *   recursive
+ */
+function _features_remove_ignores(&$item, $ignore_keys, $level = -1) {
+  $is_object = is_object($item);
+  if (!is_array($item) && !is_object($item)) {
+    return;
+  }
+  foreach ($item as $key => $value) {
+    if (isset($ignore_keys[$key]) && ($ignore_keys[$key] == $level)) {
+      if ($is_object) {
+        unset($item->$key);
+      }
+      else {
+        unset($item[$key]);
+      }
+    }
+    elseif (($level < 2) && (is_array($value) || is_object($value))) {
+      _features_remove_ignores($value, $ignore_keys, $level+1);
+    }
+  }
+}
+
+/**
+ * Returns an array of keys to be ignored for various exportables
+ * @param $component
+ *   The component to retrieve ignore_keys from.
+ */
+function _features_get_ignore_keys($component) {
+  static $cache;
+  if (!isset($cache[$component])) {
+    $cache[$component] = module_invoke_all('features_ignore', $component);
+  }
+  return $cache[$component];
 }
