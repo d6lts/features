@@ -158,7 +158,7 @@ function field_base_features_export_render($module, $data, $export = NULL) {
         unset($field['storage']);
       }
       // If we still have a storage declaration here it means that a non-default
-      // storage type was altered into to the field definition. And noone would
+      // storage type was altered into to the field definition. And no one would
       // never need to change the 'details' key, so don't render it.
       if (isset($field['storage']['details'])) {
         unset($field['storage']['details']);
@@ -410,7 +410,7 @@ function field_features_export_render($module, $data, $export = NULL) {
         unset($field['field_config']['storage']);
       }
       // If we still have a storage declaration here it means that a non-default
-      // storage type was altered into to the field definition. And noone would
+      // storage type was altered into to the field definition. And no one would
       // never need to change the 'details' key, so don't render it.
       if (isset($field['field_config']['storage']['details'])) {
         unset($field['field_config']['storage']['details']);

@@ -515,7 +515,7 @@ function features_load_feature($name, $reset = FALSE) {
  * Return a module 'object' including .info information.
  *
  * @param $name
- *   The name of the module to retrieve information for. If ommitted,
+ *   The name of the module to retrieve information for. If omitted,
  *   an array of all available modules will be returned.
  * @param $reset
  *   Whether to reset the cache.

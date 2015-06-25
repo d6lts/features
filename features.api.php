@@ -42,7 +42,7 @@
  *   are declared "dynamically" or are part of a family of components.
  *
  *   'alter_type': What type of alter hook this hook uses. 'normal' is called
- *   after the main hook is called. 'inline' is embeded within the default hook
+ *   after the main hook is called. 'inline' is embedded within the default hook
  *   and may not be implemented by some default hooks.
  *   'none' is no alter hook exists. Defaults to 'normal'
  *
