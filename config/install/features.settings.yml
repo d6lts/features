@@ -19,4 +19,6 @@ assignment:
     profile: -5
 export:
   folder: 'custom'
+bundle:
+  settings: []
 langcode: en
