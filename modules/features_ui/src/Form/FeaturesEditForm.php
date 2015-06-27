@@ -220,7 +220,7 @@ class FeaturesEditForm extends FormBase {
 
     $form['info']['version'] = array(
       '#title' => t('Version'),
-      '#description' => t('Examples: 7.x-1.0, 7.x-1.0-beta1'),
+      '#description' => t('Examples: 8.x-1.0, 8.x-1.0-beta1'),
       '#type' => 'textfield',
       '#required' => FALSE,
       '#default_value' => $this->package['version'],
