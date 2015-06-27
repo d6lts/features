@@ -823,8 +823,9 @@ class FeaturesManager implements FeaturesManagerInterface {
    * {@inheritdoc}
    */
   public function listExtensionConfig($extension) {
-    $name = $this->getExtensionName($extension);
-    return array_keys($this->extensionStorage->getComponentNames('module', array($name)));
+    return array_keys($this->extensionStorage->getComponentNames([
+      $this->getExtensionName($extension) => $extension,
+    ]));
   }
 
   /**

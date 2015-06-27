@@ -103,12 +103,13 @@ class FeaturesInstallStorage extends ExtensionInstallStorage {
   public function getAllFolders() {
     if (!isset($this->folders)) {
       $this->folders = array();
-      $this->folders += $this->getComponentNames('core', array('core'));
+      $this->folders += $this->getCoreNames();
 
       $extensions = $this->configStorage->read('core.extension');
       // Override the module list to include uninstalled modules (exported but
       // not enabled).
       $extensions['module'] = $this->getAllModules();
+      $listing = new ExtensionDiscovery(\Drupal::root());
       if (!empty($extensions['module'])) {
         $modules = $extensions['module'];
         if (!$this->includeProfile) {
@@ -116,16 +117,27 @@ class FeaturesInstallStorage extends ExtensionInstallStorage {
             unset($modules[$install_profile]);
           }
         }
-        $this->folders += $this->getComponentNames('module', array_keys($modules));
+
+        $module_list_scan = $listing->scan('module');
+        $module_list = [];
+        foreach (array_keys($modules) as $module) {
+          if (isset($module_list_scan[$module])) {
+            $module_list[$module] = $module_list_scan[$module];
+          }
+        }
+        $this->folders += $this->getComponentNames($module_list);
       }
 
       // DO NOT OVERRIDE PROFILE if includeProfile is false
       // (which is the default in FeaturesInstallStorage).
       if ($this->includeProfile) {
+        $profile = drupal_get_profile();
         // The install profile can override module default configuration. We do
         // this by replacing the config file path from the module/theme with the
         // install profile version if there are any duplicates.
-        $profile_folders = $this->getComponentNames('profile', array(drupal_get_profile()));
+        $profile_list = $listing->scan('profile');
+        $profile_folders = $this->getComponentNames(array($profile_list[$profile]));
+        $this->folders = $profile_folders + $this->folders;
         $folders_to_replace = array_intersect_key($profile_folders, $this->folders);
         if (!empty($folders_to_replace)) {
           $this->folders = array_merge($this->folders, $folders_to_replace);
