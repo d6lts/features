@@ -316,6 +316,7 @@ function menu_links_features_rebuild_ordered($menu_links, $reset = FALSE) {
     foreach ($unordered as $link) {
       $identifier = menu_links_features_identifier($link);
       $ordered[$identifier] = 0;
+      $all_links[$identifier] = $link;
     }
     asort($ordered);
   }
