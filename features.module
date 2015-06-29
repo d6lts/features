@@ -278,7 +278,13 @@ function features_flush_caches() {
       features_get_modules(NULL, TRUE);
     }
   }
-  return array('cache_features');
+
+  // The update to add the table needs to have run.
+  include_once DRUPAL_ROOT . '/includes/install.inc';
+  if (drupal_get_installed_schema_version('features') >= 7200) {
+    return array('cache_features');
+  }
+  return array();
 }
 
 /**
