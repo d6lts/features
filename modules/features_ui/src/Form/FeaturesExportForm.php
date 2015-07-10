@@ -165,7 +165,7 @@ class FeaturesExportForm extends FormBase {
       uasort($generation_info, '\Drupal\Component\Utility\SortArray::sortByWeightElement');
 
       $form['description'] = array(
-        '#markup' => '<p>' . $this->t('Use an export method button below to generate the selected configuration modules.') . '</p>',
+        '#markup' => '<p>' . $this->t('Use an export method button below to generate the selected features.') . '</p>',
       );
 
       $form['actions'] = array('#type' => 'actions', '#tree' => TRUE);

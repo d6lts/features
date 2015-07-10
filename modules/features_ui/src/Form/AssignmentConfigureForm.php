@@ -172,7 +172,7 @@ class AssignmentConfigureForm extends FormBase {
       '#type' => 'checkbox',
       '#title' => t('Include install profile'),
       '#default_value' => $current_bundle->isProfile(),
-      '#description' => $this->t('Select this option to have your configuration modules packaged into an install profile.'),
+      '#description' => $this->t('Select this option to have your features packaged into an install profile.'),
       '#attributes' => array(
         'data-add-profile' => 'status',
       ),

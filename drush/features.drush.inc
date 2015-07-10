@@ -52,7 +52,7 @@ function features_drush_command() {
       'package' => 'A space delimited list of features to export.',
     ),
     'options' => array(
-      'add-profile' => 'Package configuration modules in an install profile.',
+      'add-profile' => 'Package features into an install profile.',
     ),
     'examples' => array(
       "drush features-export" => 'Export all available packages.',
