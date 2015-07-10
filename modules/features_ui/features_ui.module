@@ -19,7 +19,7 @@ function features_ui_help($route_name, RouteMatchInterface $route_match) {
 
     case 'features.export':
       $output = '';
-      $output .= '<p>' . t('Export bundles of configuration into modules.') . '</p>';
+      $output .= '<p>' . t('Export packages of configuration into modules.') . '</p>';
       return $output;
   }
 }
