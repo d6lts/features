@@ -560,7 +560,8 @@ class FeaturesEditForm extends FormBase {
         }
       }
       elseif (($config_count[$component] == 0) && !empty($exported_features_info[$component])) {
-        $config_new[$component] = array_combine($exported_features_info[$component], $exported_features_info[$component]);
+        $config_names = array_keys($exported_features_info[$component]);
+        $config_new[$component] = array_combine($config_names, $config_names);
       }
     }
 

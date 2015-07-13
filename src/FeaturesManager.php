@@ -649,7 +649,9 @@ class FeaturesManager implements FeaturesManagerInterface {
     $info = array_intersect_key($package, array_fill_keys($info_keys, NULL));
 
     // Assign to a "package" named for the profile.
-    $bundle = $this->assigner->getBundle($package['bundle']);
+    if (isset($package['bundle'])) {
+      $bundle = $this->assigner->getBundle($package['bundle']);
+    }
     if (isset($bundle) && !$bundle->isDefault()) {
       $info['package'] = $bundle->getName();
     }
