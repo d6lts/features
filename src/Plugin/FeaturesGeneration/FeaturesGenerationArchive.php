@@ -185,7 +185,7 @@ class FeaturesGenerationArchive extends FeaturesGenerationMethodBase {
    *   Error message when there isn't an Exception object.
    */
   protected function failure(array &$return, array $package, Exception $exception, $message = '') {
-    $type = $package['type'] == 'package' ? $this->t('Package') : $this->t('Profile');
+    $type = $package['type'] == 'module' ? $this->t('Package') : $this->t('Profile');
     $return[] = [
       'success' => FALSE,
       // Archive writing doesn't merit a message, and if done through the UI

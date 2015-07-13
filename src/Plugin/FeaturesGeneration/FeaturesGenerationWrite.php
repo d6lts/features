@@ -149,7 +149,7 @@ class FeaturesGenerationWrite extends FeaturesGenerationMethodBase {
    *   Error message when there isn't an Exception object.
    */
   protected function failure(array &$return, array $package, Exception $exception, $message = '') {
-    $type = $package['type'] == 'package' ? $this->t('Package') : $this->t('Profile');
+    $type = $package['type'] == 'module' ? $this->t('Package') : $this->t('Profile');
     $return[] = [
       'success' => FALSE,
       'display' => TRUE,
