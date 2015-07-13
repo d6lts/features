@@ -44,51 +44,6 @@ class FeaturesInstallStorage extends ExtensionInstallStorage {
   }
 
   /**
-   * Returns a list of modules regardless of if they are enabled.
-   */
-  protected function getAllModules() {
-    // ModuleHandler::getModuleDirectories() returns data only for installed
-    // modules. system_rebuild_module_data() includes only the site's install
-    // profile directory, while we may need to include a custom profile.
-    // @see _system_rebuild_module_data()
-    $listing = new ExtensionDiscovery(\Drupal::root());
-
-    $profile_directories = [];
-    // Register the install profile.
-    $installed_profile = drupal_get_profile();
-    if ($installed_profile) {
-      $profile_directories[] = drupal_get_path('profile', $installed_profile);
-    }
-    if ($this->includeProfile) {
-      // Add any profiles used in bundles.
-      $assigner = \Drupal::service('features_assigner');
-      $bundles = $assigner->getBundleList();
-      foreach ($bundles as $bundle_name => $bundle) {
-        if ($bundle->isProfile()) {
-          // Register the profile directory.
-          $profile_directory = 'profiles/' . $bundle->getProfileName();
-          if (is_dir($profile_directory)) {
-            $profile_directories[] = $profile_directory;
-          }
-        }
-      }
-    }
-    $listing->setProfileDirectories($profile_directories);
-
-    // Find modules.
-    $modules = $listing->scan('module');
-
-    // Find installation profiles.
-    $profiles = $listing->scan('profile');
-
-    foreach ($profiles as $key => $profile) {
-      $modules[$key] = $profile;
-    }
-
-    return $modules;
-  }
-
-  /**
    * Returns a map of all config object names and their folders.
    *
    * The list is based on enabled modules and themes. The active configuration
@@ -144,7 +99,7 @@ class FeaturesInstallStorage extends ExtensionInstallStorage {
         $module_list_scan = $listing->scan('module');
         $modules = $module_list_scan;
         // CHANGED END
-        
+
         // Remove the install profile as this is handled later.
         unset($modules[$install_profile]);
         $profile_list = $listing->scan('profile');
