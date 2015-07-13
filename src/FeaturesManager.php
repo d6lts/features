@@ -823,6 +823,11 @@ class FeaturesManager implements FeaturesManagerInterface {
    * {@inheritdoc}
    */
   public function listExtensionConfig($extension) {
+    // Convert to Component object if it is a string
+    if (is_string($extension)) {
+      $pathname = drupal_get_filename('module', $extension);
+      $extension = new Extension(\Drupal::root(), 'module', $pathname);
+    }
     return array_keys($this->extensionStorage->getComponentNames([
       $this->getExtensionName($extension) => $extension,
     ]));
