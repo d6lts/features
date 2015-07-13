@@ -58,12 +58,12 @@ abstract class FeaturesGenerationMethodBase implements FeaturesGenerationMethodI
   /**
    * Merges an info file into a package's info file.
    *
-   * @param array $package_info
+   * @param string $package_info
    *   The Yaml encoded package info.
    * @param string $info_file_uri
    *   The info file's URI.
    */
-  protected function mergeInfoFile(array $package_info, $info_file_uri) {
+  protected function mergeInfoFile($package_info, $info_file_uri) {
     $package_info = Yaml::decode($package_info);
     $existing_info = \Drupal::service('info_parser')->parse($info_file_uri);
     // Ensure the entire 'features' data is replaced by new data.
