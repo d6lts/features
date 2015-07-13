@@ -21,8 +21,12 @@ services:
 
   features.config_update:
     class: Drupal\config_update\ConfigReverter
-    arguments: ['@entity.manager', '@config.storage', '@features.extension_storage', '@config.factory', '@event_dispatcher']
+    arguments: ['@entity.manager', '@config.storage', '@features.extension_storage', '@features.extension_optional_storage', '@config.factory', '@event_dispatcher']
 
   features.extension_storage:
     class: Drupal\features\FeaturesInstallStorage
     arguments: ['@config.storage']
+
+  features.extension_optional_storage:
+    class: Drupal\features\FeaturesInstallStorage
+    arguments: ['@config.storage', 'config/optional']
