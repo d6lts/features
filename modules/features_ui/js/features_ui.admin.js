@@ -23,21 +23,23 @@
  */
 jQuery.fn.sortElements = (function(){
 
+  "use strict";
+
   var sort = [].sort;
 
   return function(comparator, getSortable) {
 
-    getSortable = getSortable || function(){return this;};
+    getSortable = getSortable || function() {return this;};
 
-    var placements = this.map(function(){
+    var placements = this.map(function() {
 
-      var sortElement = getSortable.call(this),
-        parentNode = sortElement.parentNode,
+      var sortElement = getSortable.call(this);
+      var parentNode = sortElement.parentNode;
 
       // Since the element itself will change position, we have
       // to have some way of storing its original position in
       // the DOM. The easiest way is to have a 'flag' node:
-        nextSibling = parentNode.insertBefore(
+      var nextSibling = parentNode.insertBefore(
           document.createTextNode(''),
           sortElement.nextSibling
         );
@@ -68,24 +70,29 @@ jQuery.fn.sortElements = (function(){
 })();
 
 (function ($) {
+
+  "use strict";
+
   Drupal.behaviors.features = {
     attach: function(context) {
 
       // mark any conflicts with a class
-      if ((drupalSettings.features != undefined) && (drupalSettings.features.conflicts != undefined)) {
+      if ((drupalSettings.features !== undefined) && (drupalSettings.features.conflicts !== undefined)) {
         for (var configType in drupalSettings.features.conflicts) {
-          var configConflicts = drupalSettings.features.conflicts;
-          $('#features-export-wrapper input[type=checkbox]', context).each(function() {
-            if (!$(this).hasClass('features-checkall')) {
-              var key = $(this).attr('name');
-              var matches = key.match(/^([^\[]+)(\[.+\])?\[(.+)\]\[(.+)\]$/);
-              var component = matches[1];
-              var item = matches[4];
-              if ((component in configConflicts) && (item in configConflicts[component])) {
-                $(this).parent().addClass('component-conflict');
+          if (drupalSettings.features.conflicts) {
+            var configConflicts = drupalSettings.features.conflicts;
+            $('#features-export-wrapper input[type=checkbox]', context).each(function () {
+              if (!$(this).hasClass('features-checkall')) {
+                var key = $(this).attr('name');
+                var matches = key.match(/^([^\[]+)(\[.+\])?\[(.+)\]\[(.+)\]$/);
+                var component = matches[1];
+                var item = matches[4];
+                if ((component in configConflicts) && (item in configConflicts[component])) {
+                  $(this).parent().addClass('component-conflict');
+                }
               }
-            }
-          });
+            });
+          }
         }
       }
 
@@ -107,9 +114,11 @@ jQuery.fn.sortElements = (function(){
       }
 
       function updateComponentCountInfo(item, section) {
+        var parent;
+
         switch (section) {
           case 'select':
-            var parent = $(item).closest('.features-export-list').siblings('.features-export-component');
+            parent = $(item).closest('.features-export-list').siblings('.features-export-component');
             $('.component-count', parent).text(function (index, text) {
                 return +text + 1;
               }
@@ -117,7 +126,7 @@ jQuery.fn.sortElements = (function(){
             break;
           case 'added':
           case 'detected':
-            var parent = $(item).closest('.features-export-component');
+            parent = $(item).closest('.features-export-component');
             $('.component-count', parent).text(function (index, text) {
               return text - 1;
             });
@@ -137,9 +146,11 @@ jQuery.fn.sortElements = (function(){
         $(curParent).detach();
         $(curParent).appendTo(newParent);
         var list = ['select', 'added', 'detected', 'included'];
-        for (i in list) {
-          $(curParent).removeClass('component-' + list[i]);
-          $(item).removeClass('component-' + list[i]);
+        for (var i in list) {
+          if (list[i]) {
+            $(curParent).removeClass('component-' + list[i]);
+            $(item).removeClass('component-' + list[i]);
+          }
         }
         $(curParent).addClass('component-'+section);
         $(item).addClass('component-'+section);
@@ -147,7 +158,7 @@ jQuery.fn.sortElements = (function(){
           $(item).attr('checked', 'checked');
         }
         else {
-          $(item).removeAttr('checked')
+          $(item).removeAttr('checked');
         }
         $(newParent).parents('.component-list').removeClass('features-export-empty');
 
@@ -172,15 +183,15 @@ jQuery.fn.sortElements = (function(){
       function _resetTimeout() {
         inTimeout++;
         // if timeout is already active, reset it
-        if (timeoutID != 0) {
+        if (timeoutID !== 0) {
           window.clearTimeout(timeoutID);
-          if (inTimeout > 0) inTimeout--;
+          if (inTimeout > 0) { inTimeout--; }
         }
         timeoutID = window.setTimeout(_triggerTimeout, 500);
       }
 
       function _updateDetected() {
-        if (!drupalSettings.features.autodetect) return;
+        if (!drupalSettings.features.autodetect) { return; }
         // query the server for a list of components/items in the feature and update
         // the auto-detected items
         var items = [];  // will contain a list of selected items exported to feature
@@ -196,7 +207,7 @@ jQuery.fn.sortElements = (function(){
           }
         });
         var featureName = $('#edit-machine-name').val();
-        if (featureName == '') {
+        if (featureName === '') {
           featureName = '*';
         }
 
@@ -204,36 +215,36 @@ jQuery.fn.sortElements = (function(){
         var excluded = drupalSettings.features.excluded;
         var postData = {'items': items, 'excluded': excluded};
         jQuery.post(url, postData, function(data) {
-          if (inTimeout > 0) inTimeout--;
+          if (inTimeout > 0) { inTimeout--; }
           // if we have triggered another timeout then don't update with old results
-          if (inTimeout == 0) {
+          if (inTimeout === 0) {
             // data is an object keyed by component listing the exports of the feature
             for (var component in data) {
-              var itemList = data[component];
-              $('#features-export-wrapper .component-' + component + ' input[type=checkbox]', context).each(function() {
-                var key = $(this).attr('value');
-                // first remove any auto-detected items that are no longer in component
-                if ($(this).hasClass('component-detected')) {
-                  if (!(key in itemList)) {
-                    moveCheckbox(this, 'select', false)
+              if (data[component]) {
+                var itemList = data[component];
+                $('#features-export-wrapper .component-' + component + ' input[type=checkbox]', context).each(function () {
+                  var key = $(this).attr('value');
+                  // first remove any auto-detected items that are no longer in component
+                  if ($(this).hasClass('component-detected')) {
+                    if (!(key in itemList)) {
+                      moveCheckbox(this, 'select', false)
+                    }
                   }
-                }
-                // next, add any new auto-detected items
-                else if ($(this).hasClass('component-select')) {
-                  if (key in itemList) {
-                    moveCheckbox(this, 'detected', itemList[key]);
-                    $(this).prop('checked', true);
-                    $(this).parent().show(); // make sure it's not hidden from filter
+                  // next, add any new auto-detected items
+                  else if ($(this).hasClass('component-select')) {
+                    if (key in itemList) {
+                      moveCheckbox(this, 'detected', itemList[key]);
+                      $(this).prop('checked', true);
+                      $(this).parent().show(); // make sure it's not hidden from filter
+                    }
                   }
-                }
-              });
+                });
+              }
             }
             // loop over all selected components and check for any that have been completely removed
-            for (var component in components) {
-              if ((data == null) || !(component in data)) {
-                $('#features-export-wrapper .component-' + component + ' input[type=checkbox].component-detected', context).each(function() {
-                  moveCheckbox(this, 'select', false);
-                });
+            for (var selectedComponent in components) {
+              if ((data == null) || !(selectedComponent in data)) {
+                $('#features-export-wrapper .component-' + selectedComponent + ' input[type=checkbox].component-detected', context).each(moveCheckbox(this, 'select', false));
               }
             }
           }
@@ -282,7 +293,7 @@ jQuery.fn.sortElements = (function(){
       }
       function _resetFilterTimeout() {
         // if timeout is already active, reset it
-        if (filterTimeoutID != 0) {
+        if (filterTimeoutID !== 0) {
           window.clearTimeout(filterTimeoutID);
           filterTimeoutID = null;
         }
@@ -305,7 +316,7 @@ jQuery.fn.sortElements = (function(){
           }
 
           details.find('.form-checkboxes label').each(function() {
-            if (filter == '') {
+            if (filter === '') {
               // collapse the section, but make checkbox visible
               if (currentState[section]) {
                 details.prop('open', false);
@@ -322,8 +333,8 @@ jQuery.fn.sortElements = (function(){
             }
           });
         });
-        for (section in newState) {
-          if (currentState[section] != newState[section]) {
+        for (var section in newState) {
+          if (currentState[section] !== newState[section]) {
             if (newState[section]) {
               $('#'+section).prop('open', true);
             }
@@ -384,6 +395,6 @@ jQuery.fn.sortElements = (function(){
         checkbox.click();
       });
     }
-  }
+  };
 
 })(jQuery);
