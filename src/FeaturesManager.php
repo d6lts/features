@@ -454,6 +454,18 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * {@inheritdoc}
    */
+  public function initPackageFromInfo($machine_name, $info) {
+    $package = $this->featuresManager->initPackage($machine_name, $info['name'], !empty($info['description']) ? $info['description'] : '');
+    $bundle = $this->assigner->findBundle($info);
+    $package['bundle'] = isset($bundle) ? $bundle->getMachineName() : '';
+    $package['config_orig'] = $this->listExtensionConfig($machine_name);
+    $this->savePackage($package);
+    return $package;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function initCorePackage() {
     $machine_name = 'core';
     $name = $this->t('Core');

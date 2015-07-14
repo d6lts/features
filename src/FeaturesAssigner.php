@@ -209,6 +209,28 @@ class FeaturesAssigner implements FeaturesAssignerInterface {
   /**
    * {@inheritdoc}
    */
+  public function findBundle(array $info) {
+    $bundle = NULL;
+    if (!empty($info['features']['bundle'])) {
+      $bundle = $this->getBundle($info['features']['bundle']);
+    }
+    elseif (!empty($info['package'])) {
+      $bundle = $this->findBundleByName($info['package']);
+    }
+    if (!isset($bundle) && (!empty($info['package']) || !empty($info['features']['bundle']))) {
+      // Create the bundle if it doesn't exist yet.
+      $bundle = $this->createBundle($info['package'], $info['features']['bundle']);
+    }
+    else {
+      // Else, return default bundle.
+      $bundle = $this->getBundle('');
+    }
+    return $bundle;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function setCurrent(FeaturesBundleInterface $bundle) {
     $this->currentBundle = $bundle;
     $session = \Drupal::request()->getSession();

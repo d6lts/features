@@ -241,6 +241,23 @@ interface FeaturesManagerInterface {
   public function initPackage($machine_name, $name = NULL, $description = '');
 
   /**
+   * Initializes a configuration package using module info data.
+   *
+   * @param string $machine_name
+   *   Machine name of the package.
+   * @param array $info
+   *   'name' => string Human readable name of the package.
+   *   'description' => optional string Description of the package
+   *
+   * @return array
+   *   The created package array.
+   *   The 'info' key will contain the original $info.
+   *   The 'bundle' key will contain the bundle that matches the $info
+   *   The 'config_orig' key will contain the original config of the module.
+   */
+  public function initPackageFromInfo($machine_name, $info);
+
+  /**
    * Lists modules that are existing exported Packages.
    *
    * @param bool $enabled
