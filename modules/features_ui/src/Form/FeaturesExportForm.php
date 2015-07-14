@@ -406,6 +406,8 @@ class FeaturesExportForm extends FormBase {
       'name' => $this->t('Unpackaged'),
       'description' => $this->t('Configuration that has not been added to any package.'),
       'config' => array(),
+      'status' => FeaturesManagerInterface::STATUS_NO_EXPORT,
+      'version' => '',
     );
     foreach ($config_collection as $item_name => $item) {
       if (empty($item['package'])) {
