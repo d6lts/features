@@ -584,6 +584,7 @@ class FeaturesEditForm extends FormBase {
         foreach ($component_info as $key => $value) {
           // Use the $clean_key when accessing $form_state.
           $clean_key = $this->domEncode($key);
+          $config_name = $this->featuresManager->getFullName($component, $key);
           // If checkbox in Sources is checked, move it to Added section.
           if (!$form_state->isValueEmpty(array($component, 'sources', 'selected', $clean_key))) {
             $form_state->setValue(array($component, 'sources', 'selected', $clean_key), FALSE);
@@ -646,6 +647,10 @@ class FeaturesEditForm extends FormBase {
                 $section = 'detected';
                 $default_value = FALSE;
               }
+              elseif (in_array($config_name, $this->package['config'])) {
+                // Original config from assignment plugins to be added.
+                $section = 'added';
+              }
             }
             $component_export['options'][$section][$key] = $this->configLabel($component, $key, $value['label']);
             $component_export['selected'][$section][$key] = $default_value;
@@ -658,7 +663,6 @@ class FeaturesEditForm extends FormBase {
                 unset($export['dependencies'][$key]);
               }
               else {
-                $config_name = $this->featuresManager->getFullName($component, $key);
                 unset($export['config'][$config_name]);
               }
             }
