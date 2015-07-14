@@ -79,9 +79,20 @@ class FeaturesGenerationWrite extends FeaturesGenerationMethodBase {
     }
 
     // Add package files.
+    // We need to update the system.module.files state because it's cached.
+    // Cannot just call system_rebuild_module_data() because $listing->scan() has
+    // it's own internal static cache that we cannot clear at this point.
+    $files = \Drupal::state()->get('system.module.files');
     foreach ($packages as $package) {
       $this->generatePackage($return, $package);
+      if (!isset($files[$package['machine_name']]) && isset($package['files']['info'])) {
+        $files[$package['machine_name']] = $package['directory'] . '/' . $package['files']['info']['filename'];
+      }
     }
+
+    // Rebuild system module cache
+    \Drupal::state()->set('system.module.files', $files);
+
     return $return;
   }
 
