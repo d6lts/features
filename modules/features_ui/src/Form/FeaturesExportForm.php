@@ -118,7 +118,7 @@ class FeaturesExportForm extends FormBase {
 
     // Filter packages on bundle if selected.
     if (!$current_bundle->isDefault()) {
-      $packages = $this->featuresManager->filterPackages($packages, $current_bundle->getMachineName());
+      $packages = $this->featuresManager->filterPackages($packages, $current_bundle->getMachineName(), TRUE);
     }
 
     $form['header'] = array(
@@ -212,7 +212,7 @@ class FeaturesExportForm extends FormBase {
     );
 
     $options = array();
-    $first = current($packages)['status'] != FeaturesManagerInterface::STATUS_NO_EXPORT;
+    $first = TRUE;
     foreach ($packages as $package) {
       if ($first && $package['status'] == FeaturesManagerInterface::STATUS_NO_EXPORT) {
         $first = FALSE;
@@ -423,11 +423,25 @@ class FeaturesExportForm extends FormBase {
     $current_bundle = $this->assigner->loadBundle();
     $this->assigner->assignConfigPackages();
 
-    $packages = array_filter($form_state->getValue('preview'));
+    $package_names = array_filter($form_state->getValue('preview'));
 
-    if (empty($packages)) {
+    if (empty($package_names)) {
       drupal_set_message(t('Please select one or more packages to export.'), 'warning');
       return;
+    }
+
+    if (!$current_bundle->isDefault()) {
+      // Assign the selected bundle to the exports.
+      $packages = $this->featuresManager->getPackages();
+      foreach ($package_names as $index => $package_name) {
+        // Rename package to use bundle prefix.
+        $package = $packages[$package_name];
+        unset($packages[$package_name]);
+        $package['machine_name'] = $current_bundle->getFullName($package['machine_name']);
+        $package['bundle'] = $current_bundle->getMachineName();
+        $this->featuresManager->savePackage($package);
+        $package_names[$index] = $package['machine_name'];
+      }
     }
 
     $method_id = NULL;
@@ -438,7 +452,7 @@ class FeaturesExportForm extends FormBase {
     }
 
     if (!empty($method_id)) {
-      $this->generator->generatePackages($method_id, $packages, $current_bundle);
+      $this->generator->generatePackages($method_id, $package_names, $current_bundle);
       $this->generator->applyExportFormSubmit($method_id, $form, $form_state);
     }
   }

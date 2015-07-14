@@ -39,9 +39,10 @@ table.features-listing .column-nowrap {
   white-space: nowrap;
 }
 
-tr.features-export-header-row {
+tr.features-export-header-row td {
   border-top: 30px solid white;
   background: #eee;
+  padding-top: 10px;
 }
 
 #features-assignment-methods tr.draggable > td:nth-child(1) {

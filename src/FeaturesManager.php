@@ -230,13 +230,14 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function filterPackages(array $packages, $namespace = '') {
+  public function filterPackages(array $packages, $namespace = '', $only_exported = FALSE) {
     if (!empty($namespace)) {
       $namespace .= '_';
     }
     $result = array();
     foreach ($packages as $key => $package) {
-      if (empty($namespace) || (strpos($package['machine_name'], $namespace) === 0)) {
+      if (empty($namespace) || (strpos($package['machine_name'], $namespace) === 0) ||
+        ($only_exported && $package['status'] === FeaturesManagerInterface::STATUS_NO_EXPORT)) {
         $result[$key] = $package;
       }
     }

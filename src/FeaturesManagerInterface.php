@@ -169,11 +169,13 @@ interface FeaturesManagerInterface {
    *   An array of packages.
    * @param string $namespace
    *   The namespace to use.
+   * @param bool $only_exported
+   *   If true, only filter out packages that are exported
    *
    * @return array
    *   An array of packages.
    */
-  public function filterPackages(array $packages, $namespace = '');
+  public function filterPackages(array $packages, $namespace = '', $only_exported = FALSE);
 
   /**
    * Gets a reference to a package assigner.
