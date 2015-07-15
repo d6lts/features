@@ -908,33 +908,36 @@ class FeaturesManager implements FeaturesManagerInterface {
     if ($reset || empty($this->configCollection)) {
       $config_collection = [];
       $config_types = $this->listConfigTypes();
+      $dependency_manager = $this->configManager->getConfigDependencyManager();
       foreach (array_keys($config_types) as $config_type) {
         $config = $this->listConfigByType($config_type);
         foreach ($config as $item_name => $label) {
           $name = $this->getFullName($config_type, $item_name);
           $data = $this->configStorage->read($name);
+
+          // Compute dependent config.
+          $dependent_list = $dependency_manager->getDependentEntities('config', $name);
+          $dependents = array();
+          foreach ($dependent_list as $config_name => $item) {
+            if (!isset($dependents[$config_name])) {
+              $dependents[$config_name] = $config_name;
+            }
+            // Grab the dependent graph paths.
+            foreach ($item['paths'] as $dependent_name => $value) {
+              if ($value && !isset($dependents[$dependent_name])) {
+                $dependents[$dependent_name] = $dependent_name;
+              }
+            }
+          }
+
           $config_collection[$name] = [
             'name' => $name,
             'name_short' => $item_name,
             'label' => $label,
             'type' => $config_type,
             'data' => $data,
-            // @todo: use // ConfigDependencyManager::getDependentEntities('config', $name) ?
-            'dependents' => []
+            'dependents' => array_keys($dependents),
           ];
-        }
-      }
-      // Add dependency information. The definition of each piece of
-      // configuration includes the other configuration it's dependent on. Here
-      // we add reverse dependencies: the configuration that is dependent on
-      // a given piece of configuration.
-      foreach ($config_collection as $config) {
-        if (isset($config['data']['dependencies']['config'])) {
-          foreach ($config['data']['dependencies']['config'] as $name) {
-            if (isset($config_collection[$name])) {
-              $config_collection[$name]['dependents'][] = $config['name'];
-            }
-          }
         }
       }
       $this->setConfigCollection($config_collection);
