@@ -647,7 +647,7 @@ class FeaturesEditForm extends FormBase {
                 $section = 'detected';
                 $default_value = FALSE;
               }
-              elseif (in_array($config_name, $this->package['config'])) {
+              elseif (empty($exported_components) && in_array($config_name, $this->package['config'])) {
                 // Original config from assignment plugins to be added.
                 $section = 'added';
               }
