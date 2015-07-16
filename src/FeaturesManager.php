@@ -480,20 +480,12 @@ class FeaturesManager implements FeaturesManagerInterface {
   public function assignConfigPackage($package_name, array $item_names, $force = FALSE) {
     $config_collection = $this->getConfigCollection();
 
-    // Determine whether the profile is requested.
-    $profile =& $this->profile;
-    if ($package_name == $profile['machine_name']) {
-      $package =& $profile;
+    $packages =& $this->packages;
+    if (isset($packages[$package_name])) {
+      $package =& $packages[$package_name];
     }
-    // If not, a package is requested.
     else {
-      $packages =& $this->packages;
-      if (isset($packages[$package_name])) {
-        $package =& $packages[$package_name];
-      }
-      else {
-        throw new \Exception($this->t('Failed to package %package_name. Package not found.', ['@package_name' => $package_name]));
-      }
+      throw new \Exception($this->t('Failed to package %package_name. Package not found.', ['@package_name' => $package_name]));
     }
 
     foreach ($item_names as $item_name) {

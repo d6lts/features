@@ -32,12 +32,17 @@ class FeaturesAssignmentProfile extends FeaturesAssignmentMethodBase {
    */
   public function assignPackages() {
     $current_bundle = $this->assigner->getBundle();
-    $profile_package = $this->featuresManager->getPackage($current_bundle->getProfileName());
+    $profile_name = $current_bundle->getProfileName();
+    $profile_package = $this->featuresManager->getPackage($profile_name);
 
     $package_directories = $this->featuresManager->listPackageDirectories(array(), $current_bundle);
     // Only read in from the Standard profile if this profile doesn't already
     // exist.
-    if ($current_bundle->isProfile() && !isset($package_directories[$current_bundle->getProfileName()])) {
+    if ($current_bundle->isProfile() && !isset($package_directories[$profile_name])) {
+      // Ensure the profile package exists.
+      if (empty($profile_package)) {
+        $this->featuresManager->initPackage($profile_name);
+      }
       // Add configuration from the Standard profile.
       $config_collection = $this->featuresManager->getConfigCollection();
       $standard_directory = 'core/profiles/standard';
@@ -46,9 +51,9 @@ class FeaturesAssignmentProfile extends FeaturesAssignmentMethodBase {
       foreach ($item_names as $item_name) {
         // If the configuration is present on the site, assign it.
         if (isset($config_collection[$item_name])) {
-          $this->featuresManager->assignConfigPackage($current_bundle->getProfileName(), [$item_name]);
+          $this->featuresManager->assignConfigPackage($profile_name, [$item_name]);
           // Reload the profile to refresh the config array after the addition.
-          $profile_package = $this->featuresManager->getPackage($current_bundle->getProfileName());
+          $profile_package = $this->featuresManager->getPackage($profile_name);
         }
         // Otherwise, copy it over from Standard.
         else {
@@ -76,12 +81,12 @@ class FeaturesAssignmentProfile extends FeaturesAssignmentMethodBase {
           // profile's equivalents.
           $string = str_replace(
             ['standard', 'Standard'],
-            [$current_bundle->getProfileName(), $current_bundle->getName()],
+            [$profile_name, $current_bundle->getName()],
             $string
           );
           // Add the files to those to be output.
           $profile_package['files'][$extension] = [
-            'filename' => $current_bundle->getProfileName() . '.' . $extension,
+            'filename' => $profile_name . '.' . $extension,
             'subdirectory' => NULL,
             'string' => $string
           ];
