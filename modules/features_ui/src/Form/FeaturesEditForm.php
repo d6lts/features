@@ -647,10 +647,6 @@ class FeaturesEditForm extends FormBase {
                 $section = 'detected';
                 $default_value = FALSE;
               }
-              elseif (empty($exported_components) && in_array($config_name, $this->package['config'])) {
-                // Original config from assignment plugins to be added.
-                $section = 'added';
-              }
             }
             $component_export['options'][$section][$key] = $this->configLabel($component, $key, $value['label']);
             $component_export['selected'][$section][$key] = $default_value;
