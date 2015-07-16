@@ -440,6 +440,17 @@ interface FeaturesManagerInterface {
   public function getFullName($type, $name);
 
   /**
+   * Returns the short name and type of a full config name.
+   *
+   * @param string $fullname
+   *   The full configuration name
+   * @return array
+   *   'type' => string the config type
+   *   'name_short' => string the short config name, without prefix.
+   */
+  public function getConfigType($fullname);
+
+  /**
    * Returns the full machine name and directory for exporting a package.
    *
    * @param string $package
@@ -492,6 +503,24 @@ interface FeaturesManagerInterface {
    *   The array of config items that are overridden.
    */
   public function detectNew(array $feature);
+
+  /**
+   * Determines which config is exported in the feature but not in the active.
+   *
+   * @param array $feature
+   *   The package array.
+   *
+   * @return array
+   *   The array of config items that are missing from active store.
+   */
+  public function detectMissing(array $feature);
+
+  /**
+   * Sort the Missing config into order by dependencies.
+   * @param array $missing config items
+   * @return array of config items in dependency order
+   */
+  public function reorderMissing(array $missing);
 
   /**
    * Helper function that returns a translatable label for the different status

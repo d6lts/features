@@ -454,6 +454,8 @@ function drush_features_diff() {
   }
 
   $overrides = $manager->detectOverrides($feature);
+  $missing = $manager->reorderMissing($manager->detectMissing($feature));
+  $overrides = array_merge($overrides, $missing);
 
   if (empty($overrides)) {
     drush_print(dt('Active config matches stored config for @module.', array('@module' => $module)));
@@ -469,14 +471,20 @@ function drush_features_diff() {
 
     foreach ($overrides as $name) {
       $message = '';
-      $active = $manager->getActiveStorage()->read($name);
-      $extension = $manager->getExtensionStorage()->read($name);
-      if (empty($extension)) {
+      if (in_array($name, $missing)) {
+        $message = sprintf($red, t('(missing from active)'));
         $extension = array();
-        $message = sprintf($green, t('(not exported)'));
       }
-      $diff = $config_diff->diff($extension, $active);
-      $rows = explode("\n", $formatter->format($diff));
+      else {
+        $active = $manager->getActiveStorage()->read($name);
+        $extension = $manager->getExtensionStorage()->read($name);
+        if (empty($extension)) {
+          $extension = array();
+          $message = sprintf($green, t('(not exported)'));
+        }
+        $diff = $config_diff->diff($extension, $active);
+        $rows = explode("\n", $formatter->format($diff));
+      }
       drush_print();
       drush_print(dt("Config !name !message", array('!name' => $name, '!message' => $message)));
       if (!empty($extension)) {
@@ -553,11 +561,14 @@ function drush_features_import() {
 
       // Forcefully revert all components of a feature.
       if ($force) {
-        $components = $feature['config'];
+        $components = $feature['config_orig'];
       }
       // Only revert components that are detected to be Overridden.
       else {
         $components = $manager->detectOverrides($feature);
+        $missing = $manager->reorderMissing($manager->detectMissing($feature));
+        // Be sure to import missing components first.
+        $components = array_merge($missing, $components);
       }
 
       if (!empty($components_needed) && is_array($components_needed)) {
@@ -570,12 +581,21 @@ function drush_features_import() {
       else {
         $config = $manager->getConfigCollection();
         foreach ($components as $component) {
-          $item = $config[$component];
           $dt_args['@component'] = $component;
           $confirmation_message = 'Do you really want to import @module : @component?';
           if ($skip_confirmation || drush_confirm(dt($confirmation_message, $dt_args))) {
-            $config_revert->revert($item['type'], $item['name_short']);
-            drush_log(dt('Reverted @module : @component.', $dt_args), 'ok');
+            if (!isset($config[$component])) {
+              // Import missing component.
+              $item = $manager->getConfigType($component);
+              $config_revert->import($item['type'], $item['name_short']);
+              drush_log(dt('Import @module : @component.', $dt_args), 'ok');
+            }
+            else {
+              // Revert existing component.
+              $item = $config[$component];
+              $config_revert->revert($item['type'], $item['name_short']);
+              drush_log(dt('Reverted @module : @component.', $dt_args), 'ok');
+            }
           }
           else {
             drush_log(dt('Skipping @module : @component.', $dt_args), 'ok');

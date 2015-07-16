@@ -167,6 +167,33 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * {@inheritdoc}
    */
+  public function getConfigType($fullname) {
+    $result = array(
+      'type' => '',
+      'name_short' => '',
+    );
+    $prefix = FeaturesManagerInterface::SYSTEM_SIMPLE_CONFIG . '.';
+    if (strpos($fullname, $prefix)) {
+      $result['type'] = FeaturesManagerInterface::SYSTEM_SIMPLE_CONFIG;
+      $result['name_short'] = substr($fullname, strlen($prefix));
+    }
+    else {
+      foreach ($this->entityManager->getDefinitions() as $entity_type => $definition) {
+        if ($definition->isSubclassOf('Drupal\Core\Config\Entity\ConfigEntityInterface')) {
+          $prefix = $definition->getConfigPrefix() . '.';
+          if (strpos($fullname, $prefix) === 0) {
+            $result['type'] = $entity_type;
+            $result['name_short'] = substr($fullname, strlen($prefix));
+          }
+        }
+      }
+    }
+    return $result;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function reset() {
     $this->packages = [];
     // Don't use getConfigCollection because reset() may be called in
@@ -998,11 +1025,53 @@ class FeaturesManager implements FeaturesManagerInterface {
         $result[] = $name;
       }
     }
-
     return $result;
   }
 
   /**
+   * {@inheritdoc}
+   */
+  public function detectMissing(array $feature) {
+    $config = $this->getConfigCollection();
+    $result = array();
+    foreach ($feature['config_orig'] as $name) {
+      if (!isset($config[$name])) {
+        $result[] = $name;
+      }
+    }
+    return $result;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function reorderMissing(array $missing) {
+    $list = array();
+    $result = array();
+    foreach ($missing as $full_name) {
+      $this->addConfigList($full_name, $list);
+    }
+    foreach ($list as $full_name) {
+      if (in_array($full_name, $missing)) {
+        $result[] = $full_name;
+      }
+    }
+    return $result;
+  }
+
+  protected function addConfigList($full_name, &$list) {
+    if (!in_array($full_name, $list)) {
+      array_unshift($list, $full_name);
+      $value = $this->extensionStorage->read($full_name);
+      if (isset($value['dependencies']['config'])) {
+        foreach ($value['dependencies']['config'] as $config_name) {
+          $this->addConfigList($config_name, $list);
+        }
+      }
+    }
+  }
+
+    /**
    * {@inheritdoc}
    */
   public function statusLabel($status) {

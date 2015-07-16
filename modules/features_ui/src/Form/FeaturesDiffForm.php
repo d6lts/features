@@ -132,8 +132,9 @@ class FeaturesDiffForm extends FormBase {
     $options = array();
     foreach ($packages as $package) {
       if ($package['status'] != FeaturesManagerInterface::STATUS_NO_EXPORT) {
+        $missing = $this->featuresManager->reorderMissing($this->featuresManager->detectMissing($package));
         $overrides = $this->featuresManager->detectOverrides($package, TRUE);
-        if (!empty($overrides)) {
+        if (!empty($overrides) || !empty($missing)) {
           $options += array(
             $package['machine_name'] => array(
               'row' => array(
@@ -148,7 +149,7 @@ class FeaturesDiffForm extends FormBase {
               ),
             ),
           );
-          $options += $this->diffOutput($package, $overrides);
+          $options += $this->diffOutput($package, $overrides, $missing);
         }
       }
     }
@@ -187,11 +188,16 @@ class FeaturesDiffForm extends FormBase {
       drupal_set_message('No configuration was selected for import.', 'warning');
       return;
     }
-    foreach ($items as $item) {
-      if (isset($config[$item])) {
-        $this->configRevert->revert($config[$item]['type'], $config[$item]['name_short']);
-        drupal_set_message(t('Imported !name', array('!name' => $item)));
+    foreach ($items as $config_name) {
+      if (isset($config[$config_name])) {
+        $item = $config[$config_name];
+        $this->configRevert->revert($item['type'], $item['name_short']);
       }
+      else {
+        $item = $this->featuresManager->getConfigType($config_name);
+        $this->configRevert->import($item['type'], $item['name_short']);
+      }
+      drupal_set_message(t('Imported !name', array('!name' => $config_name)));
     }
   }
 
@@ -202,12 +208,16 @@ class FeaturesDiffForm extends FormBase {
    *   A package array.
    * @param array $overrides
    *   An array of overrides.
+   * @param array $missing
+   *   An array of missing config.
    *
    * @return array
    *   A form element.
    */
-  protected function diffOutput($package, $overrides) {
+  protected function diffOutput($package, $overrides, $missing = array()) {
     $element = array();
+    $config = $this->featuresManager->getConfigCollection();
+    $components = array_merge($missing, $overrides);
 
     $header = array(
       array('data' => '', 'class' => 'diff-marker'),
@@ -216,24 +226,31 @@ class FeaturesDiffForm extends FormBase {
       array('data' => t('Feature code config'), 'class' => 'diff-context'),
     );
 
-    foreach ($overrides as $name) {
+    foreach ($components as $name) {
       $rows[] = array(array('data' => $name, 'colspan' => 4, 'header' => TRUE));
 
-      $active = $this->featuresManager->getActiveStorage()->read($name);
-      $extension = $this->featuresManager->getExtensionStorage()->read($name);
-      if (empty($extension)) {
+      if (!isset($config[$name])) {
         $details = array(
-          '#markup' => t('Dependency detected in active config but not exported to the feature.'),
+          '#markup' => t('Component in feature missing from active config.'),
         );
       }
       else {
-        $diff = $this->configDiff->diff($active, $extension);
-        $details = array(
-          '#type' => 'table',
-          '#header' => $header,
-          '#rows' => $this->diffFormatter->format($diff),
-          '#attributes' => array('class' => array('diff', 'features-diff')),
-        );
+        $active = $this->featuresManager->getActiveStorage()->read($name);
+        $extension = $this->featuresManager->getExtensionStorage()->read($name);
+        if (empty($extension)) {
+          $details = array(
+            '#markup' => t('Dependency detected in active config but not exported to the feature.'),
+          );
+        }
+        else {
+          $diff = $this->configDiff->diff($active, $extension);
+          $details = array(
+            '#type' => 'table',
+            '#header' => $header,
+            '#rows' => $this->diffFormatter->format($diff),
+            '#attributes' => array('class' => array('diff', 'features-diff')),
+          );
+        }
       }
       $element[$name] = array(
         'row' => array(

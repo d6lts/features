@@ -310,6 +310,7 @@ class FeaturesExportForm extends FormBase {
         }
       }
     }
+    $order = $this->featuresManager->reorderMissing($missing);
     // Add dependencies.
     $package_config['dependencies'] = array();
     if (!empty($package['dependencies'])) {
