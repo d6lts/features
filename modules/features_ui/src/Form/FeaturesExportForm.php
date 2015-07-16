@@ -271,6 +271,7 @@ class FeaturesExportForm extends FormBase {
     $overrides = $this->featuresManager->detectOverrides($package);
     $new_config = $this->featuresManager->detectNew($package);
     $conflicts = array();
+    $missing = array();
 
     if ($package['status'] == FeaturesManagerInterface::STATUS_NO_EXPORT) {
       $overrides = array();
@@ -290,7 +291,15 @@ class FeaturesExportForm extends FormBase {
     // Conflict config from other modules.
     if (!empty($package['config_orig'])) {
       foreach ($package['config_orig'] as $item_name) {
-        if (!in_array($item_name, $package['config'])) {
+        if (!isset($config_collection[$item_name])) {
+          $missing[] = $item_name;
+          $package_config['missing'][] = array(
+            'name' => SafeMarkup::checkPlain($item_name),
+            'label' => SafeMarkup::checkPlain($item_name),
+            'class' => 'features-conflict',
+          );
+        }
+        elseif (!in_array($item_name, $package['config'])) {
           $item = $config_collection[$item_name];
           $conflicts[] = $item_name;
           $package_config[$item['type']][] = array(
@@ -330,6 +339,11 @@ class FeaturesExportForm extends FormBase {
       $class = 'features-detected';
       $label = t('New detected');
     }
+    elseif (!empty($missing)) {
+      $url = Url::fromRoute('features.edit', array('featurename' => $package['machine_name']));
+      $class = 'features-conflict';
+      $label = t('Missing');
+    }
     if (!empty($class)) {
       $element['state'] = array(
         'data' => \Drupal::l($label, $url),
@@ -343,6 +357,7 @@ class FeaturesExportForm extends FormBase {
     $config_types = $this->featuresManager->listConfigTypes();
     // Add dependencies.
     $config_types['dependencies'] = $this->t('Dependencies');
+    $config_types['missing'] = $this->t('Missing');
     uasort($config_types, 'strnatcasecmp');
 
     $rows = array();

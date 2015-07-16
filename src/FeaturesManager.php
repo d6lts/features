@@ -497,20 +497,19 @@ class FeaturesManager implements FeaturesManagerInterface {
     }
 
     foreach ($item_names as $item_name) {
-      if (!isset($config_collection[$item_name])) {
-        throw new \Exception($this->t('Failed to assign @item_name to package @package_name. Configuration item not found.', ['@item_name' => $item_name, '@package_name' => $package_name]));
-      }
-      if (($force || empty($config_collection[$item_name]['package'])) && !in_array($item_name, $package['config'])) {
-        // Add the item to the package's config array.
-        $package['config'][] = $item_name;
-        // Mark the item as already assigned.
-        $config_collection[$item_name]['package'] = $package_name;
-        // Set any module dependencies of the configuration item as package
-        // dependencies.
-        if (isset($config_collection[$item_name]['data']['dependencies']['module'])) {
-          $dependencies =& $package['dependencies'];
-          $dependencies = array_unique(array_merge($dependencies, $config_collection[$item_name]['data']['dependencies']['module']));
-          sort($dependencies);
+      if (isset($config_collection[$item_name])) {
+        if (($force || empty($config_collection[$item_name]['package'])) && !in_array($item_name, $package['config'])) {
+          // Add the item to the package's config array.
+          $package['config'][] = $item_name;
+          // Mark the item as already assigned.
+          $config_collection[$item_name]['package'] = $package_name;
+          // Set any module dependencies of the configuration item as package
+          // dependencies.
+          if (isset($config_collection[$item_name]['data']['dependencies']['module'])) {
+            $dependencies =& $package['dependencies'];
+            $dependencies = array_unique(array_merge($dependencies, $config_collection[$item_name]['data']['dependencies']['module']));
+            sort($dependencies);
+          }
         }
       }
     }
