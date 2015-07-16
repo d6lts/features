@@ -486,6 +486,7 @@ class FeaturesManager implements FeaturesManagerInterface {
     $package = $this->initPackage($machine_name, $info['name'], !empty($info['description']) ? $info['description'] : '');
     $bundle = $this->assigner->findBundle($info);
     $package['bundle'] = isset($bundle) ? $bundle->getMachineName() : '';
+    $package['info'] = $info;
     $package['config_orig'] = $this->listExtensionConfig($machine_name);
     $this->savePackage($package);
     return $package;

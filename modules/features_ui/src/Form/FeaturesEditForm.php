@@ -582,13 +582,11 @@ class FeaturesEditForm extends FormBase {
         $new_components = !empty($new_features_info[$component]) ? $new_features_info[$component] : array();
 
         foreach ($component_info as $key => $value) {
-          // Use the $clean_key when accessing $form_state.
-          $clean_key = $this->domEncode($key);
           $config_name = $this->featuresManager->getFullName($component, $key);
           // If checkbox in Sources is checked, move it to Added section.
-          if (!$form_state->isValueEmpty(array($component, 'sources', 'selected', $clean_key))) {
-            $form_state->setValue(array($component, 'sources', 'selected', $clean_key), FALSE);
-            $form_state->setValue(array($component, 'added', $clean_key), 1);
+          if (!$form_state->isValueEmpty(array($component, 'sources', 'selected', $key))) {
+            $form_state->setValue(array($component, 'sources', 'selected', $key), FALSE);
+            $form_state->setValue(array($component, 'added', $key), 1);
             $component_export['options']['added'][$key] = $this->configLabel($component, $key, $value['label']);
             $component_export['selected']['added'][$key] = $key;
           }
@@ -604,8 +602,8 @@ class FeaturesEditForm extends FormBase {
               // means it was an auto-detect that was previously part of the
               // export and is now de-selected in UI.
               if ($form_state->isSubmitted() &&
-                  ($form_state->hasValue(array($component, 'included', $clean_key)) ||
-                  ($form_state->isValueEmpty(array($component, 'detected', $clean_key)))) &&
+                  ($form_state->hasValue(array($component, 'included', $key)) ||
+                  ($form_state->isValueEmpty(array($component, 'detected', $key)))) &&
                   empty($config_new[$component][$key])) {
                 $section = 'detected';
                 $default_value = FALSE;
@@ -613,9 +611,9 @@ class FeaturesEditForm extends FormBase {
               // Unless it's unchecked in the form, then move it to Newly
               // disabled item.
               elseif ($form_state->isSubmitted() &&
-                  $form_state->isValueEmpty(array($component, 'added', $clean_key)) &&
-                  $form_state->isValueEmpty(array($component, 'detected', $clean_key)) &&
-                  $form_state->isValueEmpty(array($component, 'included', $clean_key))) {
+                  $form_state->isValueEmpty(array($component, 'added', $key)) &&
+                  $form_state->isValueEmpty(array($component, 'detected', $key)) &&
+                  $form_state->isValueEmpty(array($component, 'included', $key))) {
                 $section = 'added';
                 $default_value = FALSE;
               }
@@ -625,7 +623,7 @@ class FeaturesEditForm extends FormBase {
               // so it's a user-selected or an auto-detect item.
               $section = 'detected';
               // Check for item explicitly excluded.
-              if (isset($this->excluded[$component][$key]) && !$form_state->hasValue(array($component, 'detected', $clean_key))) {
+              if (isset($this->excluded[$component][$key]) && !$form_state->hasValue(array($component, 'detected', $key))) {
                 $default_value = FALSE;
               }
               else {
@@ -634,16 +632,16 @@ class FeaturesEditForm extends FormBase {
               // If it's already checked in Added or Sources, leave it in Added
               // as checked.
               if ($form_state->isSubmitted() &&
-                  (!$form_state->isValueEmpty(array($component, 'added', $clean_key)) ||
-                   !$form_state->isValueEmpty(array($component, 'sources', 'selected', $clean_key)))) {
+                  (!$form_state->isValueEmpty(array($component, 'added', $key)) ||
+                   !$form_state->isValueEmpty(array($component, 'sources', 'selected', $key)))) {
                 $section = 'added';
                 $default_value = $key;
               }
               // If it's already been unchecked, leave it unchecked.
               elseif ($form_state->isSubmitted() &&
-                  $form_state->isValueEmpty(array($component, 'sources', 'selected', $clean_key)) &&
-                  $form_state->isValueEmpty(array($component, 'detected', $clean_key)) &&
-                  !$form_state->hasValue(array($component, 'added', $clean_key))) {
+                  $form_state->isValueEmpty(array($component, 'sources', 'selected', $key)) &&
+                  $form_state->isValueEmpty(array($component, 'detected', $key)) &&
+                  !$form_state->hasValue(array($component, 'added', $key))) {
                 $section = 'detected';
                 $default_value = FALSE;
               }
@@ -669,10 +667,10 @@ class FeaturesEditForm extends FormBase {
             // at 'input'.
             if ($form_state->isSubmitted()) {
               if (!$default_value) {
-                $form_state->setValue(array($component, $section, $clean_key), FALSE);
+                $form_state->setValue(array($component, $section, $key), FALSE);
               }
               else {
-                $form_state->setValue(array($component, $section, $clean_key), 1);
+                $form_state->setValue(array($component, $section, $key), 1);
               }
             }
           }
@@ -687,7 +685,7 @@ class FeaturesEditForm extends FormBase {
             $added = FALSE;
             foreach (array('included', 'added') as $section) {
               // Restore any user-selected checkboxes.
-              if (!$form_state->isValueEmpty(array($component, $section, $clean_key))) {
+              if (!$form_state->isValueEmpty(array($component, $section, $key))) {
                 $component_export['options'][$section][$key] = $this->configLabel($component, $key, $value['label']);
                 $component_export['selected'][$section][$key] = $key;
                 $added = TRUE;
