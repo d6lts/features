@@ -68,18 +68,63 @@ class AssignmentConfigureForm extends FormBase {
   }
 
   /**
+   * Load the values from the bundle into the user input.
+   * Used during Ajax callback since updating #default_values is ignored.
+   * @param $bundle_name
+   * @param \Drupal\Core\Form\FormStateInterface $form_state
+   */
+  protected function loadBundleValues(FormStateInterface &$form_state, $current_bundle, $enabled_methods, $methods_weight) {
+    $input = $form_state->getUserInput();
+    $input['bundle']['name'] = $current_bundle->isDefault() ? '' : $current_bundle->getName();
+    $input['bundle']['machine_name'] = $current_bundle->getMachineName();
+    $input['bundle']['description'] = $current_bundle->isDefault() ? '' : $current_bundle->getDescription();
+    $input['bundle']['is_profile'] = $current_bundle->isProfile() ? 1 : null;
+    $input['bundle']['profile_name'] = $current_bundle->isProfile() ? $current_bundle->getProfileName() : '';
+
+    foreach ($methods_weight as $method_id => $weight) {
+      $enabled = isset($enabled_methods[$method_id]);
+      $input['weight'][$method_id] = $weight;
+      $input['enabled'][$method_id] = $enabled ? 1 : null;
+    }
+
+    $form_state->setUserInput($input);
+  }
+
+  /**
+   * Detects if an element triggered the form submission via Ajax.
+   * TODO: SHOULDN'T NEED THIS!  BUT DRUPAL IS CALLING buildForm AFTER THE
+   * BUNDLE AJAX IS SELECTED AND DOESN'T HAVE getTriggeringElement() SET YET.
+   */
+  protected function elementTriggeredScriptedSubmission(FormStateInterface &$form_state) {
+    $input = $form_state->getUserInput();
+    if (!empty($input['_triggering_element_name'])) {
+      return $input['_triggering_element_name'];
+    }
+    return '';
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, $bundle_name = NULL) {
+    $load_values = FALSE;
     $trigger = $form_state->getTriggeringElement();
-    if ($trigger['#name'] == 'bundle[bundle_select]') {
+    // TODO: See if there is a Drupal Core issue for this.
+    // Sometimes the first ajax call on the page causes buildForm to be called
+    // twice!  First time form_state->getTriggeringElement is NOT SET, but
+    // the form_state['input'] shows the _triggering_element_name.  Then the
+    // SECOND time it is called the getTriggeringElement is fine.
+    $real_trigger = $this->elementTriggeredScriptedSubmission($form_state);
+    if (!isset($trigger) && ($real_trigger == 'bundle[bundle_select]')) {
+      $input = $form_state->getUserInput();
+      $bundle_name = $input['bundle']['bundle_select'];
+      $this->assigner->setCurrent($this->assigner->getBundle($bundle_name));
+      $load_values = TRUE;
+    }
+    elseif ($trigger['#name'] == 'bundle[bundle_select]') {
       $bundle_name = $form_state->getValue(array('bundle', 'bundle_select'));
       $this->assigner->setCurrent($this->assigner->getBundle($bundle_name));
-      // Setting the form values to the newly selected Bundle via Ajax is hard.
-      // #default_values is ignored after form is submitted.
-      // Can set #value in the Ajax callback, but doesn't work for checkboxes.
-      // So let's just reload the page.
-      return $this->redirect('features.assignment', array($bundle_name));
+      $load_values = TRUE;
     }
     elseif ($trigger['#name'] == 'removebundle') {
       $current_bundle = $this->assigner->loadBundle($bundle_name);
@@ -99,6 +144,12 @@ class AssignmentConfigureForm extends FormBase {
       if (!isset($methods_weight[$method_id])) {
         $methods_weight[$method_id] = isset($method['weight']) ? $method['weight'] : 0;
       }
+    }
+    // Order methods list by weight.
+    asort($methods_weight);
+
+    if ($load_values) {
+      $this->loadBundleValues($form_state, $current_bundle, $enabled_methods, $methods_weight);
     }
 
     $form = array(
@@ -193,9 +244,6 @@ class AssignmentConfigureForm extends FormBase {
       // Show only if the profile.add option is selected.
       '#states' => $show_if_profile_checked,
     );
-
-    // Order methods list by weight.
-    asort($methods_weight);
 
     foreach ($methods_weight as $method_id => $weight) {
 

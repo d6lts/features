@@ -92,12 +92,36 @@ class FeaturesExportForm extends FormBase {
   }
 
   /**
+   * Detects if an element triggered the form submission via Ajax.
+   * TODO: SHOULDN'T NEED THIS!  BUT DRUPAL IS CALLING buildForm AFTER THE
+   * BUNDLE AJAX IS SELECTED AND DOESN'T HAVE getTriggeringElement() SET YET.
+   */
+  protected function elementTriggeredScriptedSubmission(FormStateInterface &$form_state) {
+    $input = $form_state->getUserInput();
+    if (!empty($input['_triggering_element_name'])) {
+      return $input['_triggering_element_name'];
+    }
+    return '';
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state) {
 
     $trigger = $form_state->getTriggeringElement();
-    if ($trigger['#name'] == 'bundle') {
+    // TODO: See if there is a Drupal Core issue for this.
+    // Sometimes the first ajax call on the page causes buildForm to be called
+    // twice!  First time form_state->getTriggeringElement is NOT SET, but
+    // the form_state['input'] shows the _triggering_element_name.  Then the
+    // SECOND time it is called the getTriggeringElement is fine.
+    $real_trigger = $this->elementTriggeredScriptedSubmission($form_state);
+    if (!isset($trigger) && ($real_trigger == 'bundle')) {
+      $input = $form_state->getUserInput();
+      $bundle_name = $input['bundle'];
+      $this->assigner->setCurrent($this->assigner->getBundle($bundle_name));
+    }
+    elseif ($trigger['#name'] == 'bundle') {
       $bundle_name = $form_state->getValue('bundle', '');
       $this->assigner->setCurrent($this->assigner->getBundle($bundle_name));
     }
@@ -310,7 +334,6 @@ class FeaturesExportForm extends FormBase {
         }
       }
     }
-    $order = $this->featuresManager->reorderMissing($missing);
     // Add dependencies.
     $package_config['dependencies'] = array();
     if (!empty($package['dependencies'])) {
