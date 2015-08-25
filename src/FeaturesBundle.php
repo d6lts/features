@@ -314,7 +314,9 @@ class FeaturesBundle implements FeaturesBundleInterface {
     }
     else {
       foreach ($settings as $method_id => $method_settings) {
-        $this->setAssignmentSettings($method_id, $method_settings);
+        if (!empty($method_settings)) {
+          $this->setAssignmentSettings($method_id, $method_settings);
+        }
       }
     }
     return $this;
