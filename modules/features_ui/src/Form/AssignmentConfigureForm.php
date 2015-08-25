@@ -208,6 +208,7 @@ class AssignmentConfigureForm extends FormBase {
       '#description' => $this->t('A unique machine-readable name of this bundle.  Used to prefix exported packages. It must only contain lowercase letters, numbers, and underscores.'),
       '#machine_name' => array(
         'source' => array('bundle', 'name'),
+        'exists' => array($this, 'bundleExists'),
       ),
     );
 
@@ -338,6 +339,18 @@ class AssignmentConfigureForm extends FormBase {
 
     $form_state->setRedirect('features.assignment');
     drupal_set_message($this->t('Package assignment configuration saved.'));
+  }
+
+  /**
+   * Callback for machine_name exists()
+   * @param $value
+   * @param $element
+   * @param $form_state
+   * @return bool
+   */
+  public function bundleExists($value, $element, $form_state) {
+    $bundle = $this->assigner->getBundle($value);
+    return isset($bundle);
   }
 
 }

@@ -192,6 +192,7 @@ class FeaturesEditForm extends FormBase {
       '#default_value' => $bundle->getShortName($this->package['machine_name']),
       '#machine_name' => array(
         'source' => array('info', 'name'),
+        'exists' => array($this, 'featureExists'),
       ),
     );
     if (!$bundle->isDefault()) {
@@ -301,6 +302,18 @@ class FeaturesEditForm extends FormBase {
       $form['info']['machine_name']['#value'] = $bundle->getShortName($this->package['machine_name']);
     }
     return $form['info'];
+  }
+
+  /**
+   * Callback for machine_name exists()
+   * @param $value
+   * @param $element
+   * @param $form_state
+   * @return bool
+   */
+  public function featureExists($value, $element, $form_state) {
+    $packages = $this->featuresManager->getPackages();
+    return isset($packages[$value]) || \Drupal::moduleHandler()->moduleExists($value);
   }
 
   /**
