@@ -410,8 +410,8 @@ class FeaturesExportForm extends FormBase {
           ),
           'class' => 'item',
         );
+        $rows[] = $row;
       }
-      $rows[] = $row;
     }
     $element['details'] = array(
       '#type' => 'table',
@@ -420,7 +420,7 @@ class FeaturesExportForm extends FormBase {
 
     $details = array(
       '#type' => 'details',
-      '#title' => XSS::filterAdmin($package['description']),
+      '#title' => SafeMarkup::xssFilter($package['description']),
       '#description' => array('data' => $element['details']),
     );
     $element['details'] = array(
