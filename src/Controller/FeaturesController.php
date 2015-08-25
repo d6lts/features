@@ -34,7 +34,7 @@ class FeaturesController implements ContainerInjectionInterface {
   }
 
   /**
-   * Constructs a ConfigController object.
+   * Constructs a FeaturesController object.
    *
    * @param \Drupal\system\FileDownloadController $file_download_controller
    *   The file download controller.
