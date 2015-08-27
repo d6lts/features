@@ -656,7 +656,7 @@ class FeaturesManager implements FeaturesManagerInterface {
         : FeaturesManagerInterface::STATUS_DISABLED;
       $info = $this->getExtensionInfo($package['machine_name']);
       if (!empty($info)) {
-        $package['version'] = $info['version'];
+        $package['version'] = isset($info['version']) ? $info['version'] : '';
       }
     }
   }
