@@ -510,12 +510,14 @@ class FeaturesEditForm extends FormBase {
 
     // Make a map of the config data already exported to the Feature.
     $exported_features_info = array();
-    foreach ($this->package['config_orig'] as $item_name) {
-      $item = $config[$item_name];
-      // Remove any conflicts if those are not being allowed.
-      // if ($this->allowConflicts || !isset($this->conflicts[$item['type']][$item['name_short']])) {
-      $exported_features_info[$item['type']][$item['name_short']] = $item;
-      // }
+    if (!empty($this->package['config_orig'])) {
+      foreach ($this->package['config_orig'] as $item_name) {
+        $item = $config[$item_name];
+        // Remove any conflicts if those are not being allowed.
+        // if ($this->allowConflicts || !isset($this->conflicts[$item['type']][$item['name_short']])) {
+        $exported_features_info[$item['type']][$item['name_short']] = $item;
+        // }
+      }
     }
     $exported_features_info['dependencies'] = !empty($this->package['info']['dependencies']) ? $this->package['info']['dependencies'] : array();
 
