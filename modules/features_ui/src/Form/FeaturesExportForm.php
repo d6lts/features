@@ -7,7 +7,6 @@
 
 namespace Drupal\features_ui\Form;
 
-use Drupal\Component\Utility\Xss;
 use Drupal\Component\Utility\SafeMarkup;
 use Drupal\features\FeaturesAssignerInterface;
 use Drupal\features\FeaturesGeneratorInterface;

@@ -9,7 +9,6 @@ namespace Drupal\features_ui\Form;
 
 use Drupal\Component\Utility\SafeMarkup;
 use Drupal\Component\Utility\Unicode;
-use Drupal\Component\Utility\Xss;
 use Drupal\features\FeaturesManagerInterface;
 use Drupal\features\FeaturesAssignerInterface;
 use Drupal\Core\Entity\EntityStorageInterface;
@@ -277,7 +276,7 @@ class AssignmentConfigureForm extends FormBase {
         '#default_value' => $enabled,
       );
 
-      $form['description'][$method_id] = array('#markup' => Xss::filterAdmin($method['description']));
+      $form['description'][$method_id] = array('#markup' => SafeMarkup::xssFilter($method['description']));
 
       $config_op = array();
       if (isset($method['config_route_name'])) {
