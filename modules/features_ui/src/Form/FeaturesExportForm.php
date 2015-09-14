@@ -8,6 +8,7 @@
 namespace Drupal\features_ui\Form;
 
 use Drupal\Component\Utility\SafeMarkup;
+use Drupal\Component\Utility\Xss;
 use Drupal\features\FeaturesAssignerInterface;
 use Drupal\features\FeaturesGeneratorInterface;
 use Drupal\features\FeaturesManagerInterface;
@@ -419,7 +420,7 @@ class FeaturesExportForm extends FormBase {
 
     $details = array(
       '#type' => 'details',
-      '#title' => SafeMarkup::xssFilter($package['description']),
+      '#title' => array('#markup' => $package['description']),
       '#description' => array('data' => $element['details']),
     );
     $element['details'] = array(

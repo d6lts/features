@@ -38,8 +38,14 @@ function theme_features_listing(array $variables) {
 
     // Add the module label and expand/collapse functionalty.
     $id = Html::getUniqueId('feature-' . $key);
-    $col2 = '<label id="' . $id . '" for="' . $element['enable']['#id'] . '" class="module-name table-filter-text-source">' . drupal_render($element['name']) . '</label>';
-    $row[] = array('class' => array('module'), 'data' => SafeMarkup::set($col2));
+    $col2 = SafeMarkup::format('<label id="@id" for="@for" class="module-name table-filter-text-source">@name</label>',
+      array(
+        '@id' => $id,
+        '@for' => $element['enable']['#id'],
+        '@name' => drupal_render($element['name']),
+      )
+    );
+    $row[] = array('class' => array('module'), 'data' => $col2);
 
     $row[] = array('class' => array('machine_name'), 'data' => drupal_render($element['machine_name']));
 
@@ -57,7 +63,7 @@ function theme_features_listing(array $variables) {
     */
     $details = array(
       '#type' => 'details',
-      '#title' => SafeMarkup::set('<span class="text"> ' . drupal_render($element['description']) . '</span>'),
+      '#title' => SafeMarkup::format('<span class="text">@desc</span>', array( '@desc' => drupal_render($element['description']))),
       '#attributes' => array('id' => $element['enable']['#id'] . '-description'),
       '#description' => $description,
     );

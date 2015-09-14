@@ -276,7 +276,7 @@ class AssignmentConfigureForm extends FormBase {
         '#default_value' => $enabled,
       );
 
-      $form['description'][$method_id] = array('#markup' => SafeMarkup::xssFilter($method['description']));
+      $form['description'][$method_id] = array('#markup' => $method['description']);
 
       $config_op = array();
       if (isset($method['config_route_name'])) {

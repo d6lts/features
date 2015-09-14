@@ -8,6 +8,7 @@
 namespace Drupal\features_ui\Form;
 
 use Drupal\Component\Utility\SafeMarkup;
+use Drupal\Component\Utility\Xss;
 use Drupal\features\FeaturesAssignerInterface;
 use Drupal\features\FeaturesGeneratorInterface;
 use Drupal\features\FeaturesManagerInterface;
@@ -365,8 +366,12 @@ class FeaturesEditForm extends FormBase {
     foreach ($export['components'] as $component => $component_info) {
 
       $component_items_count = count($component_info['options']['sources']);
-      $label = SafeMarkup::xssFilter($config_types[$component] .
-        ' (<span class="component-count">' . $component_items_count . '</span>)');
+      $label = SafeMarkup::format('@component (<span class="component-count">@count</span>)',
+        array(
+          '@component' => $config_types[$component],
+          '@count' => $component_items_count,
+        )
+      );
 
       $count = 0;
       foreach ($sections as $section) {
@@ -745,7 +750,7 @@ class FeaturesEditForm extends FormBase {
       }
       $value .= '  <span class="config-name">[' . t('in') . ' ' . SafeMarkup::checkPlain($package_name) . ']</span>';
     }
-    return SafeMarkup::xssFilter($value);
+    return Xss::filterAdmin($value);
   }
 
   /**
