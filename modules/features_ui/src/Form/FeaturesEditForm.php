@@ -508,7 +508,9 @@ class FeaturesEditForm extends FormBase {
         !empty($packages[$item['package']]) && ($packages[$item['package']]['status'] != FeaturesManagerInterface::STATUS_NO_EXPORT)) {
         $this->conflicts[$item['type']][$item['name_short']] = $item;
       }
-      if ($this->allowConflicts || !isset($this->conflicts[$item['type']][$item['name_short']]) || in_array($item_name, $this->package['config_orig'])) {
+      if ($this->allowConflicts
+        || !isset($this->conflicts[$item['type']][$item['name_short']])
+        || (!empty($this->package['config_orig']) && in_array($item_name, $this->package['config_orig']))) {
         $components[$item['type']][$item['name_short']] = $item;
       }
     }
