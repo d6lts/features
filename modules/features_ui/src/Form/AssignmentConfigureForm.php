@@ -260,7 +260,7 @@ class AssignmentConfigureForm extends FormBase {
 
       $form['weight'][$method_id] = array(
         '#type' => 'weight',
-        '#title' => $this->t('Weight for !title package assignment method', array('!title' => Unicode::strtolower($method_name))),
+        '#title' => $this->t('Weight for @title package assignment method', array('@title' => Unicode::strtolower($method_name))),
         '#title_display' => 'invisible',
         '#default_value' => $weight,
         '#attributes' => array('class' => array('assignment-method-weight')),
@@ -271,7 +271,7 @@ class AssignmentConfigureForm extends FormBase {
 
       $form['enabled'][$method_id] = array(
         '#type' => 'checkbox',
-        '#title' => $this->t('Enable !title package assignment method', array('!title' => Unicode::strtolower($method_name))),
+        '#title' => $this->t('Enable @title package assignment method', array('@title' => Unicode::strtolower($method_name))),
         '#title_display' => 'invisible',
         '#default_value' => $enabled,
       );

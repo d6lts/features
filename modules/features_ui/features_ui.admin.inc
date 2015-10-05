@@ -49,7 +49,7 @@ function theme_features_listing(array $variables) {
 
     $row[] = array('class' => array('machine_name'), 'data' => drupal_render($element['machine_name']));
 
-    $description = t('!details', array('!details' => drupal_render($element['details'])));
+    $description = t('@details', array('@details' => drupal_render($element['details'])));
     /*
     $links = '';
     foreach (array('help', 'permissions', 'configure') as $link_type) {

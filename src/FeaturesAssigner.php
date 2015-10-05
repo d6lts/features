@@ -290,7 +290,7 @@ class FeaturesAssigner implements FeaturesAssignerInterface {
       $bundle->setDescription($description);
     }
     else {
-      $bundle->setDescription(t('Auto-generated bundle from package !name', array('!name' => $name)));
+      $bundle->setDescription(t('Auto-generated bundle from package @name', array('@name' => $name)));
     }
     $bundle->save();
     $this->setBundle($bundle);

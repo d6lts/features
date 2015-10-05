@@ -109,7 +109,7 @@ class FeaturesDiffForm extends FormBase {
 
     $machine_name = '';
     if (!empty($featurename) && empty($packages[$featurename])) {
-      drupal_set_message(t('Feature !name does not exist.', array('!name' => $featurename)), 'error');
+      drupal_set_message(t('Feature @name does not exist.', array('@name' => $featurename)), 'error');
       return array();
     }
     elseif (!empty($featurename)) {
@@ -123,8 +123,8 @@ class FeaturesDiffForm extends FormBase {
     $header = array(
       'row' => array(
         'data' => !empty($machine_name)
-        ? t('Differences in !name', array('!name' => $machine_name))
-        : ($current_bundle->isDefault() ? t('All differences') : t('All differences in bundle: !bundle', array('!bundle' => $current_bundle->getName()))),
+        ? t('Differences in @name', array('@name' => $machine_name))
+        : ($current_bundle->isDefault() ? t('All differences') : t('All differences in bundle: @bundle', array('@bundle' => $current_bundle->getName()))),
       ),
     );
 
@@ -196,7 +196,7 @@ class FeaturesDiffForm extends FormBase {
         $item = $this->featuresManager->getConfigType($config_name);
         $this->configRevert->import($item['type'], $item['name_short']);
       }
-      drupal_set_message(t('Imported !name', array('!name' => $config_name)));
+      drupal_set_message(t('Imported @name', array('@name' => $config_name)));
     }
   }
 

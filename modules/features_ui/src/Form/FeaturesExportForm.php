@@ -197,7 +197,7 @@ class FeaturesExportForm extends FormBase {
         $form['actions'][$method_id] = array(
           '#type' => 'submit',
           '#name' => $method_id,
-          '#value' => $this->t('!name', array('!name' => $method['name'])),
+          '#value' => $this->t('@name', array('@name' => $method['name'])),
           '#attributes' => array(
             'title' => SafeMarkup::checkPlain($method['description']),
           ),

@@ -59,7 +59,7 @@ class AssignmentExcludeForm extends AssignmentFormBase {
       '#type' => 'checkbox',
       '#title' => t('Exclude module-provided entity configuration'),
       '#default_value' => $module_settings['enabled'],
-      '#description' => $this->t('Select this option to exclude from packaging any configuration that is provided by already enabled modules. Note that <a href="!url">simple configuration</a> will not be excluded as it is always module-provided.', array('!url' => 'http://www.drupal.org/node/1809490')),
+      '#description' => $this->t('Select this option to exclude from packaging any configuration that is provided by already enabled modules. Note that <a href=":url">simple configuration</a> will not be excluded as it is always module-provided.', array(':url' => 'http://www.drupal.org/node/1809490')),
       '#attributes' => array(
         'data-module-enabled' => 'status',
       ),

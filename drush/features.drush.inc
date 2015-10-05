@@ -155,16 +155,16 @@ function drush_features_status() {
     drush_print(dt('Current bundle: none'));
   }
   else {
-    drush_print(dt('Current bundle: !name (!machine_name)',
+    drush_print(dt('Current bundle: @name (@machine_name)',
       array(
-        '!name' => $current_bundle->getName(),
-        '!machine_name' => $current_bundle->getMachineName(),
+        '@name' => $current_bundle->getName(),
+        '@machine_name' => $current_bundle->getMachineName(),
       )));
   }
-  drush_print(dt('Export folder: !folder', array('!folder' => $export_settings['folder'])));
-  $dt_args = array('!methods' => implode(', ', array_keys($methods)));
+  drush_print(dt('Export folder: @folder', array('@folder' => $export_settings['folder'])));
+  $dt_args = array('@methods' => implode(', ', array_keys($methods)));
   drush_print(dt('The following assignment methods are enabled:'));
-  drush_print(dt('  !methods', $dt_args));
+  drush_print(dt('  @methods', $dt_args));
 
   if (!empty($args)) {
     $config = $manager->getConfigCollection();
@@ -266,8 +266,8 @@ function drush_features_export($packages = NULL) {
 
   if (empty($packages)) {
     $packages = $all_packages;
-    $dt_args = array('!modules' => implode(', ', $packages));
-    drush_print(dt('The following extensions will be exported: !modules', $dt_args));
+    $dt_args = array('@modules' => implode(', ', $packages));
+    drush_print(dt('The following extensions will be exported: @modules', $dt_args));
     if (!drush_confirm(dt('Do you really want to continue?'))) {
       return drush_user_abort('Aborting.');
     }
@@ -276,7 +276,7 @@ function drush_features_export($packages = NULL) {
   // If any packages exist, confirm before overwriting.
   if ($existing_packages = $manager->listPackageDirectories($packages, $current_bundle)) {
     foreach ($existing_packages as $name => $directory) {
-      drush_print(dt("The extension @name already exists at !directory.", array('@name' => $name, '!directory' => $directory)));
+      drush_print(dt("The extension @name already exists at @directory.", array('@name' => $name, '@directory' => $directory)));
     }
     // Apparently, format_plural is not always available.
     if (count($existing_packages) == 1) {
@@ -333,7 +333,7 @@ function drush_features_add() {
     // If any packages exist, confirm before overwriting.
     if ($existing_packages = $manager->listPackageDirectories($packages)) {
       foreach ($existing_packages as $name => $directory) {
-        drush_print(dt("The extension @name already exists at !directory.", array('@name' => $name, '!directory' => $directory)));
+        drush_print(dt("The extension @name already exists at @directory.", array('@name' => $name, '@directory' => $directory)));
       }
       // Apparently, format_plural is not always available.
       if (count($existing_packages) == 1) {
@@ -349,7 +349,7 @@ function drush_features_add() {
     else {
       $package = $manager->initPackage($module, $module, '');
       list($full_name, $path) = $manager->getExportInfo($package, $current_bundle);
-      drush_print(dt('Will create a new extension @name in !directory', array('@name' => $full_name, '!directory' => $path)));
+      drush_print(dt('Will create a new extension @name in @directory', array('@name' => $full_name, '@directory' => $path)));
       if (!drush_confirm(dt('Do you really want to continue?'))) {
         drush_die('Aborting.');
       }
@@ -486,7 +486,7 @@ function drush_features_diff() {
         $rows = explode("\n", $formatter->format($diff));
       }
       drush_print();
-      drush_print(dt("Config !name !message", array('!name' => $name, '!message' => $message)));
+      drush_print(dt("Config @name @message", array('@name' => $name, '@message' => $message)));
       if (!empty($extension)) {
         foreach ($rows as $row) {
           if (strpos($row, '>') === 0) {
@@ -747,9 +747,9 @@ function _drush_features_component_filter($all_components, $patterns = array(), 
           $matches = array($source_pattern);
         }
         else {
-          return drush_set_error('', dt('Ambiguous source "!source", matches !matches', array(
-            '!source' => $source_pattern,
-            '!matches' => implode(', ', $matches),
+          return drush_set_error('', dt('Ambiguous source "@source", matches @matches', array(
+            '@source' => $source_pattern,
+            '@matches' => implode(', ', $matches),
           )));
         }
       }
@@ -757,7 +757,7 @@ function _drush_features_component_filter($all_components, $patterns = array(), 
       $sources = array_values($matches);
     }
     else {
-      return drush_set_error('', dt('No !state sources match "!source"', array('!state' => $state_string, '!source' => $source_pattern)));
+      return drush_set_error('', dt('No @state sources match "@source"', array('@state' => $state_string, '@source' => $source_pattern)));
     }
 
     // Now find the components.
@@ -775,9 +775,9 @@ function _drush_features_component_filter($all_components, $patterns = array(), 
             $matches = array($component_pattern);
           }
           else {
-            return drush_set_error('', dt('Ambiguous component "!component", matches !matches', array(
-              '!component' => $component_pattern,
-              '!matches' => implode(', ', $matches),
+            return drush_set_error('', dt('Ambiguous component "@component", matches @matches', array(
+              '@component' => $component_pattern,
+              '@matches' => implode(', ', $matches),
             )));
           }
         }
@@ -790,10 +790,10 @@ function _drush_features_component_filter($all_components, $patterns = array(), 
         // No matches. If the source was a pattern, just carry on, else
         // error out. Allows for patterns like :*field*
         if ($preg_source_pattern[0] != '^') {
-          return drush_set_error('', dt('No !state !source components match "!component"', array(
-            '!state' => $state_string,
-            '!component' => $component_pattern,
-            '!source' => $source,
+          return drush_set_error('', dt('No @state @source components match "@component"', array(
+            '@state' => $state_string,
+            '@component' => $component_pattern,
+            '@source' => $source,
           )));
         }
       }

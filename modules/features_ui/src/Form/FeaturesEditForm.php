@@ -181,7 +181,7 @@ class FeaturesEditForm extends FormBase {
     );
     if (!$bundle->isDefault()) {
       $form['info']['name']['#description'] .= '<br/>' .
-        t('The namespace "!name_" will be prepended to the machine name', array('!name' => $bundle->getMachineName()));
+        t('The namespace "@name_" will be prepended to the machine name', array('@name' => $bundle->getMachineName()));
     }
 
     $form['info']['machine_name'] = array(
@@ -197,7 +197,7 @@ class FeaturesEditForm extends FormBase {
     );
     if (!$bundle->isDefault()) {
       $form['info']['machine_name']['#description'] .= '<br/>' .
-        t('NOTE: Do NOT include the namespace prefix "!name_"; it will be added automatically.', array('!name' => $bundle->getMachineName()));
+        t('NOTE: Do NOT include the namespace prefix "@name_"; it will be added automatically.', array('@name' => $bundle->getMachineName()));
     }
 
     $form['info']['description'] = array(
@@ -253,7 +253,7 @@ class FeaturesEditForm extends FormBase {
       $form['actions'][$method_id] = array(
         '#type' => 'submit',
         '#name' => $method_id,
-        '#value' => $this->t('!name', array('!name' => $method['name'])),
+        '#value' => $this->t('@name', array('@name' => $method['name'])),
         '#attributes' => array(
           'title' => SafeMarkup::checkPlain($method['description']),
         ),
