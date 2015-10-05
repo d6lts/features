@@ -497,12 +497,8 @@ class FeaturesManager implements FeaturesManagerInterface {
    */
   public function initCorePackage() {
     $machine_name = 'core';
-    // The name and description are added to the .info.yml files of generated
-    // features and so need to be cast as strings from the TranslatableMarkup
-    // objects returned by t() to avoid raising an InvalidDataTypeException
-    // on serialization.
-    $name = (string) $this->t('Core');
-    $description = (string) $this->t('Provide core components required by other features.');
+    $name = $this->t('Core');
+    $description = $this->t('Provide core components required by other features.');
     $this->initPackage($machine_name, $name, $description);
   }
 
@@ -710,6 +706,13 @@ class FeaturesManager implements FeaturesManagerInterface {
       if (empty($info['features'])) {
         $info['features'] = TRUE;
       }
+    }
+
+    // The name and description need to be cast as strings from the
+    // TranslatableMarkup objects returned by t() to avoid raising an
+    // InvalidDataTypeException on Yaml serialization.
+    foreach (array('name', 'description') as $key) {
+      $info[$key] = (string) $info[$key];
     }
 
     // Add profile-specific info data.
