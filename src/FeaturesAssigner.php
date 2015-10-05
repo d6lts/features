@@ -11,6 +11,7 @@ use Drupal\Component\Plugin\PluginManagerInterface;
 use Drupal\features\FeaturesManagerInterface;
 use Drupal\features\FeaturesBundle;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Config\StorageInterface;
 
 /**
@@ -76,14 +77,17 @@ class FeaturesAssigner implements FeaturesAssignerInterface {
    *    The features manager.
    * @param \Drupal\Component\Plugin\PluginManagerInterface $assigner_manager
    *   The package assignment methods plugin manager.
+   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
+   *   The entity manager.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
    *   The configuration factory.
    * @param \Drupal\Core\Config\StorageInterface $config_storage
    *   The configuration factory.
    */
-  public function __construct(FeaturesManagerInterface $features_manager, PluginManagerInterface $assigner_manager, ConfigFactoryInterface $config_factory, StorageInterface $config_storage) {
+  public function __construct(FeaturesManagerInterface $features_manager, PluginManagerInterface $assigner_manager, EntityManagerInterface $entity_manager, ConfigFactoryInterface $config_factory, StorageInterface $config_storage) {
     $this->featuresManager = $features_manager;
     $this->assignerManager = $assigner_manager;
+    $this->entityManager = $entity_manager;
     $this->configFactory = $config_factory;
     $this->configStorage = $config_storage;
     $this->bundles = $this->getBundleList();
@@ -166,6 +170,7 @@ class FeaturesAssigner implements FeaturesAssignerInterface {
       $instance = $this->assignerManager->createInstance($method_id, array());
       $instance->setFeaturesManager($this->featuresManager);
       $instance->setAssigner($this);
+      $instance->setEntityManager($this->entityManager);
       $this->methods[$method_id] = $instance;
     }
     return $this->methods[$method_id];

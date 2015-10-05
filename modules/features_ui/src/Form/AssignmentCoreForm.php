@@ -38,10 +38,17 @@ class AssignmentCoreForm extends AssignmentFormBase {
     $this->currentBundle = $this->assigner->loadBundle($bundle_name);
     $settings = $this->currentBundle->getAssignmentSettings(self::METHOD_ID);
 
-    $this->setTypeSelect($form, $settings['types'], $this->t('core'));
+    $this->setConfigTypeSelect($form, $settings['types']['config'], $this->t('core'));
     $this->setActions($form);
 
     return $form;
+  }
+
+ /**
+   * {@inheritdoc}
+   */
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+    $form_state->setValue('types', array_map('array_filter', $form_state->getValue('types')));
   }
 
   /**
@@ -49,8 +56,9 @@ class AssignmentCoreForm extends AssignmentFormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $settings = array(
-      'types' => array_filter($form_state->getValue('types')),
+      'types' => $form_state->getValue('types'),
     );
+
     $this->currentBundle->setAssignmentSettings(self::METHOD_ID, $settings)->save();
     $this->setRedirect($form_state);
 

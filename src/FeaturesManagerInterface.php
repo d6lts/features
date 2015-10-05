@@ -352,10 +352,13 @@ interface FeaturesManagerInterface {
   /**
    * Lists the types of configuration available on the site.
    *
+   * @param boolean $bundles_only
+   *   Whether to list only configuration types that provide bundles.
+   *
    * @return array
    *   An array with machine name keys and human readable values.
    */
-  public function listConfigTypes();
+  public function listConfigTypes($bundles_only = FALSE);
 
   /**
    * Lists stored configuration for a given configuration type.

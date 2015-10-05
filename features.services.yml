@@ -7,7 +7,7 @@ services:
     arguments: ['@container.namespaces', '@cache.discovery', '@module_handler']
   features_assigner:
     class: Drupal\features\FeaturesAssigner
-    arguments: ['@features.manager', '@plugin.manager.features_assignment_method', '@config.factory', '@config.storage']
+    arguments: ['@features.manager', '@plugin.manager.features_assignment_method', '@entity.manager', '@config.factory', '@config.storage']
     calls:
       - [initFeaturesManager]
   features_generator:

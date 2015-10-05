@@ -34,13 +34,13 @@ class FeaturesAssignmentBaseType extends FeaturesAssignmentMethodBase {
   public function assignPackages() {
     $current_bundle = $this->assigner->getBundle();
     $settings = $current_bundle->getAssignmentSettings(self::METHOD_ID);
-    $base_types = $settings['types'];
+    $config_base_types = $settings['types']['config'];
 
     $config_types = $this->featuresManager->listConfigTypes();
     $config_collection = $this->featuresManager->getConfigCollection();
 
     foreach ($config_collection as $item_name => $item) {
-      if (in_array($item['type'], $base_types)) {
+      if (in_array($item['type'], $config_base_types)) {
         if (!isset($packages[$item['name_short']]) && !isset($item['package'])) {
           $description = $this->t('Provide @label @type and related configuration.', array('@label' => $item['label'], '@type' => Unicode::strtolower($config_types[$item['type']])));
           if (isset($item['data']['description'])) {
@@ -55,6 +55,17 @@ class FeaturesAssignmentBaseType extends FeaturesAssignmentMethodBase {
           }
           $this->featuresManager->assignConfigDependents([$item_name]);
         }
+      }
+    }
+
+    $entity_types = $this->entityManager->getDefinitions();
+
+    $content_base_types = $settings['types']['content'];
+    foreach ($content_base_types as $entity_type_id) {
+      if (!isset($packages[$entity_type_id]) && isset($entity_types[$entity_type_id])) {
+        $label = $entity_types[$entity_type_id]->getLabel();
+        $description = $this->t('Provide @label related configuration.', array('@label' => $label));
+        $this->featuresManager->initPackage($entity_type_id, $label, $description);
       }
     }
   }

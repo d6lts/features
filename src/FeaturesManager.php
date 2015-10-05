@@ -813,11 +813,13 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function listConfigTypes() {
+  public function listConfigTypes($bundles_only = FALSE) {
     $definitions = [];
     foreach ($this->entityManager->getDefinitions() as $entity_type => $definition) {
       if ($definition->isSubclassOf('Drupal\Core\Config\Entity\ConfigEntityInterface')) {
-        $definitions[$entity_type] = $definition;
+        if (!$bundles_only || $definition->getBundleOf()) {
+          $definitions[$entity_type] = $definition;
+        }
       }
     }
     $entity_types = array_map(function (EntityTypeInterface $definition) {
@@ -825,7 +827,7 @@ class FeaturesManager implements FeaturesManagerInterface {
     }, $definitions);
     // Sort the entity types by label, then add the simple config to the top.
     uasort($entity_types, 'strnatcasecmp');
-    return [
+    return $bundles_only ? $entity_types : [
       FeaturesManagerInterface::SYSTEM_SIMPLE_CONFIG => $this->t('Simple configuration'),
     ] + $entity_types;
   }

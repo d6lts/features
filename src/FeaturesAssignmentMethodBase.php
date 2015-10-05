@@ -9,6 +9,7 @@ namespace Drupal\features;
 
 use Drupal\features\FeaturesManagerInterface;
 use Drupal\features\FeaturesAssignerInterface;
+use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 
 /**
@@ -32,6 +33,13 @@ abstract class FeaturesAssignmentMethodBase implements FeaturesAssignmentMethodI
   protected $assigner;
 
   /**
+   * The entity manager.
+   *
+   * @var \Drupal\Core\Entity\EntityManagerInterface
+   */
+  protected $entityManager;
+
+  /**
    * {@inheritdoc}
    */
   public function setfeaturesManager(FeaturesManagerInterface $features_manager) {
@@ -43,6 +51,13 @@ abstract class FeaturesAssignmentMethodBase implements FeaturesAssignmentMethodI
    */
   public function setAssigner(FeaturesAssignerInterface $assigner) {
     $this->assigner = $assigner;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setEntityManager(EntityManagerInterface $entity_manager) {
+    $this->entityManager = $entity_manager;
   }
 
 }

@@ -39,7 +39,7 @@ class AssignmentExcludeForm extends AssignmentFormBase {
     $this->currentBundle = $this->assigner->loadBundle($bundle_name);
 
     $settings = $this->currentBundle->getAssignmentSettings(self::METHOD_ID);
-    $this->setTypeSelect($form, $settings['types'], $this->t('exclude'));
+    $this->setConfigTypeSelect($form, $settings['types']['config'], $this->t('exclude'));
 
     $module_settings = $settings['module'];
     $curated_settings = $settings['curated'];
@@ -95,11 +95,18 @@ class AssignmentExcludeForm extends AssignmentFormBase {
     return $form;
   }
 
+ /**
+   * {@inheritdoc}
+   */
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+    $form_state->setValue('types', array_map('array_filter', $form_state->getValue('types')));
+  }
+
   /**
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $types = array_filter($form_state->getValue('types'));
+    $types = $form_state->getValue('types');
     $curated = $form_state->getValue('curated');
     $module = $form_state->getValue('module');
     $settings = array(

@@ -38,7 +38,14 @@ class AssignmentBaseForm extends AssignmentFormBase {
     $this->currentBundle = $this->assigner->loadBundle($bundle_name);
     $settings = $this->currentBundle->getAssignmentSettings(self::METHOD_ID);
 
-    $this->setTypeSelect($form, $settings['types'], $this->t('base'));
+    // Pass the last argument to limit the select to config entity types that
+    // provide bundles for other entity types.
+    $this->setConfigTypeSelect($form, $settings['types']['config'], $this->t('base'), TRUE);
+    // Pass the last argument to limit the select to content entity types do
+    // not have config entity provided bundles, thus avoiding duplication with
+    // the config type select options.
+    $this->setContentTypeSelect($form, $settings['types']['content'], $this->t('base'), TRUE);
+
     $this->setActions($form);
 
     return $form;
@@ -47,10 +54,18 @@ class AssignmentBaseForm extends AssignmentFormBase {
   /**
    * {@inheritdoc}
    */
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+    $form_state->setValue('types', array_map('array_filter', $form_state->getValue('types')));
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $settings = array(
-      'types' => array_filter($form_state->getValue('types')),
+      'types' => $form_state->getValue('types'),
     );
+
     $this->currentBundle->setAssignmentSettings(self::METHOD_ID, $settings)->save();
     $this->setRedirect($form_state);
 
