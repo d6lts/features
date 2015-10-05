@@ -1126,7 +1126,7 @@ function _features_remove_ignores(&$item, $ignore_keys, $level = -1) {
   if (!is_array($item) && !is_object($item)) {
     return;
   }
-  foreach ($item as $key => $value) {
+  foreach ($item as $key => &$value) {
     if (isset($ignore_keys[$key]) && ($ignore_keys[$key] == $level)) {
       if ($is_object) {
         unset($item->$key);
@@ -1139,6 +1139,7 @@ function _features_remove_ignores(&$item, $ignore_keys, $level = -1) {
       _features_remove_ignores($value, $ignore_keys, $level+1);
     }
   }
+  unset($value);
 }
 
 /**

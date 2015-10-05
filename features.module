@@ -1332,6 +1332,9 @@ function features_features_ignore($component) {
     case 'field':
       $ignores['locked'] = 1;
       break;
+    case 'field_base':
+      $ignores['indexes'] = 0;
+      break;
   }
   return $ignores;
 }
