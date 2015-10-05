@@ -945,10 +945,12 @@ class FeaturesManager implements FeaturesManagerInterface {
             if (!isset($dependents[$config_name])) {
               $dependents[$config_name] = $config_name;
             }
-            // Grab the dependent graph paths.
-            foreach ($item['reverse_paths'] as $dependent_name => $value) {
-              if ($value && !isset($dependents[$dependent_name])) {
-                $dependents[$dependent_name] = $dependent_name;
+            // Grab any dependent graph paths.
+            if (isset($item['reverse_paths'])) {
+              foreach ($item['reverse_paths'] as $dependent_name => $value) {
+                if ($value && !isset($dependents[$dependent_name])) {
+                  $dependents[$dependent_name] = $dependent_name;
+                }
               }
             }
           }
