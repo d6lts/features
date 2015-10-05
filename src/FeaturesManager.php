@@ -946,7 +946,7 @@ class FeaturesManager implements FeaturesManagerInterface {
               $dependents[$config_name] = $config_name;
             }
             // Grab the dependent graph paths.
-            foreach ($item['paths'] as $dependent_name => $value) {
+            foreach ($item['reverse_paths'] as $dependent_name => $value) {
               if ($value && !isset($dependents[$dependent_name])) {
                 $dependents[$dependent_name] = $dependent_name;
               }
