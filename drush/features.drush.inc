@@ -266,7 +266,7 @@ function drush_features_export($packages = NULL) {
 
   if (empty($packages)) {
     $packages = $all_packages;
-    $dt_args = array('@modules' => implode(', ', $packages));
+    $dt_args = array('@modules' => implode(', ', array_keys($packages)));
     drush_print(dt('The following extensions will be exported: @modules', $dt_args));
     if (!drush_confirm(dt('Do you really want to continue?'))) {
       return drush_user_abort('Aborting.');
