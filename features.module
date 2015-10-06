@@ -279,9 +279,7 @@ function features_flush_caches() {
     }
   }
 
-  // The update to add the table needs to have run.
-  include_once DRUPAL_ROOT . '/includes/install.inc';
-  if (drupal_get_installed_schema_version('features') >= 7200) {
+  if (db_table_exists('cache_features')) {
     return array('cache_features');
   }
   return array();
