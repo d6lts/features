@@ -205,6 +205,8 @@ class FeaturesExportForm extends FormBase {
       }
     }
 
+    $form['#pre_render'][] = array(get_class($this), 'preRenderHideUnpackagedCheckbox');
+
     return $form;
   }
 
@@ -453,6 +455,20 @@ class FeaturesExportForm extends FormBase {
         $packages['unpackaged']['config'][] = $item_name;
       }
     }
+  }
+
+  /**
+   * Denies access to the checkbox for the "unpackaged" pseudo-package.
+   *
+   * @param array $form
+   *   The form build array to alter.
+   *
+   * @return array
+   *   The form build array.
+   */
+  public static function preRenderHideUnpackagedCheckbox(array $form) {
+    $form['preview']['unpackaged']['#access'] = FALSE;
+    return $form;
   }
 
   /**
