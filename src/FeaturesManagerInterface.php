@@ -236,11 +236,13 @@ interface FeaturesManagerInterface {
    *   Human readable name of the package.
    * @param string $description
    *   Description of the package.
+   * @param string $type
+   *   The package type: 'module' or 'profile'.
    *
    * @return array
    *   The created package array.
    */
-  public function initPackage($machine_name, $name = NULL, $description = '');
+  public function initPackage($machine_name, $name = NULL, $description = '', $type = 'module');
 
   /**
    * Initializes a configuration package using module info data.

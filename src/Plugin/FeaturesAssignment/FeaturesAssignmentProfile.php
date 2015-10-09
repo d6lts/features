@@ -41,7 +41,7 @@ class FeaturesAssignmentProfile extends FeaturesAssignmentMethodBase {
     if ($current_bundle->isProfile() && !isset($package_directories[$profile_name])) {
       // Ensure the profile package exists.
       if (empty($profile_package)) {
-        $this->featuresManager->initPackage($profile_name);
+        $this->featuresManager->initPackage($profile_name, $current_bundle->getName(), $current_bundle->getDescription(), 'profile');
       }
       // Add configuration from the Standard profile.
       $config_collection = $this->featuresManager->getConfigCollection();
@@ -51,9 +51,19 @@ class FeaturesAssignmentProfile extends FeaturesAssignmentMethodBase {
       foreach ($item_names as $item_name) {
         // If the configuration is present on the site, assign it.
         if (isset($config_collection[$item_name])) {
-          $this->featuresManager->assignConfigPackage($profile_name, [$item_name]);
-          // Reload the profile to refresh the config array after the addition.
-          $profile_package = $this->featuresManager->getPackage($profile_name);
+          // Only assign it if it's not already assigned to a package.
+          if (empty($config_collection[$item_name]['package'])) {
+            $this->featuresManager->assignConfigPackage($profile_name, [$item_name]);
+            // Reload the profile to refresh the config array after the addition.
+            $profile_package = $this->featuresManager->getPackage($profile_name);
+          }
+          // If it's already assigned, add a dependency.
+          else {
+            $machine_name = $current_bundle->getFullName($config_collection[$item_name]['package']);
+            if (!in_array($machine_name, $config_collection[$item_name]['dependencies'])) {
+              $config_collection[$item_name]['dependencies'][] = $machine_name;
+            }
+          }
         }
         // Otherwise, copy it over from Standard.
         else {

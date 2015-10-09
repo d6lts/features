@@ -102,14 +102,6 @@ class FeaturesGenerationArchive extends FeaturesGenerationMethodBase {
 
     $archiver = new ArchiveTar($archive_name);
 
-    // Add the Profile.
-    if (isset($bundle) && $bundle->isProfile()) {
-      $profile_package = $this->featuresManager->getPackage($bundle->getProfileName());
-      if (!empty($profile_package)) {
-        $this->generatePackage($return, $profile_package, $archiver);
-      }
-    }
-
     // Add package files.
     foreach ($packages as $package) {
       if (count($packages) == 1) {

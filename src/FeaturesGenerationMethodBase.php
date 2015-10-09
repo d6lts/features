@@ -85,20 +85,17 @@ abstract class FeaturesGenerationMethodBase implements FeaturesGenerationMethodI
 
     foreach ($packages as &$package) {
       list($full_name, $path) = $this->featuresManager->getExportInfo($package, $bundle);
-      $package['directory'] = $path . '/' . $full_name;
+      $package['directory'] = $path;
+
+      // If this is the profile, its directory is already assigned.
+      if (!isset($bundle) || !$bundle->isProfilePackage($package['machine_name'])) {
+        $package['directory'] .= '/' . $full_name;
+      }
+
       $this->preparePackage($package, $existing_packages, $bundle);
     }
     // Clean up the $package pass by reference.
     unset($package);
-
-    if (isset($bundle) && $bundle->isProfile()) {
-      $profile_name = $bundle->getProfileName();
-      $profile_package = $this->featuresManager->getPackage($profile_name);
-      if (isset($profile_package)) {
-        $package['directory'] = 'profiles/' . $profile_name;
-        $this->preparePackage($profile_package, $existing_packages, $bundle);
-      }
-    }
   }
 
   /**

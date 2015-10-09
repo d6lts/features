@@ -70,14 +70,6 @@ class FeaturesGenerationWrite extends FeaturesGenerationMethodBase {
 
     $return = [];
 
-    // Add profile files.
-    if (isset($bundle) && $bundle->isProfile()) {
-      $profile_package = $this->featuresManager->getPackage($bundle->getProfileName());
-      if (!empty($profile_package)) {
-        $this->generatePackage($return, $profile_package);
-      }
-    }
-
     // Add package files.
     // We need to update the system.module.files state because it's cached.
     // Cannot just call system_rebuild_module_data() because $listing->scan() has

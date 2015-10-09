@@ -126,7 +126,38 @@ class FeaturesGenerator implements FeaturesGeneratorInterface {
    * {@inheritdoc}
    */
   public function generatePackages($method_id, array $package_names = array(), FeaturesBundleInterface $bundle = NULL) {
+    $this->setPackageBundleNames($package_names, $bundle);
     return $this->generate($method_id, $package_names, $bundle);
+  }
+
+  /**
+   * Adds the optional bundle prefix to package machine names.
+   *
+   * @param string[] &$package_names
+   *   Array of package names, passed by reference.
+   * @param \Drupal\features\FeaturesBundleInterface $bundle
+   *   The optional bundle used for the generation.  Used to generate profiles.
+   */
+  protected function setPackageBundleNames(array &$package_names, FeaturesBundleInterface $bundle = NULL) {
+    if ($bundle && !$bundle->isDefault()) {
+      $new_package_names = [];
+      // Assign the selected bundle to the exports.
+      $packages = $this->featuresManager->getPackages();
+      foreach ($package_names as $package_name) {
+        // Rename package to use bundle prefix.
+        $package = $packages[$package_name];
+        // The install profile doesn't need renaming.
+        if ($package['type'] != 'profile') {
+          unset($packages[$package_name]);
+          $package['machine_name'] = $bundle->getFullName($package['machine_name']);
+          $package['bundle'] = $bundle->getMachineName();
+          $packages[$package['machine_name']] = $package;
+        }
+        $new_package_names[] = $package['machine_name'];
+      }
+      $this->featuresManager->setPackages($packages);
+      $package_names = $new_package_names;
+    }
   }
 
   /**

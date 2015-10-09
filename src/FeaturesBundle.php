@@ -184,7 +184,7 @@ class FeaturesBundle implements FeaturesBundleInterface {
    * {@inheritdoc}
    */
   public function getShortName($machine_name) {
-    if ($this->inBundle($machine_name)) {
+    if (!$this->isProfilePackage($machine_name) && $this->inBundle($machine_name)) {
       return substr($machine_name, strlen($this->getMachineName()) + 1, strlen($machine_name) - strlen($this->getMachineName()) - 1);
     }
     return $machine_name;
@@ -194,7 +194,14 @@ class FeaturesBundle implements FeaturesBundleInterface {
    * {@inheritdoc}
    */
   public function inBundle($machine_name) {
-    return (strpos($machine_name, $this->machineName . '_') === 0);
+    return ($this->isProfilePackage($machine_name) || strpos($machine_name, $this->machineName . '_') === 0);
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function isProfilePackage($machine_name) {
+    return ($this->isProfile() && $machine_name == $this->getProfileName());
   }
 
   /**

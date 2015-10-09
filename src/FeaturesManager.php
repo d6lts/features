@@ -249,7 +249,6 @@ class FeaturesManager implements FeaturesManagerInterface {
    */
   public function savePackage(array &$package) {
     if (!empty($package['machine_name'])) {
-      $this->addPackageFiles($package);
       $this->packages[$package['machine_name']] = $package;
     }
   }
@@ -472,9 +471,9 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function initPackage($machine_name, $name = NULL, $description = '') {
+  public function initPackage($machine_name, $name = NULL, $description = '', $type = 'module') {
     if (!isset($this->packages[$machine_name])) {
-      return $this->packages[$machine_name] = $this->getProject($machine_name, $name, $description);
+      return $this->packages[$machine_name] = $this->getProject($machine_name, $name, $description, $type);
     }
     return NULL;
   }
@@ -751,15 +750,12 @@ class FeaturesManager implements FeaturesManagerInterface {
     $config_collection = $this->getConfigCollection();
     // Ensure the directory reflects the current full machine name.
     $package['directory'] = $package['machine_name'];
-    // Clean out previous files.
-    unset($package['files']);
     // Only add files if there is at least one piece of configuration
     // present.
     if (!empty($package['config'])) {
       // Add .info.yml files.
-      if ($package['type'] == 'module') {
-        $this->addInfoFile($package);
-      }
+      $this->addInfoFile($package);
+
       // Add configuration files.
       foreach ($package['config'] as $name) {
         $config = $config_collection[$name];
@@ -988,17 +984,20 @@ class FeaturesManager implements FeaturesManagerInterface {
 
     $full_name = $package['machine_name'];
 
+    $path = '';
+
+    // Adjust export directory to be in profile.
     if (isset($bundle) && $bundle->isProfile()) {
-      // Adjust export directory to be in profile.
-      $path = 'profiles/' . $bundle->getProfileName() . '/modules';
-    }
-    else {
-      $path = 'modules';
+      $path .= 'profiles/' . $bundle->getProfileName();
     }
 
-    $export_settings = $this->getExportSettings();
-    if (!empty($export_settings['folder'])) {
-      $path .= '/' . $export_settings['folder'];
+    // If this is not the profile package, nest the directory.
+    if (!isset($bundle) || !$bundle->isProfilePackage($package['machine_name'])) {
+      $path .= '/modules';
+      $export_settings = $this->getExportSettings();
+      if (!empty($export_settings['folder'])) {
+        $path .= '/' . $export_settings['folder'];
+      }
     }
 
     return array($full_name, $path);

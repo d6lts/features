@@ -422,7 +422,7 @@ class FeaturesExportForm extends FormBase {
 
     $details = array(
       '#type' => 'details',
-      '#title' => array('#markup' => $package['description']),
+      '#title' => array('#markup' => Xss::filterAdmin($package['description'])),
       '#description' => array('data' => $element['details']),
     );
     $element['details'] = array(
@@ -483,20 +483,6 @@ class FeaturesExportForm extends FormBase {
     if (empty($package_names)) {
       drupal_set_message(t('Please select one or more packages to export.'), 'warning');
       return;
-    }
-
-    if (!$current_bundle->isDefault()) {
-      // Assign the selected bundle to the exports.
-      $packages = $this->featuresManager->getPackages();
-      foreach ($package_names as $index => $package_name) {
-        // Rename package to use bundle prefix.
-        $package = $packages[$package_name];
-        unset($packages[$package_name]);
-        $package['machine_name'] = $current_bundle->getFullName($package['machine_name']);
-        $package['bundle'] = $current_bundle->getMachineName();
-        $this->featuresManager->savePackage($package);
-        $package_names[$index] = $package['machine_name'];
-      }
     }
 
     $method_id = NULL;

@@ -80,12 +80,23 @@ interface FeaturesBundleInterface {
    * Determines if the $machine_name is prefixed by the bundle machine name.
    *
    * @param string $machine_name
-   *   The machine name of a bundle.
+   *   The machine name of a package.
    *
    * @return bool
    *   TRUE if the machine name is prefixed by the bundle machine name.
    */
   public function inBundle($machine_name);
+
+  /**
+   * Determines if the package with $machine_name is the bundle profile.
+   *
+   * @param string $machine_name
+   *   The machine name of a package.
+   *
+   * @return bool
+   *   TRUE if the machine name is prefixed by the bundle machine name.
+   */
+  public function isProfilePackage($machine_name);
 
   /**
    * Gets the description of a bundle.
