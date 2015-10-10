@@ -154,6 +154,8 @@ class AssignmentConfigureForm extends FormBase {
     $form = array(
       '#attached' => array(
         'library' => array(
+          // Provides the copyFieldValue behavior invoked below.
+          'system/drupal.system',
           'features_ui/drupal.features_ui.admin',
         ),
       ),
@@ -229,8 +231,11 @@ class AssignmentConfigureForm extends FormBase {
       ),
     );
 
-    $show_if_profile_checked = array(
+    $show_and_require_if_profile_checked = array(
       'visible' => array(
+        ':input[data-add-profile="status"]' => array('checked' => TRUE),
+      ),
+      'required' => array(
         ':input[data-add-profile="status"]' => array('checked' => TRUE),
       ),
     );
@@ -241,9 +246,14 @@ class AssignmentConfigureForm extends FormBase {
       '#default_value' => $current_bundle->isProfile() ? $current_bundle->getProfileName() : '',
       '#description' => $this->t('The machine name (directory name) of your profile.'),
       '#size' => 30,
-      // Show only if the profile.add option is selected.
-      '#states' => $show_if_profile_checked,
+      // Show and require only if the profile.add option is selected.
+      '#states' => $show_and_require_if_profile_checked,
     );
+
+    // Attach the copyFieldValue behavior to the profile_name field. In
+    // practice this only works if a user tabs through the bundle machine name
+    // field or manually edits it.
+    $form['#attached']['drupalSettings']['copyFieldValue']['edit-bundle-machine-name'] = ['edit-bundle-profile-name'];
 
     foreach ($methods_weight as $method_id => $weight) {
 
@@ -309,6 +319,16 @@ class AssignmentConfigureForm extends FormBase {
    */
   public function updateForm($form, FormStateInterface $form_state) {
     return $form;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function validateForm(array &$form, FormStateInterface $form_state) {
+    if ($form_state->getValue(array('bundle', 'is_profile')) && empty($form_state->getValue(array('bundle', 'profile_name')))) {
+      $form_state->setErrorByName('bundle][profile_name', $this->t('To create a profile, please enter a profile name.'));
+    }
+
   }
 
   /**
