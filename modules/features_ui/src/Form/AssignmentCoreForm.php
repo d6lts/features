@@ -18,13 +18,6 @@ class AssignmentCoreForm extends AssignmentFormBase {
   const METHOD_ID = 'core';
 
   /**
-   * Currently active bundle.
-   *
-   * @var \Drupal\features\FeaturesBundleInterface
-   */
-  protected $currentBundle;
-
-  /**
    * {@inheritdoc}
    */
   public function getFormId() {

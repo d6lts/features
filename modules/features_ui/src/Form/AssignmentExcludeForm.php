@@ -19,13 +19,6 @@ class AssignmentExcludeForm extends AssignmentFormBase {
   const METHOD_ID = 'exclude';
 
   /**
-   * Currently active bundle.
-   *
-   * @var \Drupal\features\FeaturesBundleInterface
-   */
-  protected $currentBundle;
-
-  /**
    * {@inheritdoc}
    */
   public function getFormId() {
