@@ -81,7 +81,8 @@ class FeaturesGenerationArchive extends FeaturesGenerationMethodBase {
    * {@inheritdoc}
    */
   public function generate(array $packages = array(), FeaturesBundleInterface $bundle = NULL) {
-    $filename = isset($bundle) ? $bundle->getMachineName() : 'features_archive';
+    $filename = (isset($bundle) && $bundle->isProfile()) ? $bundle->getProfileName() : 'generated_features';
+
     // If no packages were specified, get all packages.
     if (empty($packages)) {
       $packages = $this->featuresManager->getPackages();
@@ -93,7 +94,6 @@ class FeaturesGenerationArchive extends FeaturesGenerationMethodBase {
 
     $return = [];
 
-    $filename = (isset($bundle) && $bundle->isProfile()) ? $bundle->getProfileName() : $filename;
     $this->archiveName = $filename . '.tar.gz';
     $archive_name = file_directory_temp() . '/' . $this->archiveName;
     if (file_exists($archive_name)) {
