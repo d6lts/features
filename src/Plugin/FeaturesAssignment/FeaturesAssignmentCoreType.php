@@ -32,27 +32,10 @@ class FeaturesAssignmentCoreType extends FeaturesAssignmentMethodBase {
    * {@inheritdoc}
    */
   public function assignPackages() {
-    $current_bundle = $this->assigner->getBundle();
-    $settings = $current_bundle->getAssignmentSettings(self::METHOD_ID);
-    $core_types = $settings['types']['config'];
-
-    $config_collection = $this->featuresManager->getConfigCollection();
-
-    $initialized = FALSE;
-    foreach ($config_collection as $item_name => $item) {
-      if (in_array($item['type'], $core_types) && !isset($item['package'])) {
-        if (!$initialized) {
-          $this->featuresManager->initCorePackage();
-          $initialized = TRUE;
-        }
-        try {
-          $this->featuresManager->assignConfigPackage('core', [$item_name]);
-        }
-        catch (\Exception $exception) {
-          \Drupal::logger('features')->error($exception->getMessage());
-        }
-      }
-    }
+    $machine_name = 'core';
+    $name = $this->t('Core');
+    $description = $this->t('Provide core components required by other features.');
+    $this->assignPackageByConfigTypes(self::METHOD_ID, $machine_name, $name, $description);
   }
 
 }

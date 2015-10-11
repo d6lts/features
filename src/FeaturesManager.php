@@ -494,16 +494,6 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function initCorePackage() {
-    $machine_name = 'core';
-    $name = $this->t('Core');
-    $description = $this->t('Provide core components required by other features.');
-    $this->initPackage($machine_name, $name, $description);
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function assignConfigPackage($package_name, array $item_names, $force = FALSE) {
     $config_collection = $this->getConfigCollection();
 

@@ -60,4 +60,32 @@ abstract class FeaturesAssignmentMethodBase implements FeaturesAssignmentMethodI
     $this->entityManager = $entity_manager;
   }
 
+  /**
+   * Creates a package and assigns it configuration of the types specified in
+   * a setting.
+   */
+  protected function assignPackageByConfigTypes($method_id, $machine_name, $name, $description) {
+    $current_bundle = $this->assigner->getBundle();
+    $settings = $current_bundle->getAssignmentSettings($method_id);
+    $types = $settings['types']['config'];
+
+    $config_collection = $this->featuresManager->getConfigCollection();
+
+    $initialized = FALSE;
+    foreach ($config_collection as $item_name => $item) {
+      if (in_array($item['type'], $types) && !isset($item['package'])) {
+        if (!$initialized) {
+          $this->featuresManager->initPackage($machine_name, $name, $description);
+          $initialized = TRUE;
+        }
+        try {
+          $this->featuresManager->assignConfigPackage($machine_name, [$item_name]);
+        }
+        catch (\Exception $exception) {
+          \Drupal::logger('features')->error($exception->getMessage());
+        }
+      }
+    }
+  }
+
 }

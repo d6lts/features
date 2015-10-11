@@ -296,11 +296,6 @@ interface FeaturesManagerInterface {
   public function listPackageDirectories(array $machine_names = array(), FeaturesBundleInterface $bundle = NULL);
 
   /**
-   * Initializes a "core" configuration package.
-   */
-  public function initCorePackage();
-
-  /**
    * Assigns a set of configuration items to a given package or profile.
    *
    * @param string $package_name
