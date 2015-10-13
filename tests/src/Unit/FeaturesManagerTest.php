@@ -26,7 +26,7 @@ class FeaturesManagerTest extends UnitTestCase {
    * {@inheritdoc}
    */
   public function setUp() {
-    $entity_type = $this->getMock('\Drupal\Core\Entity\EntityTypeInterface');
+    $entity_type = $this->getMock('\Drupal\Core\Config\Entity\ConfigEntityTypeInterface');
     $entity_type->expects($this->any())
       ->method('getConfigPrefix')
       ->willReturn('custom');
