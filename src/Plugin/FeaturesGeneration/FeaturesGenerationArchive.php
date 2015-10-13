@@ -156,7 +156,7 @@ class FeaturesGenerationArchive extends FeaturesGenerationMethodBase {
       // Archive writing doesn't merit a message, and if done through the UI
       // would appear on the subsequent page load.
       'display' => FALSE,
-      'message' => $this->t('@type @package written to archive.'),
+      'message' => '@type @package written to archive.',
       'variables' => [
         '@type' => $type,
         '@package' => $package['name']
@@ -183,7 +183,7 @@ class FeaturesGenerationArchive extends FeaturesGenerationMethodBase {
       // Archive writing doesn't merit a message, and if done through the UI
       // would appear on the subsequent page load.
       'display' => FALSE,
-      'message' => $this->t('@type @package not written to archive. Error: @error.'),
+      'message' => '@type @package not written to archive. Error: @error.',
       'variables' => [
         '@type' => $type,
         '@package' => $package['name'],

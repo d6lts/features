@@ -130,7 +130,7 @@ class FeaturesGenerationWrite extends FeaturesGenerationMethodBase {
     $return[] = [
       'success' => TRUE,
       'display' => TRUE,
-      'message' => $this->t('@type @package written to @directory.'),
+      'message' => '@type @package written to @directory.',
       'variables' => [
         '@type' => $type,
         '@package' => $package['name'],
@@ -156,7 +156,7 @@ class FeaturesGenerationWrite extends FeaturesGenerationMethodBase {
     $return[] = [
       'success' => FALSE,
       'display' => TRUE,
-      'message' => $this->t('@type @package not written to @directory. Error: @error.'),
+      'message' => '@type @package not written to @directory. Error: @error.',
       'variables' => [
         '@type' => $type,
         '@package' => $package['name'],
