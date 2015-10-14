@@ -170,10 +170,10 @@ function field_base_features_export_render($module, $data, $export = NULL) {
       $field_identifier = features_var_export($identifier);
       if (features_field_export_needs_wrap($field_prefix, $field_identifier)) {
         $code[] = rtrim($field_prefix);
-        $code[] = "  // {$field_identifier}";
+        $code[] = "  // {$field_identifier}.";
       }
       else {
-        $code[] = $field_prefix . $field_identifier;
+        $code[] = $field_prefix . $field_identifier . '.';
       }
       $code[] = "  \$field_bases[{$field_identifier}] = {$field_export};";
       $code[] = "";
@@ -201,10 +201,10 @@ function field_instance_features_export_render($module, $data, $export = NULL) {
       $instance_identifier = features_var_export($identifier);
       if (features_field_export_needs_wrap($instance_prefix, $instance_identifier)) {
         $code[] = rtrim($instance_prefix);
-        $code[] = "  // {$instance_identifier}";
+        $code[] = "  // {$instance_identifier}.";
       }
       else {
-        $code[] = $instance_prefix . $instance_identifier;
+        $code[] = $instance_prefix . $instance_identifier . '.';
       }
       $code[] = "  \$field_instances[{$instance_identifier}] = {$field_export};";
       $code[] = "";
@@ -572,5 +572,6 @@ function features_field_load($identifier) {
  * @see https://www.drupal.org/node/1354
  */
 function features_field_export_needs_wrap($prefix, $identifier) {
-  return (strlen($prefix) + strlen($identifier) > 80);
+  // Check for 79 characters, since the comment ends with a full stop.
+  return (strlen($prefix) + strlen($identifier) > 79);
 }
