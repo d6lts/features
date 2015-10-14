@@ -11,6 +11,7 @@ core:
       field_storage_config: field_storage_config
       entity_form_mode: entity_form_mode
       image_style: image_style
+      user_role: user_role
       entity_view_mode: entity_view_mode
 exclude:
   types:
