@@ -21,3 +21,5 @@ exclude:
     enabled: 1
     profile: 1
     namespace: 1
+optional:
+    config: {  }

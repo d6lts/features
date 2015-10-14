@@ -6,6 +6,7 @@ assignment:
     - exclude
     - existing
     - namespace
+    - optional
     - packages
     - profile
   method_weights:
@@ -15,6 +16,7 @@ assignment:
     exclude: -8
     existing: -10
     namespace: 0
+    optional: 0
     packages: -20
     profile: -5
 export:

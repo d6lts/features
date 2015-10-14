@@ -63,6 +63,15 @@ abstract class FeaturesAssignmentMethodBase implements FeaturesAssignmentMethodI
   /**
    * Creates a package and assigns it configuration of the types specified in
    * a setting.
+   *
+   * @param string $method_id
+   *   The ID of an assignment method.
+   * @param string $machine_name
+   *   Machine name of the package to be created.
+   * @param string $name
+   *   Machine name of the package to be created.
+   * @param string $description
+   *   Machine name of the package to be created.
    */
   protected function assignPackageByConfigTypes($method_id, $machine_name, $name, $description) {
     $current_bundle = $this->assigner->getBundle();
@@ -86,6 +95,30 @@ abstract class FeaturesAssignmentMethodBase implements FeaturesAssignmentMethodI
         }
       }
     }
+  }
+
+  /**
+   * Assigns a given subdirectory to configuration of specified types.
+   *
+   * @param string $method_id
+   *   The ID of an assignment method.
+   * @param string $subdirectory
+   *   The subdirectory that designated configuration should be exported to.
+   */
+  protected function assignSubdirectoryByConfigTypes($method_id, $subdirectory) {
+    $current_bundle = $this->assigner->getBundle();
+    $settings = $current_bundle->getAssignmentSettings($method_id);
+    $types = $settings['types']['config'];
+
+    $config_collection = $this->featuresManager->getConfigCollection();
+
+    foreach ($config_collection as &$item) {
+      if (in_array($item['type'], $types)) {
+        $item['subdirectory'] = $subdirectory;
+      }
+    }
+    unset($item);
+    $this->featuresManager->setConfigCollection($config_collection);
   }
 
 }
