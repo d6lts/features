@@ -48,11 +48,14 @@ interface FeaturesManagerInterface {
   public function getActiveStorage();
 
   /**
-   * Returns the extension config store.
+   * Returns a set of config storages.
    *
-   * @return \Drupal\Core\Config\StorageInterface
+   * This method is used for support of multiple extension configuration
+   * directories, including the core-provided install and optional directories.
+   *
+   * @return \Drupal\Core\Config\StorageInterface[]
    */
-  public function getExtensionStorage();
+  public function getExtensionStorages();
 
   /**
    * Resets packages and configuration assignment.

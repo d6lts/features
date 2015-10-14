@@ -49,10 +49,10 @@ class FeaturesManagerTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::getExtensionStorage
+   * @covers ::getExtensionStorages
    */
-  public function testGetExtensionStorage() {
-    $this->assertInstanceOf('\Drupal\features\FeaturesInstallStorage', $this->featuresManager->getExtensionStorage());
+  public function testGetExtensionStorages() {
+    $this->assertInstanceOf('\Drupal\features\FeaturesExtensionStoragesInterface', $this->featuresManager->getExtensionStorages());
   }
 
   /**

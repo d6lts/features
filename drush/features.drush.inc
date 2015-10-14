@@ -477,7 +477,7 @@ function drush_features_diff() {
       }
       else {
         $active = $manager->getActiveStorage()->read($name);
-        $extension = $manager->getExtensionStorage()->read($name);
+        $extension = $manager->getExtensionStorages()->read($name);
         if (empty($extension)) {
           $extension = array();
           $message = sprintf($green, t('(not exported)'));

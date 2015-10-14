@@ -235,7 +235,7 @@ class FeaturesDiffForm extends FormBase {
       }
       else {
         $active = $this->featuresManager->getActiveStorage()->read($name);
-        $extension = $this->featuresManager->getExtensionStorage()->read($name);
+        $extension = $this->featuresManager->getExtensionStorages()->read($name);
         if (empty($extension)) {
           $details = array(
             '#markup' => t('Dependency detected in active config but not exported to the feature.'),

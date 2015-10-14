@@ -10,8 +10,9 @@ use Drupal\Component\Plugin\PluginManagerInterface;
 use Drupal\Component\Serialization\Yaml;
 use Drupal\features\FeaturesAssignerInterface;
 use Drupal\features\FeaturesGeneratorInterface;
+use Drupal\features\FeaturesExtensionStorages;
+use Drupal\features\FeaturesExtensionStoragesInterface;
 use Drupal\features\FeaturesManagerInterface;
-use Drupal\features\FeaturesInstallStorage;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\ConfigManagerInterface;
 use Drupal\Core\Config\FileStorage;
@@ -46,11 +47,11 @@ class FeaturesManager implements FeaturesManagerInterface {
   protected $configStorage;
 
   /**
-   * The extension storage.
+   * The extension storages.
    *
-   * @var \Drupal\Core\Config\StorageInterface
+   * @var \Drupal\features\FeaturesExtensionStoragesInterface
    */
-  protected $extensionStorage;
+  protected $extensionStorages;
 
   /**
    * The configuration manager.
@@ -132,7 +133,9 @@ class FeaturesManager implements FeaturesManagerInterface {
     $this->configFactory = $config_factory;
     $this->settings = $config_factory->getEditable('features.settings');
     $this->assignmentSettings = $config_factory->getEditable('features.assignment');
-    $this->extensionStorage = new FeaturesInstallStorage($this->configStorage);
+    $this->extensionStorages = new FeaturesExtensionStorages($this->configStorage);
+    $this->extensionStorages->addStorage(InstallStorage::CONFIG_INSTALL_DIRECTORY);
+    $this->extensionStorages->addStorage(InstallStorage::CONFIG_OPTIONAL_DIRECTORY);
     $this->packages = [];
     $this->configCollection = [];
   }
@@ -147,8 +150,8 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function getExtensionStorage() {
-    return $this->extensionStorage;
+  public function getExtensionStorages() {
+    return $this->extensionStorages;
   }
 
   /**
@@ -311,24 +314,6 @@ class FeaturesManager implements FeaturesManagerInterface {
    */
   public function getSettings() {
     return $this->settings;
-  }
-
-  /**
-   * Returns the name of an extension.
-   *
-   * @param mixed $extension
-   *   The string name of an extension, or a full Extension object.
-   *
-   * @return string
-   *   The name of an extension.
-   */
-  protected function getExtensionName($extension) {
-    if (is_string($extension)) {
-      return $extension;
-    }
-    else {
-      return $extension->getName();
-    }
   }
 
   /**
@@ -857,9 +842,7 @@ class FeaturesManager implements FeaturesManagerInterface {
       $pathname = drupal_get_filename('module', $extension);
       $extension = new Extension(\Drupal::root(), 'module', $pathname);
     }
-    return array_keys($this->extensionStorage->getComponentNames([
-      $this->getExtensionName($extension) => $extension,
-    ]));
+    return $this->extensionStorages->listExtensionConfig($extension);
   }
 
   /**
@@ -1002,7 +985,7 @@ class FeaturesManager implements FeaturesManagerInterface {
     $different = array();
     foreach ($feature['config'] as $name) {
       $active = $this->configStorage->read($name);
-      $extension = $this->extensionStorage->read($name);
+      $extension = $this->extensionStorages->read($name);
       $extension = !empty($extension) ? $extension : array();
       if (($include_new || !empty($extension)) && !$config_diff->same($extension, $active)) {
         $different[] = $name;
@@ -1021,7 +1004,7 @@ class FeaturesManager implements FeaturesManagerInterface {
   public function detectNew(array $feature) {
     $result = array();
     foreach ($feature['config'] as $name) {
-      $extension = $this->extensionStorage->read($name);
+      $extension = $this->extensionStorages->read($name);
       if (empty($extension)) {
         $result[] = $name;
       }
@@ -1063,7 +1046,7 @@ class FeaturesManager implements FeaturesManagerInterface {
   protected function addConfigList($full_name, &$list) {
     if (!in_array($full_name, $list)) {
       array_unshift($list, $full_name);
-      $value = $this->extensionStorage->read($full_name);
+      $value = $this->extensionStorages->read($full_name);
       if (isset($value['dependencies']['config'])) {
         foreach ($value['dependencies']['config'] as $config_name) {
           $this->addConfigList($config_name, $list);
