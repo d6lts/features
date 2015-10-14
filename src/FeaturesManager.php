@@ -497,9 +497,13 @@ class FeaturesManager implements FeaturesManagerInterface {
           $package['config'][] = $item_name;
           // Mark the item as already assigned.
           $config_collection[$item_name]['package'] = $package_name;
-          // Set any module dependencies of the configuration item as package
+          // For configuration in the InstallStorage::CONFIG_INSTALL_DIRECTORY
+          // directory, set any module dependencies of the configuration item
+          // as package dependencies.
+          // As its name implies, the core-provided
+          // InstallStorage::CONFIG_OPTIONAL_DIRECTORY should not create
           // dependencies.
-          if (isset($config_collection[$item_name]['data']['dependencies']['module'])) {
+          if ($config_collection[$item_name]['subdirectory'] === InstallStorage::CONFIG_INSTALL_DIRECTORY && isset($config_collection[$item_name]['data']['dependencies']['module'])) {
             $dependencies =& $package['dependencies'];
             $dependencies = array_unique(array_merge($dependencies, $config_collection[$item_name]['data']['dependencies']['module']));
             sort($dependencies);
@@ -745,7 +749,7 @@ class FeaturesManager implements FeaturesManagerInterface {
         }
         $package['files'][$name] = [
           'filename' => $config['name'] . '.yml',
-          'subdirectory' => InstallStorage::CONFIG_INSTALL_DIRECTORY,
+          'subdirectory' => $config['subdirectory'],
           'string' => Yaml::encode($config['data'])
         ];
       }
@@ -936,6 +940,8 @@ class FeaturesManager implements FeaturesManagerInterface {
             'type' => $config_type,
             'data' => $data,
             'dependents' => array_keys($dependents),
+            // Default to the install directory.
+            'subdirectory' => InstallStorage::CONFIG_INSTALL_DIRECTORY,
           ];
         }
       }
