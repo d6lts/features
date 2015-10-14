@@ -570,7 +570,7 @@ class FeaturesManager implements FeaturesManagerInterface {
    * Initializes and returns a package or profile array.
    *
    * @param string $machine_name
-   *   Machine name of the package .
+   *   Machine name of the package.
    * @param string $name
    *   Human readable name of the package.
    * @param string $description
