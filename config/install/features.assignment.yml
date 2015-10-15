@@ -24,6 +24,13 @@ exclude:
     namespace: 1
 optional:
     config: {  }
+profile:
+  standard:
+    files: 1
+    dependencies: 1
+  types:
+    config:
+      block: block
 site:
   types:
     config:
