@@ -109,7 +109,7 @@ function features_export_form($form, $form_state, $feature = NULL) {
 
   $feature_name = !empty($feature->name) ? $feature->name : '';
   $form = array(
-    '#attributes' => array('class' => array('features-export-form')),
+    '#attributes' => array('class' => array('features-export-form', 'clearfix')),
     '#feature' => isset($feature) ? $feature : NULL,
   );
   $form['info'] = array(
