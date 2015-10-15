@@ -1,6 +1,7 @@
 base:
   types:
     config:
+      comment_type: comment_type
       node_type: node_type
     content:
       user: user
