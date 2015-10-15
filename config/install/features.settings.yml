@@ -13,13 +13,13 @@ assignment:
   method_weights:
     base: -2
     core: 5
-    dependency: 10
-    exclude: -8
+    dependency: 15
+    exclude: -5
     existing: -10
     namespace: 0
     optional: 0
     packages: -20
-    profile: -5
+    profile: 10
     site: 7
 export:
   folder: 'custom'

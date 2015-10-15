@@ -61,32 +61,22 @@ abstract class FeaturesAssignmentMethodBase implements FeaturesAssignmentMethodI
   }
 
   /**
-   * Creates a package and assigns it configuration of the types specified in
-   * a setting.
+   * Assigns configuration of the types specified in a setting to a package.
    *
    * @param string $method_id
    *   The ID of an assignment method.
    * @param string $machine_name
-   *   Machine name of the package to be created.
-   * @param string $name
-   *   Machine name of the package to be created.
-   * @param string $description
-   *   Machine name of the package to be created.
+   *   Machine name of the package.
    */
-  protected function assignPackageByConfigTypes($method_id, $machine_name, $name, $description) {
+  protected function assignPackageByConfigTypes($method_id, $machine_name) {
     $current_bundle = $this->assigner->getBundle();
     $settings = $current_bundle->getAssignmentSettings($method_id);
     $types = $settings['types']['config'];
 
     $config_collection = $this->featuresManager->getConfigCollection();
 
-    $initialized = FALSE;
     foreach ($config_collection as $item_name => $item) {
       if (in_array($item['type'], $types) && !isset($item['package'])) {
-        if (!$initialized) {
-          $this->featuresManager->initPackage($machine_name, $name, $description);
-          $initialized = TRUE;
-        }
         try {
           $this->featuresManager->assignConfigPackage($machine_name, [$item_name]);
         }

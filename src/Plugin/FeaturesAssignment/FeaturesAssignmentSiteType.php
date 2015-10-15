@@ -35,7 +35,8 @@ class FeaturesAssignmentSiteType extends FeaturesAssignmentMethodBase {
     $machine_name = 'site';
     $name = $this->t('Site');
     $description = $this->t('Provide site components.');
-    $this->assignPackageByConfigTypes(self::METHOD_ID, $machine_name, $name, $description);
+    $this->featuresManager->initPackage($machine_name, $name, $description);
+    $this->assignPackageByConfigTypes(self::METHOD_ID, $machine_name);
   }
 
 }

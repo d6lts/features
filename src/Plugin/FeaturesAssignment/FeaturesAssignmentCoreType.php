@@ -35,7 +35,8 @@ class FeaturesAssignmentCoreType extends FeaturesAssignmentMethodBase {
     $machine_name = 'core';
     $name = $this->t('Core');
     $description = $this->t('Provide core components required by other features.');
-    $this->assignPackageByConfigTypes(self::METHOD_ID, $machine_name, $name, $description);
+    $this->featuresManager->initPackage($machine_name, $name, $description);
+    $this->assignPackageByConfigTypes(self::METHOD_ID, $machine_name);
   }
 
 }
