@@ -51,6 +51,15 @@ features.assignment_optional:
   requirements:
     _permission: 'administer site configuration'
 
+features.assignment_site:
+  path: '/admin/config/development/configuration/features/bundle/_site/{bundle_name}'
+  defaults:
+    _form: '\Drupal\features_ui\Form\AssignmentSiteForm'
+    _title: 'Configure site package assignment'
+    bundle_name: NULL
+  requirements:
+    _permission: 'administer site configuration'
+
 features.edit:
   path: '/admin/config/development/configuration/features/edit/{featurename}'
   defaults:

@@ -9,6 +9,7 @@ assignment:
     - optional
     - packages
     - profile
+    - site
   method_weights:
     base: -2
     core: 5
@@ -19,6 +20,7 @@ assignment:
     optional: 0
     packages: -20
     profile: -5
+    site: 7
 export:
   folder: 'custom'
 bundle:
