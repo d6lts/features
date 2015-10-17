@@ -492,7 +492,12 @@ class FeaturesManager implements FeaturesManagerInterface {
 
     foreach ($item_names as $item_name) {
       if (isset($config_collection[$item_name])) {
-        if (($force || empty($config_collection[$item_name]['package'])) && !in_array($item_name, $package['config'])) {
+        // Add to the package if:
+        // - force is set or
+        //   - the item hasn't already been assigned elsewhere and
+        //   - the package hasn't been excluded.
+        // - and the item isn't already in the package.
+        if (($force || (empty($config_collection[$item_name]['package']) && !in_array($package_name, $config_collection[$item_name]['package_excluded']))) && !in_array($item_name, $package['config'])) {
           // Add the item to the package's config array.
           $package['config'][] = $item_name;
           // Mark the item as already assigned.
@@ -942,6 +947,7 @@ class FeaturesManager implements FeaturesManagerInterface {
             'dependents' => array_keys($dependents),
             // Default to the install directory.
             'subdirectory' => InstallStorage::CONFIG_INSTALL_DIRECTORY,
+            'package_excluded' => [],
           ];
         }
       }

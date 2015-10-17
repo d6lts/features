@@ -76,6 +76,9 @@ interface FeaturesManagerInterface {
    *   - 'type': type of configuration.
    *   - 'data': the contents of the configuration item in exported format.
    *   - 'dependents': array of names of dependent configuration items.
+   *   - 'subdirectory': feature subdirectory to export item to.
+   *   - 'package_excluded': array of package names that this item should be
+   *     excluded from.
    */
   public function getConfigCollection($reset = FALSE);
 
@@ -90,6 +93,9 @@ interface FeaturesManagerInterface {
    *   - 'type': type of configuration.
    *   - 'data': the contents of the configuration item in exported format.
    *   - 'dependents': array of names of dependent configuration items.
+   *   - 'subdirectory': feature subdirectory to export item to.
+   *   - 'package_excluded': array of package names that this item should be
+   *     excluded from.
    */
   public function setConfigCollection(array $config_collection);
 

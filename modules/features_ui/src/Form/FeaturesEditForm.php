@@ -147,7 +147,12 @@ class FeaturesEditForm extends FormBase {
       $bundle = $this->assigner->loadBundle();
     }
     $this->bundle = $bundle->getMachineName();
-    $this->assigner->assignConfigPackages();
+
+    // Pass the $force argument as TRUE because we want to include any excluded
+    // configuration items. These should show up as automatically assigned, but
+    // not selected, thus allowing the admin to reselect if desired.
+    // @see FeaturesManagerInterface::assignConfigPackage()
+    $this->assigner->assignConfigPackages(TRUE);
 
     $packages = $this->featuresManager->getPackages();
     if (empty($packages[$featurename])) {
