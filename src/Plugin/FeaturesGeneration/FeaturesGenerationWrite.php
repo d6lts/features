@@ -51,10 +51,12 @@ class FeaturesGenerationWrite extends FeaturesGenerationMethodBase {
         $package['files']['info']['string'] = $this->mergeInfoFile($package['files']['info']['string'], $info_file_uri);
       }
 
-      // Remove the config directory, as it will be replaced.
-      $config_directory = $existing_directory . '/' . InstallStorage::CONFIG_INSTALL_DIRECTORY;
-      if (is_dir($config_directory)) {
-        file_unmanaged_delete_recursive($config_directory);
+      // Remove the config directories, as they will be replaced.
+      foreach (array_keys($this->featuresManager->getExtensionStorages()->getExtensionStorages()) as $directory) {
+        $config_directory = $existing_directory . '/' . $directory;
+        if (is_dir($config_directory)) {
+          file_unmanaged_delete_recursive($config_directory);
+        }
       }
     }
   }

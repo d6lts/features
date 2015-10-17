@@ -29,6 +29,14 @@ use Drupal\Core\Extension\Extension;
 interface FeaturesExtensionStoragesInterface {
 
   /**
+   * Returns all registered extension storages.
+   *
+   * @return FeaturesInstallStorage[]
+   *   Array of install storages keyed by configuration directory.
+   */
+  public function getExtensionStorages();
+
+  /**
    * Adds a storage.
    *
    * @param string $directory

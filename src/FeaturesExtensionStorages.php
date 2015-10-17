@@ -52,6 +52,13 @@ class FeaturesExtensionStorages implements FeaturesExtensionStoragesInterface {
   /**
    * {@inheritdoc}
    */
+  public function getExtensionStorages() {
+    return $this->extensionStorages;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function addStorage($directory = InstallStorage::CONFIG_INSTALL_DIRECTORY) {
     $this->extensionStorages[$directory] = new FeaturesInstallStorage($this->configStorage, $directory);
     $this->reset();
