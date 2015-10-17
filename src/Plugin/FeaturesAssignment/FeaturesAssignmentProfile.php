@@ -31,7 +31,7 @@ class FeaturesAssignmentProfile extends FeaturesAssignmentMethodBase {
   /**
    * {@inheritdoc}
    */
-  public function assignPackages() {
+  public function assignPackages($force = FALSE) {
     $current_bundle = $this->assigner->getBundle();
 
     if ($current_bundle->isProfile()) {
@@ -45,7 +45,7 @@ class FeaturesAssignmentProfile extends FeaturesAssignmentMethodBase {
       }
 
       // Assign configuration by type.
-      $this->assignPackageByConfigTypes(self::METHOD_ID, $profile_name);
+      $this->assignPackageByConfigTypes(self::METHOD_ID, $profile_name, $force);
 
       // Only read in from the Standard profile if this profile doesn't already
       // exist.
@@ -63,7 +63,7 @@ class FeaturesAssignmentProfile extends FeaturesAssignmentMethodBase {
             if (isset($config_collection[$item_name])) {
               // Only assign it if it's not already assigned to a package.
               if (empty($config_collection[$item_name]['package'])) {
-                $this->featuresManager->assignConfigPackage($profile_name, [$item_name]);
+                $this->featuresManager->assignConfigPackage($profile_name, [$item_name], $force);
                 // Reload the profile to refresh the config array after the addition.
                 $profile_package = $this->featuresManager->getPackage($profile_name);
               }

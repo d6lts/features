@@ -32,7 +32,7 @@ class FeaturesAssignmentExclude extends FeaturesAssignmentMethodBase {
   /**
    * {@inheritdoc}
    */
-  public function assignPackages() {
+  public function assignPackages($force = FALSE) {
     $current_bundle = $this->assigner->getBundle();
     $settings = $current_bundle->getAssignmentSettings(self::METHOD_ID);
 

@@ -33,7 +33,7 @@ class FeaturesAssignmentOptionalType extends FeaturesAssignmentMethodBase {
   /**
    * {@inheritdoc}
    */
-  public function assignPackages() {
+  public function assignPackages($force = FALSE) {
     $machine_name = 'optional';
     $name = $this->t('Optional');
     $description = $this->t('Provide optional components required by other features.');

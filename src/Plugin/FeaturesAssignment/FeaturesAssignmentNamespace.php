@@ -29,7 +29,7 @@ class FeaturesAssignmentNamespace extends FeaturesAssignmentMethodBase {
   /**
    * {@inheritdoc}
    */
-  public function assignPackages() {
+  public function assignPackages($force = FALSE) {
     $packages = array_keys($this->featuresManager->getPackages());
     $this->featuresManager->assignConfigByPattern(array_combine($packages, $packages));
   }

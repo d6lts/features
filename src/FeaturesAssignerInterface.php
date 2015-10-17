@@ -32,7 +32,7 @@ namespace Drupal\features;
  * }
  *
  * class MyFeaturesAssignmentBaseType extends FeaturesAssignmentBaseType {
- *   public function assignPackages() {
+ *   public function assignPackages($force = FALSE) {
  *     // Insert customization here.
  *   }
  * }
@@ -56,8 +56,12 @@ interface FeaturesAssignerInterface {
 
   /**
    * Apply all enabled package assignment methods.
+   *
+   * @param bool $force
+   *   (optional) If TRUE, assign config regardless of restrictions such as it
+   *   being already assigned to a package.
    */
-  public function assignConfigPackages();
+  public function assignConfigPackages($force = FALSE);
 
   /**
    * Returns the enabled package assignment methods.

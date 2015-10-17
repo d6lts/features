@@ -30,7 +30,7 @@ class FeaturesAssignmentPackages extends FeaturesAssignmentMethodBase {
   /**
    * {@inheritdoc}
    */
-  public function assignPackages() {
+  public function assignPackages($force = FALSE) {
     $existing = $this->featuresManager->getExistingPackages();
     foreach ($existing as $name => $info) {
       $this->featuresManager->initPackageFromInfo($name, $info);

@@ -34,7 +34,7 @@ use Drupal\Core\Form\FormStateInterface;
  * }
  *
  * class MyFeaturesGenerationArchive extends FeaturesGenerationArchive {
- *   public function assignPackages() {
+ *   public function generate(array $packages = array(), FeaturesBundleInterface $bundle = NULL) {
  *     // Insert customization here.
  *   }
  * }

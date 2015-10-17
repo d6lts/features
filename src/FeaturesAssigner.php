@@ -132,9 +132,9 @@ class FeaturesAssigner implements FeaturesAssignerInterface {
   /**
    * {@inheritdoc}
    */
-  public function assignConfigPackages() {
+  public function assignConfigPackages($force = FALSE) {
     foreach ($this->getEnabledAssigners() as $method_id => $info) {
-      $this->applyAssignmentMethod($method_id);
+      $this->applyAssignmentMethod($method_id, $force);
     }
   }
 
@@ -144,9 +144,12 @@ class FeaturesAssigner implements FeaturesAssignerInterface {
    * @param string $method_id
    *   The string identifier of the package assignment method to use to package
    *   configuration.
+   * @param bool $force
+   *   (optional) If TRUE, assign config regardless of restrictions such as it
+   *   being already assigned to a package.
    */
-  protected function applyAssignmentMethod($method_id) {
-    $this->getAssignmentMethodInstance($method_id)->assignPackages();
+  protected function applyAssignmentMethod($method_id, $force = FALSE) {
+    $this->getAssignmentMethodInstance($method_id)->assignPackages($force);
   }
 
   /**

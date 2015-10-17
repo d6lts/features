@@ -67,8 +67,11 @@ abstract class FeaturesAssignmentMethodBase implements FeaturesAssignmentMethodI
    *   The ID of an assignment method.
    * @param string $machine_name
    *   Machine name of the package.
+   * @param bool $force
+   *   (optional) If TRUE, assign config regardless of restrictions such as it
+   *   being already assigned to a package.
    */
-  protected function assignPackageByConfigTypes($method_id, $machine_name) {
+  protected function assignPackageByConfigTypes($method_id, $machine_name, $force = FALSE) {
     $current_bundle = $this->assigner->getBundle();
     $settings = $current_bundle->getAssignmentSettings($method_id);
     $types = $settings['types']['config'];
@@ -107,7 +110,9 @@ abstract class FeaturesAssignmentMethodBase implements FeaturesAssignmentMethodI
         $item['subdirectory'] = $subdirectory;
       }
     }
+    // Clean up the $item pass by reference.
     unset($item);
+
     $this->featuresManager->setConfigCollection($config_collection);
   }
 

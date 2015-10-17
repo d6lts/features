@@ -31,12 +31,12 @@ class FeaturesAssignmentCoreType extends FeaturesAssignmentMethodBase {
   /**
    * {@inheritdoc}
    */
-  public function assignPackages() {
+  public function assignPackages($force = FALSE) {
     $machine_name = 'core';
     $name = $this->t('Core');
     $description = $this->t('Provide core components required by other features.');
     $this->featuresManager->initPackage($machine_name, $name, $description);
-    $this->assignPackageByConfigTypes(self::METHOD_ID, $machine_name);
+    $this->assignPackageByConfigTypes(self::METHOD_ID, $machine_name, $force);
   }
 
 }

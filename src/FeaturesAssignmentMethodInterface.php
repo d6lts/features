@@ -34,7 +34,11 @@ interface FeaturesAssignmentMethodInterface {
 
   /**
    * Performs package assignment.
+   *
+   * @param bool $force
+   *   (optional) If TRUE, assign config regardless of restrictions such as it
+   *   being already assigned to a package.
    */
-  public function assignPackages();
+  public function assignPackages($force = FALSE);
 
 }

@@ -30,7 +30,7 @@ class FeaturesAssignmentDependency extends FeaturesAssignmentMethodBase {
   /**
    * {@inheritdoc}
    */
-  public function assignPackages() {
+  public function assignPackages($force = FALSE) {
     $this->featuresManager->assignConfigDependents();
   }
 

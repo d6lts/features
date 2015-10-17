@@ -306,7 +306,8 @@ interface FeaturesManagerInterface {
    * @param string[] $item_names
    *   Configuration item names.
    * @param bool $force
-   *   If TRUE, assign config even if already assigned to a package.
+   *   (optional) If TRUE, assign config regardless of restrictions such as it
+   *   being already assigned to a package.
    *
    * @throws Exception
    */
