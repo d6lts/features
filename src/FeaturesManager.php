@@ -680,12 +680,15 @@ class FeaturesManager implements FeaturesManagerInterface {
       else {
         unset($info['features']['bundle']);
       }
-      if (!empty($package['excluded'])) {
-        $info['features']['excluded'] = $package['excluded'];
+      foreach (array('excluded', 'required') as $constraint) {
+        if (!empty($package[$constraint])) {
+          $info['features'][$constraint] = $package[$constraint];
+        }
+        else {
+          unset($info['features'][$constraint]);
+        }
       }
-      else {
-        unset($info['features']['excluded']);
-      }
+
       if (empty($info['features'])) {
         $info['features'] = TRUE;
       }

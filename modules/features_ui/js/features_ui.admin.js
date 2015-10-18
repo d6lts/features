@@ -213,7 +213,8 @@ jQuery.fn.sortElements = (function(){
 
         var url = Drupal.url('features/api/detect/' + featureName);
         var excluded = drupalSettings.features.excluded;
-        var postData = {'items': items, 'excluded': excluded};
+        var required = drupalSettings.features.required;
+        var postData = {'items': items, 'excluded': excluded, 'required': required};
         jQuery.post(url, postData, function(data) {
           if (inTimeout > 0) { inTimeout--; }
           // if we have triggered another timeout then don't update with old results

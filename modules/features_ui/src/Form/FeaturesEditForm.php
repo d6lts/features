@@ -76,6 +76,13 @@ class FeaturesEditForm extends FormBase {
   protected $excluded;
 
   /**
+   * Config to be specifically required.
+   *
+   * @var array
+   */
+  protected $required;
+
+  /**
    * Config referenced by other packages.
    *
    * @var array
@@ -100,6 +107,7 @@ class FeaturesEditForm extends FormBase {
     $this->assigner = $assigner;
     $this->generator = $generator;
     $this->excluded = [];
+    $this->required = [];
     $this->conflicts = [];
   }
 
@@ -275,6 +283,7 @@ class FeaturesEditForm extends FormBase {
       'drupalSettings' => array(
         'features' => array(
           'excluded' => $this->excluded,
+          'required' => $this->required,
           'conflicts' => $this->conflicts,
           'autodetect' => TRUE,
         ),
@@ -533,12 +542,14 @@ class FeaturesEditForm extends FormBase {
     }
     $exported_features_info['dependencies'] = !empty($this->package['info']['dependencies']) ? $this->package['info']['dependencies'] : array();
 
-    // Make a map of any config specifically excluded.
-    $this->excluded = array();
-    $excluded_info = !empty($this->package['info']['features']['excluded']) ? $this->package['info']['features']['excluded'] : array();
-    foreach ($excluded_info as $item_name) {
-      $item = $config[$item_name];
-      $this->excluded[$item['type']][$item['name_short']] = $item;
+    // Make a map of any config specifically excluded and/or required.
+    foreach (array('excluded', 'required') as $constraint) {
+      $this->{$constraint} = array();
+      $info = !empty($this->package['info']['features'][$constraint]) ? $this->package['info']['features'][$constraint] : array();
+      foreach ($info as $item_name) {
+        $item = $config[$item_name];
+        $this->{$constraint}[$item['type']][$item['name_short']] = $item;
+      }
     }
 
     // Make a map of the config data to be exported within the Feature.
@@ -613,6 +624,14 @@ class FeaturesEditForm extends FormBase {
             $form_state->setValue(array($component, 'added', $key), 1);
             $component_export['options']['added'][$key] = $this->configLabel($component, $key, $value['label']);
             $component_export['selected']['added'][$key] = $key;
+            // If this was previously excluded, we don't need to set it as
+            // required because it was automatically assigned.
+            if (isset($this->excluded[$component][$key])) {
+              unset($this->excluded[$component][$key]);
+            }
+            else {
+              $this->required[$component][$key] = $key;
+            }
           }
           elseif (isset($new_components[$key])) {
             // Option is in the New exported array.
@@ -646,6 +665,7 @@ class FeaturesEditForm extends FormBase {
               // Option was in New exported array, but NOT in already exported
               // so it's a user-selected or an auto-detect item.
               $section = 'detected';
+              $default_value = NULL;
               // Check for item explicitly excluded.
               if (isset($this->excluded[$component][$key]) && !$form_state->hasValue(array($component, 'detected', $key))) {
                 $default_value = FALSE;
@@ -675,7 +695,14 @@ class FeaturesEditForm extends FormBase {
             // Save which dependencies are specifically excluded from
             // auto-detection.
             if (($section == 'detected') && ($default_value === FALSE)) {
-              $this->excluded[$component][$key] = $key;
+              // If this was previously required, we don't need to set it as
+              // excluded because it wasn't automatically assigned.
+              if (isset($this->required[$component][$key])) {
+                unset($this->required[$component][$key]);
+              }
+              else {
+                $this->excluded[$component][$key] = $key;
+              }
               // Remove excluded item from export.
               if ($component == 'dependencies') {
                 unset($export['dependencies'][$key]);
@@ -727,6 +754,7 @@ class FeaturesEditForm extends FormBase {
       $export['components'][$component] = $component_export;
     }
     $export['features_exclude'] = $this->excluded;
+    $export['features_require'] = $this->required;
     $export['conflicts'] = $this->conflicts;
 
     return $export;
@@ -777,6 +805,7 @@ class FeaturesEditForm extends FormBase {
 
     $this->package['config'] = $this->updatePackageConfig($form_state);
     $this->package['excluded'] = $this->updateExcluded();
+    $this->package['required'] = $this->updateRequired();
     // Now save it with the selected config data.
     $this->featuresManager->savePackage($this->package);
 
@@ -820,16 +849,40 @@ class FeaturesEditForm extends FormBase {
    *
    * @return array
    *   The list of excluded config in a simple array of full config names
-   *   suitable for storing in the info.yml file.S
+   *   suitable for storing in the info.yml file.
    */
   protected function updateExcluded() {
-    $excluded = array();
-    foreach ($this->excluded as $type => $item) {
+    return $this->updateConstrained('excluded');
+  }
+
+  /**
+   * Updates the list of required config.
+   *
+   * @return array
+   *   The list of required config in a simple array of full config names
+   *   suitable for storing in the info.yml file.
+   */
+  protected function updateRequired() {
+    return $this->updateConstrained('required');
+  }
+
+  /**
+   * Returns a list of constrained (excluded or required) configuration.
+   *
+   * @param string $constraint
+   *   The constraint (excluded or required).
+   * @return array
+   *   The list of constrained config in a simple array of full config names
+   *   suitable for storing in the info.yml file.
+   */
+  protected function updateConstrained($constraint) {
+    $constrained = array();
+    foreach ($this->{$constraint} as $type => $item) {
       foreach ($item as $name => $value) {
-        $excluded[] = $this->featuresManager->getFullName($type, $name);
+        $constrained[] = $this->featuresManager->getFullName($type, $name);
       }
     }
-    return $excluded;
+    return $constrained;
   }
 
   /**
