@@ -324,7 +324,6 @@ class FeaturesAssigner implements FeaturesAssignerInterface {
     $this->reset();
     $bundle = $this->loadBundle($machine_name);
     if (isset($bundle)) {
-      $this->setCurrent($bundle);
       $this->assignConfigPackages();
       return $this->currentBundle;
     }
