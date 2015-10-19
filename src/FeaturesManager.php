@@ -9,6 +9,7 @@ namespace Drupal\features;
 use Drupal\Component\Plugin\PluginManagerInterface;
 use Drupal\Component\Serialization\Yaml;
 use Drupal\features\FeaturesAssignerInterface;
+use Drupal\features\FeaturesBundleInterface;
 use Drupal\features\FeaturesGeneratorInterface;
 use Drupal\features\FeaturesExtensionStorages;
 use Drupal\features\FeaturesExtensionStoragesInterface;
@@ -353,9 +354,24 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function isFeatureModule($module) {
+  public function isFeatureModule($module, FeaturesBundleInterface $bundle = NULL) {
     $info = $this->getExtensionInfo($module);
-    return isset($info['features']);
+    if (isset($info['features'])) {
+      // If no bundle was requested, it's enough that this is a feature.
+      if (is_null($bundle)) {
+        return TRUE;
+      }
+      // If the default bundle was requested, look for features where
+      // the 'features' key is set to TRUE.
+      elseif ($bundle->isDefault()) {
+        return $info['features'] === TRUE;
+      }
+      // If we have a bundle name, look for it.
+      else {
+        return (isset($info['features']['bundle']) && ($info['features']['bundle'] == $bundle->getMachineName()));
+      }
+    }
+    return FALSE;
   }
 
   /**
@@ -373,8 +389,11 @@ class FeaturesManager implements FeaturesManagerInterface {
       $listing = new ExtensionDiscovery(\Drupal::root());
       $modules = $listing->scan('module');
     }
+
+    // Find features modules that are in the current bundle.
+    $current_bundle = $this->assigner->loadBundle();
     foreach ($modules as $name => $module) {
-      if ($this->isFeatureModule($module)) {
+      if ($this->isFeatureModule($module, $current_bundle)) {
         $result[$name] = $this->getExtensionInfo($module);
         $result[$name]['status'] = $this->moduleHandler->moduleExists($name)
           ? FeaturesManagerInterface::STATUS_ENABLED

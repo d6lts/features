@@ -8,6 +8,7 @@
 namespace Drupal\features;
 
 use Drupal\features\FeaturesAssignerInterface;
+use Drupal\features\FeaturesBundleInterface;
 use Drupal\features\FeaturesGeneratorInterface;
 use Drupal\Core\Extension\Extension;
 
@@ -475,15 +476,18 @@ interface FeaturesManagerInterface {
   public function getExportInfo($package, FeaturesBundleInterface $bundle = NULL);
 
   /**
-   * Determines if the module is a Features package.
+   * Determines if the module is a Features package, optinally testing by
+   * bundle.
    *
    * @param mixed $module
    *   Either the name of an module or a full module extension object.
+   * @param \Drupal\features\FeaturesBundleInterface $bundle
+   *   (optional) Bundle to filter by.
    *
    * @return bool
-   *   TRUE if the given module is a Features package.
+   *   TRUE if the given module is a Features package of the given bundle (if any).
    */
-  public function isFeatureModule($module);
+  public function isFeatureModule($module, FeaturesBundleInterface $bundle);
 
   /**
    * Determines which config is overridden in a package.
