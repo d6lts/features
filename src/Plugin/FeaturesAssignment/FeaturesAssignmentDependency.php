@@ -15,7 +15,7 @@ use Drupal\features\FeaturesAssignmentMethodBase;
  *
  * @Plugin(
  *   id = \Drupal\features\Plugin\FeaturesAssignment\FeaturesAssignmentDependency::METHOD_ID,
- *   weight = 10,
+ *   weight = 15,
  *   name = @Translation("Dependency"),
  *   description = @Translation("Add to packages configuration dependent on items already in that package."),
  * )

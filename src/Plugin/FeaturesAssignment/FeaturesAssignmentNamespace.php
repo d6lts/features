@@ -14,7 +14,7 @@ use Drupal\features\FeaturesAssignmentMethodBase;
  *
  * @Plugin(
  *   id = \Drupal\features\Plugin\FeaturesAssignment\FeaturesAssignmentNamespace::METHOD_ID,
- *   weight = 5,
+ *   weight = 0,
  *   name = @Translation("Namespace"),
  *   description = @Translation("Add to packages configuration with a machine name containing that package's machine name."),
  * )

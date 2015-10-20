@@ -15,7 +15,7 @@ use Drupal\features\FeaturesAssignmentMethodBase;
  *
  * @Plugin(
  *   id = \Drupal\features\Plugin\FeaturesAssignment\FeaturesAssignmentSiteType::METHOD_ID,
- *   weight = 0,
+ *   weight = 7,
  *   name = @Translation("Site type"),
  *   description = @Translation("Assign designated types of configuration to a site configuration package module. For example, if image styles are selected as a site type, a site package will be generated and image styles will be assigned to it."),
  *   config_route_name = "features.assignment_site"

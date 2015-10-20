@@ -15,7 +15,7 @@ use Drupal\features\FeaturesManagerInterface;
  *
  * @Plugin(
  *   id = \Drupal\features\Plugin\FeaturesAssignment\FeaturesAssignmentPackages::METHOD_ID,
- *   weight = -99,
+ *   weight = -20,
  *   name = @Translation("Packages"),
  *   description = @Translation("Detect and add existing package modules."),
  * )
