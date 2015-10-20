@@ -214,6 +214,11 @@ class FeaturesExportForm extends FormBase {
    * Handles switching the configuration type selector.
    */
   public function updatePreview($form, FormStateInterface $form_state) {
+    // We should really be able to add this pre_render callback to the 
+    // 'preview' element. However, since doing so leads to an error (no rows
+    // are displayed), we need to instead explicitly invoke it here for the
+    // processing to apply to the Ajax-rendered form element.
+    $form = $this->preRenderHideUnpackagedCheckbox($form);
     return $form['preview'];
   }
 
