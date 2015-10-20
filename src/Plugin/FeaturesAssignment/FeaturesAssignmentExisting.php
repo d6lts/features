@@ -47,9 +47,12 @@ class FeaturesAssignmentExisting extends FeaturesAssignmentMethodBase {
    * {@inheritdoc}
    */
   public function assignPackages($force = FALSE) {
+    // Find all existing packages that are in the new packages collection.
     $existing = $this->featuresManager->getExistingPackages(FALSE, $this->assigner->getBundle());
+    $packages = $this->featuresManager->getPackages();
+    $existing = array_intersect_key($existing, $packages);
 
-    // Assign config to Enabled modules first.
+    // Assign config to enabled modules first.
     foreach ($existing as $name => $info) {
       if ($info['status'] == FeaturesManagerInterface::STATUS_ENABLED) {
         $this->safeAssignConfig($name);
