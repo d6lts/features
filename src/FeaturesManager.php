@@ -261,12 +261,14 @@ class FeaturesManager implements FeaturesManagerInterface {
    * {@inheritdoc}
    */
   public function filterPackages(array $packages, $namespace = '', $only_exported = FALSE) {
-    if (!empty($namespace)) {
-      $namespace .= '_';
-    }
     $result = array();
     foreach ($packages as $key => $package) {
-      if (empty($namespace) || (strpos($package['machine_name'], $namespace) === 0) ||
+      // A package matches the namespace if:
+      // - it's prefixed with the namespace, or
+      // - it's assigned to a bundle named for the namespace, or
+      // - we're looking only for exported packages and it's not exported.
+      if (empty($namespace) || (strpos($package['machine_name'], $namespace . '_') === 0) ||
+        (isset($package['bundle']) && $package['bundle'] === $namespace) ||
         ($only_exported && $package['status'] === FeaturesManagerInterface::STATUS_NO_EXPORT)) {
         $result[$key] = $package;
       }
@@ -377,7 +379,7 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function getExistingPackages($enabled = FALSE) {
+  public function getExistingPackages($enabled = FALSE, FeaturesBundleInterface $bundle = NULL) {
     $result = array();
     if ($enabled) {
       $modules = $this->moduleHandler->getModuleList();
@@ -391,15 +393,16 @@ class FeaturesManager implements FeaturesManagerInterface {
     }
 
     // Find features modules that are in the current bundle.
-    $current_bundle = $this->assigner->loadBundle();
     foreach ($modules as $name => $module) {
-      if ($this->isFeatureModule($module, $current_bundle)) {
-        $result[$name] = $this->getExtensionInfo($module);
-        $result[$name]['status'] = $this->moduleHandler->moduleExists($name)
+      if ($this->isFeatureModule($module, $bundle)) {
+        $short_name = $bundle? $bundle->getShortName($name) : $name;
+        $result[$short_name] = $this->getExtensionInfo($module);
+        $result[$short_name]['status'] = $this->moduleHandler->moduleExists($name)
           ? FeaturesManagerInterface::STATUS_ENABLED
           : FeaturesManagerInterface::STATUS_DISABLED;
       }
     }
+
     return $result;
   }
 
@@ -652,11 +655,12 @@ class FeaturesManager implements FeaturesManagerInterface {
    */
   protected function setPackageNames(array &$package) {
     $module_list = $this->getAllModules();
-    if (isset($module_list[$package['machine_name']])) {
-      $package['status'] = $this->moduleHandler->moduleExists($package['machine_name'])
+    $full_name = $this->assigner->getBundle()->getFullName($package['machine_name']);
+    if (isset($module_list[$full_name])) {
+      $package['status'] = $this->moduleHandler->moduleExists($full_name)
         ? FeaturesManagerInterface::STATUS_ENABLED
         : FeaturesManagerInterface::STATUS_DISABLED;
-      $info = $this->getExtensionInfo($package['machine_name']);
+      $info = $this->getExtensionInfo($full_name);
       if (!empty($info)) {
         $package['version'] = isset($info['version']) ? $info['version'] : '';
       }
@@ -870,6 +874,8 @@ class FeaturesManager implements FeaturesManagerInterface {
   public function listExtensionConfig($extension) {
     // Convert to Component object if it is a string
     if (is_string($extension)) {
+      // In case this is the short form machine name, convert to full form.
+      $extension = $this->assigner->getBundle()->getFullName($extension);
       $pathname = drupal_get_filename('module', $extension);
       $extension = new Extension(\Drupal::root(), 'module', $pathname);
     }
@@ -879,9 +885,9 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function listExistingConfig($enabled = FALSE) {
+  public function listExistingConfig($enabled = FALSE, FeaturesBundleInterface $bundle = NULL) {
     $config = array();
-    $existing = $this->getExistingPackages($enabled);
+    $existing = $this->getExistingPackages($enabled, $bundle);
     foreach ($existing as $name => $info) {
       $config += $this->listExtensionConfig($name);
     }

@@ -31,7 +31,7 @@ class FeaturesAssignmentPackages extends FeaturesAssignmentMethodBase {
    * {@inheritdoc}
    */
   public function assignPackages($force = FALSE) {
-    $existing = $this->featuresManager->getExistingPackages();
+    $existing = $this->featuresManager->getExistingPackages(FALSE, $this->assigner->getBundle());
     foreach ($existing as $name => $info) {
       $this->featuresManager->initPackageFromInfo($name, $info);
 

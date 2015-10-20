@@ -77,6 +77,17 @@ interface FeaturesBundleInterface {
   public function getFullName($short_name);
 
   /**
+   * Returns a short machine name not prefixed with the bundle name.
+   *
+   * @param string $machine_name
+   *   The full machine_name of a bundle.
+   *
+   * @return string
+   *   The short machine_name of a bundle.
+   */
+  public function getShortName($machine_name);
+
+  /**
    * Determines if the $machine_name is prefixed by the bundle machine name.
    *
    * @param string $machine_name

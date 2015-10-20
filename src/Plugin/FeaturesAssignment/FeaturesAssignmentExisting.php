@@ -47,7 +47,8 @@ class FeaturesAssignmentExisting extends FeaturesAssignmentMethodBase {
    * {@inheritdoc}
    */
   public function assignPackages($force = FALSE) {
-    $existing = $this->featuresManager->getExistingPackages();
+    $existing = $this->featuresManager->getExistingPackages(FALSE, $this->assigner->getBundle());
+
     // Assign config to Enabled modules first.
     foreach ($existing as $name => $info) {
       if ($info['status'] == FeaturesManagerInterface::STATUS_ENABLED) {

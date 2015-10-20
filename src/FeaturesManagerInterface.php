@@ -276,11 +276,13 @@ interface FeaturesManagerInterface {
    *
    * @param bool $enabled
    *   List only enabled modules.
+   * @param \Drupal\features\FeaturesBundleInterface $bundle
+   *   (optional) Bundle to find existing packages for.
    *
    * @return array
    *   Module's info.yml config data.
    */
-  public function getExistingPackages($enabled = FALSE);
+  public function getExistingPackages($enabled = FALSE, FeaturesBundleInterface $bundle);
 
   /**
    * Lists directories in which packages are present.
@@ -425,11 +427,13 @@ interface FeaturesManagerInterface {
    *
    * @param bool $enabled
    *   List only enabled Features.
+   * @param \Drupal\features\FeaturesBundleInterface $bundle
+   *   (optional) Bundle to find existing configuration for.
    *
    * @return array
    *   An array of config names.
    */
-  public function listExistingConfig($enabled = FALSE);
+  public function listExistingConfig($enabled = FALSE, FeaturesBundleInterface $bundle = NULL);
 
   /**
    * Iterates through packages and profile and prepares file names and
