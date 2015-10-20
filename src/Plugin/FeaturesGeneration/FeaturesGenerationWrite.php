@@ -148,12 +148,12 @@ class FeaturesGenerationWrite extends FeaturesGenerationMethodBase {
    *   The return value, passed by reference.
    * @param array $package
    *   The package or profile.
-   * @param Exception $exception
+   * @param \Exception $exception
    *   The exception object.
    * @param string $message
    *   Error message when there isn't an Exception object.
    */
-  protected function failure(array &$return, array $package, Exception $exception, $message = '') {
+  protected function failure(array &$return, array $package, \Exception $exception, $message = '') {
     $type = $package['type'] == 'module' ? $this->t('Package') : $this->t('Profile');
     $return[] = [
       'success' => FALSE,
