@@ -1006,7 +1006,7 @@ class FeaturesManager implements FeaturesManagerInterface {
 
     // If this is not the profile package, nest the directory.
     if (!isset($bundle) || !$bundle->isProfilePackage($package['machine_name'])) {
-      $path .= '/modules';
+      $path .= empty($path) ? 'modules' : '/modules';
       $export_settings = $this->getExportSettings();
       if (!empty($export_settings['folder'])) {
         $path .= '/' . $export_settings['folder'];
