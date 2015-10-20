@@ -12,6 +12,8 @@ core:
       field_storage_config: field_storage_config
       entity_form_mode: entity_form_mode
       image_style: image_style
+      menu: menu
+      responsive_image_style: responsive_image_style
       user_role: user_role
       entity_view_mode: entity_view_mode
 exclude:
@@ -23,7 +25,15 @@ exclude:
     profile: 1
     namespace: 1
 optional:
-    config: {  }
+  types:
+    config:
+      image_style: image_style
+      migration: migration
+      rdf_mapping: rdf_mapping
+      responsive_image_style: responsive_image_style
+      search_page: search_page
+      tour: tour
+      view: view
 profile:
   standard:
     files: 1
@@ -31,12 +41,23 @@ profile:
   types:
     config:
       block: block
+      language_content_settings: language_content_settings
+      configurable_language: configurable_language
+      migration: migration
+      shortcut_set: shortcut_set
+      tour: tour
 site:
   types:
     config:
+      action: action
       contact_form: contact_form
       block_content_type: block_content_type
+      rdf_mapping: rdf_mapping
       search_page: search_page
       taxonomy_vocabulary: taxonomy_vocabulary
       editor: editor
       filter_format: filter_format
+packages: null
+namespace: null
+dependency: null
+existing: null
