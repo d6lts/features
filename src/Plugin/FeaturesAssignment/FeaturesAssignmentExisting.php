@@ -15,7 +15,7 @@ use Drupal\features\FeaturesManagerInterface;
  *
  * @Plugin(
  *   id = \Drupal\features\Plugin\FeaturesAssignment\FeaturesAssignmentExisting::METHOD_ID,
- *   weight = -99,
+ *   weight = 12,
  *   name = @Translation("Existing"),
  *   description = @Translation("Add exported config to existing packages."),
  * )

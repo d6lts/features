@@ -15,7 +15,7 @@ assignment:
     core: 5
     dependency: 15
     exclude: -5
-    existing: -10
+    existing: 12
     namespace: 0
     optional: 0
     packages: -20
