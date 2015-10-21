@@ -280,6 +280,9 @@ class FeaturesManager implements FeaturesManagerInterface {
    * {@inheritdoc}
    */
   public function getAssigner() {
+    if (empty($this->assigner)) {
+      $this->setAssigner(\Drupal::service('features_assigner'));
+    }
     return $this->assigner;
   }
 
@@ -490,7 +493,7 @@ class FeaturesManager implements FeaturesManagerInterface {
    */
   public function initPackageFromInfo($machine_name, $info) {
     $package = $this->initPackage($machine_name, $info['name'], !empty($info['description']) ? $info['description'] : '');
-    $bundle = $this->assigner->findBundle($info);
+    $bundle = $this->getAssigner()->findBundle($info);
     $package['bundle'] = isset($bundle) ? $bundle->getMachineName() : '';
     $package['info'] = $info;
     $package['config_orig'] = $this->listExtensionConfig($machine_name);
@@ -655,7 +658,7 @@ class FeaturesManager implements FeaturesManagerInterface {
    */
   protected function setPackageNames(array &$package) {
     $module_list = $this->getAllModules();
-    $full_name = $this->assigner->getBundle()->getFullName($package['machine_name']);
+    $full_name = $this->getAssigner()->getBundle()->getFullName($package['machine_name']);
     if (isset($module_list[$full_name])) {
       $package['status'] = $this->moduleHandler->moduleExists($full_name)
         ? FeaturesManagerInterface::STATUS_ENABLED
@@ -688,7 +691,7 @@ class FeaturesManager implements FeaturesManagerInterface {
 
     // Assign to a "package" named for the profile.
     if (isset($package['bundle'])) {
-      $bundle = $this->assigner->getBundle($package['bundle']);
+      $bundle = $this->getAssigner()->getBundle($package['bundle']);
     }
     if (isset($bundle) && !$bundle->isDefault()) {
       $info['package'] = $bundle->getName();
@@ -875,7 +878,7 @@ class FeaturesManager implements FeaturesManagerInterface {
     // Convert to Component object if it is a string
     if (is_string($extension)) {
       // In case this is the short form machine name, convert to full form.
-      $extension = $this->assigner->getBundle()->getFullName($extension);
+      $extension = $this->getAssigner()->getBundle()->getFullName($extension);
       $pathname = drupal_get_filename('module', $extension);
       $extension = new Extension(\Drupal::root(), 'module', $pathname);
     }
