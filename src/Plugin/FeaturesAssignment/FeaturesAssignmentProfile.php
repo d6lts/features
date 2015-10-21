@@ -15,7 +15,7 @@ use Drupal\Core\Config\InstallStorage;
  *
  * @Plugin(
  *   id = \Drupal\features\Plugin\FeaturesAssignment\FeaturesAssignmentProfile::METHOD_ID,
- *   weight = -5,
+ *   weight = 10,
  *   name = @Translation("Profile"),
  *   description = @Translation("Add configuration and other files to the optional install profile from the Drupal core Standard install profile. Without these additions, a generated install profile will be missing some important initial setup."),
  *   config_route_name = "features.assignment_profile"
