@@ -892,7 +892,7 @@ class FeaturesManager implements FeaturesManagerInterface {
     $config = array();
     $existing = $this->getExistingPackages($enabled, $bundle);
     foreach ($existing as $name => $info) {
-      $config += $this->listExtensionConfig($name);
+      $config = array_merge($config, $this->listExtensionConfig($name));
     }
     return $config;
   }
