@@ -81,15 +81,28 @@ class FeaturesGenerationArchive extends FeaturesGenerationMethodBase {
    * {@inheritdoc}
    */
   public function generate(array $packages = array(), FeaturesBundleInterface $bundle = NULL) {
-    $filename = (isset($bundle) && $bundle->isProfile()) ? $bundle->getProfileName() : 'generated_features';
 
     // If no packages were specified, get all packages.
     if (empty($packages)) {
       $packages = $this->featuresManager->getPackages();
     }
-    elseif (count($packages) == 1) {
-      // Single package export, so name tar archive by package name.
+
+    // Determine the best name for the tar archive.
+    // Single package export, so name by package name.
+    if (count($packages) == 1) {
       $filename = current($packages)['machine_name'];
+    }
+    // Profile export, so name by profile.
+    elseif (isset($bundle) && $bundle->isProfile()) {
+      $filename = $bundle->getProfileName();
+    }
+    // Non-default bundle, so name by bundle.
+    elseif (isset($bundle) && !$bundle->isDefault()) {
+      $filename = $bundle->getMachineName();
+    }
+    // Set a fallback name.
+    else {
+      $filename = 'generated_features';
     }
 
     $return = [];
