@@ -420,15 +420,19 @@ class FeaturesExportForm extends FormBase {
         $rows[] = $row;
       }
     }
-    $element['details'] = array(
+    $element['table'] = array(
       '#type' => 'table',
       '#rows' => $rows,
     );
 
-    $details = array(
+    $details = array();
+    $details['description'] = array(
+      '#markup' => Xss::filterAdmin($package['description']),
+    );
+    $details['table'] = array(
       '#type' => 'details',
-      '#title' => array('#markup' => Xss::filterAdmin($package['description'])),
-      '#description' => array('data' => $element['details']),
+      '#title' => array('#markup' => $this->t('Included configuration')),
+      '#description' => array('data' => $element['table']),
     );
     $element['details'] = array(
       'class' => array('description', 'expand'),
