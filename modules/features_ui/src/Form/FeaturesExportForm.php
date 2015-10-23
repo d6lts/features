@@ -288,7 +288,13 @@ class FeaturesExportForm extends FormBase {
       'data' => \Drupal::l($package['name'], $url),
       'class' => array('feature-name'),
     );
-    $element['machine_name'] = $package['machine_name'];
+    $machine_name = $package['machine_name'];
+    // Except for the 'unpackaged' pseudo-package, display the full name, since
+    // that's what will be generated.
+    if ($machine_name !== 'unpackaged') {
+      $machine_name = $this->assigner->getBundle()->getFullName($machine_name);
+    }
+    $element['machine_name'] = $machine_name;
     $element['status'] = array(
       'data' => $this->featuresManager->statusLabel($package['status']),
       'class' => array('column-nowrap'),
