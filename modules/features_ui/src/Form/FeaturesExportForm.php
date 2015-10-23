@@ -250,6 +250,12 @@ class FeaturesExportForm extends FormBase {
     $first = TRUE;
     foreach ($packages as $package) {
       if ($first && $package['status'] == FeaturesManagerInterface::STATUS_NO_EXPORT) {
+        // Don't offer new non-profile packages that are empty.
+        if ($package['status'] === FeaturesManagerInterface::STATUS_NO_EXPORT &&
+          !$this->assigner->getBundle()->isProfilePackage($package['machine_name']) &&
+          empty($package['config'])) {
+          continue;
+        }
         $first = FALSE;
         $options[] = array(
           'name' => array(
