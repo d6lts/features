@@ -148,7 +148,7 @@ class FeaturesExportForm extends FormBase {
     // Pass the packages and bundle data for use in the form pre_render
     // callback.
     $form['#packages'] = $packages;
-    $form['#bundle'] = $this->assigner->loadBundle();
+    $form['#profile_package'] = $current_bundle->getProfileName();
     $form['header'] = array(
       '#type' => 'container',
       '#attributes' => array('class' => 'features-header'),
@@ -499,7 +499,7 @@ class FeaturesExportForm extends FormBase {
       // - have no configuration assigned and are not the profile, or
       // - are the "unpackaged" pseudo-package.
       if ($package['status'] == FeaturesManagerInterface::STATUS_DISABLED ||
-        (empty($package['config']) && !($form['#bundle']->isProfilePackage($package['machine_name']))) ||
+        (empty($package['config']) && !($package['machine_name'] == $form['#profile_package'])) ||
         $package['machine_name'] == 'unpackaged') {
         $form['preview'][$package['machine_name']]['#access'] = FALSE;
       }
