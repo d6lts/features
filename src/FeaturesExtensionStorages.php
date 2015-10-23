@@ -33,9 +33,9 @@ class FeaturesExtensionStorages implements FeaturesExtensionStoragesInterface {
   protected $extensionStorages;
 
   /**
-   * The extension storages.
+   * Configuration provided by extension storages.
    *
-   * @var \Drupal\Core\Config\StorageInterface[]
+   * @var array
    */
   protected $configurationLists;
 
