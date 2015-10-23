@@ -145,6 +145,10 @@ class FeaturesExportForm extends FormBase {
       $packages = $this->featuresManager->filterPackages($packages, $current_bundle->getMachineName(), TRUE);
     }
 
+    // Pass the packages and bundle data for use in the form pre_render
+    // callback.
+    $form['#packages'] = $packages;
+    $form['#bundle'] = $this->assigner->loadBundle();
     $form['header'] = array(
       '#type' => 'container',
       '#attributes' => array('class' => 'features-header'),
@@ -205,7 +209,7 @@ class FeaturesExportForm extends FormBase {
       }
     }
 
-    $form['#pre_render'][] = array(get_class($this), 'preRenderHideUnpackagedCheckbox');
+    $form['#pre_render'][] = array(get_class($this), 'preRenderRemoveInvalidCheckboxes');
 
     return $form;
   }
@@ -214,11 +218,11 @@ class FeaturesExportForm extends FormBase {
    * Handles switching the configuration type selector.
    */
   public function updatePreview($form, FormStateInterface $form_state) {
-    // We should really be able to add this pre_render callback to the 
+    // We should really be able to add this pre_render callback to the
     // 'preview' element. However, since doing so leads to an error (no rows
     // are displayed), we need to instead explicitly invoke it here for the
     // processing to apply to the Ajax-rendered form element.
-    $form = $this->preRenderHideUnpackagedCheckbox($form);
+    $form = $this->preRenderRemoveInvalidCheckboxes($form);
     return $form['preview'];
   }
 
@@ -473,7 +477,8 @@ class FeaturesExportForm extends FormBase {
   }
 
   /**
-   * Denies access to the checkbox for the "unpackaged" pseudo-package.
+   * Denies access to the checkboxes for uninstalled or empty packages and the
+   * "unpackaged" pseudo-package.
    *
    * @param array $form
    *   The form build array to alter.
@@ -481,8 +486,18 @@ class FeaturesExportForm extends FormBase {
    * @return array
    *   The form build array.
    */
-  public static function preRenderHideUnpackagedCheckbox(array $form) {
-    $form['preview']['unpackaged']['#access'] = FALSE;
+  public static function preRenderRemoveInvalidCheckboxes(array $form) {
+    foreach ($form['#packages'] as $package) {
+      // Remove checkboxes for packages that:
+      // - exist and are disabled, or
+      // - have no configuration assigned and are not the profile, or
+      // - are the "unpackaged" pseudo-package.
+      if ($package['status'] == FeaturesManagerInterface::STATUS_DISABLED ||
+        (empty($package['config']) && !($form['#bundle']->isProfilePackage($package['machine_name']))) ||
+        $package['machine_name'] == 'unpackaged') {
+        $form['preview'][$package['machine_name']]['#access'] = FALSE;
+      }
+    }
     return $form;
   }
 
