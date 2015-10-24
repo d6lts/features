@@ -344,12 +344,13 @@ interface FeaturesManagerInterface {
   public function assignConfigDependents(array $item_names = NULL, $package = NULL);
 
   /**
-   * Merges two arrays and processes the resulting array, ensuring values are
-   * unique and sorted.
+   * Merges two info arrays and processes the resulting array.
    *
-   * @param array $array1
+   * Ensures values are unique and sorted.
+   *
+   * @param array $info1
    *   The first array.
-   * @param array $array2
+   * @param array $info2
    *   The second array.
    * @param string[] $keys
    *   Keys to merge. If not specified, all keys present will be merged.
@@ -357,7 +358,7 @@ interface FeaturesManagerInterface {
    * @return array
    *   An array with the merged and processed results.
    */
-  public function arrayMergeUnique(array $array1, array $array2, $keys = array());
+  public function mergeInfoArray(array $info1, array $info2, array $keys = array());
 
   /**
    * Lists the types of configuration available on the site.

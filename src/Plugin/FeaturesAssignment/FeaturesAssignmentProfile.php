@@ -138,7 +138,7 @@ class FeaturesAssignmentProfile extends FeaturesAssignmentMethodBase {
           if (file_exists($info_file_uri)) {
             $profile_info = \Drupal::service('info_parser')->parse($info_file_uri);
             // Merge in dependencies and themes data.
-            $profile_package = $this->featuresManager->arrayMergeUnique($profile_package, $profile_info, ['dependencies', 'themes']);
+            $profile_package = $this->featuresManager->mergeInfoArray($profile_package, $profile_info, ['dependencies', 'themes']);
           }
         }
         $this->featuresManager->savePackage($profile_package);

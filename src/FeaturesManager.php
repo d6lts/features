@@ -8,6 +8,7 @@
 namespace Drupal\features;
 use Drupal\Component\Plugin\PluginManagerInterface;
 use Drupal\Component\Serialization\Yaml;
+use Drupal\Component\Utility\NestedArray;
 use Drupal\features\FeaturesAssignerInterface;
 use Drupal\features\FeaturesBundleInterface;
 use Drupal\features\FeaturesGeneratorInterface;
@@ -789,34 +790,31 @@ class FeaturesManager implements FeaturesManagerInterface {
       }
     }
   }
+
   /**
    * {@inheritdoc}
    */
-  public function arrayMergeUnique(array $array1, array $array2, $keys = array()) {
+  public function mergeInfoArray(array $info1, array $info2, array $keys = array()) {
     // If keys were specified, use only those.
     if (!empty($keys)) {
-      $array2 = array_intersect_key($array2, array_fill_keys($keys, NULL));
+      $info2 = array_intersect_key($info2, array_fill_keys($keys, NULL));
     }
 
-    // Iterate through the incoming array.
-    foreach ($array2 as $key => $value) {
-      // If its values are arrays, merge them in and sort them.
-      if (is_array($value) && isset($array1[$key]) && is_array($array1[$key])) {
-        $array1[$key] = array_unique(
-          array_merge(
-            $array1[$key],
-            $value
-          )
-        );
-        asort($array1[$key]);
-      }
-      // Otherwise, accept the incoming values.
-      else {
-        $array1[$key] = $value;
-      }
+    // Ensure the entire 'features' data is replaced by new data.
+    if (isset($info2['features'])) {
+      unset($info1['features']);
     }
 
-    return $array1;
+    $info = NestedArray::mergeDeep($info1, $info2);
+
+    // Sort the dependencies and themes keys.
+    $keys = ['dependencies', 'themes'];
+    foreach ($keys as $key) {
+      if (isset($info[$key]) && is_array($info[$key])) {
+        sort($info[$key]);
+      }
+    }
+    return $info;
   }
 
   /**
