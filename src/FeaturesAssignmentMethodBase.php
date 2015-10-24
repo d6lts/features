@@ -9,6 +9,7 @@ namespace Drupal\features;
 
 use Drupal\features\FeaturesManagerInterface;
 use Drupal\features\FeaturesAssignerInterface;
+use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 
@@ -40,6 +41,13 @@ abstract class FeaturesAssignmentMethodBase implements FeaturesAssignmentMethodI
   protected $entityManager;
 
   /**
+   * The configuration factory.
+   *
+   * @var \Drupal\Core\Config\ConfigFactoryInterface
+   */
+  protected $configFactory;
+
+  /**
    * {@inheritdoc}
    */
   public function setfeaturesManager(FeaturesManagerInterface $features_manager) {
@@ -58,6 +66,13 @@ abstract class FeaturesAssignmentMethodBase implements FeaturesAssignmentMethodI
    */
   public function setEntityManager(EntityManagerInterface $entity_manager) {
     $this->entityManager = $entity_manager;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function setConfigFactory(ConfigFactoryInterface $config_factory) {
+    $this->configFactory = $config_factory;
   }
 
   /**

@@ -7,6 +7,8 @@
 
 namespace Drupal\features;
 
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\features\FeaturesManagerInterface;
 use Drupal\features\FeaturesAssignerInterface;
 
@@ -31,6 +33,22 @@ interface FeaturesAssignmentMethodInterface {
    *   The features assigner to be used to retrieve the bundle configuration.
    */
   public function setAssigner(FeaturesAssignerInterface $assigner);
+
+  /**
+   * Injects the entity manager.
+   *
+   * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
+   *   The entity manager to be used to retrieve entity information.
+   */
+  public function setEntityManager(EntityManagerInterface $entity_manager);
+
+  /**
+   * Injects the configuration factory.
+   *
+   * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
+   *   The configuration factory to be used to retrieve configuration values.
+   */
+  public function setConfigFactory(ConfigFactoryInterface $config_factory);
 
   /**
    * Performs package assignment.

@@ -174,6 +174,7 @@ class FeaturesAssigner implements FeaturesAssignerInterface {
       $instance->setFeaturesManager($this->featuresManager);
       $instance->setAssigner($this);
       $instance->setEntityManager($this->entityManager);
+      $instance->setConfigFactory($this->configFactory);
       $this->methods[$method_id] = $instance;
     }
     return $this->methods[$method_id];

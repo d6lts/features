@@ -35,6 +35,8 @@ optional:
       tour: tour
       view: view
 profile:
+profile:
+  theme: 1
   standard:
     files: 1
     dependencies: 1

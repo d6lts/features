@@ -47,6 +47,24 @@ class FeaturesAssignmentProfile extends FeaturesAssignmentMethodBase {
       // Assign configuration by type.
       $this->assignPackageByConfigTypes(self::METHOD_ID, $profile_name, $force);
 
+      // Include theme-specific configuration.
+      if ($settings['theme']) {
+        $config_collection = $this->featuresManager->getConfigCollection();
+        $theme_settings = $this->configFactory->get('system.theme');
+        foreach (['default', 'admin'] as $key) {
+          $setting = $theme_settings->get($key) . '.settings';
+          if (isset($config_collection[$setting])) {
+            try {
+              $this->featuresManager->assignConfigPackage($profile_name, [$setting]);
+            }
+            catch (\Exception $exception) {
+              \Drupal::logger('features')->error($exception->getMessage());
+            }
+          }
+        }
+
+      }
+
       // Only read in from the Standard profile if this profile doesn't already
       // exist.
       $package_directories = $this->featuresManager->listPackageDirectories(array(), $current_bundle);
