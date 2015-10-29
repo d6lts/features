@@ -28,6 +28,16 @@ interface FeaturesManagerInterface {
   const SYSTEM_SIMPLE_CONFIG = 'system_simple';
 
   /**
+   * Configuration provided by an extension.
+   *
+   * Configuration assigned to this pseudo-package will not be assigned to a
+   * package unless that package is the install profile, which can reprovide
+   * configuration provided by another extension, or the $force option
+   * is used.
+   */
+  const CONFIG_PROVIDED = '_provided_';
+
+  /**
    * Constants for package/module status.
    */
   const STATUS_NO_EXPORT = 0;

@@ -520,10 +520,18 @@ class FeaturesManager implements FeaturesManagerInterface {
       if (isset($config_collection[$item_name])) {
         // Add to the package if:
         // - force is set or
-        //   - the item hasn't already been assigned elsewhere and
+        //   - the item hasn't already been assigned elsewhere, and
         //   - the package hasn't been excluded.
         // - and the item isn't already in the package.
-        if (($force || (empty($config_collection[$item_name]['package']) && !in_array($package_name, $config_collection[$item_name]['package_excluded']))) && !in_array($item_name, $package['config'])) {
+
+        // Look for the pseudo-bundle that designates extension-provided
+        // configuration.
+        $config_provided = $config_collection[$item_name]['package'] == FeaturesManagerInterface::CONFIG_PROVIDED;
+        // If this is the profile bundle, we can reassign extension-provided configuration.
+        $already_assigned = !empty($config_collection[$item_name]['package']) && !($config_provided && $this->getAssigner()->getBundle()->isProfilePackage($package['machine_name']));
+        $excluded_from_package = in_array($package_name, $config_collection[$item_name]['package_excluded']);
+        $already_in_package = in_array($item_name, $package['config']);
+        if (($force || (!$already_assigned && !$excluded_from_package)) && !$already_in_package) {
           // Add the item to the package's config array.
           $package['config'][] = $item_name;
           // Mark the item as already assigned.

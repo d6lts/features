@@ -54,7 +54,7 @@ class FeaturesAssignmentExclude extends FeaturesAssignmentMethodBase {
       $install_list = $this->featuresManager->getExtensionStorages()->listAll();
 
       // There are two settings that can limit what's included.
-      // First, we can skipped configuration provided by the install profile.
+      // First, we can skip configuration provided by the install profile.
       $module_profile = !empty($exclude_module['profile']);
       // Second, we can skip configuration provided by namespaced modules.
       $module_namespace = !empty($exclude_module['namespace']);
@@ -78,7 +78,10 @@ class FeaturesAssignmentExclude extends FeaturesAssignmentMethodBase {
       }
       foreach ($install_list as $item_name) {
         if (isset($config_collection[$item_name])) {
-          unset($config_collection[$item_name]);
+          // Assign extension-provided configuration to a pseudo-package.
+          // Configuration with this pseudo-package can be added to an install
+          // profile.
+          $config_collection[$item_name]['package'] = FeaturesManagerInterface::CONFIG_PROVIDED;
         }
       }
     }
