@@ -513,7 +513,7 @@ class FeaturesManager implements FeaturesManagerInterface {
       $package =& $packages[$package_name];
     }
     else {
-      throw new \Exception($this->t('Failed to package %package_name. Package not found.', ['@package_name' => $package_name]));
+      throw new \Exception($this->t('Failed to package @package_name. Package not found.', ['@package_name' => $package_name]));
     }
 
     foreach ($item_names as $item_name) {
@@ -587,7 +587,7 @@ class FeaturesManager implements FeaturesManagerInterface {
       $item_names = array_keys($config_collection);
     }
     foreach ($item_names as $item_name) {
-      if (!empty($config_collection[$item_name]['package'])) {
+      if (!empty($config_collection[$item_name]['package']) && $config_collection[$item_name]['package'] != FeaturesManagerInterface::CONFIG_PROVIDED) {
         foreach ($config_collection[$item_name]['dependents'] as $dependent_item_name) {
           if (isset($config_collection[$dependent_item_name]) && (!empty($package) || empty($config_collection[$dependent_item_name]['package']))) {
             try {
