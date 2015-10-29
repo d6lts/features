@@ -33,11 +33,11 @@ class AssignmentProfileForm extends AssignmentFormBase {
 
     $this->setConfigTypeSelect($form, $settings['types']['config'], $this->t('profile'));
 
-    $form['theme'] = array(
+    $form['curated'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Include settings for the default and administration themes'),
-      '#default_value' => $settings['theme'],
-      '#description' => $this->t('Select this option to add settings from the default and administration themes.'),
+      '#title' => t('Add commonly-needed configuration'),
+      '#default_value' => $settings['curated'],
+      '#description' => $this->t('Select this option to add a curated list of commonly-needed configuration including cron- and theme-related settings to the install profile.'),
     );
 
     $standard_settings = $settings['standard'];
@@ -77,7 +77,7 @@ class AssignmentProfileForm extends AssignmentFormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $settings = array(
-      'theme' => $form_state->getValue('theme'),
+      'curated' => $form_state->getValue('curated'),
       'standard' => $form_state->getValue('standard'),
       'types' => $form_state->getValue('types'),
     );

@@ -98,7 +98,6 @@ class FeaturesAssignmentExclude extends FeaturesAssignmentMethodBase {
         'image.settings',
         'node.settings',
         'system.authorize',
-        'system.cron',
         'system.date',
         'system.file',
         'system.diff',
@@ -106,8 +105,6 @@ class FeaturesAssignmentExclude extends FeaturesAssignmentMethodBase {
         'system.maintenance',
         'system.performance',
         'system.site',
-        'system.theme',
-        'system.theme.global',
         'update.settings',
       ];
       foreach ($item_names as $item_name) {

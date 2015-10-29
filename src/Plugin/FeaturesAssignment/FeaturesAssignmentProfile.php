@@ -39,6 +39,7 @@ class FeaturesAssignmentProfile extends FeaturesAssignmentMethodBase {
 
       // Ensure the profile package exists.
       $profile_name = $current_bundle->getProfileName();
+
       $profile_package = $this->featuresManager->getPackage($profile_name);
       if (empty($profile_package)) {
         $this->featuresManager->initPackage($profile_name, $current_bundle->getName(), $current_bundle->getDescription(), 'profile');
@@ -47,22 +48,28 @@ class FeaturesAssignmentProfile extends FeaturesAssignmentMethodBase {
       // Assign configuration by type.
       $this->assignPackageByConfigTypes(self::METHOD_ID, $profile_name, $force);
 
-      // Include theme-specific configuration.
-      if ($settings['theme']) {
+      // Include a curated list of configuration.
+      if ($settings['curated']) {
         $config_collection = $this->featuresManager->getConfigCollection();
+        $item_names = [
+          'automated_cron.settings',
+          'system.cron',
+          'system.theme',
+        ];
         $theme_settings = $this->configFactory->get('system.theme');
         foreach (['default', 'admin'] as $key) {
-          $setting = $theme_settings->get($key) . '.settings';
-          if (isset($config_collection[$setting])) {
+          $item_names[] = $theme_settings->get($key) . '.settings';
+        }
+        foreach ($item_names as $item_name) {
+          if (isset($config_collection[$item_name])) {
             try {
-              $this->featuresManager->assignConfigPackage($profile_name, [$setting]);
+              $this->featuresManager->assignConfigPackage($profile_name, [$item_name]);
             }
             catch (\Exception $exception) {
               \Drupal::logger('features')->error($exception->getMessage());
             }
           }
         }
-
       }
 
       // Only read in from the Standard profile if this profile doesn't already

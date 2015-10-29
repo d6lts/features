@@ -984,6 +984,7 @@ class FeaturesManager implements FeaturesManagerInterface {
             'dependents' => array_keys($dependents),
             // Default to the install directory.
             'subdirectory' => InstallStorage::CONFIG_INSTALL_DIRECTORY,
+            'package' => '',
             'package_excluded' => [],
           ];
         }
