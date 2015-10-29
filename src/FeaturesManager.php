@@ -815,11 +815,12 @@ class FeaturesManager implements FeaturesManagerInterface {
 
     $info = NestedArray::mergeDeep($info1, $info2);
 
-    // Sort the dependencies and themes keys.
+    // Process the dependencies and themes keys.
     $keys = ['dependencies', 'themes'];
     foreach ($keys as $key) {
       if (isset($info[$key]) && is_array($info[$key])) {
-        sort($info[$key]);
+        // NestedArray::mergeDeep() may produce duplicate values.
+        sort(array_unique($info[$key]));
       }
     }
     return $info;
