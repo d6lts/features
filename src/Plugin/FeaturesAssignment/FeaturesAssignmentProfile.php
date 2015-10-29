@@ -8,6 +8,7 @@
 namespace Drupal\features\Plugin\FeaturesAssignment;
 
 use Drupal\features\FeaturesAssignmentMethodBase;
+use Drupal\features\FeaturesManagerInterface;
 use Drupal\Core\Config\InstallStorage;
 
 /**
@@ -92,11 +93,16 @@ class FeaturesAssignmentProfile extends FeaturesAssignmentMethodBase {
                 // Reload the profile to refresh the config array after the addition.
                 $profile_package = $this->featuresManager->getPackage($profile_name);
               }
-              // If it's already assigned, add a dependency.
+              // @todo: if it's provided by a module, add a dependency.
+              elseif ($config_collection[$item_name]['package'] == FeaturesManagerInterface::CONFIG_PROVIDED) {
+
+              }
+              // If it's already assigned to a package in the current bundle,
+              // add a dependency.
               else {
                 $machine_name = $current_bundle->getFullName($config_collection[$item_name]['package']);
-                if (!in_array($machine_name, $config_collection[$item_name]['dependencies'])) {
-                  $config_collection[$item_name]['dependencies'][] = $machine_name;
+                if (!in_array($machine_name, $profile_package['dependencies'])) {
+                  $profile_package['dependencies'][] = $machine_name;
                 }
               }
             }
