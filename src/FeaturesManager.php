@@ -368,9 +368,9 @@ class FeaturesManager implements FeaturesManagerInterface {
         return TRUE;
       }
       // If the default bundle was requested, look for features where
-      // the 'features' key is set to TRUE.
+      // the bundle is not set.
       elseif ($bundle->isDefault()) {
-        return $info['features'] === TRUE;
+        return !isset($info['features']['bundle']);
       }
       // If we have a bundle name, look for it.
       else {
