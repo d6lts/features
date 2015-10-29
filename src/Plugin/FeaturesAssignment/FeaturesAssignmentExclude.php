@@ -110,6 +110,20 @@ class FeaturesAssignmentExclude extends FeaturesAssignmentMethodBase {
       foreach ($item_names as $item_name) {
         unset($config_collection[$item_name]);
       }
+      // Unset role-related actions that are automatically created by the
+      // User module.
+      // @see user_user_role_insert()
+      $prefixes = [
+        'system.action.user_add_role_action.',
+        'system.action.user_remove_role_action.',
+      ];
+      foreach (array_keys($config_collection) as $item_name) {
+        foreach ($prefixes as $prefix) {
+          if (strpos($item_name, $prefix) === 0) {
+            unset($config_collection[$item_name]);
+          }
+        }
+      }
     }
 
     // Register the updated data.
