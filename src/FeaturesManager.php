@@ -714,19 +714,17 @@ class FeaturesManager implements FeaturesManagerInterface {
     if (isset($package['bundle'])) {
       $bundle = $this->getAssigner()->getBundle($package['bundle']);
     }
+    // Save the current bundle in the info file so the package
+    // can be reloaded later by the AssignmentPackages plugin.
     if (isset($bundle) && !$bundle->isDefault()) {
       $info['package'] = $bundle->getName();
+      $info['features']['bundle'] = $bundle->getMachineName();
+    }
+    else {
+      unset($info['features']['bundle']);
     }
 
     if (!empty($package['config'])) {
-      // Save the current bundle in the info file so the package
-      // can be reloaded later by the AssignmentPackages plugin.
-      if (isset($bundle) && !$bundle->isDefault()) {
-        $info['features']['bundle'] = $bundle->getMachineName();
-      }
-      else {
-        unset($info['features']['bundle']);
-      }
       foreach (array('excluded', 'required') as $constraint) {
         if (!empty($package[$constraint])) {
           $info['features'][$constraint] = $package[$constraint];

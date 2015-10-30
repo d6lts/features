@@ -146,13 +146,16 @@ class FeaturesGenerator implements FeaturesGeneratorInterface {
       foreach ($package_names as $package_name) {
         // Rename package to use bundle prefix.
         $package = $packages[$package_name];
+
         // The install profile doesn't need renaming.
         if ($package['type'] != 'profile') {
           unset($packages[$package_name]);
           $package['machine_name'] = $bundle->getFullName($package['machine_name']);
-          $package['bundle'] = $bundle->getMachineName();
           $packages[$package['machine_name']] = $package;
         }
+
+        // Set the bundle machine name.
+        $packages[$package['machine_name']]['bundle'] = $bundle->getMachineName();
         $new_package_names[] = $package['machine_name'];
       }
       $this->featuresManager->setPackages($packages);
