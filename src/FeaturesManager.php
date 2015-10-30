@@ -820,7 +820,8 @@ class FeaturesManager implements FeaturesManagerInterface {
     foreach ($keys as $key) {
       if (isset($info[$key]) && is_array($info[$key])) {
         // NestedArray::mergeDeep() may produce duplicate values.
-        sort(array_unique($info[$key]));
+        $info[$key] = array_unique($info[$key]);
+        sort($info[$key]);
       }
     }
     return $info;
