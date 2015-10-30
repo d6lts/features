@@ -399,7 +399,7 @@ class FeaturesManager implements FeaturesManagerInterface {
     // Find features modules that are in the current bundle.
     foreach ($modules as $name => $module) {
       if ($this->isFeatureModule($module, $bundle)) {
-        $short_name = $bundle? $bundle->getShortName($name) : $name;
+        $short_name = $bundle ? $bundle->getShortName($name) : $name;
         $result[$short_name] = $this->getExtensionInfo($module);
         $result[$short_name]['status'] = $this->moduleHandler->moduleExists($name)
           ? FeaturesManagerInterface::STATUS_ENABLED
@@ -524,11 +524,10 @@ class FeaturesManager implements FeaturesManagerInterface {
         //   - the package hasn't been excluded.
         // - and the item isn't already in the package.
 
-        // Look for the pseudo-bundle that designates extension-provided
-        // configuration.
-        $config_provided = $config_collection[$item_name]['package'] == FeaturesManagerInterface::CONFIG_PROVIDED;
+        // Determine if the item is provided by an extension.
+        $extension_provided = $config_collection[$item_name]['extension_provided'] === TRUE;
         // If this is the profile bundle, we can reassign extension-provided configuration.
-        $already_assigned = !empty($config_collection[$item_name]['package']) && !($config_provided && $this->getAssigner()->getBundle()->isProfilePackage($package['machine_name']));
+        $already_assigned = !empty($config_collection[$item_name]['package']) && !($extension_provided && $this->getAssigner()->getBundle()->isProfilePackage($package['machine_name']));
         $excluded_from_package = in_array($package_name, $config_collection[$item_name]['package_excluded']);
         $already_in_package = in_array($item_name, $package['config']);
         if (($force || (!$already_assigned && !$excluded_from_package)) && !$already_in_package) {
@@ -600,7 +599,7 @@ class FeaturesManager implements FeaturesManagerInterface {
       $item_names = array_keys($config_collection);
     }
     foreach ($item_names as $item_name) {
-      if (!empty($config_collection[$item_name]['package']) && $config_collection[$item_name]['package'] != FeaturesManagerInterface::CONFIG_PROVIDED) {
+      if (!empty($config_collection[$item_name]['package'])) {
         foreach ($config_collection[$item_name]['dependents'] as $dependent_item_name) {
           if (isset($config_collection[$dependent_item_name]) && (!empty($package) || empty($config_collection[$dependent_item_name]['package']))) {
             try {
@@ -1000,6 +999,7 @@ class FeaturesManager implements FeaturesManagerInterface {
             // Default to the install directory.
             'subdirectory' => InstallStorage::CONFIG_INSTALL_DIRECTORY,
             'package' => '',
+            'extension_provided' => NULL,
             'package_excluded' => [],
           ];
         }

@@ -78,10 +78,9 @@ class FeaturesAssignmentExclude extends FeaturesAssignmentMethodBase {
       }
       foreach ($install_list as $item_name) {
         if (isset($config_collection[$item_name])) {
-          // Assign extension-provided configuration to a pseudo-package.
-          // Configuration with this pseudo-package can be added to an install
-          // profile.
-          $config_collection[$item_name]['package'] = FeaturesManagerInterface::CONFIG_PROVIDED;
+          // Flag extension-provided configuration, which should not be added
+          // to regular features but can be added to an install profile.
+          $config_collection[$item_name]['extension_provided'] = TRUE;
         }
       }
     }

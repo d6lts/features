@@ -476,7 +476,7 @@ class FeaturesExportForm extends FormBase {
       'version' => '',
     );
     foreach ($config_collection as $item_name => $item) {
-      if (empty($item['package'])) {
+      if (empty($item['package']) && !$item['extension_provided']) {
         $packages['unpackaged']['config'][] = $item_name;
       }
     }

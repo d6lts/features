@@ -41,7 +41,7 @@ class FeaturesAssignmentBaseType extends FeaturesAssignmentMethodBase {
 
     foreach ($config_collection as $item_name => $item) {
       if (in_array($item['type'], $config_base_types)) {
-        if (!isset($packages[$item['name_short']]) && !isset($item['package'])) {
+        if (!isset($packages[$item['name_short']]) && empty($item['package'])) {
           $description = $this->t('Provide @label @type and related configuration.', array('@label' => $item['label'], '@type' => Unicode::strtolower($config_types[$item['type']])));
           if (isset($item['data']['description'])) {
             $description .= ' ' . $item['data']['description'];

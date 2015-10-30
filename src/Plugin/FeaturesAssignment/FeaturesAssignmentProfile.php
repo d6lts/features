@@ -88,14 +88,11 @@ class FeaturesAssignmentProfile extends FeaturesAssignmentMethodBase {
             // If the configuration is present on the site, assign it.
             if (isset($config_collection[$item_name])) {
               // Only assign it if it's not already assigned to a package.
+              // @todo: if it's provided by a module, add a dependency.
               if (empty($config_collection[$item_name]['package'])) {
                 $this->featuresManager->assignConfigPackage($profile_name, [$item_name], $force);
                 // Reload the profile to refresh the config array after the addition.
                 $profile_package = $this->featuresManager->getPackage($profile_name);
-              }
-              // @todo: if it's provided by a module, add a dependency.
-              elseif ($config_collection[$item_name]['package'] == FeaturesManagerInterface::CONFIG_PROVIDED) {
-
               }
               // If it's already assigned to a package in the current bundle,
               // add a dependency.

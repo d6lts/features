@@ -28,16 +28,6 @@ interface FeaturesManagerInterface {
   const SYSTEM_SIMPLE_CONFIG = 'system_simple';
 
   /**
-   * Configuration provided by an extension.
-   *
-   * Configuration assigned to this pseudo-package will not be assigned to a
-   * package unless that package is the install profile, which can reprovide
-   * configuration provided by another extension, or the $force option
-   * is used.
-   */
-  const CONFIG_PROVIDED = '_provided_';
-
-  /**
    * Constants for package/module status.
    */
   const STATUS_NO_EXPORT = 0;
@@ -88,6 +78,9 @@ interface FeaturesManagerInterface {
    *   - 'data': the contents of the configuration item in exported format.
    *   - 'dependents': array of names of dependent configuration items.
    *   - 'subdirectory': feature subdirectory to export item to.
+   *   - 'package': machine name of a package the configuration is assigned to.
+   *   - 'extension_provided': whether the configuration is provided by an
+   *     extension.
    *   - 'package_excluded': array of package names that this item should be
    *     excluded from.
    */
@@ -105,6 +98,9 @@ interface FeaturesManagerInterface {
    *   - 'data': the contents of the configuration item in exported format.
    *   - 'dependents': array of names of dependent configuration items.
    *   - 'subdirectory': feature subdirectory to export item to.
+   *   - 'package': machine name of a package the configuration is assigned to.
+   *   - 'extension_provided': whether the configuration is provided by an
+   *     extension.
    *   - 'package_excluded': array of package names that this item should be
    *     excluded from.
    */
