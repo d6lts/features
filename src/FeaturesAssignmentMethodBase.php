@@ -94,7 +94,7 @@ abstract class FeaturesAssignmentMethodBase implements FeaturesAssignmentMethodI
     $config_collection = $this->featuresManager->getConfigCollection();
 
     foreach ($config_collection as $item_name => $item) {
-      if (in_array($item['type'], $types)) {
+      if (in_array($item['type'], $types) && $item['package'] != FeaturesManagerInterface::CONFIG_PROVIDED) {
         try {
           $this->featuresManager->assignConfigPackage($machine_name, [$item_name]);
         }
