@@ -558,6 +558,12 @@ class FeaturesManager implements FeaturesManagerInterface {
    * {@inheritdoc}
    */
   public function assignConfigByPattern(array $patterns) {
+    // Regular expressions for items that are likely to generate false
+    // positives when assigned by pattern.
+    $false_positives = [
+      // Blocks with the page title should not be assigned to a 'page' package.
+      '/block\.block\..*_page_title/',
+    ];
     $config_collection = $this->getConfigCollection();
     // Reverse sort by key so that child package will claim items before parent
     // package. E.g., event_registration will claim before event.
@@ -565,6 +571,13 @@ class FeaturesManager implements FeaturesManagerInterface {
     foreach ($patterns as $pattern => $machine_name) {
       if (isset($this->packages[$machine_name])) {
         foreach ($config_collection as $item_name => $item) {
+          // Test for and skip false positives.
+          foreach ($false_positives as $false_positive) {
+            if (preg_match($false_positive, $item_name)) {
+              continue 2;
+            }
+          }
+
           if (empty($item['package']) && preg_match('/[_\-.]' . $pattern . '[_\-.]/', '.' . $item['name_short'] . '.')) {
             try {
               $this->assignConfigPackage($machine_name, [$item_name]);
