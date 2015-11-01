@@ -543,8 +543,7 @@ class FeaturesManager implements FeaturesManagerInterface {
           // dependencies.
           if ($config_collection[$item_name]['subdirectory'] === InstallStorage::CONFIG_INSTALL_DIRECTORY && isset($config_collection[$item_name]['data']['dependencies']['module'])) {
             $dependencies =& $package['dependencies'];
-            $dependencies = array_unique(array_merge($dependencies, $config_collection[$item_name]['data']['dependencies']['module']));
-            sort($dependencies);
+            $this->mergeUniqueItems($dependencies, $config_collection[$item_name]['data']['dependencies']['module']);
           }
         }
       }
@@ -615,6 +614,48 @@ class FeaturesManager implements FeaturesManagerInterface {
         }
       }
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function assignInterPackageDependencies(array &$packages) {
+    $config_collection = $this->getConfigCollection();
+    foreach ($packages as &$package) {
+      foreach ($package['config'] as $item_name) {
+        if (!empty($config_collection[$item_name]['data']['dependencies']['config'])) {
+          foreach ($config_collection[$item_name]['data']['dependencies']['config'] as $dependency_name) {
+            if (isset($config_collection[$dependency_name])) {
+              // If the required item is assigned to one of the packages, add
+              // a dependency on that package.
+              if (!empty($config_collection[$dependency_name]['package']) && array_key_exists($config_collection[$dependency_name]['package'], $packages)) {
+                $this->mergeUniqueItems($package['dependencies'], [$this->getAssigner()->getBundle()->getFullName($config_collection[$dependency_name]['machine_name'])]);
+              }
+              // Otherwise, if the dependency is provided by an existing
+              // feature, add a dependency on that feature.
+              elseif (!empty($config_collection[$dependency_name]['providing_feature'])) {
+                $this->mergeUniqueItems($package['dependencies'], [$config_collection[$dependency_name]['providing_feature']]);
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  /**
+   * Merges a set of new item into an array and sorts the result.
+   *
+   * Only unique values are retained.
+   *
+   * @param array &$items
+   *   An array of items.
+   * @param array $new_items
+   *   An array of new items to be merged in.
+   */
+  protected function mergeUniqueItems(&$items, $new_items) {
+    $items = array_unique(array_merge($items, $new_items));
+    sort($items);
   }
 
   /**
@@ -763,19 +804,6 @@ class FeaturesManager implements FeaturesManagerInterface {
   }
 
   /**
-   * Generates and adds files to all packages.
-   */
-  protected function addPackagesFiles() {
-    $packages = $this->getPackages();
-    foreach ($packages as &$package) {
-      $this->addPackageFiles($package);
-    }
-    // Clean up the $package pass by reference.
-    unset($package);
-    $this->setPackages($packages);
-  }
-
-  /**
    * Generates and adds files to a given package or profile.
    */
   protected function addPackageFiles(array &$package) {
@@ -910,7 +938,10 @@ class FeaturesManager implements FeaturesManagerInterface {
     $config = array();
     $existing = $this->getExistingPackages($enabled, $bundle);
     foreach ($existing as $name => $info) {
-      $config = array_merge($config, $this->listExtensionConfig($name));
+      // Keys are configuration item names and values are providing extension
+      // name.
+      $new_config = array_fill_keys($this->listExtensionConfig($name), $name);
+      $config = array_merge($config, $new_config);
     }
     return $config;
   }
@@ -964,6 +995,8 @@ class FeaturesManager implements FeaturesManagerInterface {
       $config_collection = [];
       $config_types = $this->listConfigTypes();
       $dependency_manager = $this->configManager->getConfigDependencyManager();
+      // List configuration provided by installed features.
+      $existing_config = $this->listExistingConfig(TRUE);
       foreach (array_keys($config_types) as $config_type) {
         $config = $this->listConfigByType($config_type);
         foreach ($config as $item_name => $label) {
@@ -998,6 +1031,7 @@ class FeaturesManager implements FeaturesManagerInterface {
             'subdirectory' => InstallStorage::CONFIG_INSTALL_DIRECTORY,
             'package' => '',
             'extension_provided' => NULL,
+            'providing_feature' => isset($existing_config[$name]) ? $existing_config[$name] : NULL,
             'package_excluded' => [],
           ];
         }
@@ -1009,8 +1043,12 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function prepareFiles() {
-    $this->addPackagesFiles();
+  public function prepareFiles(array &$packages) {
+    foreach ($packages as &$package) {
+      $this->addPackageFiles($package);
+    }
+    // Clean up the $package pass by reference.
+    unset($package);
   }
 
   /**

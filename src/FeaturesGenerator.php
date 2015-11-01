@@ -185,14 +185,17 @@ class FeaturesGenerator implements FeaturesGeneratorInterface {
    *   - 'variables': an array of substitutions to be used in the message.
    */
   protected function generate($method_id, array $package_names = array(), FeaturesBundleInterface $bundle = NULL) {
-    // Prepare the files.
-    $this->featuresManager->prepareFiles();
     $packages = $this->featuresManager->getPackages();
 
     // Filter out the packages that weren't requested.
     if (!empty($package_names)) {
       $packages = array_intersect_key($packages, array_fill_keys($package_names, NULL));
     }
+
+    $this->featuresManager->assignInterPackageDependencies($packages);
+
+    // Prepare the files.
+    $this->featuresManager->prepareFiles($packages);
 
     $return = $this->applyGenerationMethod($method_id, $packages, $bundle);
 

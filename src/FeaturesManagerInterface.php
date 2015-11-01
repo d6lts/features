@@ -350,6 +350,14 @@ interface FeaturesManagerInterface {
   public function assignConfigDependents(array $item_names = NULL, $package = NULL);
 
   /**
+   * Assigns dependencies between packages based on configuration dependencies.
+   *
+   * @param array $packages
+   *   An array of packages.
+   */
+  public function assignInterPackageDependencies(array &$packages);
+
+  /**
    * Merges two info arrays and processes the resulting array.
    *
    * Ensures values are unique and sorted.
@@ -438,15 +446,17 @@ interface FeaturesManagerInterface {
    *   (optional) Bundle to find existing configuration for.
    *
    * @return array
-   *   An array of config names.
+   *   An array with config names as keys and providing module names as values.
    */
   public function listExistingConfig($enabled = FALSE, FeaturesBundleInterface $bundle = NULL);
 
   /**
-   * Iterates through packages and profile and prepares file names and
-   * contents.
+   * Iterates through packages and prepares file names and contents.
+   *
+   * @param array &$packages
+   *   An array of packages.
    */
-  public function prepareFiles();
+  public function prepareFiles(array &$packages);
 
   /**
    * Returns the full name of a config item.

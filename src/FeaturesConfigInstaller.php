@@ -28,7 +28,7 @@ class FeaturesConfigInstaller extends ConfigInstaller {
     // Drupal\Core\Config\ConfigInstaller::findPreExistingConfiguration().
     // Allow config that already exists coming from Features.
     $manager = \Drupal::service('features.manager');
-    $features_config = $manager->listExistingConfig();
+    $features_config = array_keys($manager->listExistingConfig());
     // Map array so we can use isset instead of in_array for faster access.
     $features_config = array_combine($features_config, $features_config);
     // CHANGE END.
