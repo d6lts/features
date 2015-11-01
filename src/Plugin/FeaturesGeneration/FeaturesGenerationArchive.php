@@ -48,9 +48,12 @@ class FeaturesGenerationArchive extends FeaturesGenerationMethodBase {
       // Scan for all files.
       $files = file_scan_directory($existing_directory, '/.*/');
       foreach ($files as $file) {
-        // Skip files in the install directory.
-        if (strpos($existing_directory, InstallStorage::CONFIG_INSTALL_DIRECTORY) !== FALSE) {
-          continue;
+        // Skip files in the any existing configuration directory, as these
+        // will be replaced.
+        foreach (array_keys($this->featuresManager->getExtensionStorages()->getExtensionStorages()) as $directory) {
+          if (strpos($file->uri, $directory) !== FALSE) {
+            continue 2;
+          }
         }
         // Merge in the info file.
         if ($file->name == $package['machine_name'] . '.info') {
