@@ -154,12 +154,21 @@ interface FeaturesAssignerInterface {
    * @param string $machine_name
    *   Machine name. If omitted, auto-generated from Name.
    * @param string $description
-   *   Optional description.
+   *   (optional) Description of the bundle.
+   * @param bool $is_profile
+   *   (optional) TRUE if a profile is used with this bundle.
+   * @param string $profile_name
+   *   (optional) The machine name of the profile.
    *
    * @return \Drupal\features\FeaturesBundleInterface
    *   A features bundle object.
    */
-  public function createBundle($name, $machine_name = '', $description = '');
+  public function createBundle($name, $machine_name = '', $description = '', $is_profile = FALSE, $profile_name = NULL);
+
+  /**
+   * Creates bundles by parsing information from installed packages.
+   */
+  public function createBundlesFromPackages();
 
   /**
    * Returns an array of bundle names suitable for a select option list.

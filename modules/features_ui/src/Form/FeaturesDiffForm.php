@@ -184,7 +184,7 @@ class FeaturesDiffForm extends FormBase {
     $config = $this->featuresManager->getConfigCollection();
     $items = array_filter($form_state->getValue('diff'));
     if (empty($items)) {
-      drupal_set_message('No configuration was selected for import.', 'warning');
+      drupal_set_message($this->t('No configuration was selected for import.'), 'warning');
       return;
     }
     foreach ($items as $config_name) {

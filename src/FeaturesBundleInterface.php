@@ -141,7 +141,7 @@ interface FeaturesBundleInterface {
    * Sets option for using a profile with this bundle.
    *
    * @param bool $value
-   *   TRUE if a profile is used with this profile.
+   *   TRUE if a profile is used with this bundle.
    */
   public function setIsProfile($value);
 

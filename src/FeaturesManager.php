@@ -385,6 +385,7 @@ class FeaturesManager implements FeaturesManagerInterface {
    */
   public function getExistingPackages($enabled = FALSE, FeaturesBundleInterface $bundle = NULL) {
     $result = array();
+
     if ($enabled) {
       $modules = $this->moduleHandler->getModuleList();
     }
@@ -392,8 +393,7 @@ class FeaturesManager implements FeaturesManagerInterface {
       // ModuleHandler::getModuleList() returns data only for installed
       // modules. We want to search all possible exports for Features that
       // might be disabled.
-      $listing = new ExtensionDiscovery(\Drupal::root());
-      $modules = $listing->scan('module');
+      $modules = $this->getAllModules($bundle);
     }
 
     // Find features modules that are in the current bundle.
@@ -438,41 +438,44 @@ class FeaturesManager implements FeaturesManagerInterface {
    * {@inheritdoc}
    */
   public function getAllModules(FeaturesBundleInterface $bundle = NULL) {
-    // ModuleHandler::getModuleDirectories() returns data only for installed
-    // modules. system_rebuild_module_data() includes only the site's install
-    // profile directory, while we may need to include a custom profile.
-    // @see _system_rebuild_module_data().
-    $listing = new ExtensionDiscovery(\Drupal::root());
+    static $modules;
 
-    $profile_directories = [];
-    // Register the install profile.
-    $installed_profile = drupal_get_profile();
-    if ($installed_profile) {
-      $profile_directories[] = drupal_get_path('profile', $installed_profile);
-    }
-    if (isset($bundle) && $bundle->isProfile()) {
-      $profile_directory = 'profiles/' . $bundle->getProfileName();
-      if (($bundle->getProfileName() != $installed_profile) && is_dir($profile_directory)) {
-        $profile_directories[] = $profile_directory;
+    if (!isset($modules)) {
+      // ModuleHandler::getModuleDirectories() returns data only for installed
+      // modules. system_rebuild_module_data() includes only the site's install
+      // profile directory, while we may need to include a custom profile.
+      // @see _system_rebuild_module_data().
+      $listing = new ExtensionDiscovery(\Drupal::root());
+
+      $profile_directories = [];
+      // Register the install profile.
+      $installed_profile = drupal_get_profile();
+      if ($installed_profile) {
+        $profile_directories[] = drupal_get_path('profile', $installed_profile);
       }
-    }
-    $listing->setProfileDirectories($profile_directories);
+      if (isset($bundle) && $bundle->isProfile()) {
+        $profile_directory = 'profiles/' . $bundle->getProfileName();
+        if (($bundle->getProfileName() != $installed_profile) && is_dir($profile_directory)) {
+          $profile_directories[] = $profile_directory;
+        }
+      }
+      $listing->setProfileDirectories($profile_directories);
 
-    // Find modules.
-    $modules = $listing->scan('module');
+      // Find modules.
+      $modules = $listing->scan('module');
 
-    // Find installation profiles.
-    $profiles = $listing->scan('profile');
+      // Find installation profiles.
+      $profiles = $listing->scan('profile');
 
-    foreach ($profiles as $key => $profile) {
-      $modules[$key] = $profile;
+      foreach ($profiles as $key => $profile) {
+        $modules[$key] = $profile;
+      }
     }
 
     $return = array();
-    // Detect modules by namespace.
-    // If namespace is provided but is empty, then match all modules.
+
     foreach ($modules as $module_name => $extension) {
-      if ($this->isFeatureModule($extension) && (!isset($bundle) || $bundle->isDefault() || $bundle->inBundle($module_name))) {
+      if ($this->isFeatureModule($extension, $bundle)) {
         $return[$module_name] = $extension;
       }
     }

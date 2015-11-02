@@ -13,11 +13,13 @@ use Drupal\features\FeaturesBundle;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Config\StorageInterface;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 
 /**
  * Class responsible for performing package assignment.
  */
 class FeaturesAssigner implements FeaturesAssignerInterface {
+  use StringTranslationTrait;
 
   const DEFAULTBUNDLE = '_default_';
 
@@ -92,6 +94,8 @@ class FeaturesAssigner implements FeaturesAssignerInterface {
     $this->configStorage = $config_storage;
     $this->bundles = $this->getBundleList();
     $this->currentBundle = $this->getBundle(self::DEFAULTBUNDLE);
+    // Ensure bundle information is fresh.
+    $this->createBundlesFromPackages();
   }
 
   /**
@@ -226,13 +230,9 @@ class FeaturesAssigner implements FeaturesAssignerInterface {
     elseif (!empty($info['package'])) {
       $bundle = $this->findBundleByName($info['package']);
     }
-    if (!isset($bundle) && (!empty($info['package']) || !empty($info['features']['bundle']))) {
-      // Create the bundle if it doesn't exist yet.
-      $bundle = $this->createBundle($info['package'], $info['features']['bundle']);
-    }
-    else {
-      // Else, return default bundle.
-      $bundle = $this->getBundle('');
+    if (!isset($bundle)) {
+      // Return the default bundle.
+      return $this->getBundle('');
     }
     return $bundle;
   }
@@ -287,7 +287,7 @@ class FeaturesAssigner implements FeaturesAssignerInterface {
   /**
    * {@inheritdoc}
    */
-  public function createBundle($name, $machine_name = NULL, $description = NULL) {
+  public function createBundle($name, $machine_name = NULL, $description = NULL, $is_profile = FALSE, $profile_name = NULL) {
     $bundle = new FeaturesBundle('', $this->featuresManager, $this, $this->configFactory);
     $bundle->load();
     if (empty($machine_name)) {
@@ -301,9 +301,59 @@ class FeaturesAssigner implements FeaturesAssignerInterface {
     else {
       $bundle->setDescription(t('Auto-generated bundle from package @name', array('@name' => $name)));
     }
+    $bundle->setIsProfile($is_profile);
+    if (isset($profile_name)) {
+      $bundle->setProfileName($profile_name);
+    }
     $bundle->save();
     $this->setBundle($bundle);
     return $bundle;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function createBundlesFromPackages() {
+    $existing_bundles = $this->getBundleList();
+    $new_bundles = [];
+    $packages = $this->featuresManager->getExistingPackages();
+
+    foreach ($packages as $machine_name => $package) {
+      // Only parse from enabled features.
+      if ($package['status'] === FeaturesManagerInterface::STATUS_ENABLED) {
+        // Create a new bundle if:
+        // - the feature specifies a bundle and
+        // - that bundle doesn't yet exist locally.
+        // Allow profiles to override previous values.
+        if (!empty($package['features']['bundle']) &&
+          !isset($existing_bundles[$package['features']['bundle']]) &&
+          (!in_array($package['features']['bundle'], $new_bundles) || $package['type'] == 'profile')) {
+          if ($package['type'] == 'profile') {
+            $new_bundle = [
+              'name' => $package['name'],
+              'description' => $package['description'],
+              'is_profile' => TRUE,
+              'profile_name' => $machine_name,
+            ];
+          }
+          else {
+            $new_bundle = [
+              'name' => isset($package['package']) ? $package['package'] : ucwords(str_replace('_', ' ', $package['features']['bundle'])),
+              'description' => NULL,
+              'is_profile' => FALSE,
+              'profile_name' => NULL,
+            ];
+          }
+          $new_bundle['machine_name'] = $package['features']['bundle'];
+          $new_bundles[$new_bundle['machine_name']] = $new_bundle;
+        }
+      }
+    }
+    foreach ($new_bundles as $new_bundle) {
+      $new_bundle = $this->createBundle($new_bundle['name'], $new_bundle['machine_name'], $new_bundle['description'], $new_bundle['is_profile']);
+      drupal_set_message($this->t('Features bundle @name automatically created.', ['@name' => $new_bundle->getName()]));
+    }
+
   }
 
   /**
