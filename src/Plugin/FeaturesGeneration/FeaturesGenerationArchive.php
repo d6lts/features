@@ -230,7 +230,8 @@ class FeaturesGenerationArchive extends FeaturesGenerationMethodBase {
       $filename .= '/' . $file['subdirectory'];
     }
     $filename .= '/' . $file['filename'];
-    if ($archiver->addString($filename, $file['string']) === FALSE) {
+    // Set the mode to 0644 rather than the default of 0600.
+    if ($archiver->addString($filename, $file['string'], FALSE, ['mode' => 0644]) === FALSE) {
       throw new \Exception($this->t('Failed to archive file @filename.', ['@filename' => $file['filename']]));
     }
   }
