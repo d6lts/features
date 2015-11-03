@@ -431,11 +431,13 @@ interface FeaturesManagerInterface {
    *
    * @param mixed $extension
    *   A string name of an extension or a full Extension object.
+   * @param \Drupal\features\FeaturesBundleInterface $bundle
+   *   (optional) Bundle to determine name with.
    *
    * @return array
    *   An array of configuration object names.
    */
-  public function listExtensionConfig($extension);
+  public function listExtensionConfig($extension, FeaturesBundleInterface $bundle = NULL);
 
   /**
    * Lists names of configuration items provided by existing Features modules.

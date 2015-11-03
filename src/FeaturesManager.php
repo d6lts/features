@@ -500,7 +500,7 @@ class FeaturesManager implements FeaturesManagerInterface {
     $bundle = $this->getAssigner()->findBundle($info);
     $package['bundle'] = isset($bundle) ? $bundle->getMachineName() : '';
     $package['info'] = $info;
-    $package['config_orig'] = $this->listExtensionConfig($machine_name);
+    $package['config_orig'] = $this->listExtensionConfig($machine_name, $bundle);
     $this->savePackage($package);
     return $package;
   }
@@ -924,11 +924,13 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function listExtensionConfig($extension) {
-    // Convert to Component object if it is a string
+  public function listExtensionConfig($extension, FeaturesBundleInterface $bundle = NULL) {
+    // Convert to Extension object if it is a string.
     if (is_string($extension)) {
       // In case this is the short form machine name, convert to full form.
-      $extension = $this->getAssigner()->getBundle()->getFullName($extension);
+      if ($bundle) {
+        $extension = $bundle->getFullName($extension);
+      }
       $pathname = drupal_get_filename('module', $extension);
       $extension = new Extension(\Drupal::root(), 'module', $pathname);
     }
@@ -944,7 +946,7 @@ class FeaturesManager implements FeaturesManagerInterface {
     foreach ($existing as $name => $info) {
       // Keys are configuration item names and values are providing extension
       // name.
-      $new_config = array_fill_keys($this->listExtensionConfig($name), $name);
+      $new_config = array_fill_keys($this->listExtensionConfig($name, $bundle), $name);
       $config = array_merge($config, $new_config);
     }
     return $config;

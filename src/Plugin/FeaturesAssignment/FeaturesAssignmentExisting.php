@@ -34,7 +34,7 @@ class FeaturesAssignmentExisting extends FeaturesAssignmentMethodBase {
    *   The name of a feature module.
    */
   protected function safeAssignConfig($name) {
-    $config = $this->featuresManager->listExtensionConfig($name);
+    $config = $this->featuresManager->listExtensionConfig($name, $this->assigner->getBundle());
     try {
       $this->featuresManager->assignConfigPackage($name, $config);
     }
