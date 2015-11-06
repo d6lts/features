@@ -31,9 +31,12 @@ class FeaturesAssignmentPackages extends FeaturesAssignmentMethodBase {
    * {@inheritdoc}
    */
   public function assignPackages($force = FALSE) {
-    $existing = $this->featuresManager->getExistingPackages(FALSE, $this->assigner->getBundle());
-    foreach ($existing as $name => $info) {
-      $this->featuresManager->initPackageFromInfo($name, $info);
+    $bundle = $this->assigner->getBundle();
+    $existing = $this->featuresManager->getFeaturesModules($bundle);
+    foreach ($existing as $extension) {
+      $package = $this->featuresManager->initPackageFromExtension($extension);
+      $info = $package['info'];
+      $short_name = $this->assigner->getBundle($package['bundle'])->getShortName($extension->getName());
 
       if (!empty($info['features']['excluded']) || !empty($info['features']['required'])) {
         // Copy over package excluded settings, if any.
@@ -41,14 +44,14 @@ class FeaturesAssignmentPackages extends FeaturesAssignmentMethodBase {
           $config_collection = $this->featuresManager->getConfigCollection();
           foreach ($info['features']['excluded'] as $config_name) {
             if (isset($config_collection[$config_name])) {
-              $config_collection[$config_name]['package_excluded'][] = $name;
+              $config_collection[$config_name]['package_excluded'][] = $short_name;
             }
           }
           $this->featuresManager->setConfigCollection($config_collection);
         }
         // Assign required components, if any.
         if (!empty($info['features']['required'])) {
-          $this->featuresManager->assignConfigPackage($name, $info['features']['required']);
+          $this->featuresManager->assignConfigPackage($short_name, $info['features']['required']);
         }
       }
     }

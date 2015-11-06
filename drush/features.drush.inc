@@ -6,6 +6,7 @@
  */
 
 use Drupal\features\FeaturesManagerInterface;
+use Drupal\features\Plugin\FeaturesGeneration\FeaturesGenerationWrite;
 use Drupal\Component\Diff\DiffFormatter;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\config_update\ConfigReverter;
@@ -291,7 +292,7 @@ function drush_features_export($packages = NULL) {
   }
 
   // Use the write generation method.
-  $method_id = \Drupal\features\Plugin\FeaturesGeneration\FeaturesGenerationWrite::METHOD_ID;
+  $method_id = FeaturesGenerationWrite::METHOD_ID;
   $result = $generator->generatePackages($method_id, $packages, $current_bundle);
 
   foreach ($result as $message) {
@@ -311,7 +312,10 @@ function drush_features_add() {
     _drush_features_options();
 
     $manager = \Drupal::service('features.manager');
+    $assigner = \Drupal::service('features_assigner');
     $generator = \Drupal::service('features_generator');
+
+    $current_bundle = $assigner->getBundle();
 
     $module = array_shift($args);
     if (empty($args)) {
@@ -347,7 +351,7 @@ function drush_features_add() {
       }
     }
     else {
-      $package = $manager->initPackage($module, $module, '');
+      $package = $manager->initPackage($module, NULL, '', 'module', $current_bundle);
       list($full_name, $path) = $manager->getExportInfo($package, $current_bundle);
       drush_print(dt('Will create a new extension @name in @directory', array('@name' => $full_name, '@directory' => $path)));
       if (!drush_confirm(dt('Do you really want to continue?'))) {
@@ -360,7 +364,7 @@ function drush_features_add() {
     $manager->assignConfigPackage($module, $config);
 
     // Use the write generation method.
-    $method_id = \Drupal\features\Plugin\FeaturesGeneration\FeaturesGenerationWrite::METHOD_ID;
+    $method_id = FeaturesGenerationWrite::METHOD_ID;
     $result = $generator->generatePackages($method_id, $packages, $current_bundle);
 
     foreach ($result as $message) {
@@ -629,10 +633,9 @@ function _drush_features_load_feature($module, $any = FALSE) {
     $module_handler = \Drupal::service('module_handler');
     $modules = $module_handler->getModuleList();
     if (!empty($modules[$module])) {
-      $manager->initPackage($module, $module);
       $extension = $modules[$module];
+      $feature = $manager->initPackageFromExtension($extension);
       $config = $manager->listExtensionConfig($extension);
-      $feature = $packages[$module];
       $feature['config'] = $config;
       $feature['status'] = FeaturesManagerInterface::STATUS_ENABLED;
     }

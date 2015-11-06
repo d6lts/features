@@ -165,7 +165,7 @@ class FeaturesEditForm extends FormBase {
     $packages = $this->featuresManager->getPackages();
     if (empty($packages[$featurename])) {
       $featurename = str_replace(array('-', ' '), '_', $featurename);
-      $this->package = $this->featuresManager->initPackage($featurename, str_replace(array('_', '-'), ' ', $featurename));
+      $this->package = $this->featuresManager->initPackage($featurename, NULL, '', 'module', $bundle);
     }
     else {
       $this->package = $packages[$featurename];
@@ -801,13 +801,13 @@ class FeaturesEditForm extends FormBase {
     $this->package['version'] = $form_state->getValue('version');
     $this->package['bundle'] = $bundle->getMachineName();
     // Save it first just to create it in case it's a new package.
-    $this->featuresManager->savePackage($this->package);
+    $this->featuresManager->setPackage($this->package);
 
     $this->package['config'] = $this->updatePackageConfig($form_state);
     $this->package['excluded'] = $this->updateExcluded();
     $this->package['required'] = $this->updateRequired();
     // Now save it with the selected config data.
-    $this->featuresManager->savePackage($this->package);
+    $this->featuresManager->setPackage($this->package);
 
     $method_id = NULL;
     $trigger = $form_state->getTriggeringElement();

@@ -101,9 +101,9 @@ class FeaturesManagerTest extends UnitTestCase {
   }
 
   /**
-   * @covers ::savePackage
+   * @covers ::setPackage
    */
-  public function testSavePackage() {
+  public function testSetPackage() {
     // @todo
   }
 

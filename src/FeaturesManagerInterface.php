@@ -90,19 +90,7 @@ interface FeaturesManagerInterface {
    * Sets an array of site configuration.
    *
    * @param array $config_collection
-   *   An array of items, each with the following keys:
-   *   - 'name': prefixed configuration item name.
-   *   - 'name_short': configuration item name without prefix.
-   *   - 'label': human readable name of configuration item.
-   *   - 'type': type of configuration.
-   *   - 'data': the contents of the configuration item in exported format.
-   *   - 'dependents': array of names of dependent configuration items.
-   *   - 'subdirectory': feature subdirectory to export item to.
-   *   - 'package': machine name of a package the configuration is assigned to.
-   *   - 'extension_provided': whether the configuration is provided by an
-   *     extension.
-   *   - 'package_excluded': array of package names that this item should be
-   *     excluded from.
+   *   An array of items.
    */
   public function setConfigCollection(array $config_collection);
 
@@ -116,16 +104,28 @@ interface FeaturesManagerInterface {
    *   - 'name': human readable name of the package such as 'Example Article'.
    *   - 'description': description of the package.
    *   - 'type': type of Drupal project ('module').
-   *   - 'core': Drupal core compatibility ('8.x'),
+   *   - 'core': Drupal core compatibility ('8.x').
    *   - 'dependencies': array of module dependencies.
    *   - 'themes': array of names of themes to enable.
    *   - 'config': array of names of configuration items.
+   *   - 'status': status of the package. Valid values are:
+   *      - FeaturesManagerInterface::STATUS_NO_EXPORT
+   *      - FeaturesManagerInterface::STATUS_ENABLED
+   *      - FeaturesManagerInterface::STATUS_DISABLED
+   *   - 'version': version of the extension.
+   *   - 'state': state of the extension. Valid values are:
+   *      - FeaturesManagerInterface::STATE_DEFAULT
+   *      - FeaturesManagerInterface::STATE_OVERRIDDEN
    *   - 'directory': the extension's directory.
    *   - 'files' array of files, each having the following keys:
    *      - 'filename': the name of the file.
    *      - 'subdirectory': any subdirectory of the file within the extension
    *         directory.
    *      - 'string': the contents of the file.
+   *   - 'bundle': name of the features bundle this package belongs to.
+   *   - 'extension': \Drupal\Core\Extension\Extension object.
+   *   - 'info': the original info array from an existing package.
+   *   - 'config_info': the original config of the module.
    *
    * @see \Drupal\features\FeaturesManagerInterface::setPackages()
    */
@@ -135,22 +135,7 @@ interface FeaturesManagerInterface {
    * Sets an array of packages.
    *
    * @param array $packages
-   *   An array of packages, each with the following keys:
-   *   - 'machine_name': machine name of the package such as 'example_article'.
-   *     'article'.
-   *   - 'name': human readable name of the package such as 'Example Article'.
-   *   - 'description': description of the package.
-   *   - 'type': type of Drupal project ('module').
-   *   - 'core': Drupal core compatibility ('8.x'),
-   *   - 'dependencies': array of module dependencies.
-   *   - 'themes': array of names of themes to enable.
-   *   - 'config': array of names of configuration items.
-   *   - 'directory': the extension's directory.
-   *   - 'files' array of files, each having the following keys:
-   *      - 'filename': the name of the file.
-   *      - 'subdirectory': any subdirectory of the file within the extension
-   *         directory.
-   *      - 'string': the contents of the file.
+   *   An array of packages.
    */
   public function setPackages(array $packages);
 
@@ -176,7 +161,7 @@ interface FeaturesManagerInterface {
    * @param array $package
    *   The package.
    */
-  public function savePackage(array &$package);
+  public function setPackage(array &$package);
 
   /**
    * Filters the supplied package list by the given namespace.
@@ -244,51 +229,46 @@ interface FeaturesManagerInterface {
   public function getSettings();
 
   /**
+   * Returns the contents of an extensions info.yml file.
+   *
+   * @param \Drupal\Core\Extension\Extension $extension
+   *   An Extension object.
+   *
+   * @return array
+   *   An array representing data in an info.yml file.
+   */
+  public function getExtensionInfo(Extension $extension);
+
+  /**
    * Initializes a configuration package.
    *
    * @param string $machine_name
    *   Machine name of the package.
    * @param string $name
-   *   Human readable name of the package.
+   *   (optional) Human readable name of the package.
    * @param string $description
-   *   Description of the package.
+   *   (optional) Description of the package.
    * @param string $type
-   *   The package type: 'module' or 'profile'.
-   *
+   *   (optional) Type of project.
+   * @param \Drupal\features\FeaturesBundleInterface $bundle
+   *   (optional) Bundle to use to add profile directories to the scan.
+   * @param \Drupal\Core\Extension\Extension $extension
+   *   (optional) An Extension object.
    * @return array
    *   The created package array.
    */
-  public function initPackage($machine_name, $name = NULL, $description = '', $type = 'module');
+  public function initPackage($machine_name, $name = NULL, $description = '', $type = 'module', FeaturesBundleInterface $bundle = NULL, Extension $extension = NULL);
 
   /**
    * Initializes a configuration package using module info data.
    *
-   * @param string $machine_name
-   *   Machine name of the package.
-   * @param array $info
-   *   'name' => string Human readable name of the package.
-   *   'description' => optional string Description of the package
+   * @param \Drupal\Core\Extension\Extension $extension
+   *   An Extension object.
    *
    * @return array
    *   The created package array.
-   *   The 'info' key will contain the original $info.
-   *   The 'bundle' key will contain the bundle that matches the $info
-   *   The 'config_orig' key will contain the original config of the module.
    */
-  public function initPackageFromInfo($machine_name, $info);
-
-  /**
-   * Lists modules that are existing exported Packages.
-   *
-   * @param bool $enabled
-   *   List only enabled modules.
-   * @param \Drupal\features\FeaturesBundleInterface $bundle
-   *   (optional) Bundle to find existing packages for.
-   *
-   * @return array
-   *   Module's info.yml config data.
-   */
-  public function getExistingPackages($enabled = FALSE, FeaturesBundleInterface $bundle);
+  public function initPackageFromExtension(Extension $extension);
 
   /**
    * Lists directories in which packages are present.
@@ -394,23 +374,12 @@ interface FeaturesManagerInterface {
   public function listConfigByType($config_type);
 
   /**
-   * Returns an array of installed modules.
+   * Returns a list of all modules present on the site's file system.
    *
-   * If a $name and/or $namespace is specified, only matching modules will be
-   * returned. Otherwise, all installed modules are returned.
-   *
-   * @param string[] $names
-   *   Names of specific modules to return.
-   * @param string $namespace
-   *   A namespace prefix to match modules by.
-   *
-   * @return \Drupal\Core\Extension\Extension[]
-   *   An associative array whose keys are the names of the modules and whose
-   *   values are Extension objects.
-   *
-   * @see Drupal\Core\Extension\ModuleHandlerInterface::getModuleList()
+   * @return Drupal\Core\Extension\Extension[]
+   *   An array of extension objects.
    */
-  public function getModuleList(array $names = array(), $namespace = NULL);
+  public function getAllModules();
 
   /**
    * Returns a list of Features modules regardless of if they are enabled.
@@ -420,24 +389,24 @@ interface FeaturesManagerInterface {
    *   If given, only modules matching the bundle namespace will be returned.
    *   If the bundle uses a profile, only modules in the profile will be
    *   returned.
+   * @param bool $enabled
+   *   List only enabled modules.
+   *
+   * @return Drupal\Core\Extension\Extension[]
+   *   An array of extension objects.
    */
-  public function getAllModules(FeaturesBundleInterface $bundle = NULL);
+  public function getFeaturesModules(FeaturesBundleInterface $bundle = NULL, $enabled = FALSE);
 
   /**
    * Lists names of configuration objects provided by a given extension.
    *
-   * If a $name and/or $namespace is specified, only matching modules will be
-   * returned. Otherwise, all install are returned.
-   *
-   * @param mixed $extension
-   *   A string name of an extension or a full Extension object.
-   * @param \Drupal\features\FeaturesBundleInterface $bundle
-   *   (optional) Bundle to determine name with.
+   * @param \Drupal\Core\Extension\Extension $extension
+   *   An Extension object.
    *
    * @return array
    *   An array of configuration object names.
    */
-  public function listExtensionConfig($extension, FeaturesBundleInterface $bundle = NULL);
+  public function listExtensionConfig(Extension $extension);
 
   /**
    * Lists names of configuration items provided by existing Features modules.
@@ -502,15 +471,15 @@ interface FeaturesManagerInterface {
    * Determines if the module is a Features package, optinally testing by
    * bundle.
    *
-   * @param mixed $module
-   *   Either the name of an module or a full module extension object.
+   * @param \Drupal\Core\Extension\Extension $module
+   *   An extension object.
    * @param \Drupal\features\FeaturesBundleInterface $bundle
    *   (optional) Bundle to filter by.
    *
    * @return bool
    *   TRUE if the given module is a Features package of the given bundle (if any).
    */
-  public function isFeatureModule($module, FeaturesBundleInterface $bundle);
+  public function isFeatureModule(Extension $module, FeaturesBundleInterface $bundle);
 
   /**
    * Determines which config is overridden in a package.

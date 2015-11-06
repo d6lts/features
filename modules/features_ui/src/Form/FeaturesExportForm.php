@@ -302,7 +302,7 @@ class FeaturesExportForm extends FormBase {
     // Except for the 'unpackaged' pseudo-package, display the full name, since
     // that's what will be generated.
     if ($machine_name !== 'unpackaged') {
-      $machine_name = $this->assigner->getBundle()->getFullName($machine_name);
+      $machine_name = $this->assigner->getBundle($package['bundle'])->getFullName($machine_name);
     }
     $element['machine_name'] = $machine_name;
     $element['status'] = array(

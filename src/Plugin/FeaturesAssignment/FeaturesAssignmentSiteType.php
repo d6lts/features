@@ -32,10 +32,11 @@ class FeaturesAssignmentSiteType extends FeaturesAssignmentMethodBase {
    * {@inheritdoc}
    */
   public function assignPackages($force = FALSE) {
+    $current_bundle = $this->assigner->getBundle();
     $machine_name = 'site';
     $name = $this->t('Site');
     $description = $this->t('Provide site components.');
-    $this->featuresManager->initPackage($machine_name, $name, $description);
+    $this->featuresManager->initPackage($machine_name, $name, $description, 'module', $current_bundle);
     $this->assignPackageByConfigTypes(self::METHOD_ID, $machine_name, $force);
   }
 

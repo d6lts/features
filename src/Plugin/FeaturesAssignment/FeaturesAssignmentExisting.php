@@ -7,6 +7,7 @@
 
 namespace Drupal\features\Plugin\FeaturesAssignment;
 
+use Drupal\Core\Extension\Extension;
 use Drupal\features\FeaturesAssignmentMethodBase;
 use Drupal\features\FeaturesManagerInterface;
 
@@ -30,13 +31,15 @@ class FeaturesAssignmentExisting extends FeaturesAssignmentMethodBase {
   /**
    * Calls assignConfigPackage without allowing exceptions to abort us.
    *
-   * @param string $name
-   *   The name of a feature module.
+   * @param string $machine_name
+   *   Machine name of package.
+   * @param \Drupal\Core\Extension\Extension $extension
+   *   An Extension object.
    */
-  protected function safeAssignConfig($name) {
-    $config = $this->featuresManager->listExtensionConfig($name, $this->assigner->getBundle());
+  protected function safeAssignConfig($machine_name, $extension) {
+    $config = $this->featuresManager->listExtensionConfig($extension);
     try {
-      $this->featuresManager->assignConfigPackage($name, $config);
+      $this->featuresManager->assignConfigPackage($machine_name, $config);
     }
     catch (\Exception $exception) {
       \Drupal::logger('features')->error($exception->getMessage());
@@ -47,21 +50,18 @@ class FeaturesAssignmentExisting extends FeaturesAssignmentMethodBase {
    * {@inheritdoc}
    */
   public function assignPackages($force = FALSE) {
-    // Find all existing packages that are in the new packages collection.
-    $existing = $this->featuresManager->getExistingPackages(FALSE, $this->assigner->getBundle());
     $packages = $this->featuresManager->getPackages();
-    $existing = array_intersect_key($existing, $packages);
 
     // Assign config to enabled modules first.
-    foreach ($existing as $name => $info) {
-      if ($info['status'] == FeaturesManagerInterface::STATUS_ENABLED) {
-        $this->safeAssignConfig($name);
+    foreach ($packages as $name => $package) {
+      if ($package['status'] === FeaturesManagerInterface::STATUS_ENABLED) {
+        $this->safeAssignConfig($package['machine_name'], $package['extension']);
       }
     }
     // Now assign to disabled modules.
-    foreach ($existing as $name => $info) {
-      if ($info['status'] != FeaturesManagerInterface::STATUS_ENABLED) {
-        $this->safeAssignConfig($name);
+    foreach ($packages as $name => $info) {
+      if ($package['status'] === FeaturesManagerInterface::STATUS_DISABLED) {
+        $this->safeAssignConfig($package['machine_name'], $package['extension']);
       }
     }
   }

@@ -59,22 +59,37 @@ class FeaturesAssignmentExclude extends FeaturesAssignmentMethodBase {
       // Second, we can skip configuration provided by namespaced modules.
       $module_namespace = !empty($exclude_module['namespace']);
       if ($module_profile || $module_namespace) {
-        $modules = array();
+        $profile_list = [];
+        $extension_list = [];
         // Load the names of any configuration objects provided by the install
         // profile.
         if ($module_profile) {
-          $modules = array_merge($modules, $this->featuresManager->getModuleList([$current_bundle->getProfileName()]));
+          $all_modules = $this->featuresManager->getAllModules();
+          // FeaturesBundleInterface::getProfileName() would return the profile
+          // for the current bundle, if any. We want the profile that was
+          // installed.
+          $profile_name = drupal_get_profile();
+          if (isset($all_modules[$profile_name])) {
+            $profile_list = $this->featuresManager->listExtensionConfig($all_modules[$profile_name]);
+            // If the configuration has been assigned to a feature that's
+            // present on the file system, don't make an exception for it.
+            foreach ($all_modules as $name => $extension) {
+              if ($name != $profile_name && $this->featuresManager->isFeatureModule($extension)) {
+                $profile_list = array_diff($profile_list, $this->featuresManager->listExtensionConfig($extension));
+              }
+            }
+          }
         }
         // Load the names of any configuration objects provided by modules
         // having the namespace of the current package set.
         if ($module_namespace) {
-          $modules = array_merge($modules, $this->featuresManager->getAllModules($current_bundle));
+          $modules = $this->featuresManager->getFeaturesModules($current_bundle);
+          foreach ($modules as $extension) {
+            $extension_list = array_merge($extension_list, $this->featuresManager->listExtensionConfig($extension));
+          }
         }
         // If any configuration was found, remove it from the list.
-        foreach ($modules as $extension) {
-          $extension_list = $this->featuresManager->listExtensionConfig($extension);
-          $install_list = array_diff($install_list, $extension_list);
-        }
+        $install_list = array_diff($install_list, $profile_list, $extension_list);
       }
       foreach ($install_list as $item_name) {
         if (isset($config_collection[$item_name])) {

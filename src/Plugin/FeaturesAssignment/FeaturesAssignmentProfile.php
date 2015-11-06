@@ -43,7 +43,7 @@ class FeaturesAssignmentProfile extends FeaturesAssignmentMethodBase {
 
       $profile_package = $this->featuresManager->getPackage($profile_name);
       if (empty($profile_package)) {
-        $this->featuresManager->initPackage($profile_name, $current_bundle->getName(), $current_bundle->getDescription(), 'profile');
+        $this->featuresManager->initPackage($profile_name, $current_bundle->getName(), $current_bundle->getDescription(), 'profile', $current_bundle);
       }
 
       // Assign configuration by type.
@@ -151,7 +151,7 @@ class FeaturesAssignmentProfile extends FeaturesAssignmentMethodBase {
             $profile_package = $this->featuresManager->mergeInfoArray($profile_package, $profile_info, ['dependencies', 'themes']);
           }
         }
-        $this->featuresManager->savePackage($profile_package);
+        $this->featuresManager->setPackage($profile_package);
       }
     }
   }

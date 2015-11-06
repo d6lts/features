@@ -46,7 +46,7 @@ class FeaturesAssignmentBaseType extends FeaturesAssignmentMethodBase {
           if (isset($item['data']['description'])) {
             $description .= ' ' . $item['data']['description'];
           }
-          $this->featuresManager->initPackage($item['name_short'], $item['label'], $description);
+          $this->featuresManager->initPackage($item['name_short'], $item['label'], $description, 'module', $current_bundle);
           try {
             $this->featuresManager->assignConfigPackage($item['name_short'], [$item_name]);
           }
@@ -65,7 +65,7 @@ class FeaturesAssignmentBaseType extends FeaturesAssignmentMethodBase {
       if (!isset($packages[$entity_type_id]) && isset($entity_types[$entity_type_id])) {
         $label = $entity_types[$entity_type_id]->getLabel();
         $description = $this->t('Provide @label related configuration.', array('@label' => $label));
-        $this->featuresManager->initPackage($entity_type_id, $label, $description);
+        $this->featuresManager->initPackage($entity_type_id, $label, $description, 'module', $current_bundle);
       }
     }
   }

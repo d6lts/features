@@ -316,37 +316,36 @@ class FeaturesAssigner implements FeaturesAssignerInterface {
   public function createBundlesFromPackages() {
     $existing_bundles = $this->getBundleList();
     $new_bundles = [];
-    $packages = $this->featuresManager->getExistingPackages();
+    // Only parse from enabled features.
+    $modules = $this->featuresManager->getFeaturesModules(NULL, TRUE);
 
-    foreach ($packages as $machine_name => $package) {
-      // Only parse from enabled features.
-      if ($package['status'] === FeaturesManagerInterface::STATUS_ENABLED) {
-        // Create a new bundle if:
-        // - the feature specifies a bundle and
-        // - that bundle doesn't yet exist locally.
-        // Allow profiles to override previous values.
-        if (!empty($package['features']['bundle']) &&
-          !isset($existing_bundles[$package['features']['bundle']]) &&
-          (!in_array($package['features']['bundle'], $new_bundles) || $package['type'] == 'profile')) {
-          if ($package['type'] == 'profile') {
-            $new_bundle = [
-              'name' => $package['name'],
-              'description' => $package['description'],
-              'is_profile' => TRUE,
-              'profile_name' => $machine_name,
-            ];
-          }
-          else {
-            $new_bundle = [
-              'name' => isset($package['package']) ? $package['package'] : ucwords(str_replace('_', ' ', $package['features']['bundle'])),
-              'description' => NULL,
-              'is_profile' => FALSE,
-              'profile_name' => NULL,
-            ];
-          }
-          $new_bundle['machine_name'] = $package['features']['bundle'];
-          $new_bundles[$new_bundle['machine_name']] = $new_bundle;
+    foreach ($modules as $module) {
+      $info = $this->featuresManager->getExtensionInfo($module);
+      // Create a new bundle if:
+      // - the feature specifies a bundle and
+      // - that bundle doesn't yet exist locally.
+      // Allow profiles to override previous values.
+      if (!empty($info['features']['bundle']) &&
+        !isset($existing_bundles[$info['features']['bundle']]) &&
+        (!in_array($info['features']['bundle'], $new_bundles) || $info['type'] == 'profile')) {
+        if ($info['type'] == 'profile') {
+          $new_bundle = [
+            'name' => $info['name'],
+            'description' => $info['description'],
+            'is_profile' => TRUE,
+            'profile_name' => $machine_name,
+          ];
         }
+        else {
+          $new_bundle = [
+            'name' => isset($info['package']) ? $info['package'] : ucwords(str_replace('_', ' ', $info['features']['bundle'])),
+            'description' => NULL,
+            'is_profile' => FALSE,
+            'profile_name' => NULL,
+          ];
+        }
+        $new_bundle['machine_name'] = $info['features']['bundle'];
+        $new_bundles[$new_bundle['machine_name']] = $new_bundle;
       }
     }
     foreach ($new_bundles as $new_bundle) {

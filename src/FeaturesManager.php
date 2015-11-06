@@ -6,6 +6,7 @@
  */
 
 namespace Drupal\features;
+use Drupal;
 use Drupal\Component\Plugin\PluginManagerInterface;
 use Drupal\Component\Serialization\Yaml;
 use Drupal\Component\Utility\NestedArray;
@@ -252,7 +253,7 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function savePackage(array &$package) {
+  public function setPackage(array &$package) {
     if (!empty($package['machine_name'])) {
       $this->packages[$package['machine_name']] = $package;
     }
@@ -324,43 +325,16 @@ class FeaturesManager implements FeaturesManagerInterface {
   }
 
   /**
-   * Returns the path to an extension info.yml file.
-   *
-   * @param mixed $extension
-   *   The string name of an extension, or a full Extension object/
-   * @param string $type
-   *   The type of extension/
-   *
-   * @return string
-   *   A file path.
+   * {@inheritdoc}
    */
-  protected function getExtensionPath($extension, $type = 'module') {
-    if (is_string($extension)) {
-      return drupal_get_filename($type, $extension);
-    }
-    else {
-      return $extension->getPathname();
-    }
-  }
-
-  /**
-   * Returns the contents of an extensions info.yml file.
-   *
-   * @param mixed $extension
-   *   The string name of an extension, or a full Extension object.
-   *
-   * @return array
-   *   An array representing data in an info.yml file.
-   */
-  protected function getExtensionInfo($extension, $type = 'module') {
-    $info_file_uri = $this->getExtensionPath($extension, $type);
-    return \Drupal::service('info_parser')->parse($info_file_uri);
+  public function getExtensionInfo(Extension $extension) {
+    return \Drupal::service('info_parser')->parse($extension->getPathname());
   }
 
   /**
    * {@inheritdoc}
    */
-  public function isFeatureModule($module, FeaturesBundleInterface $bundle = NULL) {
+  public function isFeatureModule(Extension $module, FeaturesBundleInterface $bundle = NULL) {
     $info = $this->getExtensionInfo($module);
     if (isset($info['features'])) {
       // If no bundle was requested, it's enough that this is a feature.
@@ -383,36 +357,6 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function getExistingPackages($enabled = FALSE, FeaturesBundleInterface $bundle = NULL) {
-    $result = array();
-
-    if ($enabled) {
-      $modules = $this->moduleHandler->getModuleList();
-    }
-    else {
-      // ModuleHandler::getModuleList() returns data only for installed
-      // modules. We want to search all possible exports for Features that
-      // might be disabled.
-      $modules = $this->getAllModules($bundle);
-    }
-
-    // Find features modules that are in the current bundle.
-    foreach ($modules as $name => $module) {
-      if ($this->isFeatureModule($module, $bundle)) {
-        $short_name = $bundle ? $bundle->getShortName($name) : $name;
-        $result[$short_name] = $this->getExtensionInfo($module);
-        $result[$short_name]['status'] = $this->moduleHandler->moduleExists($name)
-          ? FeaturesManagerInterface::STATUS_ENABLED
-          : FeaturesManagerInterface::STATUS_DISABLED;
-      }
-    }
-
-    return $result;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function listPackageDirectories(array $machine_names = array(), FeaturesBundleInterface $bundle = NULL) {
     if (empty($machine_names)) {
       $machine_names = array_keys($this->getPackages());
@@ -423,12 +367,16 @@ class FeaturesManager implements FeaturesManagerInterface {
       $machine_names[] = $bundle->getProfileName();
     }
 
-    $modules = $this->getAllModules($bundle);
+    $modules = $this->getFeaturesModules($bundle);
     // Filter to include only the requested packages.
-    $modules = array_intersect_key($modules, array_fill_keys($machine_names, NULL));
+    $modules = array_filter($modules, function ($module) use ($bundle, $machine_names) {
+      $short_name = $bundle->getShortName($module->getName());
+      return in_array($short_name, $machine_names);
+    });
+
     $directories = array();
-    foreach ($modules as $name => $module) {
-      $directories[$name] = $module->getPath();
+    foreach ($modules as $module) {
+      $directories[$module->getName()] = $module->getPath();
     }
 
     return $directories;
@@ -437,7 +385,7 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function getAllModules(FeaturesBundleInterface $bundle = NULL) {
+  public function getAllModules() {
     static $modules;
 
     if (!isset($modules)) {
@@ -472,22 +420,40 @@ class FeaturesManager implements FeaturesManagerInterface {
       }
     }
 
-    $return = array();
-
-    foreach ($modules as $module_name => $extension) {
-      if ($this->isFeatureModule($extension, $bundle)) {
-        $return[$module_name] = $extension;
-      }
-    }
-    return $return;
+    return $modules;
   }
 
   /**
    * {@inheritdoc}
    */
-  public function initPackage($machine_name, $name = NULL, $description = '', $type = 'module') {
+  public function getFeaturesModules(FeaturesBundleInterface $bundle = NULL, $enabled = FALSE) {
+    $modules = $this->getAllModules();
+
+    // Filter by bundle.
+    if (isset($bundle)) {
+      $features_manager = $this;
+      $modules = array_filter($modules, function ($module) use ($features_manager, $bundle) {
+        return $features_manager->isFeatureModule($module, $bundle);
+      });
+    }
+
+    // Filtered by enabled status.
+    if ($enabled) {
+      $features_manager = $this;
+      $modules = array_filter($modules, function ($extension) use ($features_manager) {
+        return $features_manager->moduleHandler->moduleExists($extension->getName());
+      });
+    }
+
+    return $modules;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function initPackage($machine_name, $name = NULL, $description = '', $type = 'module', FeaturesBundleInterface $bundle = NULL, Extension $extension = NULL) {
     if (!isset($this->packages[$machine_name])) {
-      return $this->packages[$machine_name] = $this->getProject($machine_name, $name, $description, $type);
+      return $this->packages[$machine_name] = $this->getPackageArray($machine_name, $name, $description, $type, $bundle, $extension);
     }
     return NULL;
   }
@@ -495,14 +461,11 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function initPackageFromInfo($machine_name, $info) {
-    $package = $this->initPackage($machine_name, $info['name'], !empty($info['description']) ? $info['description'] : '');
+  public function initPackageFromExtension(Extension $extension) {
+    $info = $this->getExtensionInfo($extension);
     $bundle = $this->getAssigner()->findBundle($info);
-    $package['bundle'] = isset($bundle) ? $bundle->getMachineName() : '';
-    $package['info'] = $info;
-    $package['config_orig'] = $this->listExtensionConfig($machine_name, $bundle);
-    $this->savePackage($package);
-    return $package;
+    $short_name = $bundle->getShortName($extension->getName());
+    return $this->initPackage($short_name, $info['name'], !empty($info['description']) ? $info['description'] : '', $info['type'], $bundle, $extension);
   }
 
   /**
@@ -531,7 +494,7 @@ class FeaturesManager implements FeaturesManagerInterface {
         $extension_provided = ($config_collection[$item_name]['extension_provided'] === TRUE);
         $already_assigned = !empty($config_collection[$item_name]['package']);
         // If this is the profile package, we can reassign extension-provided configuration.
-        $assignable = (!$extension_provided || $this->getAssigner()->getBundle()->isProfilePackage($package['machine_name']));
+        $assignable = (!$extension_provided || $this->getAssigner()->getBundle($package['bundle'])->isProfilePackage($package['machine_name']));
         $excluded_from_package = in_array($package_name, $config_collection[$item_name]['package_excluded']);
         $already_in_package = in_array($item_name, $package['config']);
         if (($force || (!$already_assigned && $assignable && !$excluded_from_package)) && !$already_in_package) {
@@ -633,7 +596,9 @@ class FeaturesManager implements FeaturesManagerInterface {
               // If the required item is assigned to one of the packages, add
               // a dependency on that package.
               if (!empty($config_collection[$dependency_name]['package']) && array_key_exists($config_collection[$dependency_name]['package'], $packages)) {
-                $this->mergeUniqueItems($package['dependencies'], [$this->getAssigner()->getBundle()->getFullName($config_collection[$dependency_name]['machine_name'])]);
+                $dependency_package = $packages[$config_collection[$dependency_name]['package']];
+                $dependency_bundle = $this->getAssigner()->getBundle($dependency_package['bundle']);
+                $this->mergeUniqueItems($package['dependencies'], [$dependency_bundle->getFullName($dependency_package['machine_name'])]);
               }
               // Otherwise, if the dependency is provided by an existing
               // feature, add a dependency on that feature.
@@ -645,6 +610,8 @@ class FeaturesManager implements FeaturesManagerInterface {
         }
       }
     }
+    // Unset the $package pass by reference.
+    unset($package);
   }
 
   /**
@@ -668,38 +635,30 @@ class FeaturesManager implements FeaturesManagerInterface {
    * @param string $machine_name
    *   Machine name of the package.
    * @param string $name
-   *   Human readable name of the package.
+   *   (optional) Human readable name of the package.
    * @param string $description
-   *   Description of the package.
+   *   (optional) Description of the package.
    * @param string $type
-   *   Type of project.
+   *   (optional) Type of project.
+   * @param \Drupal\features\FeaturesBundleInterface $bundle
+   *   (optional) Bundle to use to add profile directories to the scan.
+   * @param \Drupal\Core\Extension\Extension $extension
+   *   (optional) An Extension object.
    *
    * @return array
-   *   An array with the following keys:
-   *   - 'machine_name': machine name of the project such as 'example_article'.
-   *     'article'.
-   *   - 'name': human readable name of the project such as 'Example Article'.
-   *   - 'description': description of the project.
-   *   - 'type': type of Drupal project ('profile' or 'module').
-   *   - 'core': Drupal core compatibility ('8.x'),
-   *   - 'dependencies': array of module dependencies.
-   *   - 'themes': array of names of themes to enable.
-   *   - 'config': array of names of configuration items.
-   *   - 'status': the status of the project module
-   *   - 'directory': the extension's directory.
-   *   - 'files' array of files, each having the following keys:
-   *      - 'filename': the name of the file.
-   *      - 'subdirectory': any subdirectory of the file within the extension
-   *         directory.
-   *      - 'string': the contents of the file.
+   *   An array of package properties; see
+   *   FeaturesManagerInterface::getPackages().
    */
-  protected function getProject($machine_name, $name = NULL, $description = '', $type = 'module') {
-    $project = [
+  protected function getPackageArray($machine_name, $name = NULL, $description = '', $type = 'module', FeaturesBundleInterface $bundle = NULL, Extension $extension = NULL) {
+    if (!isset($bundle)) {
+      $bundle = $this->getAssigner()->getBundle();
+    }
+    $package = [
       'machine_name' => $machine_name,
-      'name' => $name,
+      'name' => isset($name) ? $name : ucwords(str_replace(['_', '-'], ' ', $machine_name)),
       'description' => $description,
       'type' => $type,
-      'core' => '8.x',
+      'core' => Drupal::CORE_COMPATIBILITY,
       'dependencies' => [],
       'themes' => [],
       'config' => [],
@@ -707,33 +666,35 @@ class FeaturesManager implements FeaturesManagerInterface {
       'version' => '',
       'state' => FeaturesManagerInterface::STATE_DEFAULT,
       'directory' => $machine_name,
-      'files' => []
+      'files' => [],
+      'bundle' => $bundle->isDefault() ? '' : $bundle->getMachineName(),
+      'extension' => NULL,
+      'info' => [],
+      'config_orig' => [],
     ];
-    if ($type == 'module') {
-      $this->setPackageNames($project);
-    }
 
-    return $project;
-  }
-
-  /**
-   * Fills in module-specific properties, such as status and version.
-   *
-   * @param array &$package
-   *   A package array, passed by reference.
-   */
-  protected function setPackageNames(array &$package) {
-    $module_list = $this->getAllModules();
-    $full_name = $this->getAssigner()->getBundle()->getFullName($package['machine_name']);
-    if (isset($module_list[$full_name])) {
-      $package['status'] = $this->moduleHandler->moduleExists($full_name)
-        ? FeaturesManagerInterface::STATUS_ENABLED
-        : FeaturesManagerInterface::STATUS_DISABLED;
-      $info = $this->getExtensionInfo($full_name);
-      if (!empty($info)) {
-        $package['version'] = isset($info['version']) ? $info['version'] : '';
+    // If no extension was passed in, look for a match.
+    if (!isset($extension)) {
+      $module_list = $this->getFeaturesModules($bundle);
+      $full_name = $bundle->getFullName($package['machine_name']);
+      if (isset($module_list[$full_name])) {
+        $extension = $module_list[$full_name];
       }
     }
+
+    // If there is an extension, set extension-specific properties.
+    if (isset($extension)) {
+      $info = $this->getExtensionInfo($extension);
+      $package['extension'] = $extension;
+      $package['info'] = $info;
+      $package['config_orig'] = $this->listExtensionConfig($extension);
+      $package['status'] = $this->moduleHandler->moduleExists($extension->getName())
+        ? FeaturesManagerInterface::STATUS_ENABLED
+        : FeaturesManagerInterface::STATUS_DISABLED;
+      $package['version'] = isset($info['version']) ? $info['version'] : '';
+    }
+
+    return $package;
   }
 
   /**
@@ -894,46 +855,7 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function getModuleList(array $names = array(), $namespace = NULL) {
-    // Get all modules regardless of enabled/disabled status.
-    $modules = $this->getAllModules();
-    if (!empty($names) || !empty($namespace)) {
-      $return = [];
-
-      // Detect modules by name.
-      foreach ($names as $name) {
-        if (!empty($name) && isset($modules[$name])) {
-          $return[$name] = $modules[$name];
-        }
-      }
-
-      // Detect modules by namespace.
-      // If namespace is provided but is empty, then match all modules.
-      if (isset($namespace)) {
-        foreach ($modules as $module_name => $extension) {
-          if (empty($namespace) || (strpos($module_name, $namespace) === 0)) {
-            $return[$module_name] = $extension;
-          }
-        }
-      }
-      return $return;
-    }
-    return $modules;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function listExtensionConfig($extension, FeaturesBundleInterface $bundle = NULL) {
-    // Convert to Extension object if it is a string.
-    if (is_string($extension)) {
-      // In case this is the short form machine name, convert to full form.
-      if ($bundle) {
-        $extension = $bundle->getFullName($extension);
-      }
-      $pathname = drupal_get_filename('module', $extension);
-      $extension = new Extension(\Drupal::root(), 'module', $pathname);
-    }
+  public function listExtensionConfig(Extension $extension) {
     return $this->extensionStorages->listExtensionConfig($extension);
   }
 
@@ -942,11 +864,11 @@ class FeaturesManager implements FeaturesManagerInterface {
    */
   public function listExistingConfig($enabled = FALSE, FeaturesBundleInterface $bundle = NULL) {
     $config = array();
-    $existing = $this->getExistingPackages($enabled, $bundle);
-    foreach ($existing as $name => $info) {
+    $existing = $this->getFeaturesModules($bundle, $enabled);
+    foreach ($existing as $extension) {
       // Keys are configuration item names and values are providing extension
       // name.
-      $new_config = array_fill_keys($this->listExtensionConfig($name, $bundle), $name);
+      $new_config = array_fill_keys($this->listExtensionConfig($extension), $extension->getName());
       $config = array_merge($config, $new_config);
     }
     return $config;
@@ -1061,8 +983,7 @@ class FeaturesManager implements FeaturesManagerInterface {
    * {@inheritdoc}
    */
   public function getExportInfo($package, FeaturesBundleInterface $bundle = NULL) {
-
-    $full_name = $package['machine_name'];
+    $full_name = $bundle->getFullName($package['machine_name']);
 
     $path = '';
 
