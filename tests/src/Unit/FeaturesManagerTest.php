@@ -7,6 +7,9 @@
 
 namespace Drupal\Tests\features\Unit;
 
+use Drupal\features\FeaturesAssignerInterface;
+use Drupal\features\FeaturesBundle;
+use Drupal\features\FeaturesBundleInterface;
 use Drupal\features\FeaturesManager;
 use Drupal\features\FeaturesManagerInterface;
 use Drupal\Tests\UnitTestCase;
@@ -105,6 +108,125 @@ class FeaturesManagerTest extends UnitTestCase {
    */
   public function testSetPackage() {
     // @todo
+  }
+
+  protected function getAssignInterPackageDependenciesConfigCollection() {
+    $config_collection = [];
+    $config_collection['example.config'] = [
+      'name' => 'example.config',
+      'data' => [
+        'dependencies' => [
+          'config' => [
+            'example.config2',
+            'example.config3',
+          ],
+        ],
+      ],
+      'package' => 'package',
+    ];
+    $config_collection['example.config2'] = [
+      'name' => 'example.config2',
+      'data' => [
+        'dependencies' => [],
+      ],
+      'package' => 'package2',
+      'providing_feature' => 'my_feature',
+    ];
+    $config_collection['example.config3'] = [
+      'name' => 'example.config3',
+      'data' => [
+        'dependencies' => [],
+      ],
+      'package' => '',
+      'providing_feature' => 'my_other_feature',
+    ];
+    return $config_collection;
+  }
+
+  /**
+   * @covers ::assignInterPackageDependencies
+   */
+  public function testAssignInterPackageDependenciesWithoutBundle() {
+    $assigner = $this->prophesize(FeaturesAssignerInterface::class);
+    $bundle = $this->prophesize(FeaturesBundleInterface::class);
+    // Provide a bundle without any prefix.
+    $bundle->getFullName('package')->willReturn('package');
+    $bundle->getFullName('package2')->willReturn('package2');
+    $assigner->getBundle('')->willReturn($bundle->reveal());
+    $this->featuresManager->setAssigner($assigner->reveal());
+
+    $this->featuresManager->setConfigCollection($this->getAssignInterPackageDependenciesConfigCollection());
+
+    $packages = [
+      'package' => [
+        'machine_name' => 'package',
+        'config' => ['example.config', 'example.config3'],
+        'dependencies' => [],
+        'bundle' => '',
+      ],
+      'package2' => [
+        'machine_name' => 'package2',
+        'config' => ['example.config2'],
+        'dependencies' => [],
+        'bundle' => '',
+      ],
+    ];
+
+    $expected = $packages;
+    // example.config3 has a providing_feature but no assigned package.
+    $expected['package']['dependencies'][] = 'my_other_feature';
+    // my_package2 provides configuration required by configuration in
+    // my_package.
+    // Because package assignments take precedence over providing_feature ones,
+    // package2 should have been assigned rather than my_feature.
+    $expected['package']['dependencies'][] = 'package2';
+    $this->featuresManager->setPackages($packages);
+
+    $this->featuresManager->assignInterPackageDependencies($packages);
+    $this->assertEquals($expected, $packages);
+  }
+
+  /**
+   * @covers ::assignInterPackageDependencies
+   */
+  public function testAssignInterPackageDependenciesWithBundle() {
+    $assigner = $this->prophesize(FeaturesAssignerInterface::class);
+    $bundle = $this->prophesize(FeaturesBundleInterface::class);
+    // Provide a bundle without any prefix.
+    $bundle->getFullName('package')->willReturn('package');
+    $bundle->getFullName('package2')->willReturn('package2');
+    $assigner->getBundle('giraffe')->willReturn($bundle->reveal());
+    $this->featuresManager->setAssigner($assigner->reveal());
+
+    $this->featuresManager->setConfigCollection($this->getAssignInterPackageDependenciesConfigCollection());
+
+    $packages = [
+      'package' => [
+        'machine_name' => 'package',
+        'config' => ['example.config', 'example.config3'],
+        'dependencies' => [],
+        'bundle' => 'giraffe',
+      ],
+      'package2' => [
+        'machine_name' => 'package2',
+        'config' => ['example.config2'],
+        'dependencies' => [],
+        'bundle' => 'giraffe',
+      ],
+    ];
+
+    $expected = $packages;
+    // example.config3 has a providing_feature but no assigned package.
+    $expected['package']['dependencies'][] = 'my_other_feature';
+    // my_package2 provides configuration required by configuration in
+    // my_package.
+    // Because package assignments take precedence over providing_feature ones,
+    // package2 should have been assigned rather than my_feature.
+    $expected['package']['dependencies'][] = 'package2';
+    $this->featuresManager->setPackages($packages);
+
+    $this->featuresManager->assignInterPackageDependencies($packages);
+    $this->assertEquals($expected, $packages);
   }
 
 }
