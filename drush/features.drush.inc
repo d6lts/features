@@ -130,6 +130,7 @@ function features_drush_command() {
  * The option --name="bundle_name" sets the bundle namespace.
  */
 function _drush_features_options() {
+  /** @var \Drupal\features\FeaturesAssignerInterface $assigner */
   $assigner = \Drupal::service('features_assigner');
   $bundle_name = drush_get_option('bundle');
   if (!empty($bundle_name)) {
@@ -147,7 +148,10 @@ function drush_features_status() {
   $args = func_get_args();
   _drush_features_options();
 
+
+  /** @var \Drupal\features\FeaturesManagerInterface $manager */
   $manager = \Drupal::service('features.manager');
+  /** @var \Drupal\features\FeaturesAssignerInterface $assigner */
   $assigner = \Drupal::service('features_assigner');
   $current_bundle = $assigner->getBundle();
   $export_settings = $manager->getExportSettings();
@@ -183,6 +187,7 @@ function drush_features_status() {
  */
 function drush_features_list_packages($package = '') {
   _drush_features_options();
+  /** @var \Drupal\features\FeaturesManagerInterface $manager */
   $manager = \Drupal::service('features.manager');
   $packages = $manager->getPackages();
 
@@ -245,9 +250,12 @@ function drush_features_export($packages = NULL) {
   $packages = func_get_args();
   _drush_features_options();
 
+  /** @var \Drupal\features\FeaturesManagerInterface $manager */
   $manager = \Drupal::service('features.manager');
-  $generator = \Drupal::service('features_generator');
+  /** @var \Drupal\features\FeaturesAssignerInterface $assigner */
   $assigner = \Drupal::service('features_assigner');
+  /** @var \Drupal\features\FeaturesGeneratorInterface $generator */
+  $generator = \Drupal::service('features_generator');
 
   $current_bundle = $assigner->getBundle();
 
@@ -311,8 +319,11 @@ function drush_features_add() {
   if ($args = func_get_args()) {
     _drush_features_options();
 
+    /** @var \Drupal\features\FeaturesManagerInterface $manager */
     $manager = \Drupal::service('features.manager');
+    /** @var \Drupal\features\FeaturesAssignerInterface $assigner */
     $assigner = \Drupal::service('features_assigner');
+    /** @var \Drupal\features\FeaturesGeneratorInterface $generator */
     $generator = \Drupal::service('features_generator');
 
     $current_bundle = $assigner->getBundle();
@@ -425,7 +436,9 @@ function drush_features_diff() {
     return;
   }
 
+  /** @var \Drupal\features\FeaturesManagerInterface $manager */
   $manager = \Drupal::service('features.manager');
+  /** @var \Drupal\features\FeaturesAssignerInterface $assigner */
   $assigner = \Drupal::service('features_assigner');
   $assigner->assignConfigPackages();
 
@@ -465,7 +478,9 @@ function drush_features_diff() {
     drush_print(dt('Active config matches stored config for @module.', array('@module' => $module)));
   }
   else {
+    /** @var \Drupal\config_update\ConfigDiffInterface $config_diff */
     $config_diff = \Drupal::service('config_update.config_diff');
+    /** @var \Drupal\Core\Config\StorageInterface $active_storage */
     $active_storage = \Drupal::service('config.storage');
 
     // Print key for colors.
@@ -523,7 +538,9 @@ function drush_features_import() {
     // from this command.
     $skip_confirmation = drush_get_context('DRUSH_AFFIRMATIVE');
 
+    /** @var \Drupal\features\FeaturesManagerInterface $manager */
     $manager = \Drupal::service('features.manager');
+    /** @var \Drupal\config_update\ConfigRevertInterface $config_revert */
     $config_revert = \Drupal::service('features.config_update');
 
     // Parse list of arguments.
@@ -625,12 +642,13 @@ function drush_features_import() {
  * @return array
  */
 function _drush_features_load_feature($module, $any = FALSE) {
+  /** @var \Drupal\features\FeaturesManagerInterface $manager */
   $manager = \Drupal::service('features.manager');
   $packages = $manager->getPackages();
   $feature = $manager->getPackage($module);
   if ($any && !isset($feature)) {
     // See if this is a non-features module.
-    $module_handler = \Drupal::service('module_handler');
+    $module_handler = \Drupal::moduleHandler();
     $modules = $module_handler->getModuleList();
     if (!empty($modules[$module])) {
       $extension = $modules[$module];
@@ -650,6 +668,7 @@ function _drush_features_load_feature($module, $any = FALSE) {
  *   The items to return data for.
  */
 function _drush_features_build_config(array $items) {
+  /** @var \Drupal\features\FeaturesManagerInterface $manager */
   $manager = \Drupal::service('features.manager');
   $result = array();
   foreach ($items as $config_type => $item) {
@@ -665,6 +684,7 @@ function _drush_features_build_config(array $items) {
  */
 function _drush_features_component_list() {
   $result = array();
+  /** @var \Drupal\features\FeaturesManagerInterface $manager */
   $manager = \Drupal::service('features.manager');
   $config = $manager->getConfigCollection();
   foreach ($config as $item_name => $item) {
@@ -828,6 +848,7 @@ function _drush_features_component_filter($all_components, $patterns = array(), 
  */
 function _drush_features_get_component_map() {
   $result = array();
+  /** @var \Drupal\features\FeaturesManagerInterface $manager */
   $manager = \Drupal::service('features.manager');
   // Recalc full config list without running assignments.
   $config = $manager->getConfigCollection();

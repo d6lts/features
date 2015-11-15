@@ -44,6 +44,7 @@ function features_file_download($uri) {
  */
 function features_modules_installed($modules) {
   if (!in_array('features', $modules)) {
+    /** @var \Drupal\features\FeaturesAssignerInterface $assigner */
     $assigner = \Drupal::service('features_assigner');
     $assigner->purgeConfiguration();
   }

@@ -1008,6 +1008,7 @@ class FeaturesManager implements FeaturesManagerInterface {
    * {@inheritdoc}
    */
   public function detectOverrides(array $feature, $include_new = FALSE) {
+    /** @var \Drupal\config_update\ConfigDiffInterface $config_diff */
     $config_diff = \Drupal::service('config_update.config_diff');
 
     $different = array();

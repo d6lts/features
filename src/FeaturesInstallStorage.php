@@ -77,6 +77,7 @@ class FeaturesInstallStorage extends ExtensionInstallStorage {
       }
       if ($this->includeProfile) {
         // Add any profiles used in bundles.
+        /** @var \Drupal\features\FeaturesAssignerInterface $assigner */
         $assigner = \Drupal::service('features_assigner');
         $bundles = $assigner->getBundleList();
         foreach ($bundles as $bundle_name => $bundle) {
