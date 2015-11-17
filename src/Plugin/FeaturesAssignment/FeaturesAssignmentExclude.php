@@ -95,7 +95,7 @@ class FeaturesAssignmentExclude extends FeaturesAssignmentMethodBase {
         if (isset($config_collection[$item_name])) {
           // Flag extension-provided configuration, which should not be added
           // to regular features but can be added to an install profile.
-          $config_collection[$item_name]['extension_provided'] = TRUE;
+          $config_collection[$item_name]->setExtensionProvided(TRUE);
         }
       }
     }

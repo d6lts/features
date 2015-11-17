@@ -496,7 +496,7 @@ class FeaturesManager implements FeaturesManagerInterface {
         $already_assigned = !empty($config_collection[$item_name]->getPackage());
         // If this is the profile package, we can reassign extension-provided configuration.
         $assignable = (!$extension_provided || $this->getAssigner()->getBundle($package['bundle'])->isProfilePackage($package['machine_name']));
-        $excluded_from_package = in_array($package_name, $config_collection[$item_name]['package_excluded']);
+        $excluded_from_package = in_array($package_name, $config_collection[$item_name]->getPackageExcluded());
         $already_in_package = in_array($item_name, $package['config']);
         if (($force || (!$already_assigned && $assignable && !$excluded_from_package)) && !$already_in_package) {
           // Add the item to the package's config array.
