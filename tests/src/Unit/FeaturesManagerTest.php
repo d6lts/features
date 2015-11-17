@@ -7,15 +7,11 @@
 
 namespace Drupal\Tests\features\Unit;
 
-use Drupal\Core\Config\Entity\ConfigEntityType;
-use Drupal\Core\DependencyInjection\ContainerBuilder;
-use Drupal\Core\Entity\EntityType;
 use Drupal\features\FeaturesAssignerInterface;
+use Drupal\features\FeaturesBundle;
 use Drupal\features\FeaturesBundleInterface;
-use Drupal\features\ConfigurationItem;
 use Drupal\features\FeaturesManager;
 use Drupal\features\FeaturesManagerInterface;
-use Drupal\migrate\Plugin\migrate\destination\Config;
 use Drupal\Tests\UnitTestCase;
 
 /**
@@ -30,35 +26,22 @@ class FeaturesManagerTest extends UnitTestCase {
   protected $featuresManager;
 
   /**
-   * @var \Drupal\Core\Entity\EntityManagerInterface|\PHPUnit_Framework_MockObject_MockObject
-   */
-  protected $entityManager;
-
-  /**
    * {@inheritdoc}
    */
   public function setUp() {
-    parent::setUp();
-
     $entity_type = $this->getMock('\Drupal\Core\Config\Entity\ConfigEntityTypeInterface');
     $entity_type->expects($this->any())
       ->method('getConfigPrefix')
       ->willReturn('custom');
-    $this->entityManager = $this->getMock('\Drupal\Core\Entity\EntityManagerInterface');
-    $this->entityManager->expects($this->any())
+    $entity_manager = $this->getMock('\Drupal\Core\Entity\EntityManagerInterface');
+    $entity_manager->expects($this->any())
       ->method('getDefinition')
       ->willReturn($entity_type);
     $config_factory = $this->getMock('\Drupal\Core\Config\ConfigFactoryInterface');
     $storage = $this->getMock('Drupal\Core\Config\StorageInterface');
     $config_manager = $this->getMock('Drupal\Core\Config\ConfigManagerInterface');
     $module_handler = $this->getMock('Drupal\Core\Extension\ModuleHandlerInterface');
-    $this->featuresManager = new FeaturesManager($this->entityManager, $config_factory, $storage, $config_manager, $module_handler);
-
-    $string_translation = $this->getStringTranslationStub();
-    $container = new ContainerBuilder();
-    $container->set('string_translation', $string_translation);
-    $container->set('app.root', $this->root);
-    \Drupal::setContainer($container);
+    $this->featuresManager = new FeaturesManager($entity_manager, $config_factory, $storage, $config_manager, $module_handler);
   }
 
   /**
@@ -115,7 +98,7 @@ class FeaturesManagerTest extends UnitTestCase {
    * @covers ::getConfigCollection
    */
   public function testConfigCollection() {
-    $config = ['config' => new ConfigurationItem('', [])];
+    $config = ['config' => 'collection'];
     $this->featuresManager->setConfigCollection($config);
     $this->assertArrayEquals($config, $this->featuresManager->getConfigCollection());
   }
@@ -129,23 +112,34 @@ class FeaturesManagerTest extends UnitTestCase {
 
   protected function getAssignInterPackageDependenciesConfigCollection() {
     $config_collection = [];
-    $config_collection['example.config'] = (new ConfigurationItem('example.config', [
-      'dependencies' => [
-        'config' => [
-          'example.config2',
-          'example.config3',
+    $config_collection['example.config'] = [
+      'name' => 'example.config',
+      'data' => [
+        'dependencies' => [
+          'config' => [
+            'example.config2',
+            'example.config3',
+          ],
         ],
       ],
-    ]))->setPackage('package');
-    $config_collection['example.config2'] =  (new ConfigurationItem('example.config2', [
-      'dependencies' => [],
-    ]))
-      ->setPackage('package2')
-      ->setProvidingFeature('my_feature');
-    $config_collection['example.config3'] = (new ConfigurationItem('example.config3', [
-      'dependencies' => [],
-    ]))
-      ->setProvidingFeature('my_other_feature');
+      'package' => 'package',
+    ];
+    $config_collection['example.config2'] = [
+      'name' => 'example.config2',
+      'data' => [
+        'dependencies' => [],
+      ],
+      'package' => 'package2',
+      'providing_feature' => 'my_feature',
+    ];
+    $config_collection['example.config3'] = [
+      'name' => 'example.config3',
+      'data' => [
+        'dependencies' => [],
+      ],
+      'package' => '',
+      'providing_feature' => 'my_other_feature',
+    ];
     return $config_collection;
   }
 

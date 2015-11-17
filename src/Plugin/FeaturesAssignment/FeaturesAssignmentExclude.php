@@ -42,7 +42,7 @@ class FeaturesAssignmentExclude extends FeaturesAssignmentMethodBase {
     $exclude_types = $settings['types']['config'];
     if (!empty($exclude_types)) {
       foreach ($config_collection as $item_name => $item) {
-        if (in_array($item->getType(), $exclude_types)) {
+        if (in_array($item['type'], $exclude_types)) {
           unset($config_collection[$item_name]);
         }
       }

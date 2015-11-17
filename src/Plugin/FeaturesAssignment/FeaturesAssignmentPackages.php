@@ -44,9 +44,7 @@ class FeaturesAssignmentPackages extends FeaturesAssignmentMethodBase {
           $config_collection = $this->featuresManager->getConfigCollection();
           foreach ($info['features']['excluded'] as $config_name) {
             if (isset($config_collection[$config_name])) {
-              $package_excluded = $config_collection[$config_name]->getPackageExcluded();
-              $package_excluded[] = $short_name;
-              $config_collection[$config_name]->setPackageExcluded($package_excluded);
+              $config_collection[$config_name]['package_excluded'][] = $short_name;
             }
           }
           $this->featuresManager->setConfigCollection($config_collection);

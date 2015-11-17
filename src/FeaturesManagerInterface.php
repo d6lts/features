@@ -69,7 +69,7 @@ interface FeaturesManagerInterface {
    * @param bool $reset
    *   If TRUE, recalculate the configuration (undo all assignment methods).
    *
-   * @return \Drupal\features\ConfigurationItem[]
+   * @return array
    *   An array of items, each with the following keys:
    *   - 'name': prefixed configuration item name.
    *   - 'name_short': configuration item name without prefix.
@@ -89,7 +89,7 @@ interface FeaturesManagerInterface {
   /**
    * Sets an array of site configuration.
    *
-   * @param \Drupal\features\ConfigurationItem[] $config_collection
+   * @param array $config_collection
    *   An array of items.
    */
   public function setConfigCollection(array $config_collection);

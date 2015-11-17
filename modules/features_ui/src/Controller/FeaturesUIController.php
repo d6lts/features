@@ -88,7 +88,7 @@ class FeaturesUIController implements ContainerInjectionInterface {
     $result = [];
     foreach ($detected as $name) {
       $item = $config_collection[$name];
-      $result[$item->getType()][$item->getShortName()] = $item->getName();
+      $result[$item['type']][$item['name_short']] = $item['name'];
     }
     return new JsonResponse($result);
   }
@@ -114,14 +114,14 @@ class FeaturesUIController implements ContainerInjectionInterface {
     }
 
     foreach ($item_names as $item_name) {
-      if ($config_collection[$item_name]->getPackage()) {
-        foreach ($config_collection[$item_name]->getDependents() as $dependent_item_name) {
+      if (!empty($config_collection[$item_name]['package'])) {
+        foreach ($config_collection[$item_name]['dependents'] as $dependent_item_name) {
           if (isset($config_collection[$dependent_item_name])) {
             $allow = TRUE;
-            if (!$allow_conflicts && $config_collection[$dependent_item_name]->getPackage()) {
-              if ($packages[$config_collection[$dependent_item_name]->getPackage()]) {
-                $allow = ($packages[$config_collection[$dependent_item_name]->getPackage()]['status'] == FeaturesManagerInterface::STATUS_NO_EXPORT)
-                  || ($config_collection[$item_name]->getPackage() == $config_collection[$dependent_item_name]->getPackage());
+            if (!$allow_conflicts && !empty($config_collection[$dependent_item_name]['package'])) {
+              if (!empty($packages[$config_collection[$dependent_item_name]['package']])) {
+                $allow = ($packages[$config_collection[$dependent_item_name]['package']]['status'] == FeaturesManagerInterface::STATUS_NO_EXPORT)
+                  || ($config_collection[$item_name]['package'] == $config_collection[$dependent_item_name]['package']);
               }
             }
             if ($allow) {
