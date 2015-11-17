@@ -983,7 +983,7 @@ class FeaturesManager implements FeaturesManagerInterface {
    * {@inheritdoc}
    */
   public function getExportInfo($package, FeaturesBundleInterface $bundle = NULL) {
-    $full_name = $bundle->getFullName($package['machine_name']);
+    $full_name = isset($bundle) ? $bundle->getFullName($package['machine_name']) : $package['machine_name'];
 
     $path = '';
 
