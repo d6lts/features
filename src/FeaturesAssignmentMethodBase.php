@@ -95,7 +95,7 @@ abstract class FeaturesAssignmentMethodBase implements FeaturesAssignmentMethodI
 
     foreach ($config_collection as $item_name => $item) {
       // Don't assign configuration that's provided by an extension.
-      if (in_array($item['type'], $types) && !($item['extension_provided'])) {
+      if (in_array($item->getType(), $types) && !($item->isExtensionProvided())) {
         try {
           $this->featuresManager->assignConfigPackage($machine_name, [$item_name]);
         }
@@ -122,8 +122,8 @@ abstract class FeaturesAssignmentMethodBase implements FeaturesAssignmentMethodI
     $config_collection = $this->featuresManager->getConfigCollection();
 
     foreach ($config_collection as &$item) {
-      if (in_array($item['type'], $types)) {
-        $item['subdirectory'] = $subdirectory;
+      if (in_array($item->getType(), $types)) {
+        $item->setSubdirectory($subdirectory);
       }
     }
     // Clean up the $item pass by reference.

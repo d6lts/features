@@ -190,7 +190,7 @@ class FeaturesDiffForm extends FormBase {
     foreach ($items as $config_name) {
       if (isset($config[$config_name])) {
         $item = $config[$config_name];
-        $this->configRevert->revert($item['type'], $item['name_short']);
+        $this->configRevert->revert($item->getType(), $item->getShortName());
       }
       else {
         $item = $this->featuresManager->getConfigType($config_name);

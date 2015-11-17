@@ -518,14 +518,14 @@ class FeaturesEditForm extends FormBase {
     $components = array();
     $this->conflicts = array();
     foreach ($config as $item_name => $item) {
-      if (!empty($item['package']) && ($item['package'] != $package_name) &&
-        !empty($packages[$item['package']]) && ($packages[$item['package']]['status'] != FeaturesManagerInterface::STATUS_NO_EXPORT)) {
-        $this->conflicts[$item['type']][$item['name_short']] = $item;
+      if (($item->getPackage() != $package_name) &&
+        !empty($packages[$item->getPackage()]) && ($packages[$item->getPackage()]['status'] != FeaturesManagerInterface::STATUS_NO_EXPORT)) {
+        $this->conflicts[$item->getType()][$item->getShortName()] = $item;
       }
       if ($this->allowConflicts
-        || !isset($this->conflicts[$item['type']][$item['name_short']])
+        || !isset($this->conflicts[$item->getType()][$item->getShortName()])
         || (!empty($this->package['config_orig']) && in_array($item_name, $this->package['config_orig']))) {
-        $components[$item['type']][$item['name_short']] = $item;
+        $components[$item->getType()][$item->getShortName()] = $item;
       }
     }
 
@@ -536,7 +536,7 @@ class FeaturesEditForm extends FormBase {
         $item = $config[$item_name];
         // Remove any conflicts if those are not being allowed.
         // if ($this->allowConflicts || !isset($this->conflicts[$item['type']][$item['name_short']])) {
-        $exported_features_info[$item['type']][$item['name_short']] = $item;
+        $exported_features_info[$item->getType()][$item->getShortName()] = $item;
         // }
       }
     }
@@ -548,7 +548,7 @@ class FeaturesEditForm extends FormBase {
       $info = !empty($this->package['info']['features'][$constraint]) ? $this->package['info']['features'][$constraint] : array();
       foreach ($info as $item_name) {
         $item = $config[$item_name];
-        $this->{$constraint}[$item['type']][$item['name_short']] = $item;
+        $this->{$constraint}[$item->getType()][$item->getShortName()] = $item;
       }
     }
 
@@ -556,7 +556,7 @@ class FeaturesEditForm extends FormBase {
     $new_features_info = array();
     foreach ($this->package['config'] as $item_name) {
       $item = $config[$item_name];
-      $new_features_info[$item['type']][$item['name_short']] = $item;
+      $new_features_info[$item->getType()][$item->getShortName()] = $item;
     }
     $new_features_info['dependencies'] = !empty($this->package['dependencies']) ? $this->package['dependencies'] : array();
 

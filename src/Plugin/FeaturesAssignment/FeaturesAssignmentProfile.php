@@ -89,7 +89,7 @@ class FeaturesAssignmentProfile extends FeaturesAssignmentMethodBase {
             if (isset($config_collection[$item_name])) {
               // Only assign it if it's not already assigned to a package.
               // @todo: if it's provided by a module, add a dependency.
-              if (empty($config_collection[$item_name]['package'])) {
+              if (!$config_collection[$item_name]->getPackage()) {
                 $this->featuresManager->assignConfigPackage($profile_name, [$item_name], $force);
                 // Reload the profile to refresh the config array after the addition.
                 $profile_package = $this->featuresManager->getPackage($profile_name);
@@ -97,7 +97,7 @@ class FeaturesAssignmentProfile extends FeaturesAssignmentMethodBase {
               // If it's already assigned to a package in the current bundle,
               // add a dependency.
               else {
-                $machine_name = $current_bundle->getFullName($config_collection[$item_name]['package']);
+                $machine_name = $current_bundle->getFullName($config_collection[$item_name]->getPackage());
                 if (!in_array($machine_name, $profile_package['dependencies'])) {
                   $profile_package['dependencies'][] = $machine_name;
                 }
