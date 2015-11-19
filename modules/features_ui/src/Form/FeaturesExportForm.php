@@ -328,9 +328,9 @@ class FeaturesExportForm extends FormBase {
     $package_config = array();
     foreach ($package['config'] as $item_name) {
       $item = $config_collection[$item_name];
-      $package_config[$item['type']][] = array(
+      $package_config[$item->getType()][] = array(
         'name' => SafeMarkup::checkPlain($item_name),
-        'label' => SafeMarkup::checkPlain($item['label']),
+        'label' => SafeMarkup::checkPlain($item->getLabel()),
         'class' => in_array($item_name, $overrides) ? 'features-override' :
           (in_array($item_name, $new_config) ? 'features-detected' : ''),
       );
@@ -349,9 +349,9 @@ class FeaturesExportForm extends FormBase {
         elseif (!in_array($item_name, $package['config'])) {
           $item = $config_collection[$item_name];
           $conflicts[] = $item_name;
-          $package_config[$item['type']][] = array(
+          $package_config[$item->getType()][] = array(
             'name' => SafeMarkup::checkPlain($item_name),
-            'label' => SafeMarkup::checkPlain($item['label']),
+            'label' => SafeMarkup::checkPlain($item->getLabel()),
             'class' => 'features-conflict',
           );
         }
@@ -463,7 +463,7 @@ class FeaturesExportForm extends FormBase {
    *
    * @param array $packages
    *   An array of package names.
-   * @param array $config_collection
+   * @param \Drupal\features\ConfigurationItem[] $config_collection
    *   A collection of configuration.
    */
   protected function addUnpackaged(array &$packages, array $config_collection) {
@@ -476,7 +476,7 @@ class FeaturesExportForm extends FormBase {
       'version' => '',
     );
     foreach ($config_collection as $item_name => $item) {
-      if (empty($item['package']) && !$item['extension_provided']) {
+      if (!$item->getPackage() && !$item->isExtensionProvided()) {
         $packages['unpackaged']['config'][] = $item_name;
       }
     }

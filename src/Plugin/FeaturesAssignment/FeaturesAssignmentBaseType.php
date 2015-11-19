@@ -40,15 +40,15 @@ class FeaturesAssignmentBaseType extends FeaturesAssignmentMethodBase {
     $config_collection = $this->featuresManager->getConfigCollection();
 
     foreach ($config_collection as $item_name => $item) {
-      if (in_array($item['type'], $config_base_types)) {
-        if (!isset($packages[$item['name_short']]) && empty($item['package'])) {
-          $description = $this->t('Provide @label @type and related configuration.', array('@label' => $item['label'], '@type' => Unicode::strtolower($config_types[$item['type']])));
-          if (isset($item['data']['description'])) {
-            $description .= ' ' . $item['data']['description'];
+      if (in_array($item->getType(), $config_base_types)) {
+        if (!isset($packages[$item->getShortName()]) && !$item->getPackage()) {
+          $description = $this->t('Provide @label @type and related configuration.', array('@label' => $item->getLabel(), '@type' => Unicode::strtolower($config_types[$item->getType()])));
+          if (isset($item->getData()['description'])) {
+            $description .= ' ' . $item->getData()['description'];
           }
-          $this->featuresManager->initPackage($item['name_short'], $item['label'], $description, 'module', $current_bundle);
+          $this->featuresManager->initPackage($item->getShortName(), $item->getLabel(), $description, 'module', $current_bundle);
           try {
-            $this->featuresManager->assignConfigPackage($item['name_short'], [$item_name]);
+            $this->featuresManager->assignConfigPackage($item->getShortName(), [$item_name]);
           }
           catch (\Exception $exception) {
             \Drupal::logger('features')->error($exception->getMessage());

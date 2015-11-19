@@ -518,14 +518,14 @@ class FeaturesEditForm extends FormBase {
     $components = array();
     $this->conflicts = array();
     foreach ($config as $item_name => $item) {
-      if (!empty($item['package']) && ($item['package'] != $package_name) &&
-        !empty($packages[$item['package']]) && ($packages[$item['package']]['status'] != FeaturesManagerInterface::STATUS_NO_EXPORT)) {
-        $this->conflicts[$item['type']][$item['name_short']] = $item;
+      if (($item->getPackage() != $package_name) &&
+        !empty($packages[$item->getPackage()]) && ($packages[$item->getPackage()]['status'] != FeaturesManagerInterface::STATUS_NO_EXPORT)) {
+        $this->conflicts[$item->getType()][$item->getShortName()] = $item->getLabel();
       }
       if ($this->allowConflicts
-        || !isset($this->conflicts[$item['type']][$item['name_short']])
+        || !isset($this->conflicts[$item->getType()][$item->getShortName()])
         || (!empty($this->package['config_orig']) && in_array($item_name, $this->package['config_orig']))) {
-        $components[$item['type']][$item['name_short']] = $item;
+        $components[$item->getType()][$item->getShortName()] = $item->getLabel();
       }
     }
 
@@ -536,7 +536,7 @@ class FeaturesEditForm extends FormBase {
         $item = $config[$item_name];
         // Remove any conflicts if those are not being allowed.
         // if ($this->allowConflicts || !isset($this->conflicts[$item['type']][$item['name_short']])) {
-        $exported_features_info[$item['type']][$item['name_short']] = $item;
+        $exported_features_info[$item->getType()][$item->getShortName()] = $item->getLabel();
         // }
       }
     }
@@ -548,7 +548,7 @@ class FeaturesEditForm extends FormBase {
       $info = !empty($this->package['info']['features'][$constraint]) ? $this->package['info']['features'][$constraint] : array();
       foreach ($info as $item_name) {
         $item = $config[$item_name];
-        $this->{$constraint}[$item['type']][$item['name_short']] = $item;
+        $this->{$constraint}[$item->getType()][$item->getShortName()] = $item->getLabel();
       }
     }
 
@@ -556,7 +556,7 @@ class FeaturesEditForm extends FormBase {
     $new_features_info = array();
     foreach ($this->package['config'] as $item_name) {
       $item = $config[$item_name];
-      $new_features_info[$item['type']][$item['name_short']] = $item;
+      $new_features_info[$item->getType()][$item->getShortName()] = $item->getLabel();
     }
     $new_features_info['dependencies'] = !empty($this->package['dependencies']) ? $this->package['dependencies'] : array();
 
@@ -616,13 +616,13 @@ class FeaturesEditForm extends FormBase {
         $exported_components = !empty($exported_features_info[$component]) ? $exported_features_info[$component] : array();
         $new_components = !empty($new_features_info[$component]) ? $new_features_info[$component] : array();
 
-        foreach ($component_info as $key => $value) {
+        foreach ($component_info as $key => $label) {
           $config_name = $this->featuresManager->getFullName($component, $key);
           // If checkbox in Sources is checked, move it to Added section.
           if (!$form_state->isValueEmpty(array($component, 'sources', 'selected', $key))) {
             $form_state->setValue(array($component, 'sources', 'selected', $key), FALSE);
             $form_state->setValue(array($component, 'added', $key), 1);
-            $component_export['options']['added'][$key] = $this->configLabel($component, $key, $value['label']);
+            $component_export['options']['added'][$key] = $this->configLabel($component, $key, $label);
             $component_export['selected']['added'][$key] = $key;
             // If this was previously excluded, we don't need to set it as
             // required because it was automatically assigned.
@@ -690,7 +690,7 @@ class FeaturesEditForm extends FormBase {
                 $default_value = FALSE;
               }
             }
-            $component_export['options'][$section][$key] = $this->configLabel($component, $key, $value['label']);
+            $component_export['options'][$section][$key] = $this->configLabel($component, $key, $label);
             $component_export['selected'][$section][$key] = $default_value;
             // Save which dependencies are specifically excluded from
             // auto-detection.
@@ -728,7 +728,7 @@ class FeaturesEditForm extends FormBase {
           elseif (!$form_state->isSubmitted() && isset($exported_components[$key])) {
             // Component is not part of new export, but was in original export.
             // Mark component as Added when creating initial form.
-            $component_export['options']['added'][$key] = $this->configLabel($component, $key, $value['label']);
+            $component_export['options']['added'][$key] = $this->configLabel($component, $key, $label);
             $component_export['selected']['added'][$key] = $key;
           }
           else {
@@ -737,7 +737,7 @@ class FeaturesEditForm extends FormBase {
             foreach (array('included', 'added') as $section) {
               // Restore any user-selected checkboxes.
               if (!$form_state->isValueEmpty(array($component, $section, $key))) {
-                $component_export['options'][$section][$key] = $this->configLabel($component, $key, $value['label']);
+                $component_export['options'][$section][$key] = $this->configLabel($component, $key, $label);
                 $component_export['selected'][$section][$key] = $key;
                 $added = TRUE;
               }
@@ -745,7 +745,7 @@ class FeaturesEditForm extends FormBase {
             if (!$added) {
               // If not Included or Added, then put it back in the unchecked
               // Sources checkboxes.
-              $component_export['options']['sources'][$key] = $this->configLabel($component, $key, $value['label']);
+              $component_export['options']['sources'][$key] = $this->configLabel($component, $key, $label);
               $component_export['selected']['sources'][$key] = FALSE;
             }
           }

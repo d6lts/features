@@ -42,7 +42,7 @@ class FeaturesAssignmentExclude extends FeaturesAssignmentMethodBase {
     $exclude_types = $settings['types']['config'];
     if (!empty($exclude_types)) {
       foreach ($config_collection as $item_name => $item) {
-        if (in_array($item['type'], $exclude_types)) {
+        if (in_array($item->getType(), $exclude_types)) {
           unset($config_collection[$item_name]);
         }
       }
@@ -95,7 +95,7 @@ class FeaturesAssignmentExclude extends FeaturesAssignmentMethodBase {
         if (isset($config_collection[$item_name])) {
           // Flag extension-provided configuration, which should not be added
           // to regular features but can be added to an install profile.
-          $config_collection[$item_name]['extension_provided'] = TRUE;
+          $config_collection[$item_name]->setExtensionProvided(TRUE);
         }
       }
     }

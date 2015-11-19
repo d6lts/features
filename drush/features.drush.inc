@@ -613,8 +613,9 @@ function drush_features_import() {
             }
             else {
               // Revert existing component.
+              /** @var \Drupal\features\ConfigurationItem $item */
               $item = $config[$component];
-              $config_revert->revert($item['type'], $item['name_short']);
+              $config_revert->revert($item->getType(), $item->getShortName());
               drush_log(dt('Reverted @module : @component.', $dt_args), 'ok');
             }
           }
@@ -688,7 +689,7 @@ function _drush_features_component_list() {
   $manager = \Drupal::service('features.manager');
   $config = $manager->getConfigCollection();
   foreach ($config as $item_name => $item) {
-    $result[$item['type']][$item['name_short']] = $item['label'];
+    $result[$item->getType()][$item->getShortName()] = $item->getLabel();
   }
   return $result;
 }
@@ -855,12 +856,15 @@ function _drush_features_get_component_map() {
   $packages = $manager->getPackages();
 
   foreach ($config as $item_name => $item) {
-    if (!isset($result[$item['type']][$item['name_short']])) {
-      $result[$item['type']][$item['name_short']] = array();
+    $type = $item->getType();
+    $short_name = $item->getShortName();
+    $name = $item->getName();
+    if (!isset($result[$type][$short_name])) {
+      $result[$type][$short_name] = array();
     }
-    if (!empty($item['package'])) {
-      $package = $packages[$item['package']];
-      $result[$item['type']][$item['name_short']][] = $package['machine_name'];
+    if (!empty($item->getPackage())) {
+      $package = $packages[$item->getPackage()];
+      $result[$type][$short_name][] = $package['machine_name'];
     }
   }
 
