@@ -55,10 +55,9 @@ class AssignmentBaseForm extends AssignmentFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $settings = array(
-      'types' => $form_state->getValue('types'),
-    );
-
+    // Merge in types selections.
+    $settings = $this->currentBundle->getAssignmentSettings(self::METHOD_ID);
+    $settings['types'] = $form_state->getValue('types');
     $this->currentBundle->setAssignmentSettings(self::METHOD_ID, $settings)->save();
     $this->setRedirect($form_state);
 

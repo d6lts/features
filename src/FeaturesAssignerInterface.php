@@ -7,6 +7,8 @@
 
 namespace Drupal\features;
 
+use Drupal\features\FeaturesBundleInterface;
+
 /**
  * Common interface for features assignment services.
  *
@@ -127,7 +129,7 @@ interface FeaturesAssignerInterface {
   /**
    * Returns an array of all existing features bundles.
    *
-   * @return array
+   * @return \Drupal\features\FeaturesBundleInterface[]
    *   Keyed by machine_name with value of
    *   \Drupal\features\FeaturesBundleInterface.
    */
@@ -147,12 +149,12 @@ interface FeaturesAssignerInterface {
   public function findBundleByName($name);
 
   /**
-   * Creates a new bundle.
+   * Creates a new bundle by cloning the default bundle and customizing.
    *
-   * @param string $name
-   *   Human readable name of the bundle.
    * @param string $machine_name
-   *   Machine name. If omitted, auto-generated from Name.
+   *   Machine name.
+   * @param string $name
+   *   (optional) Human readable name of the bundle.
    * @param string $description
    *   (optional) Description of the bundle.
    * @param bool $is_profile
@@ -163,7 +165,7 @@ interface FeaturesAssignerInterface {
    * @return \Drupal\features\FeaturesBundleInterface
    *   A features bundle object.
    */
-  public function createBundle($name, $machine_name = '', $description = '', $is_profile = FALSE, $profile_name = NULL);
+  public function createBundleFromDefault($name, $machine_name = '', $description = '', $is_profile = FALSE, $profile_name = NULL);
 
   /**
    * Creates bundles by parsing information from installed packages.
@@ -173,14 +175,14 @@ interface FeaturesAssignerInterface {
   /**
    * Returns an array of bundle names suitable for a select option list.
    *
-   * @param string $default_text
-   *   The optional label for the default bundle in the list.
+   * @param string $none_text
+   *   (optional) A label for an empty option in the list.
    *
    * @return array
    *   An array of bundles, keyed by machine_name, with values being human
    *   readable names.
    */
-  public function getBundleOptions($default_text = NULL);
+  public function getBundleOptions($none_text = NULL);
 
   /**
    * Makes the named bundle the current bundle.

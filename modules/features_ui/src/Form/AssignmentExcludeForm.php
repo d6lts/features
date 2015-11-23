@@ -99,14 +99,13 @@ class AssignmentExcludeForm extends AssignmentFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $types = $form_state->getValue('types');
-    $curated = $form_state->getValue('curated');
-    $module = $form_state->getValue('module');
-    $settings = array(
-      'types' => $types,
-      'curated' => $curated,
-      'module' => $module,
-    );
+    // Merge in selections.
+    $settings = $this->currentBundle->getAssignmentSettings(self::METHOD_ID);
+    $settings = array_merge($settings, [
+      'types' => $form_state->getValue('types'),
+      'curated' => $form_state->getValue('curated'),
+      'module' => $form_state->getValue('module'),
+    ]);
 
     $this->currentBundle->setAssignmentSettings(self::METHOD_ID, $settings)->save();
 

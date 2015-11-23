@@ -76,11 +76,14 @@ class AssignmentProfileForm extends AssignmentFormBase {
    * {@inheritdoc}
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
-    $settings = array(
+    // Merge in selections.
+    $settings = $this->currentBundle->getAssignmentSettings(self::METHOD_ID);
+
+    $settings = array_merge($settings, [
       'curated' => $form_state->getValue('curated'),
       'standard' => $form_state->getValue('standard'),
       'types' => $form_state->getValue('types'),
-    );
+    ]);
 
     $this->currentBundle->setAssignmentSettings(self::METHOD_ID, $settings)->save();
     $this->setRedirect($form_state);

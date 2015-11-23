@@ -8,8 +8,9 @@
 namespace Drupal\features;
 
 use Drupal\Component\Plugin\PluginManagerInterface;
+use Drupal\features\Entity\FeaturesBundle;
+use Drupal\features\FeaturesBundleInterface;
 use Drupal\features\FeaturesManagerInterface;
-use Drupal\features\FeaturesBundle;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Config\StorageInterface;
@@ -20,8 +21,6 @@ use Drupal\Core\StringTranslation\StringTranslationTrait;
  */
 class FeaturesAssigner implements FeaturesAssignerInterface {
   use StringTranslationTrait;
-
-  const DEFAULTBUNDLE = '_default_';
 
   /**
    * The package assignment method plugin manager.
@@ -93,7 +92,7 @@ class FeaturesAssigner implements FeaturesAssignerInterface {
     $this->configFactory = $config_factory;
     $this->configStorage = $config_storage;
     $this->bundles = $this->getBundleList();
-    $this->currentBundle = $this->getBundle(self::DEFAULTBUNDLE);
+    $this->currentBundle = $this->getBundle(FeaturesBundleInterface::DEFAULT_BUNDLE);
     // Ensure bundle information is fresh.
     $this->createBundlesFromPackages();
   }
@@ -255,12 +254,7 @@ class FeaturesAssigner implements FeaturesAssignerInterface {
   public function getBundleList() {
     if (empty($this->bundles)) {
       $this->bundles = array();
-      $this->bundles[self::DEFAULTBUNDLE] = new FeaturesBundle('', $this->featuresManager, $this, $this->configFactory);
-      $this->bundles[self::DEFAULTBUNDLE]->load();
-      $bundles = array_keys($this->configFactory->get('features.bundles')->get());
-      foreach ($bundles as $machine_name) {
-        $bundle = new FeaturesBundle($machine_name, $this->featuresManager, $this, $this->configFactory);
-        $bundle->load();
+      foreach (\Drupal::entityTypeManager()->getStorage('features_bundle')->loadMultiple() as $machine_name => $bundle) {
         $this->bundles[$machine_name] = $bundle;
       }
     }
@@ -287,12 +281,10 @@ class FeaturesAssigner implements FeaturesAssignerInterface {
   /**
    * {@inheritdoc}
    */
-  public function createBundle($name, $machine_name = NULL, $description = NULL, $is_profile = FALSE, $profile_name = NULL) {
-    $bundle = new FeaturesBundle('', $this->featuresManager, $this, $this->configFactory);
-    $bundle->load();
-    if (empty($machine_name)) {
-      $machine_name = strtolower(str_replace(array(' ', '-'), '_', $name));
-    }
+  public function createBundleFromDefault($machine_name, $name = NULL, $description = NULL, $is_profile = FALSE, $profile_name = NULL) {
+    // Clone the default bundle to get its default configuration.
+    $bundle = clone $this->getBundle(FeaturesBundleInterface::DEFAULT_BUNDLE);
+
     $bundle->setMachineName($machine_name);
     $bundle->setName($name);
     if (isset($description)) {
@@ -349,7 +341,7 @@ class FeaturesAssigner implements FeaturesAssignerInterface {
       }
     }
     foreach ($new_bundles as $new_bundle) {
-      $new_bundle = $this->createBundle($new_bundle['name'], $new_bundle['machine_name'], $new_bundle['description'], $new_bundle['is_profile']);
+      $new_bundle = $this->createBundleFromDefault($new_bundle['name'], $new_bundle['machine_name'], $new_bundle['description'], $new_bundle['is_profile']);
       drupal_set_message($this->t('Features bundle @name automatically created.', ['@name' => $new_bundle->getName()]));
     }
 
@@ -358,11 +350,14 @@ class FeaturesAssigner implements FeaturesAssignerInterface {
   /**
    * {@inheritdoc}
    */
-  public function getBundleOptions($default_name = NULL) {
+  public function getBundleOptions($none_text = NULL) {
     $list = $this->getBundleList();
     $result = array();
+    if (isset($empty_name)) {
+      $result[''] = $empty_name;
+    }
     foreach ($list as $machine_name => $bundle) {
-      $result[$machine_name] = (isset($default_name) && $bundle->isDefault()) ? $default_name : $bundle->getName();
+      $result[$machine_name] = $bundle->getName();
     }
     return $result;
   }
@@ -407,15 +402,15 @@ class FeaturesAssigner implements FeaturesAssignerInterface {
     if (!isset($machine_name)) {
       $session = \Drupal::request()->getSession();
       if (isset($session)) {
-        $machine_name = isset($session) ? $session->get('features_current_bundle', '') : '';
+        $machine_name = isset($session) ? $session->get('features_current_bundle', FeaturesBundleInterface::DEFAULT_BUNDLE) : FeaturesBundleInterface::DEFAULT_BUNDLE;
       }
     }
     $bundle = $this->getBundle($machine_name);
     if (!isset($bundle)) {
       // If bundle no longer exists then return default.
-      $bundle = $this->bundles[self::DEFAULTBUNDLE];
+      $bundle = $this->bundles[FeaturesBundleInterface::DEFAULT_BUNDLE];
     }
-    return $this->setCurrent($bundle->load());
+    return $this->setCurrent($bundle);
   }
 
   /**

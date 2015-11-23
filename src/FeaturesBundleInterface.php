@@ -17,6 +17,8 @@ use Drupal\Core\Extension\Extension;
  */
 interface FeaturesBundleInterface {
 
+  const DEFAULT_BUNDLE = 'default';
+
   /**
    * Determines whether the current bundle is the default one.
    *
@@ -256,15 +258,6 @@ interface FeaturesBundleInterface {
    * @see \Drupal\features\FeaturesBundleInterface::getSettings()
    */
   public function setSettings(array $settings);
-
-  /**
-   * Loads a named bundle from the active config.
-   *
-   * @param string $machine_name
-   *   The machine name of a bundle. If omitted, use the current machine_name,
-   *   otherwise replace the data in the bundle with the data from the config.
-   */
-  public function load($machine_name = NULL);
 
   /**
    * Saves the bundle to the active config.

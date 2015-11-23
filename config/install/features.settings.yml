@@ -1,28 +1,3 @@
-assignment:
-  enabled:
-    - base
-    - core
-    - dependency
-    - exclude
-    - existing
-    - namespace
-    - optional
-    - packages
-    - profile
-    - site
-  method_weights:
-    base: -2
-    core: 5
-    dependency: 15
-    exclude: -5
-    existing: 12
-    namespace: 0
-    optional: 0
-    packages: -20
-    profile: 10
-    site: 7
 export:
   folder: 'custom'
-bundle:
-  settings: []
 langcode: en

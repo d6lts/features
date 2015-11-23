@@ -159,7 +159,7 @@ class FeaturesExportForm extends FormBase {
     $form['header']['bundle'] = array(
       '#title' => t('Bundle'),
       '#type' => 'select',
-      '#options' => $this->assigner->getBundleOptions(t('--None--')),
+      '#options' => $this->assigner->getBundleOptions(),
       '#default_value' => $current_bundle->getMachineName(),
       '#prefix' => '<div id="edit-package-set-wrapper">',
       '#suffix' => '</div>',
