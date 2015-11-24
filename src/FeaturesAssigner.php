@@ -282,8 +282,11 @@ class FeaturesAssigner implements FeaturesAssignerInterface {
    * {@inheritdoc}
    */
   public function createBundleFromDefault($machine_name, $name = NULL, $description = NULL, $is_profile = FALSE, $profile_name = NULL) {
-    // Clone the default bundle to get its default configuration.
-    $bundle = clone $this->getBundle(FeaturesBundleInterface::DEFAULT_BUNDLE);
+    $bundle = FeaturesBundle::create([]);
+
+    // Initialize assignment settings from those of the default bundle.
+    $default_bundle = $this->getBundle(FeaturesBundleInterface::DEFAULT_BUNDLE);
+    $bundle->setAssignmentSettings(NULL, $default_bundle->getAssignmentSettings(NULL));
 
     $bundle->setMachineName($machine_name);
     $bundle->setName($name);
@@ -299,6 +302,7 @@ class FeaturesAssigner implements FeaturesAssignerInterface {
     }
     $bundle->save();
     $this->setBundle($bundle);
+
     return $bundle;
   }
 

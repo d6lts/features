@@ -149,7 +149,7 @@ interface FeaturesAssignerInterface {
   public function findBundleByName($name);
 
   /**
-   * Creates a new bundle by cloning the default bundle and customizing.
+   * Creates a new bundle, copying over default assignment settings.
    *
    * @param string $machine_name
    *   Machine name.
