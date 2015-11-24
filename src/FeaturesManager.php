@@ -95,7 +95,7 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * The configuration present on the site.
    *
-   * @var array
+   * @var \Drupal\features\ConfigurationItem[]
    */
   private $configCollection;
 
@@ -205,11 +205,9 @@ class FeaturesManager implements FeaturesManagerInterface {
     $this->packages = [];
     // Don't use getConfigCollection because reset() may be called in
     // cases where we don't need to load config.
-    foreach ($this->configCollection as &$config) {
-      $config['package'] = NULL;
+    foreach ($this->configCollection as $config) {
+      $config->setPackage(NULL);
     }
-    // Clean up the $config pass by reference.
-    unset($config);
   }
 
   /**

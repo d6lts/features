@@ -235,4 +235,35 @@ class FeaturesManagerTest extends UnitTestCase {
     $this->assertEquals($expected, $packages);
   }
 
+  /**
+   * @covers ::reset
+   */
+  public function testReset() {
+    $packages = [
+      'package' => [
+        'machine_name' => 'package',
+        'config' => ['example.config', 'example.config3'],
+        'dependencies' => [],
+        'bundle' => 'giraffe',
+      ],
+      'package2' => [
+        'machine_name' => 'package2',
+        'config' => ['example.config2'],
+        'dependencies' => [],
+        'bundle' => 'giraffe',
+      ],
+    ];
+    $this->featuresManager->setPackages($packages);
+
+    $config_item = new ConfigurationItem('example', [], ['package' => 'package']);
+    $config_item2 = new ConfigurationItem('example2', [], ['package' => 'package2']);
+    $this->featuresManager->setConfigCollection([$config_item, $config_item2]);
+
+    $this->featuresManager->reset();
+    $this->assertEmpty($this->featuresManager->getPackages());
+    $config_collection = $this->featuresManager->getConfigCollection();
+    $this->assertEquals('', $config_collection[0]->getPackage());
+    $this->assertEquals('', $config_collection[1]->getPackage());
+  }
+
 }
