@@ -8,6 +8,7 @@
 namespace Drupal\features_ui\Form;
 
 use Drupal\Component\Utility\SafeMarkup;
+use Drupal\features\ConfigurationItem;
 use Drupal\features\FeaturesAssignerInterface;
 use Drupal\features\FeaturesGeneratorInterface;
 use Drupal\features\FeaturesManagerInterface;
@@ -190,11 +191,13 @@ class FeaturesDiffForm extends FormBase {
     foreach ($items as $config_name) {
       if (isset($config[$config_name])) {
         $item = $config[$config_name];
-        $this->configRevert->revert($item->getType(), $item->getShortName());
+        $type = ConfigurationItem::fromConfigStringToConfigType($item->getType());
+        $this->configRevert->revert($type, $item->getShortName());
       }
       else {
         $item = $this->featuresManager->getConfigType($config_name);
-        $this->configRevert->import($item['type'], $item['name_short']);
+        $type = ConfigurationItem::fromConfigStringToConfigType($item['type']);
+        $this->configRevert->import($type, $item['name_short']);
       }
       drupal_set_message(t('Imported @name', array('@name' => $config_name)));
     }

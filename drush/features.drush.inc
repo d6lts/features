@@ -5,6 +5,7 @@
  * Features module drush integration.
  */
 
+use Drupal\features\ConfigurationItem;
 use Drupal\features\FeaturesManagerInterface;
 use Drupal\features\Plugin\FeaturesGeneration\FeaturesGenerationWrite;
 use Drupal\Component\Diff\DiffFormatter;
@@ -608,14 +609,16 @@ function drush_features_import() {
             if (!isset($config[$component])) {
               // Import missing component.
               $item = $manager->getConfigType($component);
-              $config_revert->import($item['type'], $item['name_short']);
+              $type = ConfigurationItem::fromConfigStringToConfigType($item['type']);
+              $config_revert->import($type, $item['name_short']);
               drush_log(dt('Import @module : @component.', $dt_args), 'ok');
             }
             else {
               // Revert existing component.
               /** @var \Drupal\features\ConfigurationItem $item */
               $item = $config[$component];
-              $config_revert->revert($item->getType(), $item->getShortName());
+              $type = ConfigurationItem::fromConfigStringToConfigType($item['type']);
+              $config_revert->revert($type, $item->getShortName());
               drush_log(dt('Reverted @module : @component.', $dt_args), 'ok');
             }
           }

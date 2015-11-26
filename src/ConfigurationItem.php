@@ -112,6 +112,35 @@ class ConfigurationItem {
   }
 
   /**
+   * Calculates the config type usable in configuration.
+   *
+   * By default Drupal uses system.simple as config type, which cannot be used
+   * inside configuration itself. Therefore convert it to system_simple.
+   *
+   * @param string $type
+   *   The config type provided by core.
+   *
+   * @return string
+   *   The config type as string without dots.
+   */
+  public static function fromConfigTypeToConfigString($type) {
+    return $type == 'system.simple' ? FeaturesManagerInterface::SYSTEM_SIMPLE_CONFIG : $type;
+  }
+
+  /**
+   * Converts a config type string in configuration back to the config type.
+   *
+   * @param string $type
+   *   The config type as string without dots.
+   *
+   * @return string
+   *   The config type provided by core.
+   */
+  public static function fromConfigStringToConfigType($type) {
+    return $type == FeaturesManagerInterface::SYSTEM_SIMPLE_CONFIG ? 'system.simple' : $type;
+  }
+
+  /**
    * @return mixed
    */
   public function getName() {
