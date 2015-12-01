@@ -564,7 +564,9 @@ class FeaturesManager implements FeaturesManagerInterface {
       $item_names = array_keys($config_collection);
     }
     foreach ($item_names as $item_name) {
-      if ($config_collection[$item_name]->getPackage()) {
+      // Make sure the extension provided item exists in the active
+      // configuration storage.
+      if (isset($config_collection[$item_name]) && $config_collection[$item_name]->getPackage()) {
         foreach ($config_collection[$item_name]->getDependents() as $dependent_item_name) {
           if (isset($config_collection[$dependent_item_name]) && (!empty($package) || empty($config_collection[$dependent_item_name]->getPackage()))) {
             try {

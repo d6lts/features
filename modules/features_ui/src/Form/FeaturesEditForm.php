@@ -533,11 +533,15 @@ class FeaturesEditForm extends FormBase {
     $exported_features_info = array();
     if (!empty($this->package['config_orig'])) {
       foreach ($this->package['config_orig'] as $item_name) {
-        $item = $config[$item_name];
-        // Remove any conflicts if those are not being allowed.
-        // if ($this->allowConflicts || !isset($this->conflicts[$item['type']][$item['name_short']])) {
-        $exported_features_info[$item->getType()][$item->getShortName()] = $item->getLabel();
-        // }
+        // Make sure the extension provided item exists in the active
+        // configuration storage.
+        if (isset($config[$item_name])) {
+          $item = $config[$item_name];
+          // Remove any conflicts if those are not being allowed.
+          // if ($this->allowConflicts || !isset($this->conflicts[$item['type']][$item['name_short']])) {
+          $exported_features_info[$item->getType()][$item->getShortName()] = $item->getLabel();
+          // }
+        }
       }
     }
     $exported_features_info['dependencies'] = !empty($this->package['info']['dependencies']) ? $this->package['info']['dependencies'] : array();
