@@ -7,9 +7,7 @@
 
 namespace Drupal\features\Plugin\FeaturesAssignment;
 
-use Drupal\component\Utility\Unicode;
 use Drupal\features\FeaturesAssignmentMethodBase;
-use Drupal\features\FeaturesManagerInterface;
 
 /**
  * Class for excluding configuration from packages.

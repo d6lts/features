@@ -8,9 +8,6 @@
 namespace Drupal\features;
 
 use Drupal\Component\Plugin\PluginManagerInterface;
-use Drupal\features\Entity\FeaturesBundle;
-use Drupal\features\FeaturesBundleInterface;
-use Drupal\features\FeaturesManagerInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Config\StorageInterface;

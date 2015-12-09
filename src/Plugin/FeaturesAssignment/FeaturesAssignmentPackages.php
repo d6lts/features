@@ -8,7 +8,6 @@
 namespace Drupal\features\Plugin\FeaturesAssignment;
 
 use Drupal\features\FeaturesAssignmentMethodBase;
-use Drupal\features\FeaturesManagerInterface;
 
 /**
  * Class for assigning existing modules to packages.

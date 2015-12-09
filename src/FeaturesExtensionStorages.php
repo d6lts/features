@@ -10,7 +10,6 @@ namespace Drupal\features;
 use Drupal\Core\Config\InstallStorage;
 use Drupal\Core\Config\StorageInterface;
 use Drupal\Core\Extension\Extension;
-use Drupal\features\FeaturesInstallStorage;
 
 /**
  * Wraps FeaturesInstallStorage to support multiple configuration

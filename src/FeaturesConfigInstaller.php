@@ -9,7 +9,6 @@ namespace Drupal\features;
 
 use Drupal\Core\Config\ConfigInstaller;
 use Drupal\Core\Config\StorageInterface;
-use Drupal\features\FeaturesManagerInterface;
 
 /**
  * Class for customizing the test for pre existing configuration.

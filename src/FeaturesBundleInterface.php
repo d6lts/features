@@ -7,11 +7,6 @@
 
 namespace Drupal\features;
 
-use Drupal\features\FeaturesManagerInterface;
-use Drupal\features\FeaturesAssignerInterface;
-use Drupal\features\FeaturesGeneratorInterface;
-use Drupal\Core\Extension\Extension;
-
 /**
  * Provides an interface for the FeaturesBundle object.
  */

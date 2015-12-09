@@ -7,19 +7,10 @@
 
 namespace Drupal\features;
 use Drupal;
-use Drupal\Component\Plugin\PluginManagerInterface;
 use Drupal\Component\Serialization\Yaml;
 use Drupal\Component\Utility\NestedArray;
-use Drupal\Core\Config\Entity\ConfigEntityTypeInterface;
-use Drupal\features\FeaturesAssignerInterface;
-use Drupal\features\FeaturesBundleInterface;
-use Drupal\features\FeaturesGeneratorInterface;
-use Drupal\features\FeaturesExtensionStorages;
-use Drupal\features\FeaturesExtensionStoragesInterface;
-use Drupal\features\FeaturesManagerInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\ConfigManagerInterface;
-use Drupal\Core\Config\FileStorage;
 use Drupal\Core\Config\InstallStorage;
 use Drupal\Core\Config\StorageInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
@@ -28,7 +19,6 @@ use Drupal\Core\Extension\Extension;
 use Drupal\Core\Extension\ExtensionDiscovery;
 use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
-use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * The FeaturesManager provides helper functions for building packages.

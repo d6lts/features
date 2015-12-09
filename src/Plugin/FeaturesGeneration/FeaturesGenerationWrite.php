@@ -8,7 +8,6 @@
 namespace Drupal\features\Plugin\FeaturesGeneration;
 
 use Drupal\features\FeaturesGenerationMethodBase;
-use Drupal\Core\Config\InstallStorage;
 use Drupal\features\FeaturesBundleInterface;
 
 /**

@@ -7,15 +7,12 @@
 
 namespace Drupal\Tests\features\Unit;
 
-use Drupal\Core\Config\Entity\ConfigEntityType;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
-use Drupal\Core\Entity\EntityType;
 use Drupal\features\FeaturesAssignerInterface;
 use Drupal\features\FeaturesBundleInterface;
 use Drupal\features\ConfigurationItem;
 use Drupal\features\FeaturesManager;
 use Drupal\features\FeaturesManagerInterface;
-use Drupal\migrate\Plugin\migrate\destination\Config;
 use Drupal\Tests\UnitTestCase;
 
 /**

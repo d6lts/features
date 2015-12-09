@@ -8,10 +8,8 @@
 
 namespace Drupal\features\Plugin\FeaturesGeneration;
 
-use Drupal\Component\Serialization\Yaml;
 use Drupal\features\FeaturesGenerationMethodBase;
 use Drupal\Core\Archiver\ArchiveTar;
-use Drupal\Core\Config\InstallStorage;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\features\FeaturesBundleInterface;
 

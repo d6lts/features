@@ -8,7 +8,6 @@
 namespace Drupal\features\Plugin\FeaturesAssignment;
 
 use Drupal\features\FeaturesAssignmentMethodBase;
-use Drupal\features\FeaturesManagerInterface;
 use Drupal\Core\Config\InstallStorage;
 
 /**

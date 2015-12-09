@@ -7,7 +7,6 @@
 
 namespace Drupal\features\Plugin\FeaturesAssignment;
 
-use Drupal\Core\Extension\Extension;
 use Drupal\features\FeaturesAssignmentMethodBase;
 use Drupal\features\FeaturesManagerInterface;
 

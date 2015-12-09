@@ -7,8 +7,6 @@
 
 namespace Drupal\features;
 
-use Drupal\features\FeaturesBundleInterface;
-
 /**
  * Common interface for features assignment services.
  *

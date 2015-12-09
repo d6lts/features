@@ -8,9 +8,6 @@
 namespace Drupal\features;
 
 use Drupal\Component\Serialization\Yaml;
-use Drupal\features\FeaturesManagerInterface;
-use Drupal\features\FeaturesAssignerInterface;
-use Drupal\features\FeaturesBundleInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 

@@ -8,8 +8,6 @@
 namespace Drupal\features;
 
 use Drupal\Component\Plugin\PluginManagerInterface;
-use Drupal\features\FeaturesManagerInterface;
-use Drupal\features\FeaturesAssignerInterface;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
 

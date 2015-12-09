@@ -9,7 +9,6 @@ use Drupal\features\ConfigurationItem;
 use Drupal\features\FeaturesManagerInterface;
 use Drupal\features\Plugin\FeaturesGeneration\FeaturesGenerationWrite;
 use Drupal\Component\Diff\DiffFormatter;
-use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\config_update\ConfigReverter;
 
 /**
