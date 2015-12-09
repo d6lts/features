@@ -18,15 +18,18 @@ class FeaturesAssignTest extends KernelTestBase {
   public static $modules = ['features', 'node', 'system', 'user'];
 
   /**
-   * @var \Drupal\features\FeaturesManagerInterface
+   * @var \Drupal\features\FeaturesManager
    */
   protected $featuresManager;
 
   /**
-   * @var \Drupal\features\FeaturesAssignerInterface
+   * @var \Drupal\features\FeaturesAssigner
    */
   protected $assigner;
 
+  /**
+   * @todo Remove the disabled strict config schema checking.
+   */
   protected $strictConfigSchema = FALSE;
 
   /**
@@ -171,14 +174,14 @@ class FeaturesAssignTest extends KernelTestBase {
 
     $expected_package_names = [self::PACKAGE_NAME];
 
-    $this->assertEquals($expected_package_names, array_keys($packages), 'Expected packages not created.');  
+    $this->assertEquals($expected_package_names, array_keys($packages), 'Expected packages not created.');
 
     $expected_config_items = [
       'node.type.article',
       'field.field.node.article.body',
     ];
 
-    $this->assertEquals($expected_config_items, $packages[self::PACKAGE_NAME]['config'], 'Expected configuration items not present in article package.');  
+    $this->assertEquals($expected_config_items, $packages[self::PACKAGE_NAME]['config'], 'Expected configuration items not present in article package.');
 
   }
 
@@ -213,7 +216,7 @@ class FeaturesAssignTest extends KernelTestBase {
    *   The config name.
    * @param array $data
    *   The config data.
-   * @param array $additional_properties
+   * @param array $properties
    *   (optional) Additional properties set on the object.
    */
   protected function addConfigurationItem($name, array $data = [], array $properties = []) {
