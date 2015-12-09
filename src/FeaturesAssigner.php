@@ -139,16 +139,9 @@ class FeaturesAssigner implements FeaturesAssignerInterface {
   }
 
   /**
-   * Applies a given package assignment method.
-   *
-   * @param string $method_id
-   *   The string identifier of the package assignment method to use to package
-   *   configuration.
-   * @param bool $force
-   *   (optional) If TRUE, assign config regardless of restrictions such as it
-   *   being already assigned to a package.
+   * {@inheritdoc}
    */
-  protected function applyAssignmentMethod($method_id, $force = FALSE) {
+  public function applyAssignmentMethod($method_id, $force = FALSE) {
     $this->getAssignmentMethodInstance($method_id)->assignPackages($force);
   }
 

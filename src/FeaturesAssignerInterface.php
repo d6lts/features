@@ -64,6 +64,18 @@ interface FeaturesAssignerInterface {
   public function assignConfigPackages($force = FALSE);
 
   /**
+   * Applies a given package assignment method.
+   *
+   * @param string $method_id
+   *   The string identifier of the package assignment method to use to package
+   *   configuration.
+   * @param bool $force
+   *   (optional) If TRUE, assign config regardless of restrictions such as it
+   *   being already assigned to a package.
+   */
+  public function applyAssignmentMethod($method_id, $force = FALSE);
+
+  /**
    * Returns the enabled package assignment methods.
    *
    * @return array
