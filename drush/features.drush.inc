@@ -9,7 +9,6 @@ use Drupal\features\ConfigurationItem;
 use Drupal\features\FeaturesManagerInterface;
 use Drupal\features\Plugin\FeaturesGeneration\FeaturesGenerationWrite;
 use Drupal\Component\Diff\DiffFormatter;
-use Drupal\config_update\ConfigReverter;
 
 /**
  * Implements hook_drush_command().
