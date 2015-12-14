@@ -131,7 +131,7 @@ class FeaturesEditForm extends FormBase {
    * {@inheritdoc}
    */
   public function buildForm(array $form, FormStateInterface $form_state, $featurename = '') {
-    $session = \Drupal::request()->getSession();
+    $session = $this->getRequest()->getSession();
     $this->allowConflicts = FALSE;
     if (isset($session)) {
       $this->allowConflicts = $session->get('features_allow_conflicts', FALSE);

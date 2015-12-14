@@ -8,10 +8,13 @@
 
 namespace Drupal\features\Plugin\FeaturesGeneration;
 
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
+use Drupal\Core\Url;
 use Drupal\features\FeaturesGenerationMethodBase;
 use Drupal\Core\Archiver\ArchiveTar;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\features\FeaturesBundleInterface;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Class for generating a compressed archive of packages.
@@ -23,7 +26,33 @@ use Drupal\features\FeaturesBundleInterface;
  *   description = @Translation("Generate packages and optional profile as a compressed archive for download."),
  * )
  */
-class FeaturesGenerationArchive extends FeaturesGenerationMethodBase {
+class FeaturesGenerationArchive extends FeaturesGenerationMethodBase implements ContainerFactoryPluginInterface {
+
+  /**
+   * The CSRF token generator.
+   *
+   * @var \Drupal\Core\Access\CsrfTokenGenerator
+   */
+  protected $csrfToken;
+
+  /**
+   * Creates a new FeaturesGenerationArchive instance.
+   *
+   * @param \Drupal\Core\Access\CsrfTokenGenerator $csrf_token
+   *   The CSRF token generator.
+   */
+  public function __construct(\Drupal\Core\Access\CsrfTokenGenerator $csrf_token) {
+    $this->csrfToken = $csrf_token;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    return new static(
+      $container->get('csrf_token')
+    );
+  }
 
   /**
    * The package generation method id.
@@ -239,11 +268,7 @@ class FeaturesGenerationArchive extends FeaturesGenerationMethodBase {
    */
   public function exportFormSubmit(array &$form, FormStateInterface $form_state) {
     // Redirect to the archive file download.
-    $session = \Drupal::request()->getSession();
-    if (isset($session)) {
-      $session->set('features_download', $this->archiveName);
-    }
-    $form_state->setRedirect('features.export_download');
+    $form_state->setRedirect('features.export_download', ['uri' => $this->archiveName, 'token' => $this->csrfToken->get($this->archiveName)]);
   }
 
 }
