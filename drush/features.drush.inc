@@ -615,7 +615,7 @@ function drush_features_import() {
               // Revert existing component.
               /** @var \Drupal\features\ConfigurationItem $item */
               $item = $config[$component];
-              $type = ConfigurationItem::fromConfigStringToConfigType($item['type']);
+              $type = ConfigurationItem::fromConfigStringToConfigType($item->getType());
               $config_revert->revert($type, $item->getShortName());
               drush_log(dt('Reverted @module : @component.', $dt_args), 'ok');
             }
