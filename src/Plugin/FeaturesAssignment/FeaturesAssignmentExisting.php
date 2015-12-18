@@ -53,14 +53,15 @@ class FeaturesAssignmentExisting extends FeaturesAssignmentMethodBase {
 
     // Assign config to enabled modules first.
     foreach ($packages as $name => $package) {
-      if ($package['status'] === FeaturesManagerInterface::STATUS_ENABLED) {
-        $this->safeAssignConfig($package['machine_name'], $package['extension']);
+      // @todo Introduce $package->isEnabled() and / or $package->isDisabled().
+      if ($package->getStatus() === FeaturesManagerInterface::STATUS_ENABLED) {
+        $this->safeAssignConfig($package->getMachineName(), $package->getExtension());
       }
     }
     // Now assign to disabled modules.
     foreach ($packages as $name => $info) {
-      if ($package['status'] === FeaturesManagerInterface::STATUS_DISABLED) {
-        $this->safeAssignConfig($package['machine_name'], $package['extension']);
+      if ($package->getStatus() === FeaturesManagerInterface::STATUS_DISABLED) {
+        $this->safeAssignConfig($package->getMachineName(), $package->getExtension());
       }
     }
   }

@@ -7,13 +7,27 @@
 
 namespace Drupal\Tests\features\Unit;
 
+use Drupal\Component\Serialization\Yaml;
+use Drupal\config_update\ConfigDiffInterface;
+use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\ConfigManagerInterface;
+use Drupal\Core\Config\StorageInterface;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
+use Drupal\Core\Extension\Extension;
+use Drupal\Core\Extension\InfoParser;
+use Drupal\Core\Extension\InfoParserInterface;
+use Drupal\Core\Extension\ModuleHandlerInterface;
+use Drupal\features\Entity\FeaturesBundle;
 use Drupal\features\FeaturesAssignerInterface;
 use Drupal\features\FeaturesBundleInterface;
 use Drupal\features\ConfigurationItem;
+use Drupal\features\FeaturesExtensionStoragesInterface;
 use Drupal\features\FeaturesManager;
 use Drupal\features\FeaturesManagerInterface;
+use Drupal\features\Package;
 use Drupal\Tests\UnitTestCase;
+use org\bovigo\vfs\vfsStream;
+use Prophecy\Argument;
 
 /**
  * @coversDefaultClass Drupal\features\FeaturesManager
@@ -32,6 +46,26 @@ class FeaturesManagerTest extends UnitTestCase {
   protected $entityManager;
 
   /**
+   * @var \Drupal\Core\Config\StorageInterface|\PHPUnit_Framework_MockObject_MockObject
+   */
+  protected $configStorage;
+
+  /**
+   * @var \Drupal\Core\Config\ConfigFactoryInterface|\PHPUnit_Framework_MockObject_MockObject
+   */
+  protected $configFactory;
+
+  /**
+   * @var \Drupal\Core\Config\ConfigManagerInterface|\PHPUnit_Framework_MockObject_MockObject
+   */
+  protected $configManager;
+
+  /**
+   * @var \Drupal\Core\Extension\ModuleHandlerInterface|\PHPUnit_Framework_MockObject_MockObject
+   */
+  protected $moduleHandler;
+
+  /**
    * {@inheritdoc}
    */
   public function setUp() {
@@ -45,11 +79,11 @@ class FeaturesManagerTest extends UnitTestCase {
     $this->entityManager->expects($this->any())
       ->method('getDefinition')
       ->willReturn($entity_type);
-    $config_factory = $this->getMock('\Drupal\Core\Config\ConfigFactoryInterface');
-    $storage = $this->getMock('Drupal\Core\Config\StorageInterface');
-    $config_manager = $this->getMock('Drupal\Core\Config\ConfigManagerInterface');
-    $module_handler = $this->getMock('Drupal\Core\Extension\ModuleHandlerInterface');
-    $this->featuresManager = new FeaturesManager($this->entityManager, $config_factory, $storage, $config_manager, $module_handler);
+    $this->configFactory = $this->getMock(ConfigFactoryInterface::class);
+    $this->configStorage = $this->getMock(StorageInterface::class);
+    $this->configManager = $this->getMock(ConfigManagerInterface::class);
+    $this->moduleHandler = $this->getMock(ModuleHandlerInterface::class);
+    $this->featuresManager = new FeaturesManager($this->entityManager, $this->configFactory, $this->configStorage, $this->configManager, $this->moduleHandler);
 
     $string_translation = $this->getStringTranslationStub();
     $container = new ContainerBuilder();
@@ -161,28 +195,26 @@ class FeaturesManagerTest extends UnitTestCase {
     $this->featuresManager->setConfigCollection($this->getAssignInterPackageDependenciesConfigCollection());
 
     $packages = [
-      'package' => [
-        'machine_name' => 'package',
+      'package' => new Package('package', [
         'config' => ['example.config', 'example.config3'],
         'dependencies' => [],
         'bundle' => '',
-      ],
-      'package2' => [
-        'machine_name' => 'package2',
+      ]),
+      'package2' => new Package('package2', [
         'config' => ['example.config2'],
         'dependencies' => [],
         'bundle' => '',
-      ],
+      ]),
     ];
 
     $expected = $packages;
     // example.config3 has a providing_feature but no assigned package.
-    $expected['package']['dependencies'][] = 'my_other_feature';
+    $expected['package']->setDependencies(['my_other_feature']);
     // my_package2 provides configuration required by configuration in
     // my_package.
     // Because package assignments take precedence over providing_feature ones,
     // package2 should have been assigned rather than my_feature.
-    $expected['package']['dependencies'][] = 'package2';
+    $expected['package']->setDependencies(['my_other_feature', 'package2']);
     $this->featuresManager->setPackages($packages);
 
     $this->featuresManager->assignInterPackageDependencies($packages);
@@ -204,28 +236,26 @@ class FeaturesManagerTest extends UnitTestCase {
     $this->featuresManager->setConfigCollection($this->getAssignInterPackageDependenciesConfigCollection());
 
     $packages = [
-      'package' => [
-        'machine_name' => 'package',
+      'package' => new Package('package', [
         'config' => ['example.config', 'example.config3'],
         'dependencies' => [],
         'bundle' => 'giraffe',
-      ],
-      'package2' => [
-        'machine_name' => 'package2',
+      ]),
+      'package2' => new Package('package2', [
         'config' => ['example.config2'],
         'dependencies' => [],
         'bundle' => 'giraffe',
-      ],
+      ]),
     ];
 
     $expected = $packages;
     // example.config3 has a providing_feature but no assigned package.
-    $expected['package']['dependencies'][] = 'my_other_feature';
+    $expected['package']->setDependencies(['my_other_feature']);
     // my_package2 provides configuration required by configuration in
     // my_package.
     // Because package assignments take precedence over providing_feature ones,
     // package2 should have been assigned rather than my_feature.
-    $expected['package']['dependencies'][] = 'package2';
+    $expected['package']->setDependencies(['my_other_feature', 'package2']);
     $this->featuresManager->setPackages($packages);
 
     $this->featuresManager->assignInterPackageDependencies($packages);
@@ -261,6 +291,399 @@ class FeaturesManagerTest extends UnitTestCase {
     $config_collection = $this->featuresManager->getConfigCollection();
     $this->assertEquals('', $config_collection[0]->getPackage());
     $this->assertEquals('', $config_collection[1]->getPackage());
+  }
+
+
+  /**
+   * @covers ::detectMissing
+   */
+  public function testDetectMissing() {
+    $package = new Package('test-package', [
+      'configOrig' => ['test_config', 'test_config_non_existing'],
+    ]);
+
+    $config_collection = [];
+    $config_collection['test_config'] = new ConfigurationItem('test_config', []);
+    $this->featuresManager->setConfigCollection($config_collection);
+
+    $this->assertEquals(['test_config_non_existing'], $this->featuresManager->detectMissing($package));
+  }
+
+  /**
+   * @covers ::detectOverrides
+   */
+  public function testDetectOverrides() {
+    $config_diff = $this->prophesize(ConfigDiffInterface::class);
+    $config_diff->same(Argument::cetera())->will(function($args) {
+      return $args[0] == $args[1];
+    });
+    \Drupal::getContainer()->set('config_update.config_diff', $config_diff->reveal());
+
+    $package = new Package('test-package', [
+      'config' => ['test_config', 'test_overridden'],
+    ]);
+
+    $config_storage = $this->prophesize(StorageInterface::class);
+    $config_storage->read('test_config')->willReturn([
+      'key' => 'value',
+    ]);
+    $config_storage->read('test_overridden')->willReturn([
+      'key2' => 'value2',
+    ]);
+
+    $extension_storage = $this->prophesize(FeaturesExtensionStoragesInterface::class);
+    $extension_storage->read('test_config')->willReturn([
+      'key' => 'value',
+    ]);
+    $extension_storage->read('test_overridden')->willReturn([
+      'key2' => 'value0',
+    ]);
+
+
+    $features_manager = new TestFeaturesManager($this->entityManager, $this->configFactory, $config_storage->reveal(), $this->configManager, $this->moduleHandler);
+    $features_manager->setExtensionStorages($extension_storage->reveal());
+
+    $this->assertEquals(['test_overridden'], $features_manager->detectOverrides($package));
+  }
+
+  /**
+   * @covers ::assignConfigPackage
+   */
+  public function testAssignConfigPackageWithNonExtensionProvidedConfig() {
+    $config_collection = [
+      'test_config' => new ConfigurationItem('test_config', []),
+      'test_config2' => new ConfigurationItem('test_config2', []),
+    ];
+    $this->featuresManager->setConfigCollection($config_collection);
+
+    $package = new Package('test_package');
+    $this->featuresManager->setPackage($package);
+
+    $this->featuresManager->assignConfigPackage('test_package', ['test_config', 'test_config2']);
+
+    $this->assertEquals(['test_config', 'test_config2'], $this->featuresManager->getPackage('test_package')->getConfig());
+  }
+
+  /**
+   * @covers ::assignConfigPackage
+   */
+  public function testAssignConfigPackageWithExtensionProvidedConfig() {
+    $config_collection = [
+      'test_config' => new ConfigurationItem('test_config', []),
+      'test_config2' => new ConfigurationItem('test_config2', [], ['extensionProvided' => TRUE]),
+    ];
+    $this->featuresManager->setConfigCollection($config_collection);
+
+    $feature_assigner = $this->prophesize(FeaturesAssignerInterface::class);
+    $feature_assigner->getBundle(NULL)->willReturn(new FeaturesBundle(['machine_name' => 'default'], 'features_bundle'));
+    $this->featuresManager->setAssigner($feature_assigner->reveal());
+
+    $package = new Package('test_package');
+    $original_package = clone $package;
+
+    $this->featuresManager->setPackage($package);
+    $this->featuresManager->assignConfigPackage('test_package', ['test_config', 'test_config2']);
+    $this->assertEquals(['test_config'], $this->featuresManager->getPackage('test_package')->getConfig(), 'just assign new packages');
+
+    $this->featuresManager->setPackage($original_package);
+    $this->featuresManager->assignConfigPackage('test_package', ['test_config', 'test_config2'], TRUE);
+    $this->assertEquals(['test_config', 'test_config2'], $this->featuresManager->getPackage('test_package')->getConfig(), 'just assign new packages');
+  }
+
+  /**
+   * @covers ::initPackageFromExtension
+   * @covers ::getPackageObject
+   */
+  public function testInitPackageFromNonInstalledExtension() {
+    $extension = new Extension($this->root, 'module', 'modules/test_module/test_module.info.yml');
+
+    $info_parser = $this->prophesize(InfoParserInterface::class);
+    $info_parser->parse($this->root . '/modules/test_module/test_module.info.yml')->willReturn([
+      'name' => 'Test module',
+      'description' => 'test description',
+      'type' => 'module',
+    ]);
+    \Drupal::getContainer()->set('info_parser', $info_parser->reveal());
+
+    $bundle = $this->prophesize(FeaturesBundle::class);
+    $bundle->getShortName('test_module')->willReturn('test_module');
+    $bundle->isDefault()->willReturn(TRUE);
+
+    $assigner = $this->prophesize(FeaturesAssignerInterface::class);
+    $assigner->findBundle(Argument::any())->willReturn($bundle->reveal());
+    $this->featuresManager->setAssigner($assigner->reveal());
+
+    $result = $this->featuresManager->initPackageFromExtension($extension);
+    $this->assertInstanceOf(Package::class, $result);
+    // Ensure that that calling the function twice works.
+    $result = $this->featuresManager->initPackageFromExtension($extension);
+    $this->assertInstanceOf(Package::class, $result);
+
+    $this->assertEquals('test_module', $result->getMachineName());
+    $this->assertEquals('Test module', $result->getName());
+    $this->assertEquals('test description', $result->getDescription());
+    $this->assertEquals('module', $result->getType());
+
+    $this->assertEquals(FeaturesManagerInterface::STATUS_DISABLED, $result->getStatus());
+  }
+
+  /**
+   * @covers ::initPackageFromExtension
+   * @covers ::getPackageObject
+   */
+  public function testInitPackageFromInstalledExtension() {
+    $extension = new Extension($this->root, 'module', 'modules/test_module/test_module.info.yml');
+
+    $info_parser = $this->prophesize(InfoParserInterface::class);
+    $info_parser->parse($this->root . '/modules/test_module/test_module.info.yml')->willReturn([
+      'name' => 'Test module',
+      'description' => 'test description',
+      'type' => 'module',
+    ]);
+    \Drupal::getContainer()->set('info_parser', $info_parser->reveal());
+
+    $bundle = $this->prophesize(FeaturesBundle::class);
+    $bundle->getShortName('test_module')->willReturn('test_module');
+    $bundle->isDefault()->willReturn(TRUE);
+
+    $assigner = $this->prophesize(FeaturesAssignerInterface::class);
+    $assigner->findBundle(Argument::any())->willReturn($bundle->reveal());
+    $this->featuresManager->setAssigner($assigner->reveal());
+
+    $this->moduleHandler->expects($this->any())
+      ->method('moduleExists')
+      ->with('test_module')
+      ->willReturn(TRUE);
+
+    $result = $this->featuresManager->initPackageFromExtension($extension);
+    $this->assertEquals(FeaturesManagerInterface::STATUS_ENABLED, $result->getStatus());
+  }
+
+  public function testDetectNewWithNoConfig() {
+    $package = new Package('test_feature');
+
+    $this->assertEmpty($this->featuresManager->detectNew($package));
+  }
+
+  public function testDetectNewWithNoNewConfig() {
+    $package = new Package('test_feature', ['config' => ['test_config']]);
+
+    $extension_storage = $this->prophesize(FeaturesExtensionStoragesInterface::class);
+    $extension_storage->read('test_config')->willReturn([
+      'key' => 'value',
+    ]);
+
+    $features_manager = new TestFeaturesManager($this->entityManager, $this->configFactory, $this->configStorage, $this->configManager, $this->moduleHandler);
+    $features_manager->setExtensionStorages($extension_storage->reveal());
+
+    $this->assertEmpty($features_manager->detectNew($package));
+  }
+
+  public function testDetectNewWithNewConfig() {
+    $package = new Package('test_feature', ['config' => ['test_config']]);
+
+    $extension_storage = $this->prophesize(FeaturesExtensionStoragesInterface::class);
+    $extension_storage->read('test_config')->willReturn(FALSE);
+
+    $features_manager = new TestFeaturesManager($this->entityManager, $this->configFactory, $this->configStorage, $this->configManager, $this->moduleHandler);
+    $features_manager->setExtensionStorages($extension_storage->reveal());
+
+    $this->assertEquals(['test_config'], $features_manager->detectNew($package));
+  }
+
+  /**
+   * @todo This could have of course much more test coverage.
+   *
+   * @covers ::mergeInfoArray
+   *
+   * @dataProvider providerTestMergeInfoArray
+   */
+  public function testMergeInfoArray($expected, $info1, $info2, $keys = []) {
+    $this->assertSame($expected, $this->featuresManager->mergeInfoArray($info1, $info2, $keys));
+  }
+
+  public function providerTestMergeInfoArray() {
+    $data = [];
+    $data['empty-info'] = [[], [], []];
+    $data['override-features'] = [
+      ['features' => ['a', 'b']],
+      ['features' => ['1', '2']],
+      ['features' => ['a', 'b']]
+    ];
+    $data['override-features-and-info'] = [
+      ['name' => 'New name', 'core' => '8.x', 'features' => ['a', 'b']],
+      ['name' => 'Old name', 'core' => '8.x', 'features' => ['1', '2']],
+      ['name' => 'New name', 'features' => ['a', 'b']]
+    ];
+    $data['dependency-merging'] = [
+      ['dependencies' => ['a', 'b', 'c', 'd', 'e']],
+      ['dependencies' => ['b', 'd', 'c']],
+      ['dependencies' => ['a', 'b', 'e']],
+      [],
+    ];
+
+    return $data;
+  }
+
+  public function testInitPackageWithNewPackage() {
+    $bundle = new FeaturesBundle(['machine_name' => 'default'], 'features_bundle');
+
+    $features_manager = new TestFeaturesManager($this->entityManager, $this->configFactory, $this->configStorage, $this->configManager, $this->moduleHandler);
+    $features_manager->setAllModules([]);
+
+    $package = $features_manager->initPackage('test_feature', 'test name', 'test description', 'module', $bundle);
+
+    $this->assertInstanceOf(Package::class, $package);
+    $this->assertEquals('test_feature', $package->getMachineName());
+    $this->assertEquals('test name', $package->getName());
+    $this->assertEquals('test description', $package->getDescription());
+    $this->assertEquals('module', $package->getType());
+    $this->assertEquals('', $package->getBundle());
+    $this->assertEquals([], $package->getFeaturesInfo());
+  }
+
+  public function testInitPackageWithExistingPackage() {
+    $bundle = new FeaturesBundle(['machine_name' => 'default'], 'features_bundle');
+
+    $features_manager = new TestFeaturesManager($this->entityManager, $this->configFactory, $this->configStorage, $this->configManager, $this->moduleHandler);
+
+    vfsStream::setup('drupal');
+    \Drupal::getContainer()->set('app.root', 'vfs://drupal');
+    vfsStream::create([
+      'modules' => [
+        'test_feature' => [
+          'test_feature.info.yml' => <<<EOT
+name: Test feature 2
+type: module
+core: 8.x
+description: test description 2
+features:
+  config:
+    - test_config
+EOT
+          ,
+        ],
+      ],
+    ]);
+    $extension = new Extension('vfs://drupal', 'module', 'modules/test_feature/test_feature.info.yml');
+    $features_manager->setAllModules(['test_feature' => $extension]);
+
+    $this->moduleHandler->expects($this->any())
+      ->method('exists')
+      ->with('test_feature')
+      ->willReturn(TRUE);
+
+    $info_parser = new InfoParser();
+    \Drupal::getContainer()->set('info_parser', $info_parser);
+
+    $package = $features_manager->initPackage('test_feature', 'test name', 'test description', 'module', $bundle);
+
+    $this->assertInstanceOf(Package::class, $package);
+    $this->assertEquals(['config' => ['test_config']], $package->getFeaturesInfo());
+  }
+
+  /**
+   * @covers ::prepareFiles
+   */
+  public function testPrepareFiles() {
+    $packages = [];
+    $packages['test_feature'] = new Package('test_feature', [
+      'config' => ['test_config'],
+      'name' => 'Test feature',
+    ]);
+
+    $config_collection = [];
+    $config_collection['test_config'] = new ConfigurationItem('test_config', ['foo' => 'bar']);
+
+    $this->featuresManager->setConfigCollection($config_collection);
+    $this->featuresManager->prepareFiles($packages);
+
+    $files = $packages['test_feature']->getFiles();
+    $this->assertCount(2, $files);
+    $this->assertEquals('test_feature.info.yml', $files['info']['filename']);
+    $this->assertEquals(Yaml::encode([
+      'name' => 'Test feature',
+      'type' => 'module',
+      'core' => '8.x',
+      'config' => ['test_config'],
+      'features' => TRUE,
+    ]), $files['info']['string']);
+
+    $this->assertEquals('test_config.yml', $files['test_config']['filename']);
+    $this->assertEquals(Yaml::encode([
+      'foo' => 'bar'
+    ]), $files['test_config']['string']);
+  }
+
+  /**
+   * @covers ::getExportInfo
+   */
+  public function testGetExportInfoWithoutBundle() {
+    $config_factory = $this->getConfigFactoryStub([
+      'features.settings' => [
+        'export' => [
+          'folder' => 'custom',
+        ],
+      ],
+    ]);
+    $this->featuresManager = new FeaturesManager($this->entityManager, $config_factory, $this->configStorage, $this->configManager, $this->moduleHandler);
+
+    $package = new Package('test_feature');
+    $result = $this->featuresManager->getExportInfo($package);
+
+    $this->assertEquals(['test_feature', 'modules/custom'], $result);
+  }
+
+  /**
+   * @covers ::getExportInfo
+   */
+  public function testGetExportInfoWithBundle() {
+    $config_factory = $this->getConfigFactoryStub([
+      'features.settings' => [
+        'export' => [
+          'folder' => 'custom',
+        ],
+      ],
+    ]);
+    $this->featuresManager = new FeaturesManager($this->entityManager, $config_factory, $this->configStorage, $this->configManager, $this->moduleHandler);
+
+    $package = new Package('test_feature');
+    $bundle = new FeaturesBundle(['machine_name' => 'test_bundle'], 'features_bundle');
+
+    $result = $this->featuresManager->getExportInfo($package, $bundle);
+
+    $this->assertEquals(['test_bundle_test_feature', 'modules/custom'], $result);
+  }
+
+}
+
+class TestFeaturesManager extends FeaturesManager {
+
+  protected $allModules;
+
+  /**
+   * @param \Drupal\features\FeaturesExtensionStoragesInterface $extensionStorages
+   */
+  public function setExtensionStorages($extensionStorages) {
+    $this->extensionStorages = $extensionStorages;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getAllModules() {
+    if (isset($this->allModules)) {
+      return $this->allModules;
+    }
+    return parent::getAllModules();
+  }
+
+  /**
+   * @param mixed $all_modules
+   */
+  public function setAllModules($all_modules) {
+    $this->allModules = $all_modules;
+    return $this;
   }
 
 }

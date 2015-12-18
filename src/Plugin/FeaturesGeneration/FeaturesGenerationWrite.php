@@ -9,6 +9,7 @@ namespace Drupal\features\Plugin\FeaturesGeneration;
 
 use Drupal\features\FeaturesGenerationMethodBase;
 use Drupal\features\FeaturesBundleInterface;
+use Drupal\features\Package;
 
 /**
  * Class for writing packages to the local file system.
@@ -30,24 +31,26 @@ class FeaturesGenerationWrite extends FeaturesGenerationMethodBase {
   /**
    * Reads and merges in existing files for a given package or profile.
    *
-   * @param array &$package
+   * @param \Drupal\features\Package &$package
    *   The package.
    * @param array $existing_packages
    *   An array of existing packages.
    * @param \Drupal\features\FeaturesBundleInterface $bundle
    *   The bundle the package belongs to.
    */
-  protected function preparePackage(array &$package, array $existing_packages, FeaturesBundleInterface $bundle = NULL) {
+  protected function preparePackage(Package $package, array $existing_packages, FeaturesBundleInterface $bundle = NULL) {
     // If this package is already present, prepare files.
-    if (isset($existing_packages[$package['machine_name']])) {
-      $existing_directory = $existing_packages[$package['machine_name']];
+    if (isset($existing_packages[$package->getMachineName()])) {
+      $existing_directory = $existing_packages[$package->getMachineName()];
 
-      $package['directory'] = $existing_directory;
+      $package->setDirectory($existing_directory);
 
       // Merge in the info file.
-      $info_file_uri = $existing_directory . '/' . $package['machine_name'] . '.info.yml';
+      $info_file_uri = $existing_directory . '/' . $package->getMachineName() . '.info.yml';
       if (file_exists($info_file_uri)) {
-        $package['files']['info']['string'] = $this->mergeInfoFile($package['files']['info']['string'], $info_file_uri);
+        $files = $package->getFiles();
+        $files['info']['string'] = $this->mergeInfoFile($package->getFiles()['info']['string'], $info_file_uri);
+        $package->setFiles($files);
       }
 
       // Remove the config directories, as they will be replaced.
@@ -78,8 +81,8 @@ class FeaturesGenerationWrite extends FeaturesGenerationMethodBase {
     $files = \Drupal::state()->get('system.module.files');
     foreach ($packages as $package) {
       $this->generatePackage($return, $package);
-      if (!isset($files[$package['machine_name']]) && isset($package['files']['info'])) {
-        $files[$package['machine_name']] = $package['directory'] . '/' . $package['files']['info']['filename'];
+      if (!isset($files[$package->getMachineName()]) && isset($package->getFiles()['info'])) {
+        $files[$package->getMachineName()] = $package->getDirectory() . '/' . $package->getFiles()['info']['filename'];
       }
     }
 
@@ -94,18 +97,18 @@ class FeaturesGenerationWrite extends FeaturesGenerationMethodBase {
    *
    * @param array &$return
    *   The return value, passed by reference.
-   * @param array $package
+   * @param \Drupal\features\Package $package
    *   The package or profile.
    */
-  protected function generatePackage(array &$return, array $package) {
-    if (empty($package['files'])) {
+  protected function generatePackage(array &$return, Package $package) {
+    if (!$package->getFiles()) {
       $this->failure($return, $package, NULL, t('No configuration was selected to be exported.'));
       return;
     }
     $success = TRUE;
-    foreach ($package['files'] as $file) {
+    foreach ($package->getFiles() as $file) {
       try {
-        $this->generateFile($package['directory'], $file);
+        $this->generateFile($package->getDirectory(), $file);
       }
       catch (\Exception $exception) {
         $this->failure($return, $package, $exception);
@@ -123,19 +126,19 @@ class FeaturesGenerationWrite extends FeaturesGenerationMethodBase {
    *
    * @param array &$return
    *   The return value, passed by reference.
-   * @param array $package
+   * @param \Drupal\features\Package $package
    *   The package or profile.
    */
-  protected function success(array &$return, array $package) {
-    $type = $package['type'] == 'module' ? $this->t('Package') : $this->t('Profile');
+  protected function success(array &$return, Package $package) {
+    $type = $package->getType() == 'module' ? $this->t('Package') : $this->t('Profile');
     $return[] = [
       'success' => TRUE,
       'display' => TRUE,
       'message' => '@type @package written to @directory.',
       'variables' => [
         '@type' => $type,
-        '@package' => $package['name'],
-        '@directory' => $package['directory']
+        '@package' => $package->getName(),
+        '@directory' => $package->getDirectory(),
       ],
     ];
   }
@@ -145,23 +148,23 @@ class FeaturesGenerationWrite extends FeaturesGenerationMethodBase {
    *
    * @param array &$return
    *   The return value, passed by reference.
-   * @param array $package
+   * @param \Drupal\features\Package $package
    *   The package or profile.
    * @param \Exception $exception
    *   The exception object.
    * @param string $message
    *   Error message when there isn't an Exception object.
    */
-  protected function failure(array &$return, array $package, \Exception $exception, $message = '') {
-    $type = $package['type'] == 'module' ? $this->t('Package') : $this->t('Profile');
+  protected function failure(array &$return, Package $package, \Exception $exception, $message = '') {
+    $type = $package->getType() == 'module' ? $this->t('Package') : $this->t('Profile');
     $return[] = [
       'success' => FALSE,
       'display' => TRUE,
       'message' => '@type @package not written to @directory. Error: @error.',
       'variables' => [
         '@type' => $type,
-        '@package' => $package['name'],
-        '@directory' => $package['directory'],
+        '@package' => $package->getName(),
+        '@directory' => $package->getDirectory(),
         '@error' => isset($exception) ? $exception->getMessage() : $message,
       ],
     ];

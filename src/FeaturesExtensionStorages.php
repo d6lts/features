@@ -72,6 +72,7 @@ class FeaturesExtensionStorages implements FeaturesExtensionStoragesInterface {
       $directory = $list[$name];
       return $this->extensionStorages[$directory]->read($name);
     }
+    return FALSE;
   }
 
   /**

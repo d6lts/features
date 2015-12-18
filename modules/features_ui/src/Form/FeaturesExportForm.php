@@ -16,6 +16,7 @@ use Drupal\Core\Extension\ModuleHandlerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element;
+use Drupal\features\Package;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Core\Url;
 
@@ -228,7 +229,7 @@ class FeaturesExportForm extends FormBase {
   /**
    * Builds the portion of the form showing a listing of features.
    *
-   * @param array $packages
+   * @param \Drupal\features\Package[] $packages
    *   The packages.
    *
    * @return array
@@ -248,11 +249,11 @@ class FeaturesExportForm extends FormBase {
     $options = array();
     $first = TRUE;
     foreach ($packages as $package) {
-      if ($first && $package['status'] == FeaturesManagerInterface::STATUS_NO_EXPORT) {
+      if ($first && $package->getStatus() == FeaturesManagerInterface::STATUS_NO_EXPORT) {
         // Don't offer new non-profile packages that are empty.
-        if ($package['status'] === FeaturesManagerInterface::STATUS_NO_EXPORT &&
-          !$this->assigner->getBundle()->isProfilePackage($package['machine_name']) &&
-          empty($package['config'])) {
+        if ($package->getStatus() === FeaturesManagerInterface::STATUS_NO_EXPORT &&
+          !$this->assigner->getBundle()->isProfilePackage($package->getMachineName()) &&
+          empty($package->getConfig())) {
           continue;
         }
         $first = FALSE;
@@ -264,7 +265,7 @@ class FeaturesExportForm extends FormBase {
           ),
         );
       }
-      $options[$package['machine_name']] = $this->buildPackageDetail($package);
+      $options[$package->getMachineName()] = $this->buildPackageDetail($package);
     }
 
     $element = array(
@@ -282,36 +283,36 @@ class FeaturesExportForm extends FormBase {
   /**
    * Builds the details of a package.
    *
-   * @param array $package
-   *   The package name.
+   * @param \Drupal\features\Package $package
+   *   The package.
    *
    * @return array
    *   A render array of a form element.
    */
-  protected function buildPackageDetail(array $package) {
+  protected function buildPackageDetail(Package $package) {
     $config_collection = $this->featuresManager->getConfigCollection();
 
-    $url = Url::fromRoute('features.edit', array('featurename' => $package['machine_name']));
+    $url = Url::fromRoute('features.edit', array('featurename' => $package->getMachineName()));
 
     $element['name'] = array(
-      'data' => \Drupal::l($package['name'], $url),
+      'data' => \Drupal::l($package->getName(), $url),
       'class' => array('feature-name'),
     );
-    $machine_name = $package['machine_name'];
+    $machine_name = $package->getMachineName();
     // Except for the 'unpackaged' pseudo-package, display the full name, since
     // that's what will be generated.
     if ($machine_name !== 'unpackaged') {
-      $machine_name = $this->assigner->getBundle($package['bundle'])->getFullName($machine_name);
+      $machine_name = $this->assigner->getBundle($package->getBundle())->getFullName($machine_name);
     }
     $element['machine_name'] = $machine_name;
     $element['status'] = array(
-      'data' => $this->featuresManager->statusLabel($package['status']),
+      'data' => $this->featuresManager->statusLabel($package->getStatus()),
       'class' => array('column-nowrap'),
     );
     // Use 'data' instead of plain string value so a blank version doesn't
     // remove column from table.
     $element['version'] = array(
-      'data' => SafeMarkup::checkPlain($package['version']),
+      'data' => SafeMarkup::checkPlain($package->getVersion()),
       'class' => array('column-nowrap'),
     );
     $overrides = $this->featuresManager->detectOverrides($package);
@@ -319,13 +320,13 @@ class FeaturesExportForm extends FormBase {
     $conflicts = array();
     $missing = array();
 
-    if ($package['status'] == FeaturesManagerInterface::STATUS_NO_EXPORT) {
+    if ($package->getStatus() == FeaturesManagerInterface::STATUS_NO_EXPORT) {
       $overrides = array();
       $new_config = array();
     }
     // Bundle package configuration by type.
     $package_config = array();
-    foreach ($package['config'] as $item_name) {
+    foreach ($package->getConfig() as $item_name) {
       $item = $config_collection[$item_name];
       $package_config[$item->getType()][] = array(
         'name' => SafeMarkup::checkPlain($item_name),
@@ -335,58 +336,54 @@ class FeaturesExportForm extends FormBase {
       );
     }
     // Conflict config from other modules.
-    if (!empty($package['config_orig'])) {
-      foreach ($package['config_orig'] as $item_name) {
-        if (!isset($config_collection[$item_name])) {
-          $missing[] = $item_name;
-          $package_config['missing'][] = array(
-            'name' => SafeMarkup::checkPlain($item_name),
-            'label' => SafeMarkup::checkPlain($item_name),
-            'class' => 'features-conflict',
-          );
-        }
-        elseif (!in_array($item_name, $package['config'])) {
-          $item = $config_collection[$item_name];
-          $conflicts[] = $item_name;
-          $package_config[$item->getType()][] = array(
-            'name' => SafeMarkup::checkPlain($item_name),
-            'label' => SafeMarkup::checkPlain($item->getLabel()),
-            'class' => 'features-conflict',
-          );
-        }
+    foreach ($package->getConfigOrig() as $item_name) {
+      if (!isset($config_collection[$item_name])) {
+        $missing[] = $item_name;
+        $package_config['missing'][] = array(
+          'name' => SafeMarkup::checkPlain($item_name),
+          'label' => SafeMarkup::checkPlain($item_name),
+          'class' => 'features-conflict',
+        );
+      }
+      elseif (!in_array($item_name, $package->getConfig())) {
+        $item = $config_collection[$item_name];
+        $conflicts[] = $item_name;
+        $package_config[$item->getType()][] = array(
+          'name' => SafeMarkup::checkPlain($item_name),
+          'label' => SafeMarkup::checkPlain($item->getLabel()),
+          'class' => 'features-conflict',
+        );
       }
     }
     // Add dependencies.
     $package_config['dependencies'] = array();
-    if (!empty($package['dependencies'])) {
-      foreach ($package['dependencies'] as $dependency) {
-        $package_config['dependencies'][] = array(
-          'name' => $dependency,
-          'label' => $this->moduleHandler->getName($dependency),
-          'class' => '',
-        );
-      }
+    foreach ($package->getDependencies() as $dependency) {
+      $package_config['dependencies'][] = array(
+        'name' => $dependency,
+        'label' => $this->moduleHandler->getName($dependency),
+        'class' => '',
+      );
     }
 
     $class = '';
     $label = '';
     if (!empty($conflicts)) {
-      $url = Url::fromRoute('features.edit', array('featurename' => $package['machine_name']));
+      $url = Url::fromRoute('features.edit', array('featurename' => $package->getMachineName()));
       $class = 'features-conflict';
       $label = t('Conflicts');
     }
     elseif (!empty($overrides)) {
-      $url = Url::fromRoute('features.diff', array('featurename' => $package['machine_name']));
+      $url = Url::fromRoute('features.diff', array('featurename' => $package->getMachineName()));
       $class = 'features-override';
       $label = $this->featuresManager->stateLabel(FeaturesManagerInterface::STATE_OVERRIDDEN);
     }
     elseif (!empty($new_config)) {
-      $url = Url::fromRoute('features.diff', array('featurename' => $package['machine_name']));
+      $url = Url::fromRoute('features.diff', array('featurename' => $package->getMachineName()));
       $class = 'features-detected';
       $label = t('New detected');
     }
     elseif (!empty($missing)) {
-      $url = Url::fromRoute('features.edit', array('featurename' => $package['machine_name']));
+      $url = Url::fromRoute('features.edit', array('featurename' => $package->getMachineName()));
       $class = 'features-conflict';
       $label = t('Missing');
     }
@@ -442,7 +439,7 @@ class FeaturesExportForm extends FormBase {
 
     $details = array();
     $details['description'] = array(
-      '#markup' => Xss::filterAdmin($package['description']),
+      '#markup' => Xss::filterAdmin($package->getDescription()),
     );
     $details['table'] = array(
       '#type' => 'details',
@@ -466,17 +463,16 @@ class FeaturesExportForm extends FormBase {
    *   A collection of configuration.
    */
   protected function addUnpackaged(array &$packages, array $config_collection) {
-    $packages['unpackaged'] = array(
-      'machine_name' => 'unpackaged',
+    $packages['unpackaged'] = new Package('unpackaged', [
       'name' => $this->t('Unpackaged'),
       'description' => $this->t('Configuration that has not been added to any package.'),
-      'config' => array(),
+      'config' => [],
       'status' => FeaturesManagerInterface::STATUS_NO_EXPORT,
       'version' => '',
-    );
+    ]);
     foreach ($config_collection as $item_name => $item) {
       if (!$item->getPackage() && !$item->isExtensionProvided()) {
-        $packages['unpackaged']['config'][] = $item_name;
+        $packages['unpackaged']->appendConfig($item_name);
       }
     }
   }
@@ -492,15 +488,16 @@ class FeaturesExportForm extends FormBase {
    *   The form build array.
    */
   public static function preRenderRemoveInvalidCheckboxes(array $form) {
+    /** @var \Drupal\features\Package $package */
     foreach ($form['#packages'] as $package) {
       // Remove checkboxes for packages that:
       // - exist and are disabled, or
       // - have no configuration assigned and are not the profile, or
       // - are the "unpackaged" pseudo-package.
-      if ($package['status'] == FeaturesManagerInterface::STATUS_DISABLED ||
-        (empty($package['config']) && !($package['machine_name'] == $form['#profile_package'])) ||
-        $package['machine_name'] == 'unpackaged') {
-        $form['preview'][$package['machine_name']]['#access'] = FALSE;
+      if ($package->getStatus() == FeaturesManagerInterface::STATUS_DISABLED ||
+        (empty($package->getConfig()) && !($package->getMachineName() == $form['#profile_package'])) ||
+        $package->getMachineName() == 'unpackaged') {
+        $form['preview'][$package->getMachineName()]['#access'] = FALSE;
       }
     }
     return $form;

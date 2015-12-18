@@ -13,6 +13,7 @@ use Drupal\features\FeaturesAssignerInterface;
 use Drupal\features\FeaturesManagerInterface;
 use Drupal\Core\Form\FormBase;
 use Drupal\Core\Form\FormStateInterface;
+use Drupal\features\Package;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 use Drupal\Component\Diff\DiffFormatter;
 use Drupal\config_update\ConfigRevertInterface;
@@ -111,7 +112,7 @@ class FeaturesDiffForm extends FormBase {
       return array();
     }
     elseif (!empty($featurename)) {
-      $machine_name = $packages[$featurename]['machine_name'];
+      $machine_name = $packages[$featurename]->getMachineName();
       $packages = array($packages[$featurename]);
     }
     else {
@@ -128,17 +129,17 @@ class FeaturesDiffForm extends FormBase {
 
     $options = array();
     foreach ($packages as $package) {
-      if ($package['status'] != FeaturesManagerInterface::STATUS_NO_EXPORT) {
+      if ($package->getStatus() != FeaturesManagerInterface::STATUS_NO_EXPORT) {
         $missing = $this->featuresManager->reorderMissing($this->featuresManager->detectMissing($package));
         $overrides = $this->featuresManager->detectOverrides($package, TRUE);
         if (!empty($overrides) || !empty($missing)) {
           $options += array(
-            $package['machine_name'] => array(
+            $package->getMachineName() => array(
               'row' => array(
                 'data' => array(
                   '#type' => 'html_tag',
                   '#tag' => 'h2',
-                  '#value' => SafeMarkup::checkPlain($package['name']),
+                  '#value' => SafeMarkup::checkPlain($package->getName()),
                 ),
               ),
               '#attributes' => array(
@@ -203,8 +204,8 @@ class FeaturesDiffForm extends FormBase {
   /**
    * Returns a form element for the given overrides.
    *
-   * @param array $package
-   *   A package array.
+   * @param \Drupal\features\Package $package
+   *   A package.
    * @param array $overrides
    *   An array of overrides.
    * @param array $missing
@@ -213,7 +214,7 @@ class FeaturesDiffForm extends FormBase {
    * @return array
    *   A form element.
    */
-  protected function diffOutput($package, $overrides, $missing = array()) {
+  protected function diffOutput(Package $package, $overrides, $missing = array()) {
     $element = array();
     $config = $this->featuresManager->getConfigCollection();
     $components = array_merge($missing, $overrides);
@@ -263,7 +264,7 @@ class FeaturesDiffForm extends FormBase {
           ),
         ),
         '#attributes' => array(
-          'class' => 'diff-' . $package['machine_name'],
+          'class' => 'diff-' . $package->getMachineName(),
         ),
       );
     }

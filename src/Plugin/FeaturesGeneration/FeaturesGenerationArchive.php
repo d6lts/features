@@ -14,6 +14,7 @@ use Drupal\features\FeaturesGenerationMethodBase;
 use Drupal\Core\Archiver\ArchiveTar;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\features\FeaturesBundleInterface;
+use Drupal\features\Package;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -69,9 +70,9 @@ class FeaturesGenerationArchive extends FeaturesGenerationMethodBase implements 
   /**
    * Reads and merges in existing files for a given package or profile.
    */
-  protected function preparePackage(array &$package, array $existing_packages, FeaturesBundleInterface $bundle = NULL) {
-    if (isset($existing_packages[$package['machine_name']])) {
-      $existing_directory = $existing_packages[$package['machine_name']];
+  protected function preparePackage(Package $package, array $existing_packages, FeaturesBundleInterface $bundle = NULL) {
+    if (isset($existing_packages[$package->getMachineName()])) {
+      $existing_directory = $existing_packages[$package->getMachineName()];
       // Scan for all files.
       $files = file_scan_directory($existing_directory, '/.*/');
       foreach ($files as $file) {
@@ -83,8 +84,10 @@ class FeaturesGenerationArchive extends FeaturesGenerationMethodBase implements 
           }
         }
         // Merge in the info file.
-        if ($file->name == $package['machine_name'] . '.info') {
-          $package['files']['info']['string'] = $this->mergeInfoFile($package['files']['info']['string'], $file->uri);
+        if ($file->name == $package->getMachineName() . '.info') {
+          $files = $package->getFiles();
+          $files['info']['string'] = $this->mergeInfoFile($package->getFiles()['info']['string'], $file->uri);
+          $package->setFiles($files);
         }
         // Read in remaining files.
         else {
@@ -97,11 +100,11 @@ class FeaturesGenerationArchive extends FeaturesGenerationMethodBase implements 
           else {
             $subdirectory = NULL;
           }
-          $package['files'][] = [
+          $package->appendFile([
             'filename' => $file->filename,
             'subdirectory' => $subdirectory,
             'string' => file_get_contents($file->uri)
-          ];
+          ]);
         }
       }
     }
@@ -120,7 +123,7 @@ class FeaturesGenerationArchive extends FeaturesGenerationMethodBase implements 
     // Determine the best name for the tar archive.
     // Single package export, so name by package name.
     if (count($packages) == 1) {
-      $filename = current($packages)['machine_name'];
+      $filename = current($packages)->getMachineName();
     }
     // Profile export, so name by profile.
     elseif (isset($bundle) && $bundle->isProfile()) {
@@ -149,7 +152,7 @@ class FeaturesGenerationArchive extends FeaturesGenerationMethodBase implements 
     foreach ($packages as $package) {
       if (count($packages) == 1) {
         // Single module export, so don't generate entire modules dir structure.
-        $package['directory'] = $package['machine_name'];
+        $package->setDirectory($package->getMachineName());
       }
       $this->generatePackage($return, $package, $archiver);
     }
@@ -162,16 +165,16 @@ class FeaturesGenerationArchive extends FeaturesGenerationMethodBase implements 
    *
    * @param array &$return
    *   The return value, passed by reference.
-   * @param array $package
+   * @param \Drupal\features\Package $package
    *   The package or profile.
    * @param ArchiveTar $archiver
    *   The archiver.
    */
-  protected function generatePackage(array &$return, array $package, ArchiveTar $archiver) {
+  protected function generatePackage(array &$return, Package $package, ArchiveTar $archiver) {
     $success = TRUE;
-    foreach ($package['files'] as $file) {
+    foreach ($package->getFiles() as $file) {
       try {
-        $this->generateFile($package['directory'], $file, $archiver);
+        $this->generateFile($package->getDirectory(), $file, $archiver);
       }
       catch (\Exception $exception) {
         $this->failure($return, $package, $exception);
@@ -189,11 +192,11 @@ class FeaturesGenerationArchive extends FeaturesGenerationMethodBase implements 
    *
    * @param array &$return
    *   The return value, passed by reference.
-   * @param array $package
+   * @param \Drupal\features\Package $package
    *   The package or profile.
    */
-  protected function success(array &$return, array $package) {
-    $type = $package['type'] == 'module' ? $this->t('Package') : $this->t('Profile');
+  protected function success(array &$return, Package $package) {
+    $type = $package->getType() == 'module' ? $this->t('Package') : $this->t('Profile');
     $return[] = [
       'success' => TRUE,
       // Archive writing doesn't merit a message, and if done through the UI
@@ -202,7 +205,7 @@ class FeaturesGenerationArchive extends FeaturesGenerationMethodBase implements 
       'message' => '@type @package written to archive.',
       'variables' => [
         '@type' => $type,
-        '@package' => $package['name']
+        '@package' => $package->getName(),
       ],
     ];
   }
@@ -212,15 +215,15 @@ class FeaturesGenerationArchive extends FeaturesGenerationMethodBase implements 
    *
    * @param array &$return
    *   The return value, passed by reference.
-   * @param array $package
+   * @param \Drupal\features\Package $package
    *   The package or profile.
    * @param \Exception $exception
    *   The exception object.
    * @param string $message
    *   Error message when there isn't an Exception object.
    */
-  protected function failure(array &$return, array $package, \Exception $exception, $message = '') {
-    $type = $package['type'] == 'module' ? $this->t('Package') : $this->t('Profile');
+  protected function failure(array &$return, Package $package, \Exception $exception, $message = '') {
+    $type = $package->getType() == 'module' ? $this->t('Package') : $this->t('Profile');
     $return[] = [
       'success' => FALSE,
       // Archive writing doesn't merit a message, and if done through the UI
@@ -229,7 +232,7 @@ class FeaturesGenerationArchive extends FeaturesGenerationMethodBase implements 
       'message' => '@type @package not written to archive. Error: @error.',
       'variables' => [
         '@type' => $type,
-        '@package' => $package['name'],
+        '@package' => $package->getName(),
         '@error' => isset($exception) ? $exception->getMessage() : $message,
       ],
     ];

@@ -52,7 +52,7 @@ class FeaturesGenerateTest extends KernelTestBase {
 
     $this->featuresManager->initPackage(self::PACKAGE_NAME, 'My test package');
     $package = $this->featuresManager->getPackage(self::PACKAGE_NAME);
-    $package['config'][] = 'system.site';
+    $package->appendConfig('system.site');
     $this->featuresManager->setPackage($package);
   }
 

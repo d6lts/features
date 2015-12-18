@@ -93,7 +93,7 @@ class FeaturesAssignTest extends KernelTestBase {
       'field.field.node.article.body',
     ];
 
-    $this->assertEquals($expected_config_items, $packages['article']['config'], 'Expected configuration items not present in article package.');  
+    $this->assertEquals($expected_config_items, $packages['article']->getConfig(), 'Expected configuration items not present in article package.');
 
   }
 
@@ -132,8 +132,8 @@ class FeaturesAssignTest extends KernelTestBase {
 
     $this->assertEquals($expected_package_names, array_keys($packages), 'Expected packages not created.');  
 
-    $this->assertTrue(in_array('field.storage.node.body', $packages['core']['config'], 'Expected configuration item not present in core package.'));  
-    $this->assertFalse(in_array('field.field.node.article.body', $packages['core']['config'], 'Unexpected configuration item present in core package.'));  
+    $this->assertTrue(in_array('field.storage.node.body', $packages['core']->getConfig(), 'Expected configuration item not present in core package.'));
+    $this->assertFalse(in_array('field.field.node.article.body', $packages['core']->getConfig(), 'Unexpected configuration item present in core package.'));
 
   }
 
@@ -181,7 +181,7 @@ class FeaturesAssignTest extends KernelTestBase {
       'field.field.node.article.body',
     ];
 
-    $this->assertEquals($expected_config_items, $packages[self::PACKAGE_NAME]['config'], 'Expected configuration items not present in article package.');
+    $this->assertEquals($expected_config_items, $packages[self::PACKAGE_NAME]->getConfig(), 'Expected configuration items not present in article package.');
 
   }
 
