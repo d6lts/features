@@ -3,6 +3,7 @@
 namespace Drupal\Tests\features\Kernel;
 
 use Drupal\KernelTests\KernelTestBase;
+use org\bovigo\vfs\vfsStream;
 
 /**
  * @group features
@@ -56,7 +57,9 @@ class FeaturesGenerateTest extends KernelTestBase {
     $this->featuresManager->setPackage($package);
   }
 
-
+  /**
+   * @covers \Drupal\features\Plugin\FeaturesGeneration\FeaturesGenerationArchive
+   */
   public function testExportArchive() {
     $filename = file_directory_temp() . '/' . self::PACKAGE_NAME . '.tar.gz';
     if (file_exists($filename)) {
@@ -68,11 +71,18 @@ class FeaturesGenerateTest extends KernelTestBase {
     $this->assertTrue(file_exists($filename), 'Archive file was not generated.');
   }
 
+  /**
+   * @covers \Drupal\features\Plugin\FeaturesGeneration\FeaturesGenerationWrite
+   */
   public function testExportWrite() {
+    // Set a fake drupal root, so the testbot can also write into it.
+    vfsStream::setup('drupal');
+    \Drupal::getContainer()->set('app.root', 'vfs://drupal');
+
     $package = $this->featuresManager->getPackage(self::PACKAGE_NAME);
     // Find out where package will be exported
     list($full_name, $path) = $this->featuresManager->getExportInfo($package, $this->assigner->getBundle());
-    $path = $path . '/' . $full_name;
+    $path = 'vfs://drupal/' . $path . '/' . $full_name;
     if (file_exists($path)) {
       file_unmanaged_delete_recursive($path);
     }

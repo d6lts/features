@@ -7,9 +7,11 @@
 
 namespace Drupal\features\Plugin\FeaturesGeneration;
 
+use Drupal\Core\Plugin\ContainerFactoryPluginInterface;
 use Drupal\features\FeaturesGenerationMethodBase;
 use Drupal\features\FeaturesBundleInterface;
 use Drupal\features\Package;
+use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
  * Class for writing packages to the local file system.
@@ -21,12 +23,38 @@ use Drupal\features\Package;
  *   description = @Translation("Write packages and optional profile to the file system."),
  * )
  */
-class FeaturesGenerationWrite extends FeaturesGenerationMethodBase {
+class FeaturesGenerationWrite extends FeaturesGenerationMethodBase implements ContainerFactoryPluginInterface {
 
   /**
    * The package generation method id.
    */
   const METHOD_ID = 'write';
+
+  /**
+   * The app root.
+   *
+   * @var string
+   */
+  protected $root;
+
+  /**
+   * Creates a new FeaturesGenerationWrite instance.
+   *
+   * @param string $root
+   *   The app root.
+   */
+  public function __construct($root) {
+    $this->root = $root;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public static function create(ContainerInterface $container, array $configuration, $plugin_id, $plugin_definition) {
+    return new static(
+      $container->get('app.root')
+    );
+  }
 
   /**
    * Reads and merges in existing files for a given package or profile.
@@ -46,7 +74,7 @@ class FeaturesGenerationWrite extends FeaturesGenerationMethodBase {
       $package->setDirectory($existing_directory);
 
       // Merge in the info file.
-      $info_file_uri = $existing_directory . '/' . $package->getMachineName() . '.info.yml';
+      $info_file_uri = $this->root . '/' . $existing_directory . '/' . $package->getMachineName() . '.info.yml';
       if (file_exists($info_file_uri)) {
         $files = $package->getFiles();
         $files['info']['string'] = $this->mergeInfoFile($package->getFiles()['info']['string'], $info_file_uri);
@@ -55,7 +83,7 @@ class FeaturesGenerationWrite extends FeaturesGenerationMethodBase {
 
       // Remove the config directories, as they will be replaced.
       foreach (array_keys($this->featuresManager->getExtensionStorages()->getExtensionStorages()) as $directory) {
-        $config_directory = $existing_directory . '/' . $directory;
+        $config_directory = $this->root . '/' . $existing_directory . '/' . $directory;
         if (is_dir($config_directory)) {
           file_unmanaged_delete_recursive($config_directory);
         }
@@ -188,6 +216,7 @@ class FeaturesGenerationWrite extends FeaturesGenerationMethodBase {
     if (!empty($file['subdirectory'])) {
       $directory .= '/' . $file['subdirectory'];
     }
+    $directory = $this->root . '/' . $directory;
     if (!is_dir($directory)) {
       if (drupal_mkdir($directory, NULL, TRUE) === FALSE) {
         throw new \Exception($this->t('Failed to create directory @directory.', ['@directory' => $directory]));
