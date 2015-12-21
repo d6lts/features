@@ -43,6 +43,8 @@ class FeaturesAssignmentProfile extends FeaturesAssignmentMethodBase {
       $profile_package = $this->featuresManager->getPackage($profile_name);
       if (empty($profile_package)) {
         $this->featuresManager->initPackage($profile_name, $current_bundle->getName(), $current_bundle->getDescription(), 'profile', $current_bundle);
+        // Reload the profile to refresh the config array after initializing profile package.
+        $profile_package = $this->featuresManager->getPackage($profile_name);
       }
 
       // Assign configuration by type.
