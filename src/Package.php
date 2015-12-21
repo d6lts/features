@@ -113,6 +113,15 @@ class Package {
   protected $configOrig = [];
 
   /**
+   * The features info.
+   *
+   * Contains the components used in this feature.
+   *
+   * @var array
+   */
+  protected $featuresInfo = [];
+
+  /**
    * Creates a new Package instance.
    *
    * @param string $machine_name
@@ -289,8 +298,13 @@ class Package {
     return isset($this->info['dependencies']) ? $this->info['dependencies'] : [];
   }
 
+  /**
+   * Returns the features info.
+   *
+   * @return array
+   */
   public function getFeaturesInfo() {
-    return isset($this->info['features']) ? $this->info['features'] : [];
+    return $this->featuresInfo;
   }
 
   /**
@@ -353,6 +367,20 @@ class Package {
    */
   public function setInfo($info) {
     $this->info = $info;
+    return $this;
+  }
+
+  /**
+   * @param \string[] $features_info
+   *
+   * @return $this
+   */
+  public function setFeaturesInfo($features_info) {
+    $this->featuresInfo = $features_info;
+    if (isset($features_info['bundle'])) {
+      $this->setBundle($features_info['bundle']);
+    }
+
     return $this;
   }
 

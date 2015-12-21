@@ -83,7 +83,7 @@ class FeaturesManagerTest extends UnitTestCase {
     $this->configStorage = $this->getMock(StorageInterface::class);
     $this->configManager = $this->getMock(ConfigManagerInterface::class);
     $this->moduleHandler = $this->getMock(ModuleHandlerInterface::class);
-    $this->featuresManager = new FeaturesManager($this->entityManager, $this->configFactory, $this->configStorage, $this->configManager, $this->moduleHandler);
+    $this->featuresManager = new FeaturesManager($this->root, $this->entityManager, $this->configFactory, $this->configStorage, $this->configManager, $this->moduleHandler);
 
     $string_translation = $this->getStringTranslationStub();
     $container = new ContainerBuilder();
@@ -340,7 +340,7 @@ class FeaturesManagerTest extends UnitTestCase {
     ]);
 
 
-    $features_manager = new TestFeaturesManager($this->entityManager, $this->configFactory, $config_storage->reveal(), $this->configManager, $this->moduleHandler);
+    $features_manager = new TestFeaturesManager($this->root, $this->entityManager, $this->configFactory, $config_storage->reveal(), $this->configManager, $this->moduleHandler);
     $features_manager->setExtensionStorages($extension_storage->reveal());
 
     $this->assertEquals(['test_overridden'], $features_manager->detectOverrides($package));
@@ -473,7 +473,7 @@ class FeaturesManagerTest extends UnitTestCase {
       'key' => 'value',
     ]);
 
-    $features_manager = new TestFeaturesManager($this->entityManager, $this->configFactory, $this->configStorage, $this->configManager, $this->moduleHandler);
+    $features_manager = new TestFeaturesManager($this->root, $this->entityManager, $this->configFactory, $this->configStorage, $this->configManager, $this->moduleHandler);
     $features_manager->setExtensionStorages($extension_storage->reveal());
 
     $this->assertEmpty($features_manager->detectNew($package));
@@ -485,7 +485,7 @@ class FeaturesManagerTest extends UnitTestCase {
     $extension_storage = $this->prophesize(FeaturesExtensionStoragesInterface::class);
     $extension_storage->read('test_config')->willReturn(FALSE);
 
-    $features_manager = new TestFeaturesManager($this->entityManager, $this->configFactory, $this->configStorage, $this->configManager, $this->moduleHandler);
+    $features_manager = new TestFeaturesManager($this->root, $this->entityManager, $this->configFactory, $this->configStorage, $this->configManager, $this->moduleHandler);
     $features_manager->setExtensionStorages($extension_storage->reveal());
 
     $this->assertEquals(['test_config'], $features_manager->detectNew($package));
@@ -528,7 +528,7 @@ class FeaturesManagerTest extends UnitTestCase {
   public function testInitPackageWithNewPackage() {
     $bundle = new FeaturesBundle(['machine_name' => 'default'], 'features_bundle');
 
-    $features_manager = new TestFeaturesManager($this->entityManager, $this->configFactory, $this->configStorage, $this->configManager, $this->moduleHandler);
+    $features_manager = new TestFeaturesManager($this->root, $this->entityManager, $this->configFactory, $this->configStorage, $this->configManager, $this->moduleHandler);
     $features_manager->setAllModules([]);
 
     $package = $features_manager->initPackage('test_feature', 'test name', 'test description', 'module', $bundle);
@@ -545,7 +545,7 @@ class FeaturesManagerTest extends UnitTestCase {
   public function testInitPackageWithExistingPackage() {
     $bundle = new FeaturesBundle(['machine_name' => 'default'], 'features_bundle');
 
-    $features_manager = new TestFeaturesManager($this->entityManager, $this->configFactory, $this->configStorage, $this->configManager, $this->moduleHandler);
+    $features_manager = new TestFeaturesManager('vfs://drupal', $this->entityManager, $this->configFactory, $this->configStorage, $this->configManager, $this->moduleHandler);
 
     vfsStream::setup('drupal');
     \Drupal::getContainer()->set('app.root', 'vfs://drupal');
@@ -557,9 +557,11 @@ name: Test feature 2
 type: module
 core: 8.x
 description: test description 2
-features:
-  config:
-    - test_config
+EOT
+      ,
+          'test_feature.features.yml' => <<<EOT
+config:
+  - test_config
 EOT
           ,
         ],
@@ -599,13 +601,12 @@ EOT
     $this->featuresManager->prepareFiles($packages);
 
     $files = $packages['test_feature']->getFiles();
-    $this->assertCount(2, $files);
+    $this->assertCount(3, $files);
     $this->assertEquals('test_feature.info.yml', $files['info']['filename']);
     $this->assertEquals(Yaml::encode([
       'name' => 'Test feature',
       'type' => 'module',
       'core' => '8.x',
-      'config' => ['test_config'],
       'features' => TRUE,
     ]), $files['info']['string']);
 
@@ -613,6 +614,11 @@ EOT
     $this->assertEquals(Yaml::encode([
       'foo' => 'bar'
     ]), $files['test_config']['string']);
+
+    $this->assertEquals('test_feature.features.yml', $files['features']['filename']);
+    $this->assertEquals(Yaml::encode([
+      'config' => ['test_config'],
+    ]), $files['features']['string']);
   }
 
   /**
@@ -626,7 +632,7 @@ EOT
         ],
       ],
     ]);
-    $this->featuresManager = new FeaturesManager($this->entityManager, $config_factory, $this->configStorage, $this->configManager, $this->moduleHandler);
+    $this->featuresManager = new FeaturesManager($this->root, $this->entityManager, $config_factory, $this->configStorage, $this->configManager, $this->moduleHandler);
 
     $package = new Package('test_feature');
     $result = $this->featuresManager->getExportInfo($package);
@@ -645,7 +651,7 @@ EOT
         ],
       ],
     ]);
-    $this->featuresManager = new FeaturesManager($this->entityManager, $config_factory, $this->configStorage, $this->configManager, $this->moduleHandler);
+    $this->featuresManager = new FeaturesManager($this->root, $this->entityManager, $config_factory, $this->configStorage, $this->configManager, $this->moduleHandler);
 
     $package = new Package('test_feature');
     $bundle = new FeaturesBundle(['machine_name' => 'test_bundle'], 'features_bundle');

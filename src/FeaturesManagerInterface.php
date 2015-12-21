@@ -7,6 +7,10 @@
 
 namespace Drupal\features;
 
+use Drupal\Component\Serialization\Yaml;
+use Drupal\features\FeaturesAssignerInterface;
+use Drupal\features\FeaturesBundleInterface;
+use Drupal\features\FeaturesGeneratorInterface;
 use Drupal\Core\Extension\Extension;
 
 /**
@@ -550,5 +554,12 @@ interface FeaturesManagerInterface {
    *   A translatable label.
    */
   public function stateLabel($state);
+
+  /**
+   * @param \Drupal\Core\Extension\Extension $extension
+   *
+   * @return array
+   */
+  public function getFeaturesInfo(Extension $extension);
 
 }
