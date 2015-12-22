@@ -153,7 +153,7 @@ class FeaturesGenerator implements FeaturesGeneratorInterface {
         }
 
         // Set the bundle machine name.
-        $packages[$package->getMachineName()]->setBundle($bundle->getMachineName());
+        $packages[$package->getMachineName()]['bundle'] = $bundle->getMachineName();
         $new_package_names[] = $package->getMachineName();
       }
       $this->featuresManager->setPackages($packages);
