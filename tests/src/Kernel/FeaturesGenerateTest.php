@@ -2,6 +2,7 @@
 
 namespace Drupal\Tests\features\Kernel;
 
+use Drupal\features\Entity\FeaturesBundle;
 use Drupal\KernelTests\KernelTestBase;
 use org\bovigo\vfs\vfsStream;
 
@@ -68,6 +69,33 @@ class FeaturesGenerateTest extends KernelTestBase {
     $this->assertFalse(file_exists($filename), 'Archive file already exists.');
 
     $this->generator->generatePackages('archive', [self::PACKAGE_NAME], $this->assigner->getBundle());
+    $this->assertTrue(file_exists($filename), 'Archive file was not generated.');
+  }
+
+  /**
+   * @covers \Drupal\features\FeaturesGenerator::setPackageBundleNames
+   */
+  public function testGeneratorWithBundle() {
+
+    $filename = file_directory_temp() . '/giraffe_' . self::PACKAGE_NAME . '.tar.gz';
+    if (file_exists($filename)) {
+      unlink($filename);
+    }
+    $this->assertFalse(file_exists($filename), 'Archive file already exists.');
+
+    $bundle = FeaturesBundle::create([
+      'machine_name' => 'giraffe'
+    ]);
+
+    $this->generator->generatePackages('archive', [self::PACKAGE_NAME], $bundle);
+
+    $package = $this->featuresManager->getPackage(self::PACKAGE_NAME);
+    $this->assertNull($package);
+
+    $package = $this->featuresManager->getPackage('giraffe_' . self::PACKAGE_NAME);
+    $this->assertEquals('giraffe_' . self::PACKAGE_NAME, $package->getMachineName());
+    $this->assertEquals('giraffe', $package->getBundle());
+
     $this->assertTrue(file_exists($filename), 'Archive file was not generated.');
   }
 
