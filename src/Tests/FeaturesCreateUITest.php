@@ -59,11 +59,10 @@ class FeaturesCreateUITest extends WebTestBase {
     $archive = new ArchiveTar($filename);
     $files = $archive->listContent();
 
-    $this->assertEqual(4, count($files));
+    $this->assertEqual(3, count($files));
     $this->assertEqual('test_feature/test_feature.info.yml', $files[0]['filename']);
-    $this->assertEqual('test_feature/test_feature.features.yml', $files[1]['filename']);
-    $this->assertEqual('test_feature/config/install/system.theme.yml', $files[2]['filename']);
-    $this->assertEqual('test_feature/config/install/user.settings.yml', $files[3]['filename']);
+    $this->assertEqual('test_feature/config/install/system.theme.yml', $files[1]['filename']);
+    $this->assertEqual('test_feature/config/install/user.settings.yml', $files[2]['filename']);
 
     // Ensure that the archive contains the expected values.
     $info_filename = tempnam($this->tempFilesDirectory, 'feature');
