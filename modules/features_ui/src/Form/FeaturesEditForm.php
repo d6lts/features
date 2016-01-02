@@ -378,7 +378,7 @@ class FeaturesEditForm extends FormBase {
 
     foreach ($export['components'] as $component => $component_info) {
 
-      $component_items_count = count($component_info['options']['sources']);
+      $component_items_count = count($component_info['_features_options']['sources']);
       $label = SafeMarkup::format('@component (<span class="component-count">@count</span>)',
         array(
           '@component' => $config_types[$component],
@@ -388,7 +388,7 @@ class FeaturesEditForm extends FormBase {
 
       $count = 0;
       foreach ($sections as $section) {
-        $count += count($component_info['options'][$section]);
+        $count += count($component_info['_features_options'][$section]);
       }
       $extra_class = ($count == 0) ? 'features-export-empty' : '';
       $component_name = str_replace('_', '-', SafeMarkup::checkPlain($component));
@@ -410,8 +410,8 @@ class FeaturesEditForm extends FormBase {
         $element[$component]['sources']['selected'] = array(
           '#type' => 'checkboxes',
           '#id' => "edit-sources-$component_name",
-          '#options' => $this->domDecodeOptions($component_info['options']['sources']),
-          '#default_value' => $this->domDecodeOptions($component_info['selected']['sources'], FALSE),
+          '#options' => $this->domDecodeOptions($component_info['_features_options']['sources']),
+          '#default_value' => $this->domDecodeOptions($component_info['_features_selected']['sources'], FALSE),
           '#attributes' => array('class' => array('component-select')),
           '#prefix' => "<span class='component-select'>",
           '#suffix' => '</span>',
@@ -424,10 +424,10 @@ class FeaturesEditForm extends FormBase {
         foreach ($sections as $section) {
           $element[$component][$section] = array(
             '#type' => 'checkboxes',
-            '#options' => !empty($component_info['options'][$section]) ?
-              $this->domDecodeOptions($component_info['options'][$section]) : array(),
-            '#default_value' => !empty($component_info['selected'][$section]) ?
-              $this->domDecodeOptions($component_info['selected'][$section], FALSE) : array(),
+            '#options' => !empty($component_info['_features_options'][$section]) ?
+              $this->domDecodeOptions($component_info['_features_options'][$section]) : array(),
+            '#default_value' => !empty($component_info['_features_selected'][$section]) ?
+              $this->domDecodeOptions($component_info['_features_selected'][$section], FALSE) : array(),
             '#attributes' => array('class' => array('component-' . $section)),
             '#prefix' => "<span class='component-$section'>",
             '#suffix' => '</span>',
@@ -469,8 +469,8 @@ class FeaturesEditForm extends FormBase {
    * @return \Drupal\features\Package
    *   New export array to be exported
    *   array['components'][$component_name] = $component_info
-   *     $component_info['options'][$section] is list of available options
-   *     $component_info['selected'][$section] is option state TRUE/FALSE
+   *     $component_info['_features_options'][$section] is list of available options
+   *     $component_info['_features_selected'][$section] is option state TRUE/FALSE
    *   $section = array('sources', included', 'detected', 'added')
    *     sources - options that are available to be added to the feature
    *     included - options that have been previously exported to the feature
@@ -610,8 +610,8 @@ class FeaturesEditForm extends FormBase {
     foreach ($components as $component => $component_info) {
       $component_export = $component_info;
       foreach ($sections as $section) {
-        $component_export['options'][$section] = array();
-        $component_export['selected'][$section] = array();
+        $component_export['_features_options'][$section] = array();
+        $component_export['_features_selected'][$section] = array();
       }
       if (!empty($component_info)) {
         $exported_components = !empty($exported_features_info[$component]) ? $exported_features_info[$component] : array();
@@ -623,8 +623,8 @@ class FeaturesEditForm extends FormBase {
           if (!$form_state->isValueEmpty(array($component, 'sources', 'selected', $key))) {
             $form_state->setValue(array($component, 'sources', 'selected', $key), FALSE);
             $form_state->setValue(array($component, 'added', $key), 1);
-            $component_export['options']['added'][$key] = $this->configLabel($component, $key, $label);
-            $component_export['selected']['added'][$key] = $key;
+            $component_export['_features_options']['added'][$key] = $this->configLabel($component, $key, $label);
+            $component_export['_features_selected']['added'][$key] = $key;
             // If this was previously excluded, we don't need to set it as
             // required because it was automatically assigned.
             if (isset($this->excluded[$component][$key])) {
@@ -691,8 +691,8 @@ class FeaturesEditForm extends FormBase {
                 $default_value = FALSE;
               }
             }
-            $component_export['options'][$section][$key] = $this->configLabel($component, $key, $label);
-            $component_export['selected'][$section][$key] = $default_value;
+            $component_export['_features_options'][$section][$key] = $this->configLabel($component, $key, $label);
+            $component_export['_features_selected'][$section][$key] = $default_value;
             // Save which dependencies are specifically excluded from
             // auto-detection.
             if (($section == 'detected') && ($default_value === FALSE)) {
@@ -729,8 +729,8 @@ class FeaturesEditForm extends FormBase {
           elseif (!$form_state->isSubmitted() && isset($exported_components[$key])) {
             // Component is not part of new export, but was in original export.
             // Mark component as Added when creating initial form.
-            $component_export['options']['added'][$key] = $this->configLabel($component, $key, $label);
-            $component_export['selected']['added'][$key] = $key;
+            $component_export['_features_options']['added'][$key] = $this->configLabel($component, $key, $label);
+            $component_export['_features_selected']['added'][$key] = $key;
           }
           else {
             // Option was not part of the new export.
@@ -738,16 +738,16 @@ class FeaturesEditForm extends FormBase {
             foreach (array('included', 'added') as $section) {
               // Restore any user-selected checkboxes.
               if (!$form_state->isValueEmpty(array($component, $section, $key))) {
-                $component_export['options'][$section][$key] = $this->configLabel($component, $key, $label);
-                $component_export['selected'][$section][$key] = $key;
+                $component_export['_features_options'][$section][$key] = $this->configLabel($component, $key, $label);
+                $component_export['_features_selected'][$section][$key] = $key;
                 $added = TRUE;
               }
             }
             if (!$added) {
               // If not Included or Added, then put it back in the unchecked
               // Sources checkboxes.
-              $component_export['options']['sources'][$key] = $this->configLabel($component, $key, $label);
-              $component_export['selected']['sources'][$key] = FALSE;
+              $component_export['_features_options']['sources'][$key] = $this->configLabel($component, $key, $label);
+              $component_export['_features_selected']['sources'][$key] = FALSE;
             }
           }
         }
