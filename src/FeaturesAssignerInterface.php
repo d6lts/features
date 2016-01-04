@@ -222,9 +222,9 @@ interface FeaturesAssignerInterface {
   /**
    * Loads a named bundle.
    *
-   * @param string $bundle_name
-   *   The name of a features bundle. If omitted, gets the last bundle from the
-   *   Session.
+   * @param string $machine_name
+   *   (optional) The name of a features bundle.
+   *   Defaults to NULL, gets the last bundle from the session.
    *
    * @return \Drupal\features\FeaturesBundleInterface
    *   A features bundle object.
