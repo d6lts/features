@@ -51,10 +51,10 @@ class FeaturesAssignmentExisting extends FeaturesAssignmentMethodBase {
   public function assignPackages($force = FALSE) {
     $packages = $this->featuresManager->getPackages();
 
-    // Assign config to enabled modules first.
+    // Assign config to installed modules first.
     foreach ($packages as $name => $package) {
-      // @todo Introduce $package->isEnabled() and / or $package->isDisabled().
-      if ($package->getStatus() === FeaturesManagerInterface::STATUS_ENABLED) {
+      // @todo Introduce $package->isInstalled() and / or $package->isUninstalled().
+      if ($package->getStatus() === FeaturesManagerInterface::STATUS_INSTALLED) {
         $this->safeAssignConfig($package->getMachineName(), $package->getExtension());
       }
     }

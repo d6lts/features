@@ -29,7 +29,7 @@ interface FeaturesManagerInterface {
    */
   const STATUS_NO_EXPORT = 0;
   const STATUS_DISABLED = 1;
-  const STATUS_ENABLED = 2;
+  const STATUS_INSTALLED = 2;
   const STATUS_DEFAULT = self::STATUS_NO_EXPORT;
 
   /**
@@ -103,11 +103,11 @@ interface FeaturesManagerInterface {
    *   - 'type': type of Drupal project ('module').
    *   - 'core': Drupal core compatibility ('8.x').
    *   - 'dependencies': array of module dependencies.
-   *   - 'themes': array of names of themes to enable.
+   *   - 'themes': array of names of themes to install.
    *   - 'config': array of names of configuration items.
    *   - 'status': status of the package. Valid values are:
    *      - FeaturesManagerInterface::STATUS_NO_EXPORT
-   *      - FeaturesManagerInterface::STATUS_ENABLED
+   *      - FeaturesManagerInterface::STATUS_INSTALLED
    *      - FeaturesManagerInterface::STATUS_DISABLED
    *   - 'version': version of the extension.
    *   - 'state': state of the extension. Valid values are:
@@ -381,20 +381,20 @@ interface FeaturesManagerInterface {
   public function getAllModules();
 
   /**
-   * Returns a list of Features modules regardless of if they are enabled.
+   * Returns a list of Features modules regardless of if they are installed.
    *
    * @param \Drupal\features\FeaturesBundleInterface $bundle
    *   Optional bundle to filter module list.
    *   If given, only modules matching the bundle namespace will be returned.
    *   If the bundle uses a profile, only modules in the profile will be
    *   returned.
-   * @param bool $enabled
-   *   List only enabled modules.
+   * @param bool $installed
+   *   List only installed modules.
    *
    * @return Drupal\Core\Extension\Extension[]
    *   An array of extension objects.
    */
-  public function getFeaturesModules(FeaturesBundleInterface $bundle = NULL, $enabled = FALSE);
+  public function getFeaturesModules(FeaturesBundleInterface $bundle = NULL, $installed = FALSE);
 
   /**
    * Lists names of configuration objects provided by a given extension.
@@ -410,15 +410,15 @@ interface FeaturesManagerInterface {
   /**
    * Lists names of configuration items provided by existing Features modules.
    *
-   * @param bool $enabled
-   *   List only enabled Features.
+   * @param bool $installed
+   *   List only installed Features.
    * @param \Drupal\features\FeaturesBundleInterface $bundle
    *   (optional) Bundle to find existing configuration for.
    *
    * @return array
    *   An array with config names as keys and providing module names as values.
    */
-  public function listExistingConfig($enabled = FALSE, FeaturesBundleInterface $bundle = NULL);
+  public function listExistingConfig($installed = FALSE, FeaturesBundleInterface $bundle = NULL);
 
   /**
    * Iterates through packages and prepares file names and contents.

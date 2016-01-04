@@ -579,8 +579,8 @@ function drush_features_import() {
         return;
       }
 
-      if ($feature['status'] != FeaturesManagerInterface::STATUS_ENABLED) {
-        drush_log(dt('No such feature is enabled: @module', $dt_args), 'error');
+      if ($feature['status'] != FeaturesManagerInterface::STATUS_INSTALLED) {
+        drush_log(dt('No such feature is installed: @module', $dt_args), 'error');
         return;
       }
 
@@ -661,7 +661,7 @@ function _drush_features_load_feature($module, $any = FALSE) {
       $feature = $manager->initPackageFromExtension($extension);
       $config = $manager->listExtensionConfig($extension);
       $feature->setConfig($config);
-      $feature->setStatus(FeaturesManagerInterface::STATUS_ENABLED);
+      $feature->setStatus(FeaturesManagerInterface::STATUS_INSTALLED);
     }
   }
   return $feature;

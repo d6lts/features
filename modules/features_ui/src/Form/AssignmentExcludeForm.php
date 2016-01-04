@@ -46,19 +46,19 @@ class AssignmentExcludeForm extends AssignmentFormBase {
       '#type' => 'container',
       '#tree' => TRUE,
     );
-    $form['module']['enabled'] = array(
+    $form['module']['installed'] = array(
       '#type' => 'checkbox',
       '#title' => t('Exclude module-provided entity configuration'),
-      '#default_value' => $module_settings['enabled'],
-      '#description' => $this->t('Select this option to exclude from packaging any configuration that is provided by already enabled modules. Note that <a href=":url">simple configuration</a> will not be excluded as it is always module-provided.', array(':url' => 'http://www.drupal.org/node/1809490')),
+      '#default_value' => $module_settings['installed'],
+      '#description' => $this->t('Select this option to exclude from packaging any configuration that is provided by already installed modules. Note that <a href=":url">simple configuration</a> will not be excluded as it is always module-provided.', array(':url' => 'http://www.drupal.org/node/1809490')),
       '#attributes' => array(
-        'data-module-enabled' => 'status',
+        'data-module-installed' => 'status',
       ),
     );
 
-    $show_if_module_enabled_checked = array(
+    $show_if_module_installed_checked = array(
       'visible' => array(
-        ':input[data-module-enabled="status"]' => array('checked' => TRUE),
+        ':input[data-module-installed="status"]' => array('checked' => TRUE),
       ),
     );
 
@@ -68,7 +68,7 @@ class AssignmentExcludeForm extends AssignmentFormBase {
       '#title' => t("Don't exclude install profile's configuration"),
       '#default_value' => $module_settings['profile'],
       '#description' => $this->t("Select this option to not exclude from packaging any configuration that is provided by this site's install profile, %profile.", array('%profile' => $info['name'])),
-      '#states' => $show_if_module_enabled_checked,
+      '#states' => $show_if_module_installed_checked,
     );
 
     $machine_name = $this->currentBundle->getMachineName();
@@ -78,7 +78,7 @@ class AssignmentExcludeForm extends AssignmentFormBase {
       '#title' => t("Don't exclude configuration by namespace"),
       '#default_value' => $module_settings['namespace'],
       '#description' => $this->t("Select this option to not exclude from packaging any configuration that is provided by modules with the package namespace (currently %namespace).", array('%namespace' => $machine_name)),
-      '#states' => $show_if_module_enabled_checked,
+      '#states' => $show_if_module_installed_checked,
     );
 
     $this->setActions($form);

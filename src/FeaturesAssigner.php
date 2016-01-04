@@ -299,7 +299,7 @@ class FeaturesAssigner implements FeaturesAssignerInterface {
   public function createBundlesFromPackages() {
     $existing_bundles = $this->getBundleList();
     $new_bundles = [];
-    // Only parse from enabled features.
+    // Only parse from installed features.
     $modules = $this->featuresManager->getFeaturesModules(NULL, TRUE);
 
     foreach ($modules as $module) {

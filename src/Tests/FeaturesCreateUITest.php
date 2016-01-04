@@ -115,7 +115,7 @@ class FeaturesCreateUITest extends WebTestBase {
     $this->drupalGet('admin/config/development/configuration/features');
 
     $tr = $this->xpath('//table[contains(@class, "features-listing")]/tbody/tr[td[3] = "test_feature"]')[0];
-    $this->assertEqual('Enabled', (string) $tr->children()[5]);
+    $this->assertEqual('Installed', (string) $tr->children()[5]);
 
     // Check that a config change results in a feature marked as changed.
     \Drupal::configFactory()->getEditable('user.settings')
@@ -149,7 +149,7 @@ class FeaturesCreateUITest extends WebTestBase {
     $this->drupalPostForm(NULL, $edit, t('Install'));
     $this->drupalGet('admin/config/development/configuration/features');
     $tr = $this->xpath('//table[contains(@class, "features-listing")]/tbody/tr[td[3] = "test_feature"]')[0];
-    $this->assertEqual('Enabled', (string) $tr->children()[5]);
+    $this->assertEqual('Installed', (string) $tr->children()[5]);
 
     // Ensure that the changed config got overridden.
     $this->assertEqual('Anonymous', \Drupal::config('user.settings')->get('anonymous'));
@@ -169,7 +169,7 @@ class FeaturesCreateUITest extends WebTestBase {
 
     $this->drupalGet('admin/config/development/configuration/features');
     $tr = $this->xpath('//table[contains(@class, "features-listing")]/tbody/tr[td[3] = "test_feature"]')[0];
-    $this->assertEqual('Enabled', (string) $tr->children()[5]);
+    $this->assertEqual('Installed', (string) $tr->children()[5]);
   }
 
 }

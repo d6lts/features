@@ -416,7 +416,7 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function getFeaturesModules(FeaturesBundleInterface $bundle = NULL, $enabled = FALSE) {
+  public function getFeaturesModules(FeaturesBundleInterface $bundle = NULL, $installed = FALSE) {
     $modules = $this->getAllModules();
 
     // Filter by bundle.
@@ -427,8 +427,8 @@ class FeaturesManager implements FeaturesManagerInterface {
       });
     }
 
-    // Filtered by enabled status.
-    if ($enabled) {
+    // Filtered by installed status.
+    if ($installed) {
       $features_manager = $this;
       $modules = array_filter($modules, function ($extension) use ($features_manager) {
         return $features_manager->moduleHandler->moduleExists($extension->getName());
@@ -684,7 +684,7 @@ class FeaturesManager implements FeaturesManagerInterface {
       $package->setInfo($info);
       $package->setConfigOrig($this->listExtensionConfig($extension));
       $package->setStatus($this->moduleHandler->moduleExists($extension->getName())
-        ? FeaturesManagerInterface::STATUS_ENABLED
+        ? FeaturesManagerInterface::STATUS_INSTALLED
         : FeaturesManagerInterface::STATUS_DISABLED);
       $package->setVersion(isset($info['version']) ? $info['version'] : '');
     }
@@ -860,9 +860,9 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function listExistingConfig($enabled = FALSE, FeaturesBundleInterface $bundle = NULL) {
+  public function listExistingConfig($installed = FALSE, FeaturesBundleInterface $bundle = NULL) {
     $config = array();
-    $existing = $this->getFeaturesModules($bundle, $enabled);
+    $existing = $this->getFeaturesModules($bundle, $installed);
     foreach ($existing as $extension) {
       // Keys are configuration item names and values are providing extension
       // name.
@@ -1089,8 +1089,8 @@ class FeaturesManager implements FeaturesManagerInterface {
       case FeaturesManagerInterface::STATUS_DISABLED:
         return t('Uninstalled');
 
-      case FeaturesManagerInterface::STATUS_ENABLED:
-        return t('Enabled');
+      case FeaturesManagerInterface::STATUS_INSTALLED:
+        return t('Installed');
     }
   }
 

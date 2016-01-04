@@ -214,7 +214,7 @@ class FeaturesEditForm extends FormBase {
 
     $form['info']['description'] = array(
       '#title' => t('Description'),
-      '#description' => t('Provide a short description of what users should expect when they enable your feature.'),
+      '#description' => t('Provide a short description of what users should expect when they install your feature.'),
       '#type' => 'textarea',
       '#rows' => 3,
       '#default_value' => $this->package->getDescription(),

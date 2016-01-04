@@ -456,7 +456,7 @@ class FeaturesManagerTest extends UnitTestCase {
       ->willReturn(TRUE);
 
     $result = $this->featuresManager->initPackageFromExtension($extension);
-    $this->assertEquals(FeaturesManagerInterface::STATUS_ENABLED, $result->getStatus());
+    $this->assertEquals(FeaturesManagerInterface::STATUS_INSTALLED, $result->getStatus());
   }
 
   public function testDetectNewWithNoConfig() {

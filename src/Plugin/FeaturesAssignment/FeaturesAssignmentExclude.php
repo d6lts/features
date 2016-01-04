@@ -48,7 +48,7 @@ class FeaturesAssignmentExclude extends FeaturesAssignmentMethodBase {
 
     // Exclude configuration already provided by modules.
     $exclude_module = $settings['module'];
-    if (!empty($exclude_module['enabled'])) {
+    if (!empty($exclude_module['installed'])) {
       $install_list = $this->featuresManager->getExtensionStorages()->listAll();
 
       // There are two settings that can limit what's included.
