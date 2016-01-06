@@ -83,6 +83,13 @@ class FeaturesManager implements FeaturesManagerInterface {
   protected $assignmentSettings;
 
   /**
+   * The app root.
+   *
+   * @var string
+   */
+  protected $root;
+
+  /**
    * The configuration present on the site.
    *
    * @var \Drupal\features\ConfigurationItem[]
@@ -106,6 +113,8 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * Constructs a FeaturesManager object.
    *
+   * @param string $root
+   *   The app root.
    * @param \Drupal\Core\Entity\EntityManagerInterface $entity_manager
    *   The entity manager.
    * @param \Drupal\Core\Config\ConfigFactoryInterface $config_factory
@@ -117,9 +126,10 @@ class FeaturesManager implements FeaturesManagerInterface {
    * @param \Drupal\Core\Extension\ModuleHandlerInterface $module_handler
    *   The module handler.
    */
-  public function __construct(EntityManagerInterface $entity_manager, ConfigFactoryInterface $config_factory,
+  public function __construct($root, EntityManagerInterface $entity_manager, ConfigFactoryInterface $config_factory,
                               StorageInterface $config_storage, ConfigManagerInterface $config_manager,
                               ModuleHandlerInterface $module_handler) {
+    $this->root = $root;
     $this->entityManager = $entity_manager;
     $this->configStorage = $config_storage;
     $this->configManager = $config_manager;
@@ -325,8 +335,7 @@ class FeaturesManager implements FeaturesManagerInterface {
    * {@inheritdoc}
    */
   public function isFeatureModule(Extension $module, FeaturesBundleInterface $bundle = NULL) {
-    $info = $this->getExtensionInfo($module);
-    if (isset($info['features'])) {
+    if ($features_info = $this->getFeaturesInfo($module)) {
       // If no bundle was requested, it's enough that this is a feature.
       if (is_null($bundle)) {
         return TRUE;
@@ -334,11 +343,11 @@ class FeaturesManager implements FeaturesManagerInterface {
       // If the default bundle was requested, look for features where
       // the bundle is not set.
       elseif ($bundle->isDefault()) {
-        return !isset($info['features']['bundle']);
+        return !isset($features_info['bundle']);
       }
       // If we have a bundle name, look for it.
       else {
-        return (isset($info['features']['bundle']) && ($info['features']['bundle'] == $bundle->getMachineName()));
+        return (isset($features_info['bundle']) && ($features_info['bundle'] == $bundle->getMachineName()));
       }
     }
     return FALSE;
@@ -453,7 +462,8 @@ class FeaturesManager implements FeaturesManagerInterface {
    */
   public function initPackageFromExtension(Extension $extension) {
     $info = $this->getExtensionInfo($extension);
-    $bundle = $this->getAssigner()->findBundle($info);
+    $features_info = $this->getFeaturesInfo($extension);
+    $bundle = $this->getAssigner()->findBundle($info, $features_info);
     $short_name = $bundle->getShortName($extension->getName());
     return $this->initPackage($short_name, $info['name'], !empty($info['description']) ? $info['description'] : '', $info['type'], $bundle, $extension);
   }
@@ -680,8 +690,10 @@ class FeaturesManager implements FeaturesManagerInterface {
     // If there is an extension, set extension-specific properties.
     if (isset($extension)) {
       $info = $this->getExtensionInfo($extension);
+      $features_info = $this->getFeaturesInfo($extension);
       $package->setExtension($extension);
       $package->setInfo($info);
+      $package->setFeaturesInfo($features_info);
       $package->setConfigOrig($this->listExtensionConfig($extension));
       $package->setStatus($this->moduleHandler->moduleExists($extension->getName())
         ? FeaturesManagerInterface::STATUS_INSTALLED
@@ -707,8 +719,9 @@ class FeaturesManager implements FeaturesManagerInterface {
       'dependencies' => $package->getDependencies(),
       'themes' => $package->getThemes(),
       'version' => $package->getVersion(),
-      'config' => $package->getConfig(),
     ];
+
+    $features_info = [];
 
     // Assign to a "package" named for the profile.
     if ($package->getBundle()) {
@@ -718,24 +731,24 @@ class FeaturesManager implements FeaturesManagerInterface {
     // can be reloaded later by the AssignmentPackages plugin.
     if (isset($bundle) && !$bundle->isDefault()) {
       $info['package'] = $bundle->getName();
-      $info['features']['bundle'] = $bundle->getMachineName();
+      $features_info['bundle'] = $bundle->getMachineName();
     }
     else {
-      unset($info['features']['bundle']);
+      unset($features_info['bundle']);
     }
 
     if ($package->getConfig()) {
       foreach (array('excluded', 'required') as $constraint) {
         if (!empty($package->{'get' . $constraint}())) {
-          $info['features'][$constraint] = $package->{'get' . $constraint}();
+          $features_info[$constraint] = $package->{'get' . $constraint}();
         }
         else {
-          unset($info['features'][$constraint]);
+          unset($features_info[$constraint]);
         }
       }
 
-      if (empty($info['features'])) {
-        $info['features'] = TRUE;
+      if (empty($features_info)) {
+        $features_info = TRUE;
       }
     }
 
@@ -760,6 +773,12 @@ class FeaturesManager implements FeaturesManagerInterface {
       // Filter to remove any empty keys, e.g., an empty themes array.
       'string' => Yaml::encode(array_filter($info))
     ], 'info');
+
+    $package->appendFile([
+      'filename' => $package->getMachineName() . '.features.yml',
+      'subdirectory' => NULL,
+      'string' => Yaml::encode($features_info)
+    ], 'features');
   }
 
   /**
@@ -807,11 +826,6 @@ class FeaturesManager implements FeaturesManagerInterface {
     // If keys were specified, use only those.
     if (!empty($keys)) {
       $info2 = array_intersect_key($info2, array_fill_keys($keys, NULL));
-    }
-
-    // Ensure the entire 'features' data is replaced by new data.
-    if (isset($info2['features'])) {
-      unset($info1['features']);
     }
 
     $info = NestedArray::mergeDeep($info1, $info2);
@@ -1105,6 +1119,18 @@ class FeaturesManager implements FeaturesManagerInterface {
       case FeaturesManagerInterface::STATE_OVERRIDDEN:
         return t('Changed');
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function getFeaturesInfo(Extension $extension) {
+    $features_info = NULL;
+    $filename = $this->root . '/' . $extension->getPath() . '/' . $extension->getName() . '.features.yml';
+    if (file_exists($filename)) {
+      $features_info = Yaml::decode(file_get_contents($filename));
+    }
+    return $features_info;
   }
 
 }

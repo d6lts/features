@@ -15,6 +15,18 @@ use Drupal\features\Package;
  */
 class PackageTest extends \PHPUnit_Framework_TestCase {
 
+  /**
+   * @covers ::setFeaturesInfo
+   */
+  public function testSetFeaturesInfo() {
+    $package = new Package('test_feature', []);
+
+    $this->assertEquals([], $package->getFeaturesInfo());
+    $package->setFeaturesInfo(['bundle' => 'test_bundle']);
+    $this->assertEquals('test_bundle', $package->getBundle());
+    $this->assertEquals(['bundle' => 'test_bundle'], $package->getFeaturesInfo());
+  }
+
   public function testGetConfig() {
     $package = new Package('test_feature', ['config' => ['test_config_a', 'test_config_b']]);
     $this->assertEquals(['test_config_a', 'test_config_b'], $package->getConfig());

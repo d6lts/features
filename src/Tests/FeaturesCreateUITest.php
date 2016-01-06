@@ -7,6 +7,7 @@
 
 namespace Drupal\features\Tests;
 
+use Drupal\Component\Serialization\Yaml;
 use Drupal\Core\Archiver\ArchiveTar;
 use Drupal\simpletest\WebTestBase;
 
@@ -59,21 +60,25 @@ class FeaturesCreateUITest extends WebTestBase {
     $archive = new ArchiveTar($filename);
     $files = $archive->listContent();
 
-    $this->assertEqual(3, count($files));
+    $this->assertEqual(4, count($files));
     $this->assertEqual('test_feature/test_feature.info.yml', $files[0]['filename']);
-    $this->assertEqual('test_feature/config/install/system.theme.yml', $files[1]['filename']);
-    $this->assertEqual('test_feature/config/install/user.settings.yml', $files[2]['filename']);
+    $this->assertEqual('test_feature/test_feature.features.yml', $files[1]['filename']);
+    $this->assertEqual('test_feature/config/install/system.theme.yml', $files[2]['filename']);
+    $this->assertEqual('test_feature/config/install/user.settings.yml', $files[3]['filename']);
 
     // Ensure that the archive contains the expected values.
     $info_filename = tempnam($this->tempFilesDirectory, 'feature');
     file_put_contents($info_filename, $archive->extractInString('test_feature/test_feature.info.yml'));
+    $features_info_filename = tempnam($this->tempFilesDirectory, 'feature');
+    file_put_contents($features_info_filename, $archive->extractInString('test_feature/test_feature.features.yml'));
     /** @var \Drupal\Core\Extension\InfoParser $info_parser */
     $info_parser = \Drupal::service('info_parser');
     $parsed_info = $info_parser->parse($info_filename);
     $this->assertEqual('Test feature', $parsed_info['name']);
+    $parsed_features_info = Yaml::decode(file_get_contents($features_info_filename));
     $this->assertEqual([
       'required' => ['system.theme', 'user.settings'],
-    ], $parsed_info['features']);
+    ], $parsed_features_info);
 
     $archive->extract(\Drupal::service('kernel')->getSitePath() . '/modules');
     $module_path = \Drupal::service('kernel')->getSitePath() . '/modules/test_feature';
@@ -101,9 +106,12 @@ class FeaturesCreateUITest extends WebTestBase {
 
     $parsed_info = $info_parser->parse($info_filename);
     $this->assertEqual('Test feature', $parsed_info['name']);
+
+    $features_info_filename = $module_path . '/test_feature.features.yml';
+    $parsed_features_info = Yaml::decode(file_get_contents($features_info_filename));
     $this->assertEqual([
       'required' => ['user.settings', 'user.role.authenticated'],
-    ], $parsed_info['features']);
+    ], $parsed_features_info);
 
     $this->drupalGet('admin/modules');
     $edit = [

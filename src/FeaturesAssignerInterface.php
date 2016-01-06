@@ -114,17 +114,19 @@ interface FeaturesAssignerInterface {
   public function setBundle(FeaturesBundleInterface $bundle, $current = TRUE);
 
   /**
-   * Searches for a bundle that matches the $info.yml export.
+   * Searches for a bundle that matches the $info.yml or $features.yml export.
    *
    * Creates a new bundle as needed.
    *
    * @param array $info
    *   The bundle info.
+   * @param mixed $features_info
+   *   The features info.
    *
    * @return \Drupal\features\FeaturesBundleInterface
    *   A bundle.
    */
-  public function findBundle(array $info);
+  public function findBundle(array $info, $features_info = NULL);
 
   /**
    * Sets the currently active bundle.
