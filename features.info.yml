@@ -1,7 +1,7 @@
 name: 'Features'
 type: module
 description: 'Enables administrators to package configuration into modules.'
-package: Configuration
+package: Development
 core: 8.x
 configure: features.assignment
 dependencies:
