@@ -34,7 +34,7 @@ class FeaturesCreateUITest extends WebTestBase {
   public function testCreateFeaturesUI() {
     $admin_user = $this->createUser(['administer site configuration', 'export configuration', 'administer modules']);
     $this->drupalLogin($admin_user);
-    $this->drupalGet('admin/config/development/configuration/features');
+    $this->drupalGet('admin/config/development/features');
 
     $edit = [
       'bundle' => 'default',
@@ -84,7 +84,7 @@ class FeaturesCreateUITest extends WebTestBase {
     $module_path = \Drupal::service('kernel')->getSitePath() . '/modules/test_feature';
 
     // Ensure that the features listing renders the right content.
-    $this->drupalGet('admin/config/development/configuration/features');
+    $this->drupalGet('admin/config/development/features');
     $tr = $this->xpath('//table[contains(@class, "features-listing")]/tbody/tr[td[3] = "test_feature"]')[0];
     $this->assertLink('Test feature');
     $this->assertEqual('test_feature', (string) $tr->children()[2]);
@@ -120,7 +120,7 @@ class FeaturesCreateUITest extends WebTestBase {
     $this->drupalPostForm(NULL, $edit, t('Install'));
 
     // Check that the feature is listed as installed.
-    $this->drupalGet('admin/config/development/configuration/features');
+    $this->drupalGet('admin/config/development/features');
 
     $tr = $this->xpath('//table[contains(@class, "features-listing")]/tbody/tr[td[3] = "test_feature"]')[0];
     $this->assertEqual('Installed', (string) $tr->children()[5]);
@@ -130,7 +130,7 @@ class FeaturesCreateUITest extends WebTestBase {
       ->set('anonymous', 'Anonymous giraffe')
       ->save();
 
-    $this->drupalGet('admin/config/development/configuration/features');
+    $this->drupalGet('admin/config/development/features');
 
     $tr = $this->xpath('//table[contains(@class, "features-listing")]/tbody/tr[td[3] = "test_feature"]')[0];
     $this->assertTrue(strpos($tr->children()[6]->asXml(), 'Changed') !== FALSE);
@@ -141,7 +141,7 @@ class FeaturesCreateUITest extends WebTestBase {
     ], t('Uninstall'));
     $this->drupalPostForm(NULL, [], t('Uninstall'));
 
-    $this->drupalGet('admin/config/development/configuration/features');
+    $this->drupalGet('admin/config/development/features');
 
     $tr = $this->xpath('//table[contains(@class, "features-listing")]/tbody/tr[td[3] = "test_feature"]')[0];
     $this->assertTrue(strpos($tr->children()[6]->asXml(), 'Changed') !== FALSE);
@@ -155,7 +155,7 @@ class FeaturesCreateUITest extends WebTestBase {
       'modules[Other][test_feature][enable]' => TRUE,
     ];
     $this->drupalPostForm(NULL, $edit, t('Install'));
-    $this->drupalGet('admin/config/development/configuration/features');
+    $this->drupalGet('admin/config/development/features');
     $tr = $this->xpath('//table[contains(@class, "features-listing")]/tbody/tr[td[3] = "test_feature"]')[0];
     $this->assertEqual('Installed', (string) $tr->children()[5]);
 
@@ -168,14 +168,14 @@ class FeaturesCreateUITest extends WebTestBase {
       ->save();
 
     // Ensure that exporting this change will result in an unchanged feature.
-    $this->drupalGet('admin/config/development/configuration/features');
+    $this->drupalGet('admin/config/development/features');
     $tr = $this->xpath('//table[contains(@class, "features-listing")]/tbody/tr[td[3] = "test_feature"]')[0];
     $this->assertTrue(strpos($tr->children()[6]->asXml(), 'Changed') !== FALSE);
 
     $this->clickLink('Test feature');
     $this->drupalPostForm(NULL, [], t('Write'));
 
-    $this->drupalGet('admin/config/development/configuration/features');
+    $this->drupalGet('admin/config/development/features');
     $tr = $this->xpath('//table[contains(@class, "features-listing")]/tbody/tr[td[3] = "test_feature"]')[0];
     $this->assertEqual('Installed', (string) $tr->children()[5]);
   }
