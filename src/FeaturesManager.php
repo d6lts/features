@@ -697,7 +697,7 @@ class FeaturesManager implements FeaturesManagerInterface {
       $package->setConfigOrig($this->listExtensionConfig($extension));
       $package->setStatus($this->moduleHandler->moduleExists($extension->getName())
         ? FeaturesManagerInterface::STATUS_INSTALLED
-        : FeaturesManagerInterface::STATUS_DISABLED);
+        : FeaturesManagerInterface::STATUS_UNINSTALLED);
       $package->setVersion(isset($info['version']) ? $info['version'] : '');
     }
 
@@ -1100,7 +1100,7 @@ class FeaturesManager implements FeaturesManagerInterface {
       case FeaturesManagerInterface::STATUS_NO_EXPORT:
         return t('Not exported');
 
-      case FeaturesManagerInterface::STATUS_DISABLED:
+      case FeaturesManagerInterface::STATUS_UNINSTALLED:
         return t('Uninstalled');
 
       case FeaturesManagerInterface::STATUS_INSTALLED:

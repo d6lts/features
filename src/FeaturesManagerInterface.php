@@ -32,7 +32,7 @@ interface FeaturesManagerInterface {
    * Constants for package/module status.
    */
   const STATUS_NO_EXPORT = 0;
-  const STATUS_DISABLED = 1;
+  const STATUS_UNINSTALLED = 1;
   const STATUS_INSTALLED = 2;
   const STATUS_DEFAULT = self::STATUS_NO_EXPORT;
 
@@ -112,7 +112,7 @@ interface FeaturesManagerInterface {
    *   - 'status': status of the package. Valid values are:
    *      - FeaturesManagerInterface::STATUS_NO_EXPORT
    *      - FeaturesManagerInterface::STATUS_INSTALLED
-   *      - FeaturesManagerInterface::STATUS_DISABLED
+   *      - FeaturesManagerInterface::STATUS_UNINSTALLED
    *   - 'version': version of the extension.
    *   - 'state': state of the extension. Valid values are:
    *      - FeaturesManagerInterface::STATE_DEFAULT

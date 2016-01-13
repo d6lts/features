@@ -58,9 +58,9 @@ class FeaturesAssignmentExisting extends FeaturesAssignmentMethodBase {
         $this->safeAssignConfig($package->getMachineName(), $package->getExtension());
       }
     }
-    // Now assign to disabled modules.
+    // Now assign to uninstalled modules.
     foreach ($packages as $name => $info) {
-      if ($package->getStatus() === FeaturesManagerInterface::STATUS_DISABLED) {
+      if ($package->getStatus() === FeaturesManagerInterface::STATUS_UNINSTALLED) {
         $this->safeAssignConfig($package->getMachineName(), $package->getExtension());
       }
     }

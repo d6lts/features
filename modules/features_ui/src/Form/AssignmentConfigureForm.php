@@ -323,7 +323,7 @@ class AssignmentConfigureForm extends FormBase {
     foreach ($methods_weight as $method_id => $weight) {
 
       // A packaging method might no longer be available if the defining module
-      // has been disabled after the last configuration saving.
+      // has been uninstalled after the last configuration saving.
       if (!isset($assignment_info[$method_id])) {
         continue;
       }

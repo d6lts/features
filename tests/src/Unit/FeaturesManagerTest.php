@@ -424,7 +424,7 @@ class FeaturesManagerTest extends UnitTestCase {
     $this->assertEquals('test description', $result->getDescription());
     $this->assertEquals('module', $result->getType());
 
-    $this->assertEquals(FeaturesManagerInterface::STATUS_DISABLED, $result->getStatus());
+    $this->assertEquals(FeaturesManagerInterface::STATUS_UNINSTALLED, $result->getStatus());
   }
 
   /**
