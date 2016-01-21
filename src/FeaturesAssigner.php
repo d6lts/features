@@ -343,12 +343,9 @@ class FeaturesAssigner implements FeaturesAssignerInterface {
   /**
    * {@inheritdoc}
    */
-  public function getBundleOptions($none_text = NULL) {
+  public function getBundleOptions() {
     $list = $this->getBundleList();
     $result = array();
-    if (isset($empty_name)) {
-      $result[''] = $empty_name;
-    }
     foreach ($list as $machine_name => $bundle) {
       $result[$machine_name] = $bundle->getName();
     }

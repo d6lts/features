@@ -187,14 +187,11 @@ interface FeaturesAssignerInterface {
   /**
    * Returns an array of bundle names suitable for a select option list.
    *
-   * @param string $none_text
-   *   (optional) A label for an empty option in the list.
-   *
    * @return array
    *   An array of bundles, keyed by machine_name, with values being human
    *   readable names.
    */
-  public function getBundleOptions($none_text = NULL);
+  public function getBundleOptions();
 
   /**
    * Makes the named bundle the current bundle.

@@ -223,7 +223,7 @@ class FeaturesEditForm extends FormBase {
     $form['info']['package'] = array(
       '#title' => t('Bundle'),
       '#type' => 'select',
-      '#options' => $this->assigner->getBundleOptions(t('--None--')),
+      '#options' => $this->assigner->getBundleOptions(),
       '#default_value' => $bundle->getMachineName(),
       '#ajax' => array(
         'callback' => '::updateBundle',
