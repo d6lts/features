@@ -125,9 +125,6 @@ class FeaturesExportForm extends FormBase {
       $bundle_name = $form_state->getValue('bundle', '');
       $this->assigner->setCurrent($this->assigner->getBundle($bundle_name));
     }
-    elseif ($trigger['#name'] == 'newfeature') {
-      return $this->redirect('features.edit');
-    }
     else {
       $this->assigner->loadBundle();
     }
@@ -170,12 +167,6 @@ class FeaturesExportForm extends FormBase {
       '#attributes' => array(
         'data-new-package-set' => 'status',
       ),
-    );
-
-    $form['header']['new'] = array(
-      '#type' => 'button',
-      '#name' => 'newfeature',
-      '#value' => t('Create new feature'),
     );
 
     $form['preview'] = $this->buildListing($packages);

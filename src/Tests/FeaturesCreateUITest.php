@@ -26,7 +26,7 @@ class FeaturesCreateUITest extends WebTestBase {
   /**
    * {@inheritdoc}
    */
-  public static $modules = ['features', 'features_ui'];
+  public static $modules = ['block', 'features', 'features_ui'];
 
   /**
    * Tests creating a feature via UI and download it.
@@ -34,12 +34,9 @@ class FeaturesCreateUITest extends WebTestBase {
   public function testCreateFeaturesUI() {
     $admin_user = $this->createUser(['administer site configuration', 'export configuration', 'administer modules']);
     $this->drupalLogin($admin_user);
+    $this->drupalPlaceBlock('local_actions_block');
     $this->drupalGet('admin/config/development/features');
-
-    $edit = [
-      'bundle' => 'default',
-    ];
-    $this->drupalPostForm(NULL, $edit, t('Create new feature'));
+    $this->clickLink('Create new feature');
     $this->assertResponse(200);
 
     $edit = [
