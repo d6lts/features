@@ -32,7 +32,8 @@ assignments:
     weight: 15
   exclude:
     types:
-      config: {  }
+      config:
+        features_bundle: features_bundle
     curated: 1
     module:
       installed: 1
