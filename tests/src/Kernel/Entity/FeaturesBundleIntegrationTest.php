@@ -63,4 +63,20 @@ class FeaturesBundleIntegrationTest extends KernelTestBase {
   public function testGetShortName() {
   }
 
+  /**
+   * @covers ::getProfileName
+   * @covers ::setProfileName
+   */
+  public function testGetProfile() {
+    $bundle = FeaturesBundle::create([
+      'machine_name' => 'other',
+      'profile_name' => 'example',
+      'is_profile' => TRUE,
+    ]);
+    $this->assertEquals('example', $bundle->getProfileName());
+
+    $bundle->setProfileName('example2');
+    $this->assertEquals('example2', $bundle->getProfileName());
+  }
+
 }

@@ -62,11 +62,6 @@ class FeaturesBundle extends ConfigEntityBase implements FeaturesBundleInterface
   protected $assignments = [];
 
   /**
-   * @var array
-   */
-  protected $assignment_settings = [];
-
-  /**
    * @var int[]
    */
   protected $weights = [];
@@ -202,7 +197,7 @@ class FeaturesBundle extends ConfigEntityBase implements FeaturesBundleInterface
    * {@inheritdoc}
    */
   public function setProfileName($machine_name) {
-    $this->profileName = $machine_name;
+    $this->profile_name = $machine_name;
   }
 
   /**
