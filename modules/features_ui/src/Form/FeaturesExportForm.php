@@ -151,12 +151,19 @@ class FeaturesExportForm extends FormBase {
       '#attributes' => array('class' => 'features-header'),
     );
 
+    $bundle_options = $this->assigner->getBundleOptions();
+
+    // If there are no custom bundles, provide message.
+    if (count($bundle_options) < 2) {
+      drupal_set_message($this->t('You have not yet created any bundles. Before generating features, you may wish to <a href=":create">create a bundle</a> to group your features within.', [':create' => Url::fromRoute('features.assignment')->toString()]));
+    }
+
     $form['#prefix'] = '<div id="edit-features-wrapper">';
     $form['#suffix'] = '</div>';
     $form['header']['bundle'] = array(
       '#title' => t('Bundle'),
       '#type' => 'select',
-      '#options' => $this->assigner->getBundleOptions(),
+      '#options' => $bundle_options,
       '#default_value' => $current_bundle->getMachineName(),
       '#prefix' => '<div id="edit-package-set-wrapper">',
       '#suffix' => '</div>',
