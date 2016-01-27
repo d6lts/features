@@ -104,6 +104,13 @@ class FeaturesManager implements FeaturesManagerInterface {
   protected $packages;
 
   /**
+   * Whether the packages have been assigned a bundle prefix.
+   *
+   * @var boolean
+   */
+  protected $packagesPrefixed;
+
+  /**
    * The package assigner.
    *
    * @var \Drupal\features\FeaturesAssigner
@@ -141,6 +148,7 @@ class FeaturesManager implements FeaturesManagerInterface {
     $this->extensionStorages->addStorage(InstallStorage::CONFIG_INSTALL_DIRECTORY);
     $this->extensionStorages->addStorage(InstallStorage::CONFIG_OPTIONAL_DIRECTORY);
     $this->packages = [];
+    $this->packagesPrefixed = FALSE;
     $this->configCollection = [];
   }
 
@@ -587,20 +595,57 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function assignInterPackageDependencies(array &$packages) {
+  public function setPackageBundleNames(FeaturesBundleInterface $bundle, array &$package_names = []) {
+    $this->packagesPrefixed = TRUE;
+    if (!$bundle->isDefault()) {
+      $new_package_names = [];
+      // Assign the selected bundle to the exports.
+      $packages = $this->getPackages();
+      if (empty($package_names)) {
+        $package_names = array_keys($packages);
+      }
+      foreach ($package_names as $package_name) {
+        // Rename package to use bundle prefix.
+        $package = $packages[$package_name];
+
+        // The install profile doesn't need renaming.
+        if ($package->getType() != 'profile') {
+          unset($packages[$package_name]);
+          $package->setMachineName($bundle->getFullName($package->getMachineName()));
+          $packages[$package->getMachineName()] = $package;
+        }
+
+        // Set the bundle machine name.
+        $packages[$package->getMachineName()]->setBundle($bundle->getMachineName());
+        $new_package_names[] = $package->getMachineName();
+      }
+      $this->setPackages($packages);
+      $package_names = $new_package_names;
+    }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function assignInterPackageDependencies(FeaturesBundleInterface $bundle, array &$packages) {
+    if (!$this->packagesPrefixed) {
+      throw new \Exception($this->t('The packages have not yet been prefixed with a bundle name.'));
+    }
+
     $config_collection = $this->getConfigCollection();
+
     /** @var \Drupal\features\Package[] $packages */
     foreach ($packages as $package) {
       foreach ($package->getConfig() as $item_name) {
         if (!empty($config_collection[$item_name]->getData()['dependencies']['config'])) {
           foreach ($config_collection[$item_name]->getData()['dependencies']['config'] as $dependency_name) {
-            if (isset($config_collection[$dependency_name])) {
+            if (isset($config_collection[$dependency_name]) && $dependency_package = $config_collection[$dependency_name]->getPackage()) {
               // If the required item is assigned to one of the packages, add
               // a dependency on that package.
-              if ($config_collection[$dependency_name]->getPackage() && array_key_exists($config_collection[$dependency_name]->getPackage(), $packages)) {
-                $dependency_package = $packages[$config_collection[$dependency_name]->getPackage()];
-                $dependency_bundle = $this->getAssigner()->getBundle($dependency_package->getBundle());
-                $package->setDependencies($this->mergeUniqueItems($package->getDependencies(), [$dependency_bundle->getFullName($dependency_package->getMachineName())]));
+              $package_name = $bundle->getFullName($dependency_package);
+              // Package shouldn't be dependent on itself.
+              if ($package_name && array_key_exists($package_name, $packages) && $package_name != $bundle->getFullName($package->getMachineName())) {
+                $package->setDependencies($this->mergeUniqueItems($package->getDependencies(), [$package_name]));
               }
               // Otherwise, if the dependency is provided by an existing
               // feature, add a dependency on that feature.

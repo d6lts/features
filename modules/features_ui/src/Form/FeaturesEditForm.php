@@ -821,7 +821,7 @@ class FeaturesEditForm extends FormBase {
     $form_state->setRedirect('features.edit', array('featurename' => $this->package->getMachineName()));
     if (!empty($method_id)) {
       $packages = array($this->package->getMachineName());
-      $this->generator->generatePackages($method_id, $packages, $bundle);
+      $this->generator->generatePackages($method_id, $bundle, $packages);
       $this->generator->applyExportFormSubmit($method_id, $form, $form_state);
     }
 

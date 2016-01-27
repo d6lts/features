@@ -305,7 +305,7 @@ function drush_features_export($packages = NULL) {
 
   // Use the write generation method.
   $method_id = FeaturesGenerationWrite::METHOD_ID;
-  $result = $generator->generatePackages($method_id, $packages, $current_bundle);
+  $result = $generator->generatePackages($method_id, $current_bundle, $packages);
 
   foreach ($result as $message) {
     $type = $message['success'] ? 'success' : 'error';
@@ -380,7 +380,7 @@ function drush_features_add() {
 
     // Use the write generation method.
     $method_id = FeaturesGenerationWrite::METHOD_ID;
-    $result = $generator->generatePackages($method_id, $packages, $current_bundle);
+    $result = $generator->generatePackages($method_id, $current_bundle, $packages);
 
     foreach ($result as $message) {
       $type = $message['success'] ? 'success' : 'error';

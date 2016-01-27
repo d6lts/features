@@ -331,12 +331,27 @@ interface FeaturesManagerInterface {
   public function assignConfigDependents(array $item_names = NULL, $package = NULL);
 
   /**
+   * Adds the optional bundle prefix to package machine names.
+   *
+   * @param \Drupal\features\FeaturesBundleInterface $bundle
+   *   The bundle used for the generation.
+   * @param string[] &$package_names
+   *   (optional) Array of package names, passed by reference.
+   */
+  public function setPackageBundleNames(FeaturesBundleInterface $bundle, array &$package_names = []);
+
+  /**
    * Assigns dependencies between packages based on configuration dependencies.
    *
+   * \Drupal\features\FeaturesBundleInterface::setPackageBundleNames() must be
+   * called prior to calling this method.
+   *
+   * @param \Drupal\features\FeaturesBundleInterface $bundle
+   *   A features bundle.
    * @param \Drupal\features\Package[] $packages
    *   An array of packages.
    */
-  public function assignInterPackageDependencies(array &$packages);
+  public function assignInterPackageDependencies(FeaturesBundleInterface $bundle, array &$packages);
 
   /**
    * Merges two info arrays and processes the resulting array.

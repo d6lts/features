@@ -523,7 +523,7 @@ class FeaturesExportForm extends FormBase {
     }
 
     if (!empty($method_id)) {
-      $this->generator->generatePackages($method_id, $package_names, $current_bundle);
+      $this->generator->generatePackages($method_id, $current_bundle, $package_names);
       $this->generator->applyExportFormSubmit($method_id, $form, $form_state);
     }
   }

@@ -68,13 +68,10 @@ class FeaturesGenerateTest extends KernelTestBase {
     }
     $this->assertFalse(file_exists($filename), 'Archive file already exists.');
 
-    $this->generator->generatePackages('archive', [self::PACKAGE_NAME], $this->assigner->getBundle());
+    $this->generator->generatePackages('archive', $this->assigner->getBundle(), [self::PACKAGE_NAME]);
     $this->assertTrue(file_exists($filename), 'Archive file was not generated.');
   }
 
-  /**
-   * @covers \Drupal\features\FeaturesGenerator::setPackageBundleNames
-   */
   public function testGeneratorWithBundle() {
 
     $filename = file_directory_temp() . '/giraffe_' . self::PACKAGE_NAME . '.tar.gz';
@@ -87,7 +84,7 @@ class FeaturesGenerateTest extends KernelTestBase {
       'machine_name' => 'giraffe'
     ]);
 
-    $this->generator->generatePackages('archive', [self::PACKAGE_NAME], $bundle);
+    $this->generator->generatePackages('archive', $bundle, [self::PACKAGE_NAME]);
 
     $package = $this->featuresManager->getPackage(self::PACKAGE_NAME);
     $this->assertNull($package);
@@ -116,7 +113,7 @@ class FeaturesGenerateTest extends KernelTestBase {
     }
     $this->assertFalse(file_exists($path), 'Package directory already exists.');
 
-    $this->generator->generatePackages('write', [self::PACKAGE_NAME], $this->assigner->getBundle());
+    $this->generator->generatePackages('write', $this->assigner->getBundle(), [self::PACKAGE_NAME]);
     $this->assertTrue(file_exists($path), 'Package directory was not generated.');
     $this->assertTrue(file_exists($path . '/' . self::PACKAGE_NAME . '.info.yml'), 'Package info.yml not generated.');
     $this->assertTrue(file_exists($path . '/config/install'), 'Package config/install not generated.');

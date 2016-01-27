@@ -189,6 +189,7 @@ class FeaturesManagerTest extends UnitTestCase {
     // Provide a bundle without any prefix.
     $bundle->getFullName('package')->willReturn('package');
     $bundle->getFullName('package2')->willReturn('package2');
+    $bundle->isDefault()->willReturn(TRUE);
     $assigner->getBundle('')->willReturn($bundle->reveal());
     $this->featuresManager->setAssigner($assigner->reveal());
 
@@ -216,8 +217,11 @@ class FeaturesManagerTest extends UnitTestCase {
     // package2 should have been assigned rather than my_feature.
     $expected['package']->setDependencies(['my_other_feature', 'package2']);
     $this->featuresManager->setPackages($packages);
-
-    $this->featuresManager->assignInterPackageDependencies($packages);
+    // Dependencies require the full package names.
+    $package_names = array_keys($packages);
+    $this->featuresManager->setPackageBundleNames($bundle->reveal(), $package_names);
+    $packages = $this->featuresManager->getPackages();
+    $this->featuresManager->assignInterPackageDependencies($bundle->reveal(), $packages);
     $this->assertEquals($expected, $packages);
   }
 
@@ -230,6 +234,7 @@ class FeaturesManagerTest extends UnitTestCase {
     // Provide a bundle without any prefix.
     $bundle->getFullName('package')->willReturn('package');
     $bundle->getFullName('package2')->willReturn('package2');
+    $bundle->isDefault()->willReturn(TRUE);
     $assigner->getBundle('giraffe')->willReturn($bundle->reveal());
     $this->featuresManager->setAssigner($assigner->reveal());
 
@@ -257,9 +262,30 @@ class FeaturesManagerTest extends UnitTestCase {
     // package2 should have been assigned rather than my_feature.
     $expected['package']->setDependencies(['my_other_feature', 'package2']);
     $this->featuresManager->setPackages($packages);
-
-    $this->featuresManager->assignInterPackageDependencies($packages);
+    // Dependencies require the full package names.
+    $package_names = array_keys($packages);
+    $this->featuresManager->setPackageBundleNames($bundle->reveal(), $package_names);
+    $packages = $this->featuresManager->getPackages();
+    $this->featuresManager->assignInterPackageDependencies($bundle->reveal(), $packages);
     $this->assertEquals($expected, $packages);
+  }
+
+  /**
+   * @covers ::assignInterPackageDependencies
+   * @expectedException \Exception
+   * @expectedExceptionMessage The packages have not yet been prefixed with a bundle name
+   */
+  public function testAssignInterPackageDependenciesPrematureCall() {
+    $bundle = $this->prophesize(FeaturesBundleInterface::class);
+    $packages = [
+      'package' => new Package('package', [
+        'config' => ['example.config', 'example.config3'],
+        'dependencies' => [],
+        'bundle' => 'giraffe',
+      ]),
+    ];
+
+    $this->featuresManager->assignInterPackageDependencies($bundle->reveal(), $packages);
   }
 
   /**
