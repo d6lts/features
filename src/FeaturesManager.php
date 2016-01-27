@@ -639,17 +639,21 @@ class FeaturesManager implements FeaturesManagerInterface {
       foreach ($package->getConfig() as $item_name) {
         if (!empty($config_collection[$item_name]->getData()['dependencies']['config'])) {
           foreach ($config_collection[$item_name]->getData()['dependencies']['config'] as $dependency_name) {
-            if (isset($config_collection[$dependency_name]) && $dependency_package = $config_collection[$dependency_name]->getPackage()) {
+            if (isset($config_collection[$dependency_name])) {
               // If the required item is assigned to one of the packages, add
               // a dependency on that package.
-              $package_name = $bundle->getFullName($dependency_package);
-              // Package shouldn't be dependent on itself.
-              if ($package_name && array_key_exists($package_name, $packages) && $package_name != $bundle->getFullName($package->getMachineName())) {
-                $package->setDependencies($this->mergeUniqueItems($package->getDependencies(), [$package_name]));
+              $dependency_set = FALSE;
+              if ($dependency_package = $config_collection[$dependency_name]->getPackage()) {
+                $package_name = $bundle->getFullName($dependency_package);
+                // Package shouldn't be dependent on itself.
+                if ($package_name && array_key_exists($package_name, $packages) && $package_name != $package->getMachineName()) {
+                  $package->setDependencies($this->mergeUniqueItems($package->getDependencies(), [$package_name]));
+                  $dependency_set = TRUE;
+                }
               }
               // Otherwise, if the dependency is provided by an existing
               // feature, add a dependency on that feature.
-              elseif ($config_collection[$dependency_name]->getProvidingFeature()) {
+              if (!$dependency_set && $config_collection[$dependency_name]->getProvidingFeature()) {
                 $package->setDependencies($this->mergeUniqueItems($package->getDependencies(), [$config_collection[$dependency_name]->getProvidingFeature()]));
               }
             }

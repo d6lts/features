@@ -208,21 +208,19 @@ class FeaturesManagerTest extends UnitTestCase {
       ]),
     ];
 
-    $expected = $packages;
-    // example.config3 has a providing_feature but no assigned package.
-    $expected['package']->setDependencies(['my_other_feature']);
-    // my_package2 provides configuration required by configuration in
-    // my_package.
-    // Because package assignments take precedence over providing_feature ones,
-    // package2 should have been assigned rather than my_feature.
-    $expected['package']->setDependencies(['my_other_feature', 'package2']);
     $this->featuresManager->setPackages($packages);
     // Dependencies require the full package names.
     $package_names = array_keys($packages);
     $this->featuresManager->setPackageBundleNames($bundle->reveal(), $package_names);
     $packages = $this->featuresManager->getPackages();
     $this->featuresManager->assignInterPackageDependencies($bundle->reveal(), $packages);
-    $this->assertEquals($expected, $packages);
+    // example.config3 has a providing_feature but no assigned package.
+    // my_package2 provides configuration required by configuration in
+    // my_package.
+    // Because package assignments take precedence over providing_feature ones,
+    // package2 should have been assigned rather than my_feature.
+    $this->assertEquals(['my_other_feature', 'package2'], $packages['package']->getDependencies());
+    $this->assertEquals([], $packages['package2']->getDependencies());
   }
 
   /**
@@ -232,9 +230,10 @@ class FeaturesManagerTest extends UnitTestCase {
     $assigner = $this->prophesize(FeaturesAssignerInterface::class);
     $bundle = $this->prophesize(FeaturesBundleInterface::class);
     // Provide a bundle without any prefix.
-    $bundle->getFullName('package')->willReturn('package');
-    $bundle->getFullName('package2')->willReturn('package2');
-    $bundle->isDefault()->willReturn(TRUE);
+    $bundle->getFullName('package')->willReturn('giraffe_package');
+    $bundle->getFullName('package2')->willReturn('giraffe_package2');
+    $bundle->isDefault()->willReturn(FALSE);
+    $bundle->getMachineName()->willReturn('giraffe');
     $assigner->getBundle('giraffe')->willReturn($bundle->reveal());
     $this->featuresManager->setAssigner($assigner->reveal());
 
@@ -253,21 +252,19 @@ class FeaturesManagerTest extends UnitTestCase {
       ]),
     ];
 
-    $expected = $packages;
-    // example.config3 has a providing_feature but no assigned package.
-    $expected['package']->setDependencies(['my_other_feature']);
-    // my_package2 provides configuration required by configuration in
-    // my_package.
-    // Because package assignments take precedence over providing_feature ones,
-    // package2 should have been assigned rather than my_feature.
-    $expected['package']->setDependencies(['my_other_feature', 'package2']);
     $this->featuresManager->setPackages($packages);
     // Dependencies require the full package names.
     $package_names = array_keys($packages);
     $this->featuresManager->setPackageBundleNames($bundle->reveal(), $package_names);
     $packages = $this->featuresManager->getPackages();
     $this->featuresManager->assignInterPackageDependencies($bundle->reveal(), $packages);
-    $this->assertEquals($expected, $packages);
+    // example.config3 has a providing_feature but no assigned package.
+    // my_package2 provides configuration required by configuration in
+    // my_package.
+    // Because package assignments take precedence over providing_feature ones,
+    // package2 should have been assigned rather than my_feature.
+    $expected = ['giraffe_package2', 'my_other_feature'];
+    $this->assertEquals($expected, $packages['giraffe_package']->getDependencies());
   }
 
   /**
