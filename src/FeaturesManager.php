@@ -404,7 +404,7 @@ class FeaturesManager implements FeaturesManagerInterface {
 
       $profile_directories = [];
       // Register the install profile.
-      $installed_profile = drupal_get_profile();
+      $installed_profile = $this->drupalGetProfile();
       if ($installed_profile) {
         $profile_directories[] = drupal_get_path('profile', $installed_profile);
       }
@@ -653,8 +653,11 @@ class FeaturesManager implements FeaturesManagerInterface {
               }
               // Otherwise, if the dependency is provided by an existing
               // feature, add a dependency on that feature.
-              if (!$dependency_set && $config_collection[$dependency_name]->getProvidingFeature()) {
-                $package->setDependencies($this->mergeUniqueItems($package->getDependencies(), [$config_collection[$dependency_name]->getProvidingFeature()]));
+              if (!$dependency_set && $extension_name = $config_collection[$dependency_name]->getProvidingFeature()) {
+                // No extension should depend on the install profile.
+                if ($extension_name != $this->drupalGetProfile()) {
+                  $package->setDependencies($this->mergeUniqueItems($package->getDependencies(), [$extension_name]));
+                }
               }
             }
           }
@@ -663,6 +666,18 @@ class FeaturesManager implements FeaturesManagerInterface {
     }
     // Unset the $package pass by reference.
     unset($package);
+  }
+
+ /**
+  * Gets the name of the currently active installation profile.
+  *
+  * @return string|null $profile
+  *   The name of the installation profile or NULL if no installation profile is
+  *   currently active. This is the case for example during the first steps of
+  *   the installer or during unit tests.
+  */
+  protected function drupalGetProfile() {
+    return drupal_get_profile();
   }
 
   /**

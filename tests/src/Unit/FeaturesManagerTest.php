@@ -34,6 +34,11 @@ use Prophecy\Argument;
  * @group features
  */
 class FeaturesManagerTest extends UnitTestCase {
+  /**
+   * @var string
+   *   The name of the install profile.
+   */
+  const PROFILE_NAME = 'my_profile';
 
   /**
    * @var \Drupal\features\FeaturesManagerInterface
@@ -165,9 +170,11 @@ class FeaturesManagerTest extends UnitTestCase {
         'config' => [
           'example.config2',
           'example.config3',
+          'example.config4',
         ],
       ],
     ]))->setPackage('package');
+
     $config_collection['example.config2'] =  (new ConfigurationItem('example.config2', [
       'dependencies' => [],
     ]))
@@ -177,6 +184,10 @@ class FeaturesManagerTest extends UnitTestCase {
       'dependencies' => [],
     ]))
       ->setProvidingFeature('my_other_feature');
+    $config_collection['example.config4'] = (new ConfigurationItem('example.config3', [
+      'dependencies' => [],
+    ]))
+      ->setProvidingFeature(static::PROFILE_NAME);
     return $config_collection;
   }
 
@@ -191,9 +202,11 @@ class FeaturesManagerTest extends UnitTestCase {
     $bundle->getFullName('package2')->willReturn('package2');
     $bundle->isDefault()->willReturn(TRUE);
     $assigner->getBundle('')->willReturn($bundle->reveal());
-    $this->featuresManager->setAssigner($assigner->reveal());
+    // Use the wrapper because we need ::drupalGetProfile().
+    $features_manager = new TestFeaturesManager($this->root, $this->entityManager, $this->configFactory, $this->configStorage, $this->configManager, $this->moduleHandler);
+    $features_manager->setAssigner($assigner->reveal());
 
-    $this->featuresManager->setConfigCollection($this->getAssignInterPackageDependenciesConfigCollection());
+    $features_manager->setConfigCollection($this->getAssignInterPackageDependenciesConfigCollection());
 
     $packages = [
       'package' => new Package('package', [
@@ -208,12 +221,12 @@ class FeaturesManagerTest extends UnitTestCase {
       ]),
     ];
 
-    $this->featuresManager->setPackages($packages);
+    $features_manager->setPackages($packages);
     // Dependencies require the full package names.
     $package_names = array_keys($packages);
-    $this->featuresManager->setPackageBundleNames($bundle->reveal(), $package_names);
-    $packages = $this->featuresManager->getPackages();
-    $this->featuresManager->assignInterPackageDependencies($bundle->reveal(), $packages);
+    $features_manager->setPackageBundleNames($bundle->reveal(), $package_names);
+    $packages = $features_manager->getPackages();
+    $features_manager->assignInterPackageDependencies($bundle->reveal(), $packages);
     // example.config3 has a providing_feature but no assigned package.
     // my_package2 provides configuration required by configuration in
     // my_package.
@@ -235,13 +248,14 @@ class FeaturesManagerTest extends UnitTestCase {
     $bundle->isDefault()->willReturn(FALSE);
     $bundle->getMachineName()->willReturn('giraffe');
     $assigner->getBundle('giraffe')->willReturn($bundle->reveal());
-    $this->featuresManager->setAssigner($assigner->reveal());
-
-    $this->featuresManager->setConfigCollection($this->getAssignInterPackageDependenciesConfigCollection());
+    // Use the wrapper because we need ::drupalGetProfile().
+    $features_manager = new TestFeaturesManager($this->root, $this->entityManager, $this->configFactory, $this->configStorage, $this->configManager, $this->moduleHandler);
+    $features_manager->setAssigner($assigner->reveal());
+    $features_manager->setConfigCollection($this->getAssignInterPackageDependenciesConfigCollection());
 
     $packages = [
       'package' => new Package('package', [
-        'config' => ['example.config', 'example.config3'],
+        'config' => ['example.config'],
         'dependencies' => [],
         'bundle' => 'giraffe',
       ]),
@@ -252,12 +266,12 @@ class FeaturesManagerTest extends UnitTestCase {
       ]),
     ];
 
-    $this->featuresManager->setPackages($packages);
+    $features_manager->setPackages($packages);
     // Dependencies require the full package names.
     $package_names = array_keys($packages);
-    $this->featuresManager->setPackageBundleNames($bundle->reveal(), $package_names);
-    $packages = $this->featuresManager->getPackages();
-    $this->featuresManager->assignInterPackageDependencies($bundle->reveal(), $packages);
+    $features_manager->setPackageBundleNames($bundle->reveal(), $package_names);
+    $packages = $features_manager->getPackages();
+    $features_manager->assignInterPackageDependencies($bundle->reveal(), $packages);
     // example.config3 has a providing_feature but no assigned package.
     // my_package2 provides configuration required by configuration in
     // my_package.
@@ -705,6 +719,10 @@ class TestFeaturesManager extends FeaturesManager {
   public function setAllModules($all_modules) {
     $this->allModules = $all_modules;
     return $this;
+  }
+
+  protected function drupalGetProfile() {
+    return FeaturesManagerTest::PROFILE_NAME;
   }
 
 }
