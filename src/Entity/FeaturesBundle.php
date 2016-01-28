@@ -32,8 +32,6 @@ use Drupal\features\FeaturesBundleInterface;
  *     "machine_name",
  *     "description",
  *     "assignments",
- *     "weights",
- *     "settings",
  *     "profile_name",
  *     "is_profile",
  *   }
@@ -60,16 +58,6 @@ class FeaturesBundle extends ConfigEntityBase implements FeaturesBundleInterface
    * @var string[]
    */
   protected $assignments = [];
-
-  /**
-   * @var int[]
-   */
-  protected $weights = [];
-
-  /**
-   * @var array
-   */
-  protected $settings = [];
 
   /**
    * @var string

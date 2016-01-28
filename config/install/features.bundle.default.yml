@@ -90,7 +90,6 @@ assignments:
         filter_format: filter_format
     enabled: true
     weight: 7
-settings: {  }
 profile_name: ''
 is_profile: false
 
