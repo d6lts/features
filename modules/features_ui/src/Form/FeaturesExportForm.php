@@ -161,7 +161,7 @@ class FeaturesExportForm extends FormBase {
     $form['#prefix'] = '<div id="edit-features-wrapper">';
     $form['#suffix'] = '</div>';
     $form['header']['bundle'] = array(
-      '#title' => t('Bundle'),
+      '#title' => $this->t('Bundle'),
       '#type' => 'select',
       '#options' => $bundle_options,
       '#default_value' => $current_bundle->getMachineName(),
@@ -257,7 +257,7 @@ class FeaturesExportForm extends FormBase {
         $first = FALSE;
         $options[] = array(
           'name' => array(
-            'data' => t('The following packages are not exported.'),
+            'data' => $this->t('The following packages are not exported.'),
             'class' => 'features-export-header-row',
             'colspan' => 6,
           ),
@@ -368,7 +368,7 @@ class FeaturesExportForm extends FormBase {
     if (!empty($conflicts)) {
       $url = Url::fromRoute('features.edit', array('featurename' => $package->getMachineName()));
       $class = 'features-conflict';
-      $label = t('Conflicts');
+      $label = $this->t('Conflicts');
     }
     elseif (!empty($overrides)) {
       $url = Url::fromRoute('features.diff', array('featurename' => $package->getMachineName()));
@@ -378,12 +378,12 @@ class FeaturesExportForm extends FormBase {
     elseif (!empty($new_config)) {
       $url = Url::fromRoute('features.diff', array('featurename' => $package->getMachineName()));
       $class = 'features-detected';
-      $label = t('New detected');
+      $label = $this->t('New detected');
     }
     elseif (!empty($missing)) {
       $url = Url::fromRoute('features.edit', array('featurename' => $package->getMachineName()));
       $class = 'features-conflict';
-      $label = t('Missing');
+      $label = $this->t('Missing');
     }
     if (!empty($class)) {
       $element['state'] = array(
@@ -511,7 +511,7 @@ class FeaturesExportForm extends FormBase {
     $package_names = array_filter($form_state->getValue('preview'));
 
     if (empty($package_names)) {
-      drupal_set_message(t('Please select one or more packages to export.'), 'warning');
+      drupal_set_message($this->t('Please select one or more packages to export.'), 'warning');
       return;
     }
 

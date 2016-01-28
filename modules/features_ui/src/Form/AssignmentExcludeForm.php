@@ -37,7 +37,7 @@ class AssignmentExcludeForm extends AssignmentFormBase {
 
     $form['curated'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Exclude designated site-specific configuration'),
+      '#title' => $this->t('Exclude designated site-specific configuration'),
       '#default_value' => $curated_settings,
       '#description' => $this->t('Select this option to exclude from packaging items on a curated list of site-specific configuration.'),
     );
@@ -48,7 +48,7 @@ class AssignmentExcludeForm extends AssignmentFormBase {
     );
     $form['module']['installed'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Exclude module-provided entity configuration'),
+      '#title' => $this->t('Exclude module-provided entity configuration'),
       '#default_value' => $module_settings['installed'],
       '#description' => $this->t('Select this option to exclude from packaging any configuration that is provided by already installed modules.'),
       '#attributes' => array(
@@ -65,7 +65,7 @@ class AssignmentExcludeForm extends AssignmentFormBase {
     $info = system_get_info('module', drupal_get_profile());
     $form['module']['profile'] = array(
       '#type' => 'checkbox',
-      '#title' => t("Don't exclude install profile's configuration"),
+      '#title' => $this->t("Don't exclude install profile's configuration"),
       '#default_value' => $module_settings['profile'],
       '#description' => $this->t("Select this option to not exclude from packaging any configuration that is provided by this site's install profile, %profile.", array('%profile' => $info['name'])),
       '#states' => $show_if_module_installed_checked,
@@ -75,7 +75,7 @@ class AssignmentExcludeForm extends AssignmentFormBase {
     $machine_name = !empty($machine_name) ? $machine_name : t('none');
     $form['module']['namespace'] = array(
       '#type' => 'checkbox',
-      '#title' => t("Don't exclude configuration by namespace"),
+      '#title' => $this->t("Don't exclude configuration by namespace"),
       '#default_value' => $module_settings['namespace'],
       '#description' => $this->t("Select this option to not exclude from packaging any configuration that is provided by modules with the package namespace (currently %namespace).", array('%namespace' => $machine_name)),
       '#states' => $show_if_module_installed_checked,

@@ -8,6 +8,7 @@
 namespace Drupal\features_ui\Tests;
 
 use Drupal\simpletest\WebTestBase;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 
 /**
  * Tests the creation of a feature.
@@ -15,6 +16,7 @@ use Drupal\simpletest\WebTestBase;
  * @group features_ui
  */
 class FeaturesUITest extends WebTestBase {
+  use StringTranslationTrait;
 
   /**
    * @todo Remove the disabled strict config schema checking.
@@ -34,7 +36,7 @@ class FeaturesUITest extends WebTestBase {
     $this->drupalLogin($admin_user);
     $this->drupalGet('admin/config/development/features');
     // Check the message is displaying if there are no custom bundles.
-    $this->assertText(t('You have not yet created any bundles. Before generating features, you may wish to create a bundle to group your features within.'));
+    $this->assertText($this->t('You have not yet created any bundles. Before generating features, you may wish to create a bundle to group your features within.'));
     // Creating custom bundle.
     $this->drupalGet('admin/config/development/features/bundle');
     $this->drupalPostAjaxForm(NULL, array('bundle[bundle_select]' => 'new'), 'bundle[bundle_select]');
@@ -43,10 +45,10 @@ class FeaturesUITest extends WebTestBase {
       'bundle[machine_name]' => 'foo',
       'bundle[description]' => $this->randomString(),
     ];
-    $this->drupalPostForm(NULL, $edit, t('Save settings'));
+    $this->drupalPostForm(NULL, $edit, $this->t('Save settings'));
     $this->drupalGet('admin/config/development/features');
     // Check the message is not displaying if there are custom bundles.
-    $this->assertNoText(t('You have not yet created any bundles. Before generating features, you may wish to create a bundle to group your features within.'));
+    $this->assertNoText($this->t('You have not yet created any bundles. Before generating features, you may wish to create a bundle to group your features within.'));
   }
 
 }

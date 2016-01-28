@@ -178,7 +178,7 @@ class FeaturesEditForm extends FormBase {
 
     $form['info'] = array(
       '#type' => 'fieldset',
-      '#title' => t('General Information'),
+      '#title' => $this->t('General Information'),
       '#tree' => FALSE,
       '#weight' => 2,
       '#prefix' => "<div id='features-export-info'>",
@@ -186,20 +186,20 @@ class FeaturesEditForm extends FormBase {
     );
 
     $form['info']['name'] = array(
-      '#title' => t('Name'),
-      '#description' => t('Example: Image gallery') . ' (' . t('Do not begin name with numbers.') . ')',
+      '#title' => $this->t('Name'),
+      '#description' => $this->t('Example: Image gallery') . ' (' . $this->t('Do not begin name with numbers.') . ')',
       '#type' => 'textfield',
       '#default_value' => $this->package->getName(),
     );
     if (!$bundle->isDefault()) {
       $form['info']['name']['#description'] .= '<br/>' .
-        t('The namespace "@name_" will be prepended to the machine name', array('@name' => $bundle->getMachineName()));
+        $this->t('The namespace "@name_" will be prepended to the machine name', array('@name' => $bundle->getMachineName()));
     }
 
     $form['info']['machine_name'] = array(
       '#type' => 'machine_name',
-      '#title' => t('Machine-readable name'),
-      '#description' => t('Example: image_gallery') . ' ' . t('May only contain lowercase letters, numbers and underscores.'),
+      '#title' => $this->t('Machine-readable name'),
+      '#description' => $this->t('Example: image_gallery') . ' ' . $this->t('May only contain lowercase letters, numbers and underscores.'),
       '#required' => TRUE,
       '#default_value' => $bundle->getShortName($this->package->getMachineName()),
       '#machine_name' => array(
@@ -209,19 +209,19 @@ class FeaturesEditForm extends FormBase {
     );
     if (!$bundle->isDefault()) {
       $form['info']['machine_name']['#description'] .= '<br/>' .
-        t('NOTE: Do NOT include the namespace prefix "@name_"; it will be added automatically.', array('@name' => $bundle->getMachineName()));
+        $this->t('NOTE: Do NOT include the namespace prefix "@name_"; it will be added automatically.', array('@name' => $bundle->getMachineName()));
     }
 
     $form['info']['description'] = array(
-      '#title' => t('Description'),
-      '#description' => t('Provide a short description of what users should expect when they install your feature.'),
+      '#title' => $this->t('Description'),
+      '#description' => $this->t('Provide a short description of what users should expect when they install your feature.'),
       '#type' => 'textarea',
       '#rows' => 3,
       '#default_value' => $this->package->getDescription(),
     );
 
     $form['info']['package'] = array(
-      '#title' => t('Bundle'),
+      '#title' => $this->t('Bundle'),
       '#type' => 'select',
       '#options' => $this->assigner->getBundleOptions(),
       '#default_value' => $bundle->getMachineName(),
@@ -232,8 +232,8 @@ class FeaturesEditForm extends FormBase {
     );
 
     $form['info']['version'] = array(
-      '#title' => t('Version'),
-      '#description' => t('Examples: 8.x-1.0, 8.x-1.0-beta1'),
+      '#title' => $this->t('Version'),
+      '#description' => $this->t('Examples: 8.x-1.0, 8.x-1.0-beta1'),
       '#type' => 'textfield',
       '#required' => FALSE,
       '#default_value' => $this->package->getVersion(),
@@ -242,7 +242,7 @@ class FeaturesEditForm extends FormBase {
 
     $form['conflicts'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Allow conflicts'),
+      '#title' => $this->t('Allow conflicts'),
       '#default_value' => $this->allowConflicts,
       '#description' => $this->t('Allow configuration to be exported to more than one feature.'),
       '#weight' => 8,
@@ -336,8 +336,8 @@ class FeaturesEditForm extends FormBase {
   protected function buildComponentList(FormStateInterface $form_state) {
     $element = array(
       '#type' => 'fieldset',
-      '#title' => t('Components'),
-      '#description' => t('Expand each component section and select which items should be included in this feature export.'),
+      '#title' => $this->t('Components'),
+      '#description' => $this->t('Expand each component section and select which items should be included in this feature export.'),
       '#tree' => FALSE,
       '#prefix' => "<div id='features-export-wrapper'>",
       '#suffix' => '</div>',
@@ -347,7 +347,7 @@ class FeaturesEditForm extends FormBase {
     // Filter field used in javascript, so javascript will unhide it.
     $element['features_filter_wrapper'] = array(
       '#type' => 'fieldset',
-      '#title' => t('Filters'),
+      '#title' => $this->t('Filters'),
       '#tree' => FALSE,
       '#prefix' => "<div id='features-filter' class='element-invisible'>",
       '#suffix' => '</div>',
@@ -355,16 +355,16 @@ class FeaturesEditForm extends FormBase {
     );
     $element['features_filter_wrapper']['features_filter'] = array(
       '#type' => 'textfield',
-      '#title' => t('Search'),
+      '#title' => $this->t('Search'),
       '#hidden' => TRUE,
       '#default_value' => '',
-      '#suffix' => "<span class='features-filter-clear'>" . t('Clear') . "</span>",
+      '#suffix' => "<span class='features-filter-clear'>" . $this->t('Clear') . "</span>",
     );
     $element['features_filter_wrapper']['checkall'] = array(
       '#type' => 'checkbox',
       '#default_value' => FALSE,
       '#hidden' => TRUE,
-      '#title' => t('Select all'),
+      '#title' => $this->t('Select all'),
       '#attributes' => array(
         'class' => array('features-checkall'),
       ),
@@ -442,17 +442,17 @@ class FeaturesEditForm extends FormBase {
     }
     $element['features_legend'] = array(
       '#type' => 'fieldset',
-      '#title' => t('Legend'),
+      '#title' => $this->t('Legend'),
       '#tree' => FALSE,
       '#prefix' => "<div id='features-legend'>",
       '#suffix' => '</div>',
     );
     $element['features_legend']['legend'] = array(
       '#markup' =>
-        "<span class='component-included'>" . t('Normal') . "</span> " .
-        "<span class='component-added'>" . t('Added') . "</span> " .
-        "<span class='component-detected'>" . t('Auto detected') . "</span> " .
-        "<span class='component-conflict'>" . t('Conflict') . "</span> ",
+        "<span class='component-included'>" . $this->t('Normal') . "</span> " .
+        "<span class='component-added'>" . $this->t('Added') . "</span> " .
+        "<span class='component-detected'>" . $this->t('Auto detected') . "</span> " .
+        "<span class='component-conflict'>" . $this->t('Conflict') . "</span> ",
     );
 
     return $element;
@@ -784,7 +784,7 @@ class FeaturesEditForm extends FormBase {
       if (isset($packages[$package_name])) {
         $package_name = $packages[$package_name]['machine_name'];
       }
-      $value .= '  <span class="config-name">[' . t('in') . ' ' . SafeMarkup::checkPlain($package_name) . ']</span>';
+      $value .= '  <span class="config-name">[' . $this->t('in') . ' ' . SafeMarkup::checkPlain($package_name) . ']</span>';
     }
     return Xss::filterAdmin($value);
   }

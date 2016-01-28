@@ -108,7 +108,7 @@ class FeaturesDiffForm extends FormBase {
 
     $machine_name = '';
     if (!empty($featurename) && empty($packages[$featurename])) {
-      drupal_set_message(t('Feature @name does not exist.', array('@name' => $featurename)), 'error');
+      drupal_set_message($this->t('Feature @name does not exist.', array('@name' => $featurename)), 'error');
       return array();
     }
     elseif (!empty($featurename)) {
@@ -122,8 +122,8 @@ class FeaturesDiffForm extends FormBase {
     $header = array(
       'row' => array(
         'data' => !empty($machine_name)
-        ? t('Differences in @name', array('@name' => $machine_name))
-        : ($current_bundle->isDefault() ? t('All differences') : t('All differences in bundle: @bundle', array('@bundle' => $current_bundle->getName()))),
+        ? $this->t('Differences in @name', array('@name' => $machine_name))
+        : ($current_bundle->isDefault() ? $this->t('All differences') : $this->t('All differences in bundle: @bundle', array('@bundle' => $current_bundle->getName()))),
       ),
     );
 
@@ -157,16 +157,16 @@ class FeaturesDiffForm extends FormBase {
       '#header' => $header,
       '#options' => $options,
       '#attributes' => array('class' => array('features-diff-listing')),
-      '#empty' => t('No differences exist in exported features.'),
+      '#empty' => $this->t('No differences exist in exported features.'),
     );
 
     $form['actions'] = array('#type' => 'actions', '#tree' => TRUE);
     $form['actions']['revert'] = array(
       '#type' => 'submit',
-      '#value' => t('Import changes'),
+      '#value' => $this->t('Import changes'),
     );
     $form['actions']['help'] = array(
-      '#markup' => t('Import the selected changes above into the active configuration.'),
+      '#markup' => $this->t('Import the selected changes above into the active configuration.'),
     );
 
     $form['#attached']['library'][] = 'system/diff';
@@ -197,7 +197,7 @@ class FeaturesDiffForm extends FormBase {
         $type = ConfigurationItem::fromConfigStringToConfigType($item['type']);
         $this->configRevert->import($type, $item['name_short']);
       }
-      drupal_set_message(t('Imported @name', array('@name' => $config_name)));
+      drupal_set_message($this->t('Imported @name', array('@name' => $config_name)));
     }
   }
 
@@ -221,9 +221,9 @@ class FeaturesDiffForm extends FormBase {
 
     $header = array(
       array('data' => '', 'class' => 'diff-marker'),
-      array('data' => t('Active site config'), 'class' => 'diff-context'),
+      array('data' => $this->t('Active site config'), 'class' => 'diff-context'),
       array('data' => '', 'class' => 'diff-marker'),
-      array('data' => t('Feature code config'), 'class' => 'diff-context'),
+      array('data' => $this->t('Feature code config'), 'class' => 'diff-context'),
     );
 
     foreach ($components as $name) {
@@ -231,7 +231,7 @@ class FeaturesDiffForm extends FormBase {
 
       if (!isset($config[$name])) {
         $details = array(
-          '#markup' => t('Component in feature missing from active config.'),
+          '#markup' => $this->t('Component in feature missing from active config.'),
         );
       }
       else {
@@ -239,7 +239,7 @@ class FeaturesDiffForm extends FormBase {
         $extension = $this->featuresManager->getExtensionStorages()->read($name);
         if (empty($extension)) {
           $details = array(
-            '#markup' => t('Dependency detected in active config but not exported to the feature.'),
+            '#markup' => $this->t('Dependency detected in active config but not exported to the feature.'),
           );
         }
         else {

@@ -10,6 +10,7 @@ namespace Drupal\features\Tests;
 use Drupal\Component\Serialization\Yaml;
 use Drupal\Core\Archiver\ArchiveTar;
 use Drupal\simpletest\WebTestBase;
+use Drupal\Core\StringTranslation\StringTranslationTrait;
 
 /**
  * Tests the creation of a feature.
@@ -17,6 +18,7 @@ use Drupal\simpletest\WebTestBase;
  * @group features
  */
 class FeaturesCreateUITest extends WebTestBase {
+  use StringTranslationTrait;
 
   /**
    * @todo Remove the disabled strict config schema checking.
@@ -47,7 +49,7 @@ class FeaturesCreateUITest extends WebTestBase {
       'system_simple[sources][selected][system.theme]' => TRUE,
       'system_simple[sources][selected][user.settings]' => TRUE,
     ];
-    $this->drupalPostForm(NULL, $edit, t('Download Archive'));
+    $this->drupalPostForm(NULL, $edit, $this->t('Download Archive'));
 
     $this->assertResponse(200);
     $archive = $this->getRawContent();
@@ -98,7 +100,7 @@ class FeaturesCreateUITest extends WebTestBase {
       'system_simple[included][system.theme]' => FALSE,
       'user_role[sources][selected][authenticated]' => TRUE,
     ];
-    $this->drupalPostForm(NULL, $edit, t('Write'));
+    $this->drupalPostForm(NULL, $edit, $this->t('Write'));
     $info_filename = $module_path . '/test_feature.info.yml';
 
     $parsed_info = $info_parser->parse($info_filename);
@@ -114,7 +116,7 @@ class FeaturesCreateUITest extends WebTestBase {
     $edit = [
       'modules[Other][test_feature][enable]' => TRUE,
     ];
-    $this->drupalPostForm(NULL, $edit, t('Install'));
+    $this->drupalPostForm(NULL, $edit, $this->t('Install'));
 
     // Check that the feature is listed as installed.
     $this->drupalGet('admin/config/development/features');
@@ -135,15 +137,15 @@ class FeaturesCreateUITest extends WebTestBase {
     // Uninstall module.
     $this->drupalPostForm('admin/modules/uninstall', [
       'uninstall[test_feature]' => TRUE,
-    ], t('Uninstall'));
-    $this->drupalPostForm(NULL, [], t('Uninstall'));
+    ], $this->t('Uninstall'));
+    $this->drupalPostForm(NULL, [], $this->t('Uninstall'));
 
     $this->drupalGet('admin/config/development/features');
 
     $tr = $this->xpath('//table[contains(@class, "features-listing")]/tbody/tr[td[3] = "test_feature"]')[0];
     $this->assertTrue(strpos($tr->children()[6]->asXml(), 'Changed') !== FALSE);
 
-    $this->clickLink(t('Changed'));
+    $this->clickLink($this->t('Changed'));
     $this->assertRaw('<td class="diff-context diff-deletedline">anonymous : Anonymous <span class="diffchange">giraffe</span></td>');
     $this->assertRaw('<td class="diff-context diff-addedline">anonymous : Anonymous</td>');
 
@@ -151,7 +153,7 @@ class FeaturesCreateUITest extends WebTestBase {
     $edit = [
       'modules[Other][test_feature][enable]' => TRUE,
     ];
-    $this->drupalPostForm(NULL, $edit, t('Install'));
+    $this->drupalPostForm(NULL, $edit, $this->t('Install'));
     $this->drupalGet('admin/config/development/features');
     $tr = $this->xpath('//table[contains(@class, "features-listing")]/tbody/tr[td[3] = "test_feature"]')[0];
     $this->assertEqual('Installed', (string) $tr->children()[5]);
@@ -170,7 +172,7 @@ class FeaturesCreateUITest extends WebTestBase {
     $this->assertTrue(strpos($tr->children()[6]->asXml(), 'Changed') !== FALSE);
 
     $this->clickLink('Test feature');
-    $this->drupalPostForm(NULL, [], t('Write'));
+    $this->drupalPostForm(NULL, [], $this->t('Write'));
 
     $this->drupalGet('admin/config/development/features');
     $tr = $this->xpath('//table[contains(@class, "features-listing")]/tbody/tr[td[3] = "test_feature"]')[0];
