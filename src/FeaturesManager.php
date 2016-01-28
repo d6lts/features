@@ -481,6 +481,7 @@ class FeaturesManager implements FeaturesManagerInterface {
    */
   public function assignConfigPackage($package_name, array $item_names, $force = FALSE) {
     $config_collection = $this->getConfigCollection();
+    $module_list = $this->moduleHandler->getModuleList();
 
     $packages =& $this->packages;
     if (isset($packages[$package_name])) {
@@ -510,6 +511,18 @@ class FeaturesManager implements FeaturesManagerInterface {
           $package->appendConfig($item_name);
           // Mark the item as already assigned.
           $config_collection[$item_name]->setPackage($package_name);
+
+          $module_dependencies = [];
+          // Add a dependency on the extension that provides this configuration
+          // type.
+          if ($config_collection[$item_name]->getType() != static::SYSTEM_SIMPLE_CONFIG) {
+            $provider = $this->entityManager->getDefinition($config_collection[$item_name]->getType())->getProvider();
+            // Ensure the provider is an installed module and not, for example,
+            // 'core'.
+            if (isset($module_list[$provider])) {
+              $module_dependencies[] = $provider;
+            }
+          }
           // For configuration in the InstallStorage::CONFIG_INSTALL_DIRECTORY
           // directory, set any module dependencies of the configuration item
           // as package dependencies.
@@ -517,8 +530,9 @@ class FeaturesManager implements FeaturesManagerInterface {
           // InstallStorage::CONFIG_OPTIONAL_DIRECTORY should not create
           // dependencies.
           if ($config_collection[$item_name]->getSubdirectory() === InstallStorage::CONFIG_INSTALL_DIRECTORY && isset($config_collection[$item_name]->getData()['dependencies']['module'])) {
-            $package->setDependencies($this->mergeUniqueItems($package->getDependencies(), $config_collection[$item_name]->getData()['dependencies']['module']));
+            $module_dependencies = array_merge($module_dependencies, $config_collection[$item_name]->getData()['dependencies']['module']);
           }
+          $package->setDependencies($this->mergeUniqueItems($package->getDependencies(), $module_dependencies));
         }
       }
     }

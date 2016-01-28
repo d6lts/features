@@ -106,7 +106,11 @@ class ConfigurationItem {
     $this->name = $name;
     $this->data = $data;
 
+    $properties = get_object_vars($this);
     foreach ($additional_properties as $property => $value) {
+      if (!array_key_exists($property, $properties)) {
+        throw new \InvalidArgumentException('Invalid property: ' . $property);
+      }
       $this->{$property} = $value;
     }
   }

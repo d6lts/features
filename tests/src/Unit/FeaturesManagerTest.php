@@ -11,6 +11,7 @@ use Drupal\Component\Serialization\Yaml;
 use Drupal\config_update\ConfigDiffInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Config\ConfigManagerInterface;
+use Drupal\Core\Config\InstallStorage;
 use Drupal\Core\Config\StorageInterface;
 use Drupal\Core\DependencyInjection\ContainerBuilder;
 use Drupal\Core\Extension\Extension;
@@ -389,7 +390,13 @@ class FeaturesManagerTest extends UnitTestCase {
   public function testAssignConfigPackageWithNonExtensionProvidedConfig() {
     $config_collection = [
       'test_config' => new ConfigurationItem('test_config', []),
-      'test_config2' => new ConfigurationItem('test_config2', []),
+      'test_config2' => new ConfigurationItem('test_config2', [
+        'dependencies' => [
+          'module' => ['example'],
+        ]
+      ], [
+        'subdirectory' => InstallStorage::CONFIG_INSTALL_DIRECTORY,
+      ]),
     ];
     $this->featuresManager->setConfigCollection($config_collection);
 
@@ -399,6 +406,7 @@ class FeaturesManagerTest extends UnitTestCase {
     $this->featuresManager->assignConfigPackage('test_package', ['test_config', 'test_config2']);
 
     $this->assertEquals(['test_config', 'test_config2'], $this->featuresManager->getPackage('test_package')->getConfig());
+    $this->assertEquals(['example'], $this->featuresManager->getPackage('test_package')->getDependencies());
   }
 
   /**
