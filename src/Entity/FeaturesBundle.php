@@ -271,20 +271,6 @@ class FeaturesBundle extends ConfigEntityBase implements FeaturesBundleInterface
   /**
    * {@inheritdoc}
    */
-  public function getSettings() {
-    return $this->settings;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
-  public function setSettings(array $settings) {
-    $this->settings = $settings;
-  }
-
-  /**
-   * {@inheritdoc}
-   */
   public function remove() {
     $this->delete();
   }

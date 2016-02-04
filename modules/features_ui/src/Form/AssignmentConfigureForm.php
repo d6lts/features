@@ -165,7 +165,6 @@ class AssignmentConfigureForm extends FormBase {
       }
     }
 
-    $settings = $current_bundle->getSettings();
     $enabled_methods = $current_bundle->getEnabledAssignments();
     $methods_weight = $current_bundle->getAssignmentWeights();
 

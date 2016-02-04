@@ -233,28 +233,6 @@ interface FeaturesBundleInterface {
   public function setAssignmentSettings($method_id, array $settings);
 
   /**
-   * Gets global settings for a bundle.
-   *
-   * @return array
-   *   An array with the following keys:
-   *   - folder: subfolder to export modules within this package set.
-   *   - profile: boolean to determine if set is a profile.
-   *
-   * @see \Drupal\features\FeaturesBundleInterface::setSettings()
-   */
-  public function getSettings();
-
-  /**
-   * Sets the global settings for a bundle.
-   *
-   * @param array $settings
-   *   An array of setting values.
-   *
-   * @see \Drupal\features\FeaturesBundleInterface::getSettings()
-   */
-  public function setSettings(array $settings);
-
-  /**
    * Saves the bundle to the active config.
    */
   public function save();
