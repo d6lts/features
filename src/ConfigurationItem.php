@@ -72,6 +72,13 @@ class ConfigurationItem {
   protected $package;
 
   /**
+   * Whether the configuration is marked as excluded.
+   *
+   * @var bool
+   */
+  protected $excluded = FALSE;
+
+  /**
    * Whether the configuration is provided by an extension.
    *
    * @var bool
@@ -277,6 +284,23 @@ class ConfigurationItem {
    */
   public function setPackage($package) {
     $this->package = $package;
+    return $this;
+  }
+
+  /**
+   * @return boolean
+   */
+  public function isExcluded() {
+    return $this->excluded;
+  }
+
+  /**
+   * @param boolean $extensionProvided
+   *
+   * @return ConfigurationItem
+   */
+  public function setExcluded($excluded) {
+    $this->excluded = $excluded;
     return $this;
   }
 

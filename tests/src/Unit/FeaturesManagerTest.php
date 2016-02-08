@@ -388,6 +388,12 @@ class FeaturesManagerTest extends UnitTestCase {
    * @covers ::assignConfigPackage
    */
   public function testAssignConfigPackageWithNonExtensionProvidedConfig() {
+    $assigner = $this->prophesize(FeaturesAssignerInterface::class);
+    $bundle = $this->prophesize(FeaturesBundleInterface::class);
+    $bundle->isProfilePackage('test_package')->willReturn(FALSE);
+    $assigner->getBundle(NULL)->willReturn($bundle->reveal());
+    $this->featuresManager->setAssigner($assigner->reveal());
+
     $config_collection = [
       'test_config' => new ConfigurationItem('test_config', []),
       'test_config2' => new ConfigurationItem('test_config2', [
