@@ -76,13 +76,6 @@ class FeaturesManager implements FeaturesManagerInterface {
   protected $settings;
 
   /**
-   * The Features assignment settings.
-   *
-   * @var array
-   */
-  protected $assignmentSettings;
-
-  /**
    * The app root.
    *
    * @var string
@@ -143,7 +136,6 @@ class FeaturesManager implements FeaturesManagerInterface {
     $this->moduleHandler = $module_handler;
     $this->configFactory = $config_factory;
     $this->settings = $config_factory->getEditable('features.settings');
-    $this->assignmentSettings = $config_factory->getEditable('features.assignment');
     $this->extensionStorages = new FeaturesExtensionStorages($this->configStorage);
     $this->extensionStorages->addStorage(InstallStorage::CONFIG_INSTALL_DIRECTORY);
     $this->extensionStorages->addStorage(InstallStorage::CONFIG_OPTIONAL_DIRECTORY);
