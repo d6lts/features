@@ -3,7 +3,6 @@ type: module
 description: 'Enables administrators to package configuration into modules.'
 package: Development
 core: 8.x
-configure: features.assignment
 dependencies:
   - config
   - config_update
