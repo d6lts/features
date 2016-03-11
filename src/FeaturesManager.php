@@ -871,12 +871,14 @@ class FeaturesManager implements FeaturesManagerInterface {
       // Add configuration files.
       foreach ($package->getConfig() as $name) {
         $config = $config_collection[$name];
+        $data = $config->getData();
+        // The _core is site-specific, so don't export it.
+        unset($data['_core']);
         // The UUID is site-specfic, so don't export it.
         if ($entity_type_id = $this->configManager->getEntityTypeIdByName($name)) {
-          $data = $config->getData();
           unset($data['uuid']);
-          $config->setData($data);
         }
+        $config->setData($data);
         // User roles include all permissions currently assigned to them. To
         // avoid extraneous additions, reset permissions.
         if ($config->getType() == 'user_role') {
