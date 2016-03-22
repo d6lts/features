@@ -44,6 +44,9 @@ assignments:
   existing:
     enabled: true
     weight: 12
+  forward_dependency:
+    enabled: true
+    weight: 4
   namespace:
     enabled: true
     weight: 0

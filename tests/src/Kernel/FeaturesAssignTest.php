@@ -186,6 +186,79 @@ class FeaturesAssignTest extends KernelTestBase {
   }
 
   /**
+   * @covers Drupal\features\Plugin\FeaturesAssignment\FeaturesAssignmentForwardDependency
+   */
+  public function testAssignForwardDependency() {
+    $method_id = 'forward_dependency';
+
+    // Enable the method.
+    $this->enableAssignmentMethod($method_id);
+
+    // Add some configuration.
+    // Two parent items.
+    $this->addConfigurationItem('parent1', [], [
+      'type' => 'node_type',
+      'dependents' => ['grandparent'],
+    ]);
+    $this->addConfigurationItem('parent2', [], [
+      'type' => 'node_type',
+      'dependents' => [],
+    ]);
+    // Something that belongs to just one parent.
+    $this->addConfigurationItem('child1', [], [
+      'type' => 'node_type',
+      'dependents' => ['parent1'],
+    ]);
+    // Something that belongs to both parents.
+    $this->addConfigurationItem('child2', [], [
+      'type' => 'node_type',
+      'dependents' => ['parent1', 'parent2'],
+    ]);
+    // Something that indirectly belongs to parent1.
+    $this->addConfigurationItem('grandchild', [], [
+      'type' => 'node_type',
+      'dependents' => ['child1'],
+    ]);
+    // A dependent, not a dependency.
+    $this->addConfigurationItem('grandparent', [], [
+      'type' => 'node_type',
+      'dependents' => [],
+    ]);
+    // Something completely unrelated.
+    $this->addConfigurationItem('stranger', [], [
+      'type' => 'node_type',
+      'dependents' => [],
+    ]);
+
+    $this->featuresManager->initPackage(self::PACKAGE_NAME, 'My test package');
+    $this->featuresManager->assignConfigPackage(self::PACKAGE_NAME, ['parent1']);
+
+    $other_package_name = 'other_package';
+    $this->featuresManager->initPackage($other_package_name, 'Other package');
+    $this->featuresManager->assignConfigPackage($other_package_name, ['parent2']);
+
+    $this->assigner->applyAssignmentMethod($method_id);
+
+    $packages = $this->featuresManager->getPackages();
+    $expected_package_names = [self::PACKAGE_NAME, $other_package_name];
+    sort($expected_package_names);
+    $actual_package_names = array_keys($packages);
+    sort($actual_package_names);
+    $this->assertEquals($expected_package_names, $actual_package_names, 'Expected packages not created.');
+
+    $expected_config_items = [
+      'parent1',
+      'child1',
+      'grandchild',
+    ];
+    sort($expected_config_items);
+    $actual_config_items = $packages[self::PACKAGE_NAME]->getConfig();
+    sort($actual_config_items);
+
+    $this->assertEquals($expected_config_items, $actual_config_items, 'Expected configuration items not present in article package.');
+  }
+
+  /**
    * Enables a specified assignment method.
    *
    * @param string $method_id
