@@ -1143,7 +1143,7 @@ function features_admin_form($form, $form_state) {
   // As of 7.0 beta 2 it matters where the "vertical_tabs" element lives on the
   // the array. We add it late, but at the beginning of the array because that
   // keeps us away from trouble.
-  $form = array('packages' => array('#type' => 'vertical_tabs')) + $form;
+  $form = array_merge(array('packages' => array('#type' => 'vertical_tabs')), $form);
 
   $form['buttons'] = array(
     '#theme' => 'features_form_buttons',
