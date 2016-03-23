@@ -1286,6 +1286,8 @@ function features_features_ignore($component) {
     case 'field_base':
       $ignores['indexes'] = 0;
       break;
+    case 'taxonomy':
+      $ignores['hierarchy'] = 0;
   }
   return $ignores;
 }
