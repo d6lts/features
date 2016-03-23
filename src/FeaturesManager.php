@@ -469,6 +469,38 @@ class FeaturesManager implements FeaturesManagerInterface {
   }
 
   /**
+   * Helper function to update dependencies array for a specific config item
+   * @param \Drupal\features\ConfigurationItem $config a config item
+   * @param array $module_list
+   * @return array $dependencies
+   */
+  protected function getConfigDependency(ConfigurationItem $config, $module_list = array()) {
+    $dependencies = [];
+    $type = $config->getType();
+    if ($type != FeaturesManagerInterface::SYSTEM_SIMPLE_CONFIG) {
+      $provider = $this->entityManager->getDefinition($type)
+        ->getProvider();
+      // Ensure the provider is an installed module and not, for example, 'core'
+      if (isset($module_list[$provider])) {
+        $dependencies[] = $provider;
+      }
+
+      // For configuration in the InstallStorage::CONFIG_INSTALL_DIRECTORY
+      // directory, set any module dependencies of the configuration item
+      // as package dependencies.
+      // As its name implies, the core-provided
+      // InstallStorage::CONFIG_OPTIONAL_DIRECTORY should not create
+      // dependencies.
+      if ($config->getSubdirectory() === InstallStorage::CONFIG_INSTALL_DIRECTORY &&
+        isset($config->getData()['dependencies']['module'])
+      ) {
+        $dependencies = array_merge($dependencies, $config->getData()['dependencies']['module']);
+      }
+    }
+    return $dependencies;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function assignConfigPackage($package_name, array $item_names, $force = FALSE) {
@@ -508,26 +540,7 @@ class FeaturesManager implements FeaturesManagerInterface {
           // Mark the item as already assigned.
           $config_collection[$item_name]->setPackage($package_name);
 
-          $module_dependencies = [];
-          // Add a dependency on the extension that provides this configuration
-          // type.
-          if ($config_collection[$item_name]->getType() != static::SYSTEM_SIMPLE_CONFIG) {
-            $provider = $this->entityManager->getDefinition($config_collection[$item_name]->getType())->getProvider();
-            // Ensure the provider is an installed module and not, for example,
-            // 'core'.
-            if (isset($module_list[$provider])) {
-              $module_dependencies[] = $provider;
-            }
-          }
-          // For configuration in the InstallStorage::CONFIG_INSTALL_DIRECTORY
-          // directory, set any module dependencies of the configuration item
-          // as package dependencies.
-          // As its name implies, the core-provided
-          // InstallStorage::CONFIG_OPTIONAL_DIRECTORY should not create
-          // dependencies.
-          if ($config_collection[$item_name]->getSubdirectory() === InstallStorage::CONFIG_INSTALL_DIRECTORY && isset($config_collection[$item_name]->getData()['dependencies']['module'])) {
-            $module_dependencies = array_merge($module_dependencies, $config_collection[$item_name]->getData()['dependencies']['module']);
-          }
+          $module_dependencies = $this->getConfigDependency($config_collection[$item_name], $module_list);
           $package->setDependencies($this->mergeUniqueItems($package->getDependencies(), $module_dependencies));
         }
       }
@@ -632,6 +645,23 @@ class FeaturesManager implements FeaturesManagerInterface {
       $this->setPackages($packages);
       $package_names = $new_package_names;
     }
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function assignPackageDependencies(Package $package) {
+    $module_dependencies = [];
+    $module_list = $this->moduleHandler->getModuleList();
+    $config_collection = $this->getConfigCollection();
+
+    foreach ($package->getConfig() as $item_name) {
+      if (isset($config_collection[$item_name])) {
+        $dependencies = $this->updateConfigDependency($config_collection[$item_name], $module_list);
+        $module_dependencies = array_merge($module_dependencies, $dependencies);
+      }
+    }
+    $package->setDependencies($this->mergeUniqueItems($package->getDependencies(), $module_dependencies));
   }
 
   /**

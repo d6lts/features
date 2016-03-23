@@ -819,7 +819,8 @@ class FeaturesEditForm extends FormBase {
     // Save it first just to create it in case it's a new package.
     $this->featuresManager->setPackage($this->package);
 
-    $this->package->setConfig($this->updatePackageConfig($form_state));
+    $config = $this->updatePackageConfig($form_state);
+    $this->featuresManager->assignConfigPackage($this->package->getMachineName(), $config, TRUE);
     $this->package->setExcluded($this->updateExcluded());
     if ($form_state->getValue('require_all')) {
       $this->package->setRequired(TRUE);

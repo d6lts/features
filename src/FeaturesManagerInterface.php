@@ -341,6 +341,14 @@ interface FeaturesManagerInterface {
   public function setPackageBundleNames(FeaturesBundleInterface $bundle, array &$package_names = []);
 
   /**
+   * Assigns dependencies from config items into the package.
+   *
+   * @param \Drupal\features\Package[] $packages
+   *   An array of packages.
+   */
+  public function assignPackageDependencies(Package $package);
+
+  /**
    * Assigns dependencies between packages based on configuration dependencies.
    *
    * \Drupal\features\FeaturesBundleInterface::setPackageBundleNames() must be
