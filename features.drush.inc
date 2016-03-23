@@ -610,11 +610,15 @@ function _drush_features_export($info, $module_name = NULL, $directory = NULL) {
       // Ensure that the export will be created in the English language.
       // The export language must be set before flushing caches as that can
       // result into translatables being statically cached.
-      _features_set_export_language();
+      $language = _features_export_language();
 
       drupal_flush_all_caches();
       $export = _drush_features_generate_export($info, $module_name);
       $files = features_export_render($export, $module_name, TRUE);
+
+      // Restore the language
+      _features_export_language($language);
+
       // Copy any files if _files key is there.
       if (!empty($files['_files'])) {
         foreach ($files['_files'] as $file_name => $file_info) {
