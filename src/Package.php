@@ -223,6 +223,19 @@ class Package {
   }
 
   /**
+   * @return bool
+   */
+  public function getRequiredAll() {
+    $config_orig = $this->getConfigOrig();
+    $info = isset($this->getFeaturesInfo()['required']) ? $this->getFeaturesInfo()['required'] : array();
+    $info = is_array($info) ? $info : array();
+    $diff = array_diff($config_orig, $info);
+    // Mark all as required if required:true, or required is empty, or
+    // if required contains all the exported config
+    return empty($diff) || empty($info);
+  }
+
+  /**
    * @return string[]
    */
   public function getConfigOrig() {

@@ -240,6 +240,14 @@ class FeaturesEditForm extends FormBase {
       '#size' => 30,
     );
 
+    $require_all = $this->package->getRequiredAll();
+    $form['info']['require_all'] = array(
+      '#type' => 'checkbox',
+      '#title' => $this->t('Mark all config as required'),
+      '#default_value' => $this->package->getRequiredAll(),
+      '#description' => $this->t('Required config will be assigned to this feature regardless of other assignment plugins.'),
+    );
+
     $form['conflicts'] = array(
       '#type' => 'checkbox',
       '#title' => $this->t('Allow conflicts'),
@@ -546,7 +554,11 @@ class FeaturesEditForm extends FormBase {
     // Make a map of any config specifically excluded and/or required.
     foreach (array('excluded', 'required') as $constraint) {
       $this->{$constraint} = array();
-      $info = !empty($this->package->getFeaturesInfo()[$constraint]) ? $this->package->getFeaturesInfo()[$constraint] : array();
+      $info = isset($this->package->getFeaturesInfo()[$constraint]) ? $this->package->getFeaturesInfo()[$constraint] : array();
+      if (($constraint == 'required') && (empty($info) || !is_array($info))) {
+        // If required is True or empty array, add all config as required
+        $info = $this->package->getConfigOrig();
+      }
       foreach ($info as $item_name) {
         if (!isset($config[$item_name])) {
           continue;
@@ -809,7 +821,13 @@ class FeaturesEditForm extends FormBase {
 
     $this->package->setConfig($this->updatePackageConfig($form_state));
     $this->package->setExcluded($this->updateExcluded());
-    $this->package->setRequired($this->updateRequired());
+    if ($form_state->getValue('require_all')) {
+      $this->package->setRequired(TRUE);
+    }
+    else {
+      $required = $this->updateRequired();
+      $this->package->setRequired($required);
+    }
     // Now save it with the selected config data.
     $this->featuresManager->setPackage($this->package);
 
