@@ -700,7 +700,7 @@ function _drush_features_generate_export(&$info, &$module_name) {
       }
       else {
         // Split version number parts.
-        $pattern = '/([0-9]-[a-z]+([0-9])+)/';
+        $pattern = '/([0-9]-[a-z]+([0-9]+))/';
         $matches = array();
         preg_match($pattern, $version_minor, $matches);
         $number = array_pop($matches);
