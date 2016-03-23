@@ -4,6 +4,7 @@ span.features-item-list span {
   margin-right: 5px;
   padding: 2px 5px;
   white-space: nowrap;
+  line-height: 1.7em;
 }
 
 .features-listing span.features-override,
@@ -29,6 +30,16 @@ span.features-item-list span {
 .features-listing .features-conflict a {
   color: #fff;
   background-color: #c30 !important;
+  border-radius: 5px;
+  margin-right: 5px;
+  padding: 2px 5px;
+  white-space: nowrap;
+}
+
+.features-listing span.features-missing,
+.features-listing .features-missing a {
+  color: #fff;
+  background-color: #0E5EA9 !important;
   border-radius: 5px;
   margin-right: 5px;
   padding: 2px 5px;

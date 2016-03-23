@@ -340,7 +340,7 @@ class FeaturesExportForm extends FormBase {
         $package_config['missing'][] = array(
           'name' => SafeMarkup::checkPlain($item_name),
           'label' => SafeMarkup::checkPlain($item_name),
-          'class' => 'features-conflict',
+          'class' => 'features-missing',
         );
       }
       elseif (!in_array($item_name, $package->getConfig())) {
@@ -380,9 +380,9 @@ class FeaturesExportForm extends FormBase {
       $class = 'features-detected';
       $label = $this->t('New detected');
     }
-    elseif (!empty($missing)) {
+    elseif (!empty($missing) && ($package->getStatus() == FeaturesManagerInterface::STATUS_INSTALLED)) {
       $url = Url::fromRoute('features.edit', array('featurename' => $package->getMachineName()));
-      $class = 'features-conflict';
+      $class = 'features-missing';
       $label = $this->t('Missing');
     }
     if (!empty($class)) {
