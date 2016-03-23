@@ -756,7 +756,7 @@ function features_export_form_rebuild($form, &$form_state) {
 
 function features_export_components_json($feature_name) {
   module_load_include('inc', 'features', 'features.export');
-  $export = array();
+  $export = array('features' => array());
   if (!empty($_POST['items'])) {
     $excluded = (!empty($_POST['excluded'])) ? $_POST['excluded'] : array();
     $stub = array();
