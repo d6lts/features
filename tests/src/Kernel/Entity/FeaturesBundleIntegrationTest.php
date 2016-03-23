@@ -1,6 +1,6 @@
 <?php
 
-namespace Drupal\features\tests\src\Kernel\Entity;
+namespace Drupal\Tests\features\Kernel\Entity;
 
 use Drupal\features\Entity\FeaturesBundle;
 use Drupal\features\FeaturesBundleInterface;
