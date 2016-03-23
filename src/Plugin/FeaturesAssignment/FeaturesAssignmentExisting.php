@@ -59,7 +59,7 @@ class FeaturesAssignmentExisting extends FeaturesAssignmentMethodBase {
       }
     }
     // Now assign to uninstalled modules.
-    foreach ($packages as $name => $info) {
+    foreach ($packages as $name => $package) {
       if ($package->getStatus() === FeaturesManagerInterface::STATUS_UNINSTALLED) {
         $this->safeAssignConfig($package->getMachineName(), $package->getExtension());
       }
