@@ -910,7 +910,7 @@ function features_access_override_actions($feature) {
 
       features_include();
       module_load_include('inc', 'features', 'features.export');
-      $access[$feature->name] = in_array(features_get_storage($feature->name), array(FEATURES_OVERRIDDEN, FEATURES_NEEDS_REVIEW)) && user_access('administer features');
+      $access[$feature->name] = in_array(features_get_storage($feature->name), array(FEATURES_DEFAULT, FEATURES_OVERRIDDEN, FEATURES_NEEDS_REVIEW));
     }
     return $access[$feature->name];
   }
