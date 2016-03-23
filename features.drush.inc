@@ -32,6 +32,12 @@ function features_drush_command() {
     ),
     'drupal dependencies' => array('features'),
     'aliases' => array('fl', 'features'),
+    'outputformat' => array(
+      'default' => 'table',
+      'pipe-format' => 'list',
+      'field-labels' => array('name' => 'Name', 'feature' => 'Feature', 'status' => 'Status', 'version' => 'Version', 'state' => 'State'),
+      'output-data-type' => 'format-table',
+    ),
   );
   $items['features-export'] = array(
     'description' => "Export a feature from your site into a module.",
@@ -207,12 +213,12 @@ function drush_features_list() {
   }
 
   module_load_include('inc', 'features', 'features.export');
-  $rows = array(array(dt('Name'), dt('Feature'), dt('Status'), dt('Version'), dt('State')));
 
   // Sort the Features list before compiling the output.
   $features = features_get_features(NULL, TRUE);
   ksort($features);
 
+  $rows = array();
   foreach ($features as $k => $m) {
     switch (features_get_storage($m->name)) {
       case FEATURES_DEFAULT:
@@ -230,16 +236,16 @@ function drush_features_list() {
       ($m->status == 0 && ($status == 'all' || $status == 'disabled')) ||
       ($m->status == 1 && ($status == 'all' || $status == 'enabled'))
     ) {
-      $rows[] = array(
-        $m->info['name'],
-        $m->name,
-        $m->status ? dt('Enabled') : dt('Disabled'),
-        $m->info['version'],
-        $storage
+      $rows[$k] = array(
+        'name' => $m->info['name'],
+        'feature' => $m->name,
+        'status' => $m->status ? dt('Enabled') : dt('Disabled'),
+        'version' => $m->info['version'],
+        'state' => $storage
       );
     }
   }
-  drush_print_table($rows, TRUE);
+  return $rows;
 }
 
 /**
