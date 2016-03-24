@@ -9,9 +9,11 @@ namespace Drupal\features;
 
 use Drupal\Component\Plugin\PluginManagerInterface;
 use Drupal\Core\Config\ConfigFactoryInterface;
+use Drupal\Core\Config\ExtensionInstallStorage;
 use Drupal\Core\Entity\EntityManagerInterface;
 use Drupal\Core\Config\StorageInterface;
 use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\features\Entity\FeaturesBundle;
 
 /**
  * Class responsible for performing package assignment.
@@ -46,6 +48,13 @@ class FeaturesAssigner implements FeaturesAssignerInterface {
    * @var \Drupal\Core\Config\StorageInterface
    */
   protected $configStorage;
+
+  /**
+   * The entity manager.
+   *
+   * @var \Drupal\Core\Entity\EntityManagerInterface
+   */
+  protected $entityManager;
 
   /**
    * Local cache for package assignment method instances.
@@ -244,7 +253,7 @@ class FeaturesAssigner implements FeaturesAssignerInterface {
   public function getBundleList() {
     if (empty($this->bundles)) {
       $this->bundles = array();
-      foreach (\Drupal::entityTypeManager()->getStorage('features_bundle')->loadMultiple() as $machine_name => $bundle) {
+      foreach ($this->entityManager->getStorage('features_bundle')->loadMultiple() as $machine_name => $bundle) {
         $this->bundles[$machine_name] = $bundle;
       }
     }
@@ -273,7 +282,18 @@ class FeaturesAssigner implements FeaturesAssignerInterface {
    */
   public function createBundleFromDefault($machine_name, $name = NULL, $description = NULL, $is_profile = FALSE, $profile_name = NULL) {
     // Duplicate the default bundle to get its default configuration.
-    $bundle = $this->getBundle(FeaturesBundleInterface::DEFAULT_BUNDLE)->createDuplicate();
+    $default = $this->getBundle(FeaturesBundleInterface::DEFAULT_BUNDLE);
+    if (!$default) {
+      // If we don't have the default installed, generate it from the install
+      // config file.
+      $ext_storage = new ExtensionInstallStorage($this->configStorage);
+      $record = $ext_storage->read('features.bundle.default');
+      $bundle_storage = $this->entityManager->getStorage('features_bundle');
+      $default = $bundle_storage->createFromStorageRecord($record);
+    }
+
+    /** @var \Drupal\features\Entity\FeaturesBundle $bundle */
+    $bundle = $default->createDuplicate();
 
     $bundle->setMachineName($machine_name);
     $bundle->setName($name);
