@@ -793,11 +793,13 @@ class FeaturesEditForm extends FormBase {
     }
     if (isset($this->conflicts[$type][$key])) {
       // Show what package the conflict is stored in.
+      $config = $this->featuresManager->getConfigCollection();
+      $config_name = $this->featuresManager->getFullName($type, $key);
+      $package_name = isset($config[$config_name]) ? $config[$config_name]->getPackage() : '';
       // Get the full machine name instead of the short name.
       $packages = $this->featuresManager->getPackages();
-      $package_name = $this->conflicts[$type][$key]['package'];
       if (isset($packages[$package_name])) {
-        $package_name = $packages[$package_name]['machine_name'];
+        $package_name = $packages[$package_name]->getMachineName();
       }
       $value .= '  <span class="config-name">[' . $this->t('in') . ' ' . SafeMarkup::checkPlain($package_name) . ']</span>';
     }
