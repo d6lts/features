@@ -347,7 +347,7 @@ class FeaturesExportForm extends FormBase {
         $item = $config_collection[$item_name];
         $conflicts[] = $item_name;
         $package_config[$item->getType()][] = array(
-          'name' => SafeMarkup::checkPlain($item_name),
+          'name' => SafeMarkup::checkPlain($item->getPackage()),
           'label' => SafeMarkup::checkPlain($item->getLabel()),
           'class' => 'features-conflict',
         );
