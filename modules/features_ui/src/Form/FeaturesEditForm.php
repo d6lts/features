@@ -133,11 +133,6 @@ class FeaturesEditForm extends FormBase {
    */
   public function buildForm(array $form, FormStateInterface $form_state, $featurename = '') {
     $session = $this->getRequest()->getSession();
-    $this->allowConflicts = FALSE;
-    if (isset($session)) {
-      $this->allowConflicts = $session->get('features_allow_conflicts', FALSE);
-    }
-
     $trigger = $form_state->getTriggeringElement();
     if ($trigger['#name'] == 'package') {
       $this->oldBundle = $this->bundle;
@@ -148,12 +143,17 @@ class FeaturesEditForm extends FormBase {
       if (isset($session)) {
         $session->set('features_allow_conflicts', $form_state->getValue('conflicts'));
       }
-      return $this->redirect('features.edit', array($featurename));
+      $bundle = $this->assigner->loadBundle();
     }
     else {
       $bundle = $this->assigner->loadBundle();
     }
     $this->bundle = $bundle->getMachineName();
+
+    $this->allowConflicts = FALSE;
+    if (isset($session)) {
+      $this->allowConflicts = $session->get('features_allow_conflicts', FALSE);
+    }
 
     // Pass the $force argument as TRUE because we want to include any excluded
     // configuration items. These should show up as automatically assigned, but
