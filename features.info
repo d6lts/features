@@ -3,5 +3,9 @@ description = "Provides feature management for Drupal."
 core = 7.x
 package = "Features"
 files[] = tests/features.test
+test_dependencies[] = image
+test_dependencies[] = strongarm
+test_dependencies[] = taxonomy
+test_dependencies[] = views
 
 configure = admin/structure/features/settings
