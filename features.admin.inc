@@ -88,6 +88,12 @@ function features_settings_form($form, $form_state) {
     '#default_value' => variable_get('features_rebuild_on_flush', TRUE),
     '#description' => t('If you have a large site with many features, you may experience lag on full cache clear. If disabled, features will rebuild only when viewing the features list or saving the modules list.'),
   );
+  $form['general']['features_rebuild_modules_page'] = array(
+    '#type' => 'checkbox',
+    '#title' => t('Rebuild features on accessing modules list page'),
+    '#default_value' => variable_get('features_rebuild_modules_page', FALSE),
+    '#description' => t('If you have a large site with many features, you may experience lag on accessing the modules administration page. If disabled, features will not rebuild when viewing the modules list.'),
+  );
 
   return system_settings_form($form);
 }

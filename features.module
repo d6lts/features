@@ -921,7 +921,9 @@ function features_access_override_actions($feature) {
  * Implements hook_form_alter() for system_modules form().
  */
 function features_form_system_modules_alter(&$form) {
-  features_rebuild();
+  if (variable_get('features_rebuild_modules_page', FALSE)) {
+    features_rebuild();
+  }
 }
 
 /**
