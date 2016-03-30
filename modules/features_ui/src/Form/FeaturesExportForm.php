@@ -364,31 +364,43 @@ class FeaturesExportForm extends FormBase {
     }
 
     $class = '';
-    $label = '';
+    $state_links = [];
     if (!empty($conflicts)) {
-      $url = Url::fromRoute('features.edit', array('featurename' => $package->getMachineName()));
-      $class = 'features-conflict';
-      $label = $this->t('Conflicts');
+      $state_links[] = array(
+        '#type' => 'link',
+        '#title' => $this->t('Conflicts'),
+        '#url' => Url::fromRoute('features.edit', array('featurename' => $package->getMachineName())),
+        '#attributes' => array('class' => array('features-conflict')),
+      );
     }
-    elseif (!empty($overrides)) {
-      $url = Url::fromRoute('features.diff', array('featurename' => $package->getMachineName()));
-      $class = 'features-override';
-      $label = $this->featuresManager->stateLabel(FeaturesManagerInterface::STATE_OVERRIDDEN);
+    if (!empty($overrides)) {
+      $state_links[] = array(
+        '#type' => 'link',
+        '#title' => $this->featuresManager->stateLabel(FeaturesManagerInterface::STATE_OVERRIDDEN),
+        '#url' => Url::fromRoute('features.diff', array('featurename' => $package->getMachineName())),
+        '#attributes' => array('class' => array('features-override')),
+      );
     }
-    elseif (!empty($new_config)) {
-      $url = Url::fromRoute('features.diff', array('featurename' => $package->getMachineName()));
-      $class = 'features-detected';
-      $label = $this->t('New detected');
+    if (!empty($new_config)) {
+      $state_links[] = array(
+        '#type' => 'link',
+        '#title' => $this->t('New detected'),
+        '#url' => Url::fromRoute('features.diff', array('featurename' => $package->getMachineName())),
+        '#attributes' => array('class' => array('features-detected')),
+      );
     }
-    elseif (!empty($missing) && ($package->getStatus() == FeaturesManagerInterface::STATUS_INSTALLED)) {
-      $url = Url::fromRoute('features.edit', array('featurename' => $package->getMachineName()));
-      $class = 'features-missing';
-      $label = $this->t('Missing');
+    if (!empty($missing) && ($package->getStatus() == FeaturesManagerInterface::STATUS_INSTALLED)) {
+      $state_links[] = array(
+        '#type' => 'link',
+        '#title' => $this->t('Missing'),
+        '#url' => Url::fromRoute('features.edit', array('featurename' => $package->getMachineName())),
+        '#attributes' => array('class' => array('features-missing')),
+      );
     }
-    if (!empty($class)) {
+    if (!empty($state_links)) {
       $element['state'] = array(
-        'data' => \Drupal::l($label, $url),
-        'class' => array($class, 'column-nowrap'),
+        'data' => $state_links,
+        'class' => array('column-nowrap'),
       );
     }
     else {
