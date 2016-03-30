@@ -481,7 +481,7 @@ class FeaturesExportForm extends FormBase {
       'version' => '',
     ]);
     foreach ($config_collection as $item_name => $item) {
-      if (!$item->getPackage() && !$item->isExcluded() && !$item->isExtensionProvided()) {
+      if (!$item->getPackage() && !$item->isExcluded() && !$item->isProviderExcluded()) {
         $packages['unpackaged']->appendConfig($item_name);
       }
     }

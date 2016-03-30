@@ -180,15 +180,15 @@ class FeaturesManagerTest extends UnitTestCase {
       'dependencies' => [],
     ]))
       ->setPackage('package2')
-      ->setProvidingFeature('my_feature');
+      ->setProvider('my_feature');
     $config_collection['example.config3'] = (new ConfigurationItem('example.config3', [
       'dependencies' => [],
     ]))
-      ->setProvidingFeature('my_other_feature');
+      ->setProvider('my_other_feature');
     $config_collection['example.config4'] = (new ConfigurationItem('example.config3', [
       'dependencies' => [],
     ]))
-      ->setProvidingFeature(static::PROFILE_NAME);
+      ->setProvider(static::PROFILE_NAME);
     return $config_collection;
   }
 
@@ -387,7 +387,7 @@ class FeaturesManagerTest extends UnitTestCase {
   /**
    * @covers ::assignConfigPackage
    */
-  public function testAssignConfigPackageWithNonExtensionProvidedConfig() {
+  public function testAssignConfigPackageWithNonProviderExcludedConfig() {
     $assigner = $this->prophesize(FeaturesAssignerInterface::class);
     $bundle = $this->prophesize(FeaturesBundleInterface::class);
     $bundle->isProfilePackage('test_package')->willReturn(FALSE);
@@ -418,10 +418,10 @@ class FeaturesManagerTest extends UnitTestCase {
   /**
    * @covers ::assignConfigPackage
    */
-  public function testAssignConfigPackageWithExtensionProvidedConfig() {
+  public function testAssignConfigPackageWithProviderExcludedConfig() {
     $config_collection = [
       'test_config' => new ConfigurationItem('test_config', []),
-      'test_config2' => new ConfigurationItem('test_config2', [], ['extensionProvided' => TRUE]),
+      'test_config2' => new ConfigurationItem('test_config2', [], ['providerExcluded' => TRUE]),
     ];
     $this->featuresManager->setConfigCollection($config_collection);
 

@@ -79,18 +79,18 @@ class ConfigurationItem {
   protected $excluded = FALSE;
 
   /**
-   * Whether the configuration is provided by an extension.
+   * Whether the configuration provider is excluded.
    *
    * @var bool
    */
-  protected $extensionProvided = FALSE;
+  protected $providerExcluded = FALSE;
 
   /**
-   * The providing feature.
+   * The provider of the config item.
    *
    * @var string
    */
-  protected $providingFeature;
+  protected $provider;
 
   /**
    * Array of package names that this item should be excluded from.
@@ -295,7 +295,7 @@ class ConfigurationItem {
   }
 
   /**
-   * @param boolean $extensionProvided
+   * @param boolean $excluded
    *
    * @return ConfigurationItem
    */
@@ -307,32 +307,32 @@ class ConfigurationItem {
   /**
    * @return boolean
    */
-  public function isExtensionProvided() {
-    return $this->extensionProvided;
+  public function isProviderExcluded() {
+    return $this->providerExcluded;
   }
 
   /**
-   * @param boolean $extensionProvided
+   * @param boolean $providerExcluded
    *
    * @return ConfigurationItem
    */
-  public function setExtensionProvided($extensionProvided) {
-    $this->extensionProvided = $extensionProvided;
+  public function setProviderExcluded($providerExcluded) {
+    $this->providerExcluded = $providerExcluded;
     return $this;
   }
 
   /**
    * @return string
    */
-  public function getProvidingFeature() {
-    return $this->providingFeature;
+  public function getProvider() {
+    return $this->provider;
   }
 
   /**
-   * @param string $providingFeature
+   * @param string $provider
    */
-  public function setProvidingFeature($providingFeature) {
-    $this->providingFeature = $providingFeature;
+  public function setProvider($provider) {
+    $this->provider = $provider;
     return $this;
   }
 

@@ -523,15 +523,15 @@ class FeaturesManager implements FeaturesManagerInterface {
         //   - the package hasn't been excluded.
         // - and the item isn't already in the package.
 
-        // Determine if the item is provided by an extension.
-        $extension_provided = ($config_collection[$item_name]->isExtensionProvided() === TRUE);
+        // Determine if the item is excluded by provider.
+        $provider_excluded = ($config_collection[$item_name]->isProviderExcluded() === TRUE);
         $already_assigned = !empty($config_collection[$item_name]->getPackage());
         // If this is the profile package, we can reassign extension-provided configuration.
         $is_profile_package = $this->getAssigner()->getBundle($package->getBundle())->isProfilePackage($package->getMachineName());
         // An item is assignable if:
-        // - it is not extension provided or this is the profile package, and
+        // - it is not provider excluded or this is the profile package, and
         // - it is not flagged as excluded.
-        $assignable = (!$extension_provided || $is_profile_package) && !$config_collection[$item_name]->isExcluded();
+        $assignable = (!$provider_excluded || $is_profile_package) && !$config_collection[$item_name]->isExcluded();
         $excluded_from_package = in_array($package_name, $config_collection[$item_name]->getPackageExcluded());
         $already_in_package = in_array($item_name, $package->getConfig());
         if (($force || (!$already_assigned && $assignable && !$excluded_from_package)) && !$already_in_package) {
@@ -693,7 +693,7 @@ class FeaturesManager implements FeaturesManagerInterface {
               }
               // Otherwise, if the dependency is provided by an existing
               // feature, add a dependency on that feature.
-              if (!$dependency_set && $extension_name = $config_collection[$dependency_name]->getProvidingFeature()) {
+              if (!$dependency_set && $extension_name = $config_collection[$dependency_name]->getProvider()) {
                 // No extension should depend on the install profile.
                 if ($extension_name != $this->drupalGetProfile()) {
                   $package->setDependencies($this->mergeUniqueItems($package->getDependencies(), [$extension_name]));
@@ -1074,8 +1074,8 @@ class FeaturesManager implements FeaturesManagerInterface {
             // Default to the install directory.
             'subdirectory' => InstallStorage::CONFIG_INSTALL_DIRECTORY,
             'package' => '',
-            'extensionProvided' => NULL,
-            'providingFeature' => isset($existing_config[$name]) ? $existing_config[$name] : NULL,
+            'providerExcluded' => NULL,
+            'provider' => isset($existing_config[$name]) ? $existing_config[$name] : NULL,
             'packageExcluded' => [],
           ]));
         }
