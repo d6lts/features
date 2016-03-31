@@ -8,6 +8,7 @@
 namespace Drupal\features\Entity;
 
 use Drupal\Core\Config\Entity\ConfigEntityBase;
+use Drupal\features\FeaturesAssignmentMethodInterface;
 use Drupal\features\FeaturesBundleInterface;
 
 /**
@@ -205,6 +206,12 @@ class FeaturesBundle extends ConfigEntityBase implements FeaturesBundleInterface
    * {@inheritdoc}
    */
   public function setEnabledAssignments(array $assignments) {
+    // Add any new assignments that we don't yet know about.
+    $new_assignments = array_diff($assignments, array_keys($this->assignments));
+    foreach ($new_assignments as $method_id) {
+      $this->assignments[$method_id] = $this->getAssignmentSettings($method_id);
+    }
+
     foreach ($this->assignments as $method_id => &$method) {
       $method['enabled'] = in_array($method_id, $assignments);
     }
@@ -233,6 +240,28 @@ class FeaturesBundle extends ConfigEntityBase implements FeaturesBundleInterface
   }
 
   /**
+   * Return array of default settings for the given plugin method
+   *
+   * @param $method_id
+   * @return array
+   */
+  protected function getDefaultSettings($method_id) {
+    $settings = ['enabled' => FALSE, 'weight' => 0];
+
+    $manager = \Drupal::service('plugin.manager.features_assignment_method');
+    $definition = $manager->getDefinition($method_id);
+
+    if (isset($definition['weight'])) {
+      $settings['weight'] = $definition['weight'];
+    }
+    if (isset($definition['default_settings'])) {
+      $settings += $definition['default_settings'];
+    }
+
+    return $settings;
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function getAssignmentSettings($method_id = NULL) {
@@ -240,15 +269,18 @@ class FeaturesBundle extends ConfigEntityBase implements FeaturesBundleInterface
       if (isset($this->assignments[$method_id])) {
         return $this->assignments[$method_id];
       }
+      else {
+        // Use defaults.
+        return $this->getDefaultSettings($method_id);
+      }
     }
     else {
       $list = array();
-      foreach ($this->assignments as $method_id => $method) {
-        $list[$method_id] = $method;
+      foreach (array_keys($this->assignments) as $method_id) {
+        $list[$method_id] = $this->getAssignmentSettings($method_id);
       }
       return $list;
     }
-    return array();
   }
 
   /**

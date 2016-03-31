@@ -13,19 +13,13 @@ use Drupal\features\FeaturesAssignmentMethodBase;
  * Class for assigning existing modules to packages.
  *
  * @Plugin(
- *   id = \Drupal\features\Plugin\FeaturesAssignment\FeaturesAssignmentPackages::METHOD_ID,
+ *   id = "packages",
  *   weight = -20,
  *   name = @Translation("Packages"),
  *   description = @Translation("Detect and add existing package modules."),
  * )
  */
 class FeaturesAssignmentPackages extends FeaturesAssignmentMethodBase {
-
-  /**
-   * The package assignment method id.
-   */
-  const METHOD_ID = 'packages';
-
   /**
    * {@inheritdoc}
    */

@@ -13,26 +13,30 @@ use Drupal\features\FeaturesAssignmentMethodBase;
  * Class for excluding configuration from packages.
  *
  * @Plugin(
- *   id = \Drupal\features\Plugin\FeaturesAssignment\FeaturesAssignmentExclude::METHOD_ID,
+ *   id = "exclude",
  *   weight = -5,
  *   name = @Translation("Exclude"),
  *   description = @Translation("Exclude configuration items from packaging by various methods including by configuration type."),
- *   config_route_name = "features.assignment_exclude"
+ *   config_route_name = "features.assignment_exclude",
+ *   default_settings = {
+ *     "curated" = FALSE,
+ *     "module" = {
+ *       "installed" = FALSE,
+ *       "profile" = FALSE,
+ *       "namespace" = FALSE,
+ *       "namespace_any" = FALSE,
+ *     },
+ *     "types" = { "config" = {} }
+ *   }
  * )
  */
 class FeaturesAssignmentExclude extends FeaturesAssignmentMethodBase {
-
-  /**
-   * The package assignment method id.
-   */
-  const METHOD_ID = 'exclude';
-
   /**
    * {@inheritdoc}
    */
   public function assignPackages($force = FALSE) {
     $current_bundle = $this->assigner->getBundle();
-    $settings = $current_bundle->getAssignmentSettings(self::METHOD_ID);
+    $settings = $current_bundle->getAssignmentSettings($this->getPluginId());
 
     $config_collection = $this->featuresManager->getConfigCollection();
 

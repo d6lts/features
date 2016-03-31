@@ -9,14 +9,12 @@ namespace Drupal\features;
 
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Entity\EntityManagerInterface;
-use Drupal\Core\StringTranslation\StringTranslationTrait;
+use Drupal\Core\Plugin\PluginBase;
 
 /**
  * Base class for package assignment methods.
  */
-abstract class FeaturesAssignmentMethodBase implements FeaturesAssignmentMethodInterface {
-  use StringTranslationTrait;
-
+abstract class FeaturesAssignmentMethodBase extends PluginBase implements FeaturesAssignmentMethodInterface {
   /**
    * The features manager.
    *
@@ -76,17 +74,15 @@ abstract class FeaturesAssignmentMethodBase implements FeaturesAssignmentMethodI
   /**
    * Assigns configuration of the types specified in a setting to a package.
    *
-   * @param string $method_id
-   *   The ID of an assignment method.
    * @param string $machine_name
    *   Machine name of the package.
    * @param bool $force
    *   (optional) If TRUE, assign config regardless of restrictions such as it
    *   being already assigned to a package.
    */
-  protected function assignPackageByConfigTypes($method_id, $machine_name, $force = FALSE) {
+  protected function assignPackageByConfigTypes($machine_name, $force = FALSE) {
     $current_bundle = $this->assigner->getBundle();
-    $settings = $current_bundle->getAssignmentSettings($method_id);
+    $settings = $current_bundle->getAssignmentSettings($this->getPluginId());
     $types = $settings['types']['config'];
 
     $config_collection = $this->featuresManager->getConfigCollection();
@@ -107,14 +103,12 @@ abstract class FeaturesAssignmentMethodBase implements FeaturesAssignmentMethodI
   /**
    * Assigns a given subdirectory to configuration of specified types.
    *
-   * @param string $method_id
-   *   The ID of an assignment method.
    * @param string $subdirectory
    *   The subdirectory that designated configuration should be exported to.
    */
-  protected function assignSubdirectoryByConfigTypes($method_id, $subdirectory) {
+  protected function assignSubdirectoryByConfigTypes($subdirectory) {
     $current_bundle = $this->assigner->getBundle();
-    $settings = $current_bundle->getAssignmentSettings($method_id);
+    $settings = $current_bundle->getAssignmentSettings($this->getPluginId());
     $types = $settings['types']['config'];
 
     $config_collection = $this->featuresManager->getConfigCollection();

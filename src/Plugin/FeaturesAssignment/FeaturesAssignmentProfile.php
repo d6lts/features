@@ -14,20 +14,22 @@ use Drupal\Core\Config\InstallStorage;
  * Class for adding configuration for the optional install profile.
  *
  * @Plugin(
- *   id = \Drupal\features\Plugin\FeaturesAssignment\FeaturesAssignmentProfile::METHOD_ID,
+ *   id = "profile",
  *   weight = 10,
  *   name = @Translation("Profile"),
  *   description = @Translation("Add configuration and other files to the optional install profile from the Drupal core Standard install profile. Without these additions, a generated install profile will be missing some important initial setup."),
- *   config_route_name = "features.assignment_profile"
+ *   config_route_name = "features.assignment_profile",
+ *   default_settings = {
+ *     "curated" = FALSE,
+ *     "standard" = {
+ *       "files" = FALSE,
+ *       "dependencies" = FALSE,
+ *     },
+ *     "types" = { "config" = {} }
+ *   }
  * )
  */
 class FeaturesAssignmentProfile extends FeaturesAssignmentMethodBase {
-
-  /**
-   * The package assignment method id.
-   */
-  const METHOD_ID = 'profile';
-
   /**
    * {@inheritdoc}
    */
@@ -35,7 +37,7 @@ class FeaturesAssignmentProfile extends FeaturesAssignmentMethodBase {
     $current_bundle = $this->assigner->getBundle();
 
     if ($current_bundle->isProfile()) {
-      $settings = $current_bundle->getAssignmentSettings(self::METHOD_ID);
+      $settings = $current_bundle->getAssignmentSettings($this->getPluginId());
 
       // Ensure the profile package exists.
       $profile_name = $current_bundle->getProfileName();
@@ -46,7 +48,7 @@ class FeaturesAssignmentProfile extends FeaturesAssignmentMethodBase {
       }
 
       // Assign configuration by type.
-      $this->assignPackageByConfigTypes(self::METHOD_ID, $profile_name, $force);
+      $this->assignPackageByConfigTypes($profile_name, $force);
 
       // Include a curated list of configuration.
       if ($settings['curated']) {

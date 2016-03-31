@@ -14,19 +14,13 @@ use Drupal\features\FeaturesAssignmentMethodBase;
  * Class for assigning configuration to packages based on forward dependencies.
  *
  * @Plugin(
- *   id = \Drupal\features\Plugin\FeaturesAssignment\FeaturesAssignmentForwardDependency::METHOD_ID,
+ *   id = "forward_dependency",
  *   weight = 20,
  *   name = @Translation("Forward dependency"),
  *   description = @Translation("Add to packages configuration on which items in the package depend."),
  * )
  */
 class FeaturesAssignmentForwardDependency extends FeaturesAssignmentMethodBase {
-
-  /**
-   * The package assignment method id.
-   */
-  const METHOD_ID = 'forward_dependency';
-
   /**
    * {@inheritdoc}
    */

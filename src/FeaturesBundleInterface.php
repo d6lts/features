@@ -217,7 +217,7 @@ interface FeaturesBundleInterface {
    *
    * @see \Drupal\features\FeaturesBundleInterface::setAssignmentSettings()
    */
-  public function getAssignmentSettings($method_id);
+  public function getAssignmentSettings($method_id = NULL);
 
   /**
    * Sets settings specific to an assignment method.
