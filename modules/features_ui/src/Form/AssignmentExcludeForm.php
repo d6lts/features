@@ -48,7 +48,7 @@ class AssignmentExcludeForm extends AssignmentFormBase {
     );
     $form['module']['installed'] = array(
       '#type' => 'checkbox',
-      '#title' => $this->t('Exclude module-provided entity configuration'),
+      '#title' => $this->t('Exclude installed module-provided entity configuration'),
       '#default_value' => $module_settings['installed'],
       '#description' => $this->t('Select this option to exclude from packaging any configuration that is provided by already installed modules.'),
       '#attributes' => array(
@@ -75,10 +75,29 @@ class AssignmentExcludeForm extends AssignmentFormBase {
     $machine_name = !empty($machine_name) ? $machine_name : t('none');
     $form['module']['namespace'] = array(
       '#type' => 'checkbox',
-      '#title' => $this->t("Don't exclude configuration by namespace"),
+      '#title' => $this->t("Don't exclude non-installed configuration by namespace"),
       '#default_value' => $module_settings['namespace'],
-      '#description' => $this->t("Select this option to not exclude from packaging any configuration that is provided by modules with the package namespace (currently %namespace).", array('%namespace' => $machine_name)),
+      '#description' => $this->t("Select this option to not exclude from packaging any configuration that is provided by non-installed modules with the package namespace (currently %namespace).", array('%namespace' => $machine_name)),
       '#states' => $show_if_module_installed_checked,
+      '#attributes' => array(
+        'data-namespace' => 'status',
+      ),
+    );
+
+    $show_if_namespace_checked = array(
+      'visible' => array(
+        ':input[data-namespace="status"]' => array('checked' => TRUE),
+        ':input[data-module-installed="status"]' => array('checked' => TRUE),
+      ),
+    );
+
+    $form['module']['namespace_any'] = array(
+      '#type' => 'checkbox',
+      '#title' => $this->t("Don't exclude ANY configuration by namespace"),
+      '#default_value' => $module_settings['namespace_any'],
+      '#description' => $this->t("Select this option to not exclude from packaging any configuration that is provided by ANY modules with the package namespace (currently %namespace).
+        Warning: Can cause installed configuration to be reassigned to different packages.", array('%namespace' => $machine_name)),
+      '#states' => $show_if_namespace_checked,
     );
 
     $this->setActions($form);

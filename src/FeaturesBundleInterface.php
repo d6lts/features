@@ -102,7 +102,7 @@ interface FeaturesBundleInterface {
    *   The machine name of a package.
    *
    * @return bool
-   *   TRUE if the machine name is prefixed by the bundle machine name.
+   *   TRUE if the package with $machine_name is the bundle profile.
    */
   public function isProfilePackage($machine_name);
 

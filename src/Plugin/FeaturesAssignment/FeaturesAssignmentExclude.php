@@ -84,7 +84,10 @@ class FeaturesAssignmentExclude extends FeaturesAssignmentMethodBase {
         if ($module_namespace) {
           $modules = $this->featuresManager->getFeaturesModules($current_bundle);
           foreach ($modules as $extension) {
-            $extension_list = array_merge($extension_list, $this->featuresManager->listExtensionConfig($extension));
+            // Only make exception for uninstalled modules
+            if (!empty($exclude_module['namespace_any']) || !$this->featuresManager->extensionEnabled($extension)) {
+              $extension_list = array_merge($extension_list, $this->featuresManager->listExtensionConfig($extension));
+            }
           }
         }
         // If any configuration was found, remove it from the list.

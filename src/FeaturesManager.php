@@ -440,11 +440,18 @@ class FeaturesManager implements FeaturesManagerInterface {
     if ($installed) {
       $features_manager = $this;
       $modules = array_filter($modules, function ($extension) use ($features_manager) {
-        return $features_manager->moduleHandler->moduleExists($extension->getName());
+        return $features_manager->extensionEnabled($extension);
       });
     }
 
     return $modules;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
+  public function extensionEnabled(Extension $extension) {
+    return $this->moduleHandler->moduleExists($extension->getName());
   }
 
   /**
@@ -523,26 +530,29 @@ class FeaturesManager implements FeaturesManagerInterface {
         //   - the package hasn't been excluded.
         // - and the item isn't already in the package.
 
-        // Determine if the item is excluded by provider.
-        $provider_excluded = ($config_collection[$item_name]->isProviderExcluded() === TRUE);
-        $already_assigned = !empty($config_collection[$item_name]->getPackage());
+        $item = &$config_collection[$item_name];
+        $already_assigned = !empty($item->getPackage());
         // If this is the profile package, we can reassign extension-provided configuration.
-        $is_profile_package = $this->getAssigner()->getBundle($package->getBundle())->isProfilePackage($package->getMachineName());
+        $is_profile_package = $this->getAssigner()->getBundle($package->getBundle())->isProfilePackage($package_name);
         // An item is assignable if:
         // - it is not provider excluded or this is the profile package, and
         // - it is not flagged as excluded.
-        $assignable = (!$provider_excluded || $is_profile_package) && !$config_collection[$item_name]->isExcluded();
-        $excluded_from_package = in_array($package_name, $config_collection[$item_name]->getPackageExcluded());
+        $assignable = (!$item->isProviderExcluded() || $is_profile_package) && !$item->isExcluded();
+        // An item is assignable if it was provided by the current package
+        $assignable = $assignable || ($item->getProvider() == $package_name);
+        $excluded_from_package = in_array($package_name, $item->getPackageExcluded());
         $already_in_package = in_array($item_name, $package->getConfig());
         if (($force || (!$already_assigned && $assignable && !$excluded_from_package)) && !$already_in_package) {
           // Add the item to the package's config array.
           $package->appendConfig($item_name);
           // Mark the item as already assigned.
-          $config_collection[$item_name]->setPackage($package_name);
+          $item->setPackage($package_name);
 
-          $module_dependencies = $this->getConfigDependency($config_collection[$item_name], $module_list);
+          $module_dependencies = $this->getConfigDependency($item, $module_list);
           $package->setDependencies($this->mergeUniqueItems($package->getDependencies(), $module_dependencies));
         }
+        // Return memory
+        unset($item);
       }
     }
 
@@ -799,7 +809,7 @@ class FeaturesManager implements FeaturesManagerInterface {
       $package->setInfo($info);
       $package->setFeaturesInfo($features_info);
       $package->setConfigOrig($this->listExtensionConfig($extension));
-      $package->setStatus($this->moduleHandler->moduleExists($extension->getName())
+      $package->setStatus($this->extensionEnabled($extension)
         ? FeaturesManagerInterface::STATUS_INSTALLED
         : FeaturesManagerInterface::STATUS_UNINSTALLED);
       $package->setVersion(isset($info['version']) ? $info['version'] : '');

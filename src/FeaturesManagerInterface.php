@@ -241,6 +241,14 @@ interface FeaturesManagerInterface {
   public function getExtensionInfo(Extension $extension);
 
   /**
+   * Determine if extension is enabled
+   *
+   * @param \Drupal\Core\Extension\Extension $extension
+   * @return bool
+   */
+  public function extensionEnabled(Extension $extension);
+
+  /**
    * Initializes a configuration package.
    *
    * @param string $machine_name

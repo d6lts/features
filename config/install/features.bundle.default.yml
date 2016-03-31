@@ -39,6 +39,7 @@ assignments:
       installed: 1
       profile: 1
       namespace: 1
+      namespace_any: 0
     enabled: true
     weight: -5
   existing:
