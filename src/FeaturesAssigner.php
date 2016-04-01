@@ -139,12 +139,26 @@ class FeaturesAssigner implements FeaturesAssignerInterface {
   }
 
   /**
+   * Clean up the package list after all config has been assigned
+   */
+  protected function cleanup() {
+    $packages = $this->featuresManager->getPackages();
+    foreach ($packages as $index => $package) {
+      if ($package->getStatus() === FeaturesManagerInterface::STATUS_NO_EXPORT && empty($package->getConfig()) && empty($package->getConfigOrig())) {
+        unset($packages[$index]);
+      }
+    }
+    $this->featuresManager->setPackages($packages);
+  }
+
+  /**
    * {@inheritdoc}
    */
   public function assignConfigPackages($force = FALSE) {
     foreach ($this->getEnabledAssigners() as $method_id => $info) {
       $this->applyAssignmentMethod($method_id, $force);
     }
+    $this->cleanup();
   }
 
   /**
