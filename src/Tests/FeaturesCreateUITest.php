@@ -34,6 +34,7 @@ class FeaturesCreateUITest extends WebTestBase {
    * Tests creating a feature via UI and download it.
    */
   public function testCreateFeaturesUI() {
+    $feature_name = 'test_feature2';
     $admin_user = $this->createUser(['administer site configuration', 'export configuration', 'administer modules']);
     $this->drupalLogin($admin_user);
     $this->drupalPlaceBlock('local_actions_block');
@@ -43,7 +44,7 @@ class FeaturesCreateUITest extends WebTestBase {
 
     $edit = [
       'name' => 'Test feature',
-      'machine_name' => 'test_feature',
+      'machine_name' => $feature_name,
       'description' => 'Test description: <strong>giraffe</strong>',
       'version' => '8.x-1.0',
       'system_simple[sources][selected][system.theme]' => TRUE,
@@ -60,16 +61,16 @@ class FeaturesCreateUITest extends WebTestBase {
     $files = $archive->listContent();
 
     $this->assertEqual(4, count($files));
-    $this->assertEqual('test_feature/test_feature.info.yml', $files[0]['filename']);
-    $this->assertEqual('test_feature/test_feature.features.yml', $files[1]['filename']);
-    $this->assertEqual('test_feature/config/install/system.theme.yml', $files[2]['filename']);
-    $this->assertEqual('test_feature/config/install/user.settings.yml', $files[3]['filename']);
+    $this->assertEqual($feature_name . '/' . $feature_name . '.info.yml', $files[0]['filename']);
+    $this->assertEqual($feature_name . '/' . $feature_name . '.features.yml', $files[1]['filename']);
+    $this->assertEqual($feature_name . '/config/install/system.theme.yml', $files[2]['filename']);
+    $this->assertEqual($feature_name . '/config/install/user.settings.yml', $files[3]['filename']);
 
     // Ensure that the archive contains the expected values.
     $info_filename = tempnam($this->tempFilesDirectory, 'feature');
-    file_put_contents($info_filename, $archive->extractInString('test_feature/test_feature.info.yml'));
+    file_put_contents($info_filename, $archive->extractInString($feature_name . '/' . $feature_name . '.info.yml'));
     $features_info_filename = tempnam($this->tempFilesDirectory, 'feature');
-    file_put_contents($features_info_filename, $archive->extractInString('test_feature/test_feature.features.yml'));
+    file_put_contents($features_info_filename, $archive->extractInString($feature_name . '/' . $feature_name . '.features.yml'));
     /** @var \Drupal\Core\Extension\InfoParser $info_parser */
     $info_parser = \Drupal::service('info_parser');
     $parsed_info = $info_parser->parse($info_filename);
@@ -80,13 +81,13 @@ class FeaturesCreateUITest extends WebTestBase {
     ], $parsed_features_info);
 
     $archive->extract(\Drupal::service('kernel')->getSitePath() . '/modules');
-    $module_path = \Drupal::service('kernel')->getSitePath() . '/modules/test_feature';
+    $module_path = \Drupal::service('kernel')->getSitePath() . '/modules/' . $feature_name;
 
     // Ensure that the features listing renders the right content.
     $this->drupalGet('admin/config/development/features');
-    $tr = $this->xpath('//table[contains(@class, "features-listing")]/tbody/tr[td[3] = "test_feature"]')[0];
+    $tr = $this->xpath('//table[contains(@class, "features-listing")]/tbody/tr[td[3] = "' . $feature_name . '"]')[0];
     $this->assertLink('Test feature');
-    $this->assertEqual('test_feature', (string) $tr->children()[2]);
+    $this->assertEqual($feature_name, (string) $tr->children()[2]);
     $description_column = (string) $tr->children()[3]->asXml();
     $this->assertTrue(strpos($description_column, 'system.theme') !== FALSE);
     $this->assertTrue(strpos($description_column, 'user.settings') !== FALSE);
@@ -101,12 +102,12 @@ class FeaturesCreateUITest extends WebTestBase {
       'user_role[sources][selected][authenticated]' => TRUE,
     ];
     $this->drupalPostForm(NULL, $edit, $this->t('Write'));
-    $info_filename = $module_path . '/test_feature.info.yml';
+    $info_filename = $module_path . '/' . $feature_name . '.info.yml';
 
     $parsed_info = $info_parser->parse($info_filename);
     $this->assertEqual('Test feature', $parsed_info['name']);
 
-    $features_info_filename = $module_path . '/test_feature.features.yml';
+    $features_info_filename = $module_path . '/' . $feature_name . '.features.yml';
     $parsed_features_info = Yaml::decode(file_get_contents($features_info_filename));
     $this->assertEqual([
       'required' => ['user.settings', 'user.role.authenticated'],
@@ -114,14 +115,14 @@ class FeaturesCreateUITest extends WebTestBase {
 
     $this->drupalGet('admin/modules');
     $edit = [
-      'modules[Other][test_feature][enable]' => TRUE,
+      'modules[Other][' . $feature_name . '][enable]' => TRUE,
     ];
     $this->drupalPostForm(NULL, $edit, $this->t('Install'));
 
     // Check that the feature is listed as installed.
     $this->drupalGet('admin/config/development/features');
 
-    $tr = $this->xpath('//table[contains(@class, "features-listing")]/tbody/tr[td[3] = "test_feature"]')[0];
+    $tr = $this->xpath('//table[contains(@class, "features-listing")]/tbody/tr[td[3] = "' . $feature_name . '"]')[0];
     $this->assertEqual('Installed', (string) $tr->children()[5]);
 
     // Check that a config change results in a feature marked as changed.
@@ -131,18 +132,18 @@ class FeaturesCreateUITest extends WebTestBase {
 
     $this->drupalGet('admin/config/development/features');
 
-    $tr = $this->xpath('//table[contains(@class, "features-listing")]/tbody/tr[td[3] = "test_feature"]')[0];
+    $tr = $this->xpath('//table[contains(@class, "features-listing")]/tbody/tr[td[3] = "' . $feature_name . '"]')[0];
     $this->assertTrue(strpos($tr->children()[6]->asXml(), 'Changed') !== FALSE);
 
     // Uninstall module.
     $this->drupalPostForm('admin/modules/uninstall', [
-      'uninstall[test_feature]' => TRUE,
+      'uninstall[' . $feature_name . ']' => TRUE,
     ], $this->t('Uninstall'));
     $this->drupalPostForm(NULL, [], $this->t('Uninstall'));
 
     $this->drupalGet('admin/config/development/features');
 
-    $tr = $this->xpath('//table[contains(@class, "features-listing")]/tbody/tr[td[3] = "test_feature"]')[0];
+    $tr = $this->xpath('//table[contains(@class, "features-listing")]/tbody/tr[td[3] = "' . $feature_name . '"]')[0];
     $this->assertTrue(strpos($tr->children()[6]->asXml(), 'Changed') !== FALSE);
 
     $this->clickLink($this->t('Changed'));
@@ -151,11 +152,11 @@ class FeaturesCreateUITest extends WebTestBase {
 
     $this->drupalGet('admin/modules');
     $edit = [
-      'modules[Other][test_feature][enable]' => TRUE,
+      'modules[Other][' . $feature_name . '][enable]' => TRUE,
     ];
     $this->drupalPostForm(NULL, $edit, $this->t('Install'));
     $this->drupalGet('admin/config/development/features');
-    $tr = $this->xpath('//table[contains(@class, "features-listing")]/tbody/tr[td[3] = "test_feature"]')[0];
+    $tr = $this->xpath('//table[contains(@class, "features-listing")]/tbody/tr[td[3] = "' . $feature_name . '"]')[0];
     $this->assertEqual('Installed', (string) $tr->children()[5]);
 
     // Ensure that the changed config got overridden.
@@ -168,14 +169,14 @@ class FeaturesCreateUITest extends WebTestBase {
 
     // Ensure that exporting this change will result in an unchanged feature.
     $this->drupalGet('admin/config/development/features');
-    $tr = $this->xpath('//table[contains(@class, "features-listing")]/tbody/tr[td[3] = "test_feature"]')[0];
+    $tr = $this->xpath('//table[contains(@class, "features-listing")]/tbody/tr[td[3] = "' . $feature_name . '"]')[0];
     $this->assertTrue(strpos($tr->children()[6]->asXml(), 'Changed') !== FALSE);
 
     $this->clickLink('Test feature');
     $this->drupalPostForm(NULL, [], $this->t('Write'));
 
     $this->drupalGet('admin/config/development/features');
-    $tr = $this->xpath('//table[contains(@class, "features-listing")]/tbody/tr[td[3] = "test_feature"]')[0];
+    $tr = $this->xpath('//table[contains(@class, "features-listing")]/tbody/tr[td[3] = "' . $feature_name . '"]')[0];
     $this->assertEqual('Installed', (string) $tr->children()[5]);
   }
 

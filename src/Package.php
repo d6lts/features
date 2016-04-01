@@ -151,6 +151,16 @@ class Package {
   /**
    * @return string
    */
+  public function getFullName() {
+    if (!empty($this->bundle)) {
+      return $this->bundle . '_' . $this->machineName;
+    }
+    return $this->machineName;
+  }
+
+  /**
+   * @return string
+   */
   public function getName() {
     return $this->name;
   }

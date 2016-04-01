@@ -252,6 +252,23 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * {@inheritdoc}
    */
+  public function findPackage($machine_name) {
+    $result = $this->getPackage($machine_name);
+    if (!isset($result)) {
+      // Didn't find direct match, but now go through and look for matching
+      // full name (bundle_machinename)
+      foreach ($this->packages as $name => $package) {
+        if ($package->getFullName() == $machine_name) {
+          return $this->packages[$name];
+        }
+      }
+    }
+    return $result;
+  }
+
+  /**
+   * {@inheritdoc}
+   */
   public function setPackage(Package $package) {
     if ($package->getMachineName()) {
       $this->packages[$package->getMachineName()] = $package;
@@ -435,6 +452,13 @@ class FeaturesManager implements FeaturesManagerInterface {
         return $features_manager->isFeatureModule($module, $bundle);
       });
     }
+    else {
+      // No bundle filter, but still only return "Feature" modules
+      $features_manager = $this;
+      $modules = array_filter($modules, function ($module) use ($features_manager) {
+        return $features_manager->isFeatureModule($module);
+      });
+    }
 
     // Filtered by installed status.
     if ($installed) {
@@ -533,13 +557,14 @@ class FeaturesManager implements FeaturesManagerInterface {
         $item = &$config_collection[$item_name];
         $already_assigned = !empty($item->getPackage());
         // If this is the profile package, we can reassign extension-provided configuration.
-        $is_profile_package = $this->getAssigner()->getBundle($package->getBundle())->isProfilePackage($package_name);
+        $package_bundle = $this->getAssigner()->getBundle($package->getBundle());
+        $is_profile_package = isset($package_bundle) ? $package_bundle->isProfilePackage($package_name) : FALSE;
         // An item is assignable if:
         // - it is not provider excluded or this is the profile package, and
         // - it is not flagged as excluded.
         $assignable = (!$item->isProviderExcluded() || $is_profile_package) && !$item->isExcluded();
         // An item is assignable if it was provided by the current package
-        $assignable = $assignable || ($item->getProvider() == $package_name);
+        $assignable = $assignable || ($item->getProvider() == $package->getFullName());
         $excluded_from_package = in_array($package_name, $item->getPackageExcluded());
         $already_in_package = in_array($item_name, $package->getConfig());
         if (($force || (!$already_assigned && $assignable && !$excluded_from_package)) && !$already_in_package) {
@@ -1052,7 +1077,7 @@ class FeaturesManager implements FeaturesManagerInterface {
       $config_types = $this->listConfigTypes();
       $dependency_manager = $this->configManager->getConfigDependencyManager();
       // List configuration provided by installed features.
-      $existing_config = $this->listExistingConfig(TRUE);
+      $existing_config = $this->listExistingConfig(NULL);
       foreach (array_keys($config_types) as $config_type) {
         $config = $this->listConfigByType($config_type);
         foreach ($config as $item_name => $label) {

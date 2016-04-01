@@ -41,12 +41,13 @@ class FeaturesAssignmentBaseType extends FeaturesAssignmentMethodBase {
 
     foreach ($config_collection as $item_name => $item) {
       if (in_array($item->getType(), $config_base_types)) {
-        if (!isset($packages[$item->getShortName()]) && !$item->getPackage()) {
+        if (is_null($this->featuresManager->findPackage($item->getShortName())) && !$item->getPackage()) {
           $description = $this->t('Provides @label @type and related configuration.', array('@label' => $item->getLabel(), '@type' => Unicode::strtolower($config_types[$item->getType()])));
           if (isset($item->getData()['description'])) {
             $description .= ' ' . $item->getData()['description'];
           }
           $this->featuresManager->initPackage($item->getShortName(), $item->getLabel(), $description, 'module', $current_bundle);
+          // Update list with the package we just added.
           try {
             $this->featuresManager->assignConfigPackage($item->getShortName(), [$item_name]);
           }

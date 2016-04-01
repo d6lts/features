@@ -25,11 +25,11 @@ class FeaturesAssignmentPackages extends FeaturesAssignmentMethodBase {
    */
   public function assignPackages($force = FALSE) {
     $bundle = $this->assigner->getBundle();
-    $existing = $this->featuresManager->getFeaturesModules($bundle);
+    $existing = $this->featuresManager->getFeaturesModules();
     foreach ($existing as $extension) {
       $package = $this->featuresManager->initPackageFromExtension($extension);
       $features_info = $package->getFeaturesInfo();
-      $short_name = $this->assigner->getBundle($package->getBundle())->getShortName($extension->getName());
+      $short_name = $package->getMachineName();
 
       // Copy over package excluded settings, if any.
       if (!empty($features_info['excluded'])) {

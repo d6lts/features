@@ -230,7 +230,7 @@ class FeaturesAssigner implements FeaturesAssignerInterface {
     }
     if (!isset($bundle)) {
       // Return the default bundle.
-      return $this->getBundle('');
+      return $this->getBundle(FeaturesBundleInterface::DEFAULT_BUNDLE);
     }
     return $bundle;
   }

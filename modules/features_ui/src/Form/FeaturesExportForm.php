@@ -300,7 +300,7 @@ class FeaturesExportForm extends FormBase {
     // Except for the 'unpackaged' pseudo-package, display the full name, since
     // that's what will be generated.
     if ($machine_name !== 'unpackaged') {
-      $machine_name = $this->assigner->getBundle($package->getBundle())->getFullName($machine_name);
+      $machine_name = $package->getFullName($machine_name);
     }
     $element['machine_name'] = $machine_name;
     $element['status'] = array(
@@ -346,8 +346,9 @@ class FeaturesExportForm extends FormBase {
       elseif (!in_array($item_name, $package->getConfig())) {
         $item = $config_collection[$item_name];
         $conflicts[] = $item_name;
+        $package_name = !empty($item->getPackage()) ? $item->getPackage() : t('PACKAGE NOT ASSIGNED');
         $package_config[$item->getType()][] = array(
-          'name' => SafeMarkup::checkPlain($item->getPackage()),
+          'name' => SafeMarkup::checkPlain($package_name),
           'label' => SafeMarkup::checkPlain($item->getLabel()),
           'class' => 'features-conflict',
         );

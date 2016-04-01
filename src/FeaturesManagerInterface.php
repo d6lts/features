@@ -154,6 +154,20 @@ interface FeaturesManagerInterface {
   public function getPackage($machine_name);
 
   /**
+   * Gets a specific package.
+   * Similar to getPackage but will also match package FullName
+   *
+   * @param string $machine_name
+   *   Full machine name of package.
+   *
+   * @return \Drupal\features\Package
+   *   Package data.
+   *
+   * @see \Drupal\features\FeaturesManagerInterface::getPackages()
+   */
+  public function findPackage($machine_name);
+
+  /**
    * Updates a package definition in the package list.
    *
    * NOTE: This does not "export" the package; it simply updates the internal
