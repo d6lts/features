@@ -77,7 +77,7 @@ jQuery.fn.sortElements = (function () {
     attach: function (context) {
 
       // mark any conflicts with a class
-      if ((drupalSettings.features !== 'undefined') && (drupalSettings.features.conflicts !== 'undefined')) {
+      if ((typeof drupalSettings.features !== 'undefined') && (typeof drupalSettings.features.conflicts !== 'undefined')) {
       //  for (var configType in drupalSettings.features.conflicts) {
           if (drupalSettings.features.conflicts) {
             var configConflicts = drupalSettings.features.conflicts;
