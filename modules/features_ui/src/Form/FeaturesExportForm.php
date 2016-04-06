@@ -502,11 +502,9 @@ class FeaturesExportForm extends FormBase {
     /** @var \Drupal\features\Package $package */
     foreach ($form['#packages'] as $package) {
       // Remove checkboxes for packages that:
-      // - exist and are uninstalled, or
       // - have no configuration assigned and are not the profile, or
       // - are the "unpackaged" pseudo-package.
-      if ($package->getStatus() == FeaturesManagerInterface::STATUS_UNINSTALLED ||
-        (empty($package->getConfig()) && !($package->getMachineName() == $form['#profile_package'])) ||
+      if ((empty($package->getConfig()) && !($package->getMachineName() == $form['#profile_package'])) ||
         $package->getMachineName() == 'unpackaged') {
         $form['preview'][$package->getMachineName()]['#access'] = FALSE;
       }
