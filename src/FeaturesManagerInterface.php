@@ -366,9 +366,9 @@ interface FeaturesManagerInterface {
    * Assigns dependencies from config items into the package.
    *
    * @param \Drupal\features\Package[] $packages
-   *   An array of packages.
+   *   An array of packages. NULL for all packages
    */
-  public function assignPackageDependencies(Package $package);
+  public function assignPackageDependencies(Package $package = NULL);
 
   /**
    * Assigns dependencies between packages based on configuration dependencies.

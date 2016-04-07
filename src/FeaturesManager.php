@@ -685,18 +685,26 @@ class FeaturesManager implements FeaturesManagerInterface {
   /**
    * {@inheritdoc}
    */
-  public function assignPackageDependencies(Package $package) {
-    $module_dependencies = [];
+  public function assignPackageDependencies(Package $package = NULL) {
+    if (is_null($package)) {
+      $packages = $this->getPackages();
+    }
+    else {
+      $packages = array($package);
+    }
     $module_list = $this->moduleHandler->getModuleList();
     $config_collection = $this->getConfigCollection();
 
-    foreach ($package->getConfig() as $item_name) {
-      if (isset($config_collection[$item_name])) {
-        $dependencies = $this->updateConfigDependency($config_collection[$item_name], $module_list);
-        $module_dependencies = array_merge($module_dependencies, $dependencies);
+    foreach ($packages as $package) {
+      $module_dependencies = [];
+      foreach ($package->getConfig() as $item_name) {
+        if (isset($config_collection[$item_name])) {
+          $dependencies = $this->getConfigDependency($config_collection[$item_name], $module_list);
+          $module_dependencies = array_merge($module_dependencies, $dependencies);
+        }
       }
+      $package->setDependencies($this->mergeUniqueItems($package->getDependencies(), $module_dependencies));
     }
-    $package->setDependencies($this->mergeUniqueItems($package->getDependencies(), $module_dependencies));
   }
 
   /**
