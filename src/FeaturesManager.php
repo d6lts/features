@@ -738,7 +738,8 @@ class FeaturesManager implements FeaturesManagerInterface {
               // feature, add a dependency on that feature.
               if (!$dependency_set && $extension_name = $config_collection[$dependency_name]->getProvider()) {
                 // No extension should depend on the install profile.
-                if ($extension_name != $this->drupalGetProfile()) {
+                $package_name = $bundle->getFullName($package->getMachineName());
+                if ($extension_name != $package_name && $extension_name != $this->drupalGetProfile()) {
                   $package->setDependencies($this->mergeUniqueItems($package->getDependencies(), [$extension_name]));
                 }
               }

@@ -246,6 +246,8 @@ class FeaturesManagerTest extends UnitTestCase {
     // Provide a bundle without any prefix.
     $bundle->getFullName('package')->willReturn('giraffe_package');
     $bundle->getFullName('package2')->willReturn('giraffe_package2');
+    $bundle->getFullName('giraffe_package')->willReturn('giraffe_package');
+    $bundle->getFullName('giraffe_package2')->willReturn('giraffe_package2');
     $bundle->isDefault()->willReturn(FALSE);
     $bundle->getMachineName()->willReturn('giraffe');
     $assigner->getBundle('giraffe')->willReturn($bundle->reveal());
