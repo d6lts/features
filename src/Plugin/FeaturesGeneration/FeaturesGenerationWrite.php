@@ -183,7 +183,7 @@ class FeaturesGenerationWrite extends FeaturesGenerationMethodBase implements Co
    * @param string $message
    *   Error message when there isn't an Exception object.
    */
-  protected function failure(array &$return, Package $package, \Exception $exception, $message = '') {
+  protected function failure(array &$return, Package $package, \Exception $exception = NULL, $message = '') {
     $type = $package->getType() == 'module' ? $this->t('Package') : $this->t('Profile');
     $return[] = [
       'success' => FALSE,
