@@ -1334,7 +1334,7 @@ function features_form_submit(&$form, &$form_state) {
   // page callback rather than as part of the submit handler as some modules
   // have includes/other directives of importance in hooks that have already
   // been called in this page load.
-  $form_state['redirect'] = 'admin/structure/features/cleanup/clear';
+  $form_state['redirect'] = array('admin/structure/features/cleanup', array('query' => array('token' => drupal_get_token())));
 
   $features = $form['#features'];
   if (!empty($features)) {
@@ -1358,21 +1358,19 @@ function features_form_rebuild() {
 }
 
 /**
- * Form for clearing cache after enabling a feature.
+ * Callback for clearing cache after enabling a feature.
  */
-function features_cleanup_form($form, $form_state, $cache_clear = FALSE) {
-  // Clear caches if we're getting a post-submit redirect that requests it.
-  if ($cache_clear) {
+function features_cleanup() {
+  if (!empty($_GET['token']) && drupal_valid_token($_GET['token'])) {
     drupal_flush_all_caches();
-
     // The following functions need to be run because drupal_flush_all_caches()
     // runs rebuilds in the wrong order. The node type cache is rebuilt *after*
     // the menu is rebuilt, meaning that the menu tree is stale in certain
     // circumstances after drupal_flush_all_caches(). We rebuild again.
     menu_rebuild();
-  }
-
     drupal_goto('admin/structure/features');
+  }
+  return MENU_NOT_FOUND;
 }
 
 /**

@@ -84,8 +84,7 @@ function features_menu() {
   $items['admin/structure/features/cleanup'] = array(
     'title' => 'Cleanup',
     'description' => 'Clear cache after enabling/disabling a feature.',
-    'page callback' => 'drupal_get_form',
-    'page arguments' => array('features_cleanup_form', 4),
+    'page callback' => 'features_cleanup',
     'type' => MENU_CALLBACK,
     'file' => 'features.admin.inc',
     'weight' => 1,
