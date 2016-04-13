@@ -16,9 +16,3 @@ features[views][] = "features_test"
 features[views_api][] = "api:2"
 name = "Features Tests"
 package = "Testing"
-
-; Information added by Drupal 6 LTS vendors on 2016-04-13
-version = "6.x-1.3"
-core = "6.x"
-project = "features"
-datestamp = "1460575639"
